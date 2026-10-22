@@ -154,6 +154,9 @@ android {
 
     buildTypes {
         debug {
+            // Keep debug builds isolated from production (different signing keys and data).
+            applicationIdSuffix = ".qa"
+            versionNameSuffix = "-qa"
             // Pseudolocales (en-XA / ar-XB) are generated for the debug BuildType, NOT androidResources.
             // They are the pseudolocale QA instrument; localeFilters below would otherwise strip them,
             // so the debug-only qualifiers are added back via the per-variant API in the androidComponents
