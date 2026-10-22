@@ -11,13 +11,13 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '21'
-      - uses: android-actions/setup-android@v3
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: android-actions/setup-android@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: Check branding and release guardrails
         run: python3 scripts/check_branding.py
       - name: JVM tests
@@ -27,7 +27,7 @@ jobs:
       - name: Compile QA APK
         run: ./gradlew :app:assembleStandardDebug -x :app:verifyI18nLiterals --stacktrace
       - name: Upload test APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: lounge-tv-qa
           path: app/build/outputs/apk/standard/debug/*.apk
