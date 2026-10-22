@@ -1,6 +1,7 @@
 package tv.own.owntv.features.settings
 
 import androidx.lifecycle.ViewModel
+import androidx.work.ExistingWorkPolicy
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -8,6 +9,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import tv.own.owntv.core.backup.BackupManager
+import tv.own.owntv.core.database.dao.SourceDao
+import tv.own.owntv.core.sync.work.CatalogSyncScheduler
 import java.io.File
 
 /** Drives Backup & Restore (selective export/import to a JSON file). */
@@ -19,6 +22,8 @@ class BackupViewModel(
     private val profileDao: tv.own.owntv.core.database.dao.ProfileDao,
     private val settings: tv.own.owntv.core.settings.SettingsRepository,
     private val companion: tv.own.owntv.core.companion.CompanionController,
+    private val sourceDao: SourceDao,
+    private val catalogSyncScheduler: CatalogSyncScheduler,
 ) : ViewModel() {
 
     // ---- Remote restore: another device uploads a backup JSON to the TV over the LAN companion server. ----
@@ -180,6 +185,20 @@ class BackupViewModel(
             _state.value = State.Working
             backup.import(file, sections, backupPassword, deviceSettings = deviceSettings).fold(
                 onSuccess = { summary ->
+                    // Backups deliberately omit entire channel/movie/series catalogues.
+                    // Importing source URLs without queuing a fresh sync leaves Home empty
+                    // even when the exact upstream OwnTV screen and settings were restored.
+                    // KEEP never interrupts an already running catalogue sync; the worker
+                    // respects each source's enabled content types and never force-prunes.
+                    if (BackupManager.Section.SOURCES in sections) {
+                        sourceDao.getAllOnce().forEach { source ->
+                            catalogSyncScheduler.enqueueSync(
+                                sourceId = source.id,
+                                reason = "post_restore_catalog",
+                                policy = ExistingWorkPolicy.KEEP,
+                            )
+                        }
+                    }
                     _restoredIcon.value = settings.appIcon.first()
                     _state.value = State.Done(
                         DoneKind.RESTORED,
