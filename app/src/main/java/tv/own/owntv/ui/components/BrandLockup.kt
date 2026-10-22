@@ -58,7 +58,17 @@ private fun accentTriangle(): Color? {
 @Composable
 fun BrandMark(icon: AppIcon, size: Dp, modifier: Modifier = Modifier, followAccent: Boolean = true) {
     Image(
-        painter = painterResource(R.drawable.loungetv_original_icon),
+        painter = painterResource(when (icon) {
+            AppIcon.EGGSHELL -> R.drawable.loungetv_icon_variant_eggshell
+            AppIcon.PETROL -> R.drawable.loungetv_icon_variant_petrol
+            AppIcon.SUNFLOWER -> R.drawable.loungetv_icon_variant_sunflower
+            AppIcon.COBALT -> R.drawable.loungetv_icon_variant_cobalt
+            AppIcon.TOMATO -> R.drawable.loungetv_icon_variant_tomato
+            AppIcon.BOARD -> R.drawable.loungetv_icon_variant_board
+            AppIcon.OLIVE -> R.drawable.loungetv_icon_variant_olive
+            AppIcon.OLIVE_CREAM -> R.drawable.loungetv_icon_variant_olive_cream
+            AppIcon.PIXEL -> R.drawable.loungetv_icon_variant_pixel
+        }),
         contentDescription = null,
         modifier = modifier.size(size),
     )
