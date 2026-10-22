@@ -25,6 +25,11 @@ STYLES = {
     "pixel": "violet",
 }
 DENSITIES = {"mdpi": 1.0, "hdpi": 1.5, "xhdpi": 2.0, "xxhdpi": 3.0, "xxxhdpi": 4.0}
+SPLASH_CANVAS = 768
+# Android's background-free splash icon masks everything outside a centred circle whose
+# diameter is two thirds of the square canvas. 58% keeps the complete wide lockup inside
+# that circle with extra room for resampling and vendor rendering differences.
+SPLASH_SAFE_FILL = .58
 
 def tinted(source: Image.Image, style: str) -> Image.Image:
     if style == "original":
@@ -108,7 +113,7 @@ def main():
         raise SystemExit("Approved Lounge TV full logo is blank")
     original_lockup = full.crop(full_box)
     splash = RES / "drawable-nodpi/loungetv_system_launch_art.png"
-    write_image(fit(original_lockup, 768, 768, .64), splash)
+    write_image(fit(original_lockup, SPLASH_CANVAS, SPLASH_CANVAS, SPLASH_SAFE_FILL), splash)
     generated.append(splash)
 
     for name, style in STYLES.items():

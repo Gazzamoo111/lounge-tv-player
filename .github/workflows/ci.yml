@@ -25,13 +25,59 @@ jobs:
           python3 -m pip install --disable-pip-version-check Pillow
           python3 scripts/generate_loungetv_brand_assets.py
       - name: Check branding and release guardrails
-        run: python3 scripts/check_branding.py
+        run: |
+          python3 scripts/check_branding.py
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/tests -p 'test_*.py'
+      - name: Set monotonic QA version
+        run: |
+          set -euo pipefail
+          QA_VERSION_CODE=$(python3 scripts/qa_version_code.py "$GITHUB_RUN_NUMBER" "$GITHUB_RUN_ATTEMPT")
+          echo "VERSION_CODE=$QA_VERSION_CODE" >> "$GITHUB_ENV"
+          echo "VERSION_NAME=5.2.2.1-ci.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+      - name: Decode persistent QA signing key
+        env:
+          QA_KEYSTORE_BASE64: ${{ secrets.QA_KEYSTORE_BASE64 }}
+          QA_KEYSTORE_PASSWORD: ${{ secrets.QA_KEYSTORE_PASSWORD }}
+          QA_KEY_ALIAS: ${{ secrets.QA_KEY_ALIAS }}
+          QA_KEY_PASSWORD: ${{ secrets.QA_KEY_PASSWORD }}
+          EXPECTED_QA_CERT_SHA256: ${{ vars.QA_CERT_SHA256 }}
+          EXPECTED_PRODUCTION_CERT_SHA256: ${{ vars.PRODUCTION_CERT_SHA256 }}
+        run: |
+          set -euo pipefail
+          for n in QA_KEYSTORE_BASE64 QA_KEYSTORE_PASSWORD QA_KEY_ALIAS QA_KEY_PASSWORD EXPECTED_QA_CERT_SHA256 EXPECTED_PRODUCTION_CERT_SHA256; do
+            [ -n "${!n:-}" ] || { echo "Missing required QA signing setting: $n"; exit 1; }
+          done
+          qa_cert=$(printf '%s' "$EXPECTED_QA_CERT_SHA256" | tr -cd '[:xdigit:]' | tr '[:upper:]' '[:lower:]')
+          production_cert=$(printf '%s' "$EXPECTED_PRODUCTION_CERT_SHA256" | tr -cd '[:xdigit:]' | tr '[:upper:]' '[:lower:]')
+          [ "${#qa_cert}" -eq 64 ] || { echo "QA_CERT_SHA256 is not a SHA-256 digest"; exit 1; }
+          [ "$qa_cert" != "$production_cert" ] || { echo "QA and production certificates must be different"; exit 1; }
+          printf '%s' "$QA_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/loungetv-qa.keystore"
+          echo "QA_KEYSTORE_FILE=$RUNNER_TEMP/loungetv-qa.keystore" >> "$GITHUB_ENV"
       - name: JVM tests
+        env:
+          QA_KEYSTORE_PASSWORD: ${{ secrets.QA_KEYSTORE_PASSWORD }}
+          QA_KEY_ALIAS: ${{ secrets.QA_KEY_ALIAS }}
+          QA_KEY_PASSWORD: ${{ secrets.QA_KEY_PASSWORD }}
+          QA_SIGNING_REQUIRED: 'true'
         run: |
           chmod +x ./gradlew
-          ./gradlew :app:testStandardDebugUnitTest -x :app:verifyI18nLiterals --stacktrace
+          ./gradlew :app:testStandardDebugUnitTest --stacktrace
       - name: Compile QA APK
-        run: ./gradlew :app:assembleStandardDebug -x :app:verifyI18nLiterals --stacktrace
+        env:
+          QA_KEYSTORE_PASSWORD: ${{ secrets.QA_KEYSTORE_PASSWORD }}
+          QA_KEY_ALIAS: ${{ secrets.QA_KEY_ALIAS }}
+          QA_KEY_PASSWORD: ${{ secrets.QA_KEY_PASSWORD }}
+          QA_SIGNING_REQUIRED: 'true'
+          EXPECTED_QA_CERT_SHA256: ${{ vars.QA_CERT_SHA256 }}
+        run: |
+          set -euo pipefail
+          ./gradlew :app:assembleStandardDebug --stacktrace
+          QA_APK=$(find app/build/outputs/apk/standard/debug -maxdepth 1 -name '*.apk' -print -quit)
+          [ -n "$QA_APK" ] || { echo "QA APK was not produced"; exit 1; }
+          python3 scripts/verify_update_compatibility.py "$QA_APK" \
+            --expected-package com.loungetv.player.qa \
+            --expected-cert-sha256 "$EXPECTED_QA_CERT_SHA256" \
+            --expected-version-code "$VERSION_CODE"
       - name: Upload test APK
         uses: actions/upload-artifact@v4
         with:

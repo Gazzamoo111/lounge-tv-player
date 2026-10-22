@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.delay
 import tv.own.owntv.R
 
@@ -29,7 +30,7 @@ fun LoungeOptionBIntroScreen(onFinished: () -> Unit) {
     val opacity by animateFloatAsState(
         targetValue = if (visible) 1f else 0f,
         animationSpec = tween(durationMillis = 300),
-        label = "Lounge TV original logo intro",
+        label = stringResource(R.string.app_name),
     )
     LaunchedEffect(Unit) {
         visible = true
@@ -39,7 +40,7 @@ fun LoungeOptionBIntroScreen(onFinished: () -> Unit) {
     Box(Modifier.fillMaxSize().background(Color(0xFF020714))) {
         Image(
             painter = painterResource(R.drawable.loungetv_original_full_logo),
-            contentDescription = "Lounge TV",
+            contentDescription = stringResource(R.string.app_name),
             modifier = Modifier.align(Alignment.Center).fillMaxWidth(0.315f).alpha(opacity),
             contentScale = ContentScale.Fit,
         )

@@ -39,7 +39,8 @@ jobs:
           VERSION_CODE=$(python3 scripts/version_code.py "$VERSION_NAME")
           echo "VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
           python3 scripts/check_branding.py
-          if gh release view "v$VERSION_NAME" >/dev/null 2>&1; then
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/tests -p 'test_*.py'
+          if gh release view "v$VERSION_NAME" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "Release v$VERSION_NAME exists; refusing to overwrite."
             exit 1
           fi
@@ -63,17 +64,29 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           VERSION_NAME: ${{ inputs.version_name }}
+          PRODUCTION_SIGNING_REQUIRED: 'true'
+          EXPECTED_PRODUCTION_CERT_SHA256: ${{ vars.PRODUCTION_CERT_SHA256 }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          [ -n "$EXPECTED_PRODUCTION_CERT_SHA256" ] || { echo "Missing PRODUCTION_CERT_SHA256 repository variable"; exit 1; }
           chmod +x ./gradlew
-          ./gradlew :app:assembleStandardRelease :app:assembleX86_64Release -x :app:verifyI18nLiterals --stacktrace
+          ./gradlew :app:assembleStandardRelease :app:assembleX86_64Release --stacktrace
           mkdir -p dist
           cp app/build/outputs/apk/standard/release/*.apk dist/LoungeTV.apk
           cp app/build/outputs/apk/x86_64/release/*.apk "dist/LoungeTV-x86_64-v${VERSION_NAME}.apk"
-          BUILD_TOOLS=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)
-          "$BUILD_TOOLS/apksigner" verify --print-certs dist/LoungeTV.apk
-          "$BUILD_TOOLS/apksigner" verify --print-certs "dist/LoungeTV-x86_64-v${VERSION_NAME}.apk"
-          "$BUILD_TOOLS/aapt" dump badging dist/LoungeTV.apk | grep -q "package: name='com.loungetv.player'"
+          previous_tag=$(gh release view --json tagName --jq .tagName -R "$GITHUB_REPOSITORY")
+          mkdir -p previous
+          gh release download "$previous_tag" --pattern LoungeTV.apk --dir previous -R "$GITHUB_REPOSITORY"
+          python3 scripts/verify_update_compatibility.py dist/LoungeTV.apk \
+            --previous previous/LoungeTV.apk \
+            --expected-package com.loungetv.player \
+            --expected-cert-sha256 "$EXPECTED_PRODUCTION_CERT_SHA256" \
+            --expected-version-code "$VERSION_CODE"
+          python3 scripts/verify_update_compatibility.py "dist/LoungeTV-x86_64-v${VERSION_NAME}.apk" \
+            --expected-package com.loungetv.player \
+            --expected-cert-sha256 "$EXPECTED_PRODUCTION_CERT_SHA256" \
+            --expected-version-code "$VERSION_CODE"
           sha256sum dist/*.apk > dist/SHA256SUMS.txt
       - name: Save exact release candidate for review
         uses: actions/upload-artifact@v4
@@ -86,6 +99,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: LoungeTV-signed-candidate
@@ -98,11 +112,11 @@ jobs:
           set -euo pipefail
           VERSION_CODE=$(python3 -c 'import sys; s=list(map(int,sys.argv[1].split("."))); print(s[0]*1000000+s[1]*10000+s[2]*100+s[3])' "$VERSION_NAME")
           sha256sum -c dist/SHA256SUMS.txt --ignore-missing
-          if gh release view "v$VERSION_NAME" >/dev/null 2>&1; then
+          if gh release view "v$VERSION_NAME" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "Release v$VERSION_NAME already exists; refusing to overwrite."
             exit 1
           fi
           gh release create "v$VERSION_NAME" dist/LoungeTV.apk "dist/LoungeTV-x86_64-v$VERSION_NAME.apk" dist/SHA256SUMS.txt \
             --title "Lounge TV v$VERSION_NAME" \
             --notes "Android versionCode: $VERSION_CODE. Lounge TV update. Based on OwnTV (GPLv3). Source and build files in this repository." \
-            --target "$GITHUB_SHA" --latest
+            --target "$GITHUB_SHA" --latest -R "$GITHUB_REPOSITORY"

@@ -43,19 +43,20 @@ android {
         if (f.isFile) f.inputStream().use { load(it) }
     }
 
+    val publishedProductionVersionCode = 5_020_200
+    val localFallbackVersionCode = publishedProductionVersionCode + 1
+    val suppliedVersionCode = System.getenv("VERSION_CODE")
+    val suppliedVersionName = System.getenv("VERSION_NAME")
+
     defaultConfig {
         applicationId = "com.loungetv.player"
         minSdk = 26
         targetSdk = 36
-        // CI injects these from the git tag (see .github/workflows/android.yml) so releases never
-        // need a manual edit here. The fallbacks are only used for local/debug builds — pinned HIGH
-        // (99999, mirroring versionName 99.99.99) so a local/debug APK is always "newer" than any
-        // published release and installs straight over it (no INSTALL_FAILED_VERSION_DOWNGRADE).
-        versionCode = (System.getenv("VERSION_CODE") ?: "99999").toInt()
-        // CI injects VERSION_NAME from the git tag for releases. The fallback is only ever used by
-        // LOCAL builds (i.e. debug), so we pin it to 99.99.99 — that way a dev build is always "newer"
-        // than any published release and the in-app updater never offers an "update" while developing.
-        versionName = System.getenv("VERSION_NAME") ?: "99.99.99"
+        // Release CI always injects both values. The fallback belongs to local QA builds only and is
+        // deliberately one code above the currently published production APK. Production release tasks
+        // reject the fallback below, so an accidentally implicit candidate can never be produced.
+        versionCode = (suppliedVersionCode ?: localFallbackVersionCode.toString()).toInt()
+        versionName = suppliedVersionName ?: "5.2.2.1-local"
 
         // Opt-in local diagnostic APKs keep the rolling playback trace enabled even when they are
         // release-signed (so they can update an installed production build without changing its data).
@@ -114,8 +115,9 @@ android {
         }
     }
 
-    // Release signing: env vars first (that is how CI injects the GitHub secrets), then Gradle
-    // properties as a local fallback. Put the local ones in the USER-WIDE file — never in the repo:
+    // Production and QA use separate certificates. Environment variables are how CI injects them;
+    // user-wide Gradle properties and the out-of-repo properties file are local fallbacks. Never put
+    // any password or keystore in this repository.
     //
     //   C:\Users\<you>\.gradle\gradle.properties
     //     owntv.keystoreFile=E:\\MEGA\\CODE\\Github_Keystore\\owntv.keystore
@@ -123,25 +125,86 @@ android {
     //     owntv.keyAlias=...
     //     owntv.keyPassword=...
     //
-    // With those set, `./gradlew :app:assembleStandardRelease` produces a release-signed APK in any
-    // terminal with no env-var dance, so a local dev build installs straight over a published
-    // release (`adb install -r`) and upgrade/migration testing works with real data.
-    // When neither source is configured — fork CI, or a fresh clone — nothing here applies and
-    // builds still succeed, just unsigned.
-    // Third source: the standalone out-of-repo properties file, loaded above defaultConfig.
+    // Production release tasks fail closed unless all four production values and explicit version
+    // inputs are present. Debug builds remain usable with Android's local debug key, but CI sets
+    // QA_SIGNING_REQUIRED=true and therefore refuses to publish an artifact without the stable QA key.
     fun signingValue(env: String, property: String): String? =
         System.getenv(env)
             ?: providers.gradleProperty(property).orNull
             ?: localSigningProps.getProperty(property)
 
-    val releaseKeystore = signingValue("KEYSTORE_FILE", "owntv.keystoreFile")
+    data class SigningInputs(
+        val storeFile: String?,
+        val storePassword: String?,
+        val keyAlias: String?,
+        val keyPassword: String?,
+    ) {
+        val values = listOf(storeFile, storePassword, keyAlias, keyPassword)
+        val isEmpty = values.all { it.isNullOrBlank() }
+        val isComplete = values.all { !it.isNullOrBlank() }
+    }
+
+    fun validateSigningInputs(label: String, inputs: SigningInputs, required: Boolean) {
+        if ((!inputs.isEmpty && !inputs.isComplete) || (required && !inputs.isComplete)) {
+            throw GradleException("$label signing requires keystore file, store password, key alias and key password")
+        }
+        if (inputs.isComplete && !file(inputs.storeFile!!).isFile) {
+            throw GradleException("$label signing keystore file does not exist")
+        }
+    }
+
+    val productionSigning = SigningInputs(
+        signingValue("KEYSTORE_FILE", "owntv.keystoreFile"),
+        signingValue("KEYSTORE_PASSWORD", "owntv.keystorePassword"),
+        signingValue("KEY_ALIAS", "owntv.keyAlias"),
+        signingValue("KEY_PASSWORD", "owntv.keyPassword"),
+    )
+    val qaSigning = SigningInputs(
+        signingValue("QA_KEYSTORE_FILE", "owntv.qaKeystoreFile"),
+        signingValue("QA_KEYSTORE_PASSWORD", "owntv.qaKeystorePassword"),
+        signingValue("QA_KEY_ALIAS", "owntv.qaKeyAlias"),
+        signingValue("QA_KEY_PASSWORD", "owntv.qaKeyPassword"),
+    )
+    val releaseTaskRequested = gradle.startParameter.taskNames.any { requested ->
+        val task = requested.substringAfterLast(':').lowercase()
+        val nonProductionVariant = task.contains("debug") || task.contains("benchmark") || task.contains("nonminified")
+        val explicitRelease = task.contains("release") && !nonProductionVariant
+        val aggregateMayBuildRelease = !nonProductionVariant && (
+            task in setOf("assemble", "build", "bundle", "buildneeded", "builddependents") ||
+                task.startsWith("assemble") || task.startsWith("bundle")
+            )
+        explicitRelease || aggregateMayBuildRelease
+    }
+    val productionSigningRequired =
+        System.getenv("PRODUCTION_SIGNING_REQUIRED") == "true" || releaseTaskRequested
+    val qaSigningRequired = System.getenv("QA_SIGNING_REQUIRED") == "true"
+
+    validateSigningInputs("Production", productionSigning, productionSigningRequired)
+    validateSigningInputs("QA", qaSigning, qaSigningRequired)
+    if (productionSigningRequired) {
+        if (suppliedVersionCode == null || suppliedVersionName.isNullOrBlank()) {
+            throw GradleException("Production release builds require explicit VERSION_CODE and VERSION_NAME")
+        }
+        if (suppliedVersionCode.toIntOrNull() == null || suppliedVersionCode.toInt() <= publishedProductionVersionCode) {
+            throw GradleException("Production VERSION_CODE must be greater than $publishedProductionVersionCode")
+        }
+    }
+
     signingConfigs {
-        if (releaseKeystore != null) {
+        if (productionSigning.isComplete) {
             create("release") {
-                storeFile = file(releaseKeystore)
-                storePassword = signingValue("KEYSTORE_PASSWORD", "owntv.keystorePassword")
-                keyAlias = signingValue("KEY_ALIAS", "owntv.keyAlias")
-                keyPassword = signingValue("KEY_PASSWORD", "owntv.keyPassword")
+                storeFile = file(productionSigning.storeFile!!)
+                storePassword = productionSigning.storePassword
+                keyAlias = productionSigning.keyAlias
+                keyPassword = productionSigning.keyPassword
+            }
+        }
+        if (qaSigning.isComplete) {
+            create("qa") {
+                storeFile = file(qaSigning.storeFile!!)
+                storePassword = qaSigning.storePassword
+                keyAlias = qaSigning.keyAlias
+                keyPassword = qaSigning.keyPassword
             }
         }
     }
@@ -157,6 +220,9 @@ android {
             // Keep debug builds isolated from production (different signing keys and data).
             applicationIdSuffix = ".qa"
             versionNameSuffix = "-qa"
+            if (qaSigning.isComplete) {
+                signingConfig = signingConfigs.getByName("qa")
+            }
             // Pseudolocales (en-XA / ar-XB) are generated for the debug BuildType, NOT androidResources.
             // They are the pseudolocale QA instrument; localeFilters below would otherwise strip them,
             // so the debug-only qualifiers are added back via the per-variant API in the androidComponents
@@ -173,7 +239,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            if (releaseKeystore != null) {
+            if (productionSigning.isComplete) {
                 signingConfig = signingConfigs.getByName("release")
             }
         }

@@ -35,10 +35,13 @@
 1	log	app/src/main/java/tv/own/owntv/MainActivity.kt	onNewIntent deepLinkHost=${intent.data?.host} deepLinkType=${pendingDeepLink?.javaClass?.simpleName ?: "none"}
 1	performance	app/src/main/java/tv/own/owntv/MainActivity.kt	profile-id-loaded
 1	performance	app/src/main/java/tv/own/owntv/MainActivity.kt	profiles-loaded
+1	technical	app/src/main/java/tv/own/owntv/OwnTVApp.kt	#007AFF
 1	compiler	app/src/main/java/tv/own/owntv/OwnTVApp.kt	DEPRECATION
-1	technical	app/src/main/java/tv/own/owntv/OwnTVApp.kt	ahXN00/OwnTV
+1	technical	app/src/main/java/tv/own/owntv/OwnTVApp.kt	Gazzamoo111/lounge-tv-player
+2	preference-key	app/src/main/java/tv/own/owntv/OwnTVApp.kt	blue_accent_initialised_v1
 1	file-path	app/src/main/java/tv/own/owntv/OwnTVApp.kt	image_cache
 1	performance	app/src/main/java/tv/own/owntv/OwnTVApp.kt	koin-started
+1	preference-key	app/src/main/java/tv/own/owntv/OwnTVApp.kt	loungetv_brand
 3	empty	app/src/main/java/tv/own/owntv/core/i18n/LocalizedContent.kt	\0
 1	empty	app/src/main/java/tv/own/owntv/features/customize/CustomizeItemsScreen.kt	\0
 1	assertion	app/src/main/java/tv/own/owntv/features/customize/CustomizeItemsViewModel.kt	EPISODE not applicable
@@ -100,7 +103,6 @@
 2	url	app/src/main/java/tv/own/owntv/features/home/HomeScreen.kt	w1280
 2	url	app/src/main/java/tv/own/owntv/features/home/HomeScreen.kt	w500
 2	technical	app/src/main/java/tv/own/owntv/features/home/HomeScreen.kt	·
-2	technical	app/src/main/java/tv/own/owntv/features/home/HomeScreen.kt	•
 1	technical	app/src/main/java/tv/own/owntv/features/home/HomeScreen.kt	★
 1	locale	app/src/main/java/tv/own/owntv/features/home/HomeViewModel.kt	EN
 1	performance	app/src/main/java/tv/own/owntv/features/home/HomeViewModel.kt	home-data

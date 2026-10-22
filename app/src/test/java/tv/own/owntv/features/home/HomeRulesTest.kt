@@ -2,6 +2,7 @@ package tv.own.owntv.features.home
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Test
 
 class HomeRulesTest {
@@ -39,4 +40,51 @@ class HomeRulesTest {
 
     @Test
     fun singleTitleNeverPages() = assertNull(trendingPagerTarget(0, 1, 1))
+
+    // --- fresh-catalogue hero fallback ---
+
+    @Test
+    fun `backdrop wins before poster and provider order`() {
+        val posterOnly = candidate(CatalogueFeatureKind.MOVIE, 1, "First", 0, artwork = true)
+        val backdrop = candidate(CatalogueFeatureKind.SERIES, 2, "Second", 99, backdrop = true)
+
+        assertSame(backdrop, chooseCatalogueFeatureCandidate(listOf(posterOnly, backdrop)))
+    }
+
+    @Test
+    fun `poster wins before an unillustrated live channel`() {
+        val live = candidate(CatalogueFeatureKind.LIVE, 1, "Channel", 0)
+        val movie = candidate(CatalogueFeatureKind.MOVIE, 2, "Movie", 99, artwork = true)
+
+        assertSame(movie, chooseCatalogueFeatureCandidate(listOf(live, movie)))
+    }
+
+    @Test
+    fun `provider order gives deterministic no-metadata fallback`() {
+        val later = candidate(CatalogueFeatureKind.SERIES, 2, "A title", 20)
+        val earlier = candidate(CatalogueFeatureKind.LIVE, 1, "Z channel", 5)
+
+        assertSame(earlier, chooseCatalogueFeatureCandidate(listOf(later, earlier)))
+    }
+
+    @Test
+    fun `name and id make equal provider order deterministic`() {
+        val zed = candidate(CatalogueFeatureKind.MOVIE, 1, "Zulu", 4)
+        val alphaHighId = candidate(CatalogueFeatureKind.MOVIE, 9, "Alpha", 4)
+        val alphaLowId = candidate(CatalogueFeatureKind.MOVIE, 3, "alpha", 4)
+
+        assertSame(alphaLowId, chooseCatalogueFeatureCandidate(listOf(zed, alphaHighId, alphaLowId)))
+    }
+
+    @Test
+    fun `empty catalogue has no fallback`() = assertNull(chooseCatalogueFeatureCandidate(emptyList()))
+
+    private fun candidate(
+        kind: CatalogueFeatureKind,
+        id: Long,
+        name: String,
+        order: Int,
+        backdrop: Boolean = false,
+        artwork: Boolean = false,
+    ) = CatalogueFeatureCandidate(kind, id, name, order, backdrop, artwork)
 }

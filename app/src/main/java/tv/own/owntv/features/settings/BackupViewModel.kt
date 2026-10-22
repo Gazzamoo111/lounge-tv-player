@@ -2,13 +2,27 @@ package tv.own.owntv.features.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.ExistingWorkPolicy
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import tv.own.owntv.core.backup.BackupManager
+import tv.own.owntv.core.database.dao.SourceDao
+import tv.own.owntv.core.database.entity.SourceEntity
+import tv.own.owntv.core.sync.AutoRefresh
+import tv.own.owntv.core.sync.work.CatalogSyncScheduler
 import java.io.File
+
+internal fun changedSourceIds(before: Map<Long, String>, after: Map<Long, String>): Set<Long> =
+    after.filter { (id, fingerprint) -> before[id] != fingerprint }.keys
+
+private fun SourceEntity.syncFingerprint(): String = listOf(
+    type.name, url, username, password, mac, stalkerSerialNumber, stalkerDeviceId, stalkerDeviceId2,
+    stalkerSignature, userAgent, epgUrl, syncLive.toString(), syncMovies.toString(), syncSeries.toString(),
+    importPortalEpg.toString(), preferHls.toString(), httpReferer, serverTimeZone,
+).joinToString { it.orEmpty() }
 
 /** Drives Backup & Restore (selective export/import to a JSON file). */
 enum class DoneKind { EXPORTED, RESTORED }
@@ -19,6 +33,8 @@ class BackupViewModel(
     private val profileDao: tv.own.owntv.core.database.dao.ProfileDao,
     private val settings: tv.own.owntv.core.settings.SettingsRepository,
     private val companion: tv.own.owntv.core.companion.CompanionController,
+    private val sourceDao: SourceDao,
+    private val catalogSyncScheduler: CatalogSyncScheduler,
 ) : ViewModel() {
 
     // ---- Remote restore: another device uploads a backup JSON to the TV over the LAN companion server. ----
@@ -178,8 +194,22 @@ class BackupViewModel(
     fun import(file: File, sections: Set<BackupManager.Section>, backupPassword: String?, deviceSettings: Boolean = false) {
         viewModelScope.launch {
             _state.value = State.Working
+            val sourcesBefore = if (BackupManager.Section.SOURCES in sections) {
+                sourceDao.getAllOnce().associate { it.id to it.syncFingerprint() }
+            } else emptyMap()
             backup.import(file, sections, backupPassword, deviceSettings = deviceSettings).fold(
                 onSuccess = { summary ->
+                    if (BackupManager.Section.SOURCES in sections) {
+                        val sourcesAfter = sourceDao.getAllOnce()
+                        val changed = changedSourceIds(sourcesBefore, sourcesAfter.associate { it.id to it.syncFingerprint() })
+                        sourcesAfter.filter { it.id in changed }.forEach { source ->
+                            catalogSyncScheduler.enqueueSync(
+                                sourceId = source.id,
+                                reason = AutoRefresh.REASON,
+                                policy = ExistingWorkPolicy.KEEP,
+                            )
+                        }
+                    }
                     _restoredIcon.value = settings.appIcon.first()
                     _state.value = State.Done(
                         DoneKind.RESTORED,
