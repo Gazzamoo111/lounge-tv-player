@@ -9,7 +9,7 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: loungetv-release
+  group: loungetv-release-${{ github.ref }}
   cancel-in-progress: false
 jobs:
   candidate:
