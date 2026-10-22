@@ -83,7 +83,6 @@ open class MainActivity : ComponentActivity() {
      * during backup restore cannot bring the splash back; the foreground gate still refuses to
      * compose the shell until the loaded list and active-id check are valid.
      */
-    private var loungeOptionBIntroPlayed = false
     @Volatile
     private var contentReady = false
 
@@ -191,18 +190,6 @@ open class MainActivity : ComponentActivity() {
         }
         Perf.stamp("db-probed") // main thread was blocked here: everything above is pre-composition
         setContent {
-            var loungeOptionBIntroVisible by remember { mutableStateOf(false) }
-            LaunchedEffect(Unit) {
-                if (!loungeOptionBIntroPlayed) {
-                    while (!contentReady && SystemClock.uptimeMillis() < splashDeadline) {
-                        kotlinx.coroutines.delay(45)
-                    }
-                    kotlinx.coroutines.delay(180)
-                    loungeOptionBIntroVisible = true
-                }
-            }
-
-
             // First composition pass — splits "process start → Compose is running" from
             // "Compose is running → the destination's data arrived".
             // Deliberately a Unit-returning remember: the point is the side effect happening DURING
@@ -463,13 +450,6 @@ open class MainActivity : ComponentActivity() {
                             else -> Unit
                         }
                         } // end foreground Box (above the background layer)
-                        if (loungeOptionBIntroVisible) {
-                            tv.own.owntv.ui.components.LoungeOptionBIntroScreen(onFinished = {
-                                loungeOptionBIntroPlayed = true
-                                loungeOptionBIntroVisible = false
-                            })
-                        }
-
                     }
                     } // end LocalizedContent
                 }
