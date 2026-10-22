@@ -67,14 +67,13 @@ open class MainActivity : ComponentActivity() {
         private const val DB_PROBE_TIMEOUT_MS = 5_000L
 
         /**
-         * Hard ceiling on the splash. A stuck DataStore/profile read must never leave the user
-         * staring at a static logo — past this the splash dismisses whatever the state is.
-         *
-         * Kept short deliberately: the old build drew its (blank) first frame at ~1.1s, so anything
-         * beyond ~2s of splash is a perceived-responsiveness regression even though the app is doing
-         * strictly less work than before.
+         * Show the approved Lounge TV system logo from the first Android launch frame
+         * until a real destination (profile gate/onboarding/shell) has loaded.
+         * The previous 2-second timeout exposed 10-15 seconds of blank activity
+         * startup on Fire TV. Still cap pathological startup hangs so the system
+         * never traps users forever behind a logo.
          */
-        private const val SPLASH_TIMEOUT_MS = 2_000L
+        private const val SPLASH_TIMEOUT_MS = 30_000L
     }
 
     /**
@@ -84,7 +83,6 @@ open class MainActivity : ComponentActivity() {
      * during backup restore cannot bring the splash back; the foreground gate still refuses to
      * compose the shell until the loaded list and active-id check are valid.
      */
-    private var loungeOptionBIntroPlayed = false
     @Volatile
     private var contentReady = false
 
@@ -192,18 +190,6 @@ open class MainActivity : ComponentActivity() {
         }
         Perf.stamp("db-probed") // main thread was blocked here: everything above is pre-composition
         setContent {
-            var loungeOptionBIntroVisible by remember { mutableStateOf(false) }
-            LaunchedEffect(Unit) {
-                if (!loungeOptionBIntroPlayed) {
-                    while (!contentReady && SystemClock.uptimeMillis() < splashDeadline) {
-                        kotlinx.coroutines.delay(45)
-                    }
-                    kotlinx.coroutines.delay(180)
-                    loungeOptionBIntroVisible = true
-                }
-            }
-
-
             // First composition pass — splits "process start → Compose is running" from
             // "Compose is running → the destination's data arrived".
             // Deliberately a Unit-returning remember: the point is the side effect happening DURING
@@ -464,13 +450,6 @@ open class MainActivity : ComponentActivity() {
                             else -> Unit
                         }
                         } // end foreground Box (above the background layer)
-                        if (loungeOptionBIntroVisible) {
-                            tv.own.owntv.ui.components.LoungeOptionBIntroScreen(onFinished = {
-                                loungeOptionBIntroPlayed = true
-                                loungeOptionBIntroVisible = false
-                            })
-                        }
-
                     }
                     } // end LocalizedContent
                 }

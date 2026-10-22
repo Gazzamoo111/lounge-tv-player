@@ -4,4 +4,6 @@
     <string name="content_search_movies">Search movies…</string>
     <string name="content_search_series">Search series…</string>
     <string name="app_name">Lounge TV</string>
+    <string name="loungetv_featured_eyebrow">FEATURED ON LOUNGE TV</string>
+    <string name="loungetv_featured_explore">Explore title</string>
 </resources>

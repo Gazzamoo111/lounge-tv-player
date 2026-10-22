@@ -38,7 +38,13 @@ import tv.own.owntv.ui.theme.stageAccent
 @Composable
 fun rememberAppliedIcon(): AppIcon {
     val context = LocalContext.current
-    return remember(context) { AppIconSwitcher.applied(context) }
+    val settings: SettingsRepository = koinInject()
+    val applied = remember(context) { AppIconSwitcher.applied(context) }
+    // The old remember(context) value never updated while the settings screen stayed
+    // open. Observe the selected colour so the rail and branding react immediately.
+    // The Android TV launcher continues to use AppIconSwitcher independently.
+    val selected by settings.appIcon.collectAsStateWithLifecycle(initialValue = applied)
+    return selected
 }
 
 /** Settings › Accent-colored logo: the play triangle of every in-app logo in the accent (default on). */
@@ -58,7 +64,17 @@ private fun accentTriangle(): Color? {
 @Composable
 fun BrandMark(icon: AppIcon, size: Dp, modifier: Modifier = Modifier, followAccent: Boolean = true) {
     Image(
-        painter = painterResource(R.drawable.loungetv_original_icon),
+        painter = painterResource(when (icon) {
+            AppIcon.EGGSHELL -> R.drawable.loungetv_icon_variant_eggshell
+            AppIcon.PETROL -> R.drawable.loungetv_icon_variant_petrol
+            AppIcon.SUNFLOWER -> R.drawable.loungetv_icon_variant_sunflower
+            AppIcon.COBALT -> R.drawable.loungetv_icon_variant_cobalt
+            AppIcon.TOMATO -> R.drawable.loungetv_icon_variant_tomato
+            AppIcon.BOARD -> R.drawable.loungetv_icon_variant_board
+            AppIcon.OLIVE -> R.drawable.loungetv_icon_variant_olive
+            AppIcon.OLIVE_CREAM -> R.drawable.loungetv_icon_variant_olive_cream
+            AppIcon.PIXEL -> R.drawable.loungetv_icon_variant_pixel
+        }),
         contentDescription = null,
         modifier = modifier.size(size),
     )

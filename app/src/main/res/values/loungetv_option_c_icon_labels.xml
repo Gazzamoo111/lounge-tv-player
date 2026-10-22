@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_icon_eggshell" translatable="false">Lounge TV Original</string>
-    <string name="app_icon_petrol" translatable="false">Lounge TV Original</string>
-    <string name="app_icon_sunflower" translatable="false">Lounge TV Original</string>
-    <string name="app_icon_cobalt" translatable="false">Lounge TV Original</string>
-    <string name="app_icon_tomato" translatable="false">Lounge TV Original</string>
-    <string name="app_icon_pixel" translatable="false">Lounge TV Original</string>
-    <string name="app_icon_board" translatable="false">Lounge TV Original</string>
-    <string name="app_icon_olive" translatable="false">Lounge TV Original</string>
-    <string name="app_icon_olive_cream" translatable="false">Lounge TV Original</string>
+    <string name="app_icon_eggshell" translatable="false">Lounge TV · Original couch</string>
+    <string name="app_icon_petrol" translatable="false">Lounge TV · Aqua glow</string>
+    <string name="app_icon_sunflower" translatable="false">Lounge TV · Ice</string>
+    <string name="app_icon_cobalt" translatable="false">Lounge TV · Electric blue</string>
+    <string name="app_icon_tomato" translatable="false">Lounge TV · Sport red/blue</string>
+    <string name="app_icon_pixel" translatable="false">Lounge TV · Violet</string>
+    <string name="app_icon_board" translatable="false">Lounge TV · Chrome</string>
+    <string name="app_icon_olive" translatable="false">Lounge TV · Midnight</string>
+    <string name="app_icon_olive_cream" translatable="false">Lounge TV · Silver</string>
 </resources>

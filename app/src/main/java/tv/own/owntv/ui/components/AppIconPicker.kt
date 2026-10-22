@@ -48,7 +48,7 @@ fun AppIconPicker(
     var focusedIcon by remember { mutableStateOf<AppIcon?>(null) }
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         // Two rows of five (the 8 colours, Signal, Pixel): ten tiles in one row are wider than the panel.
-        listOf(AppIcon.EGGSHELL).chunked(1).forEachIndexed { row, icons ->
+        listOf(AppIcon.EGGSHELL, AppIcon.COBALT, AppIcon.PETROL, AppIcon.BOARD, AppIcon.TOMATO, AppIcon.PIXEL, AppIcon.OLIVE, AppIcon.OLIVE_CREAM, AppIcon.SUNFLOWER).chunked(5).forEachIndexed { row, icons ->
             if (row > 0) Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 icons.forEach { icon ->

@@ -40,7 +40,7 @@ fun LoungeOptionBIntroScreen(onFinished: () -> Unit) {
         Image(
             painter = painterResource(R.drawable.loungetv_original_full_logo),
             contentDescription = "Lounge TV",
-            modifier = Modifier.align(Alignment.Center).fillMaxWidth(0.63f).alpha(opacity),
+            modifier = Modifier.align(Alignment.Center).fillMaxWidth(0.315f).alpha(opacity),
             contentScale = ContentScale.Fit,
         )
     }

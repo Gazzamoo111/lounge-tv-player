@@ -11,6 +11,7 @@ import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.allowRgb565
 import coil3.request.crossfade
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
 import okio.Path.Companion.toOkioPath
@@ -98,6 +99,8 @@ class OwnTVApp : Application(), SingletonImageLoader.Factory, androidx.work.Conf
         // repository instead of relying on core to guess it, the same as the phone app does. A
         // default that happens to be right for one app is a trap for every other one.
         tv.own.owntv.core.CoreBuildInfo.releaseRepo = "Gazzamoo111/lounge-tv-player"
+        // Fixed for this process before any player exists: the setting applies only after a restart.
+        tv.own.owntv.core.player.FfmpegAudioSetting.load(this)
         // First thing after the context exists: a crash from here on leaves a trace on disk that the
         // user can export from Settings, instead of being lost with the process.
         tv.own.owntv.core.util.CrashRecorder.diagnostics = { tv.own.owntv.player.LiveDiagnosticsLog.snapshot() }
@@ -119,19 +122,28 @@ class OwnTVApp : Application(), SingletonImageLoader.Factory, androidx.work.Conf
         // A chosen icon colour ("Later", the first-run pick, a restore) reaches the launcher when the app
         // is next in the background, never while it is on screen.
         tv.own.owntv.core.brand.AppIconSwitcher.start(this, GlobalContext.get().get())
-        // Diagnostics switch, the persisted archive-decode quirk and the one-shot settings migrations —
-        // core's, shared with the phone, which used to run none of them.
+        // Diagnostics switch and the one-shot settings migrations — core's, shared with the phone, which
+        // used to run none of them.
         tv.own.owntv.player.PlaybackStartup.start(
             context = this,
             scope = appScope,
             settings = GlobalContext.get().get(),
-            archiveStore = GlobalContext.get().get(),
         )
-        // The Stage UI's own defaults, once per install: Docked · Compact rail, glass
-        // on at 50%, the Stage background; Movies & Series keep an update's layout.
+        // One-time brand migration. Preserve any customised accent; only replace
+        // the untouched OwnTV teal with Lounge TV's electric blue.
         appScope.launch {
             runCatching {
-                GlobalContext.get().get<tv.own.owntv.core.settings.SettingsRepository>().applyStageDefaults()
+                val prefs = GlobalContext.get().get<tv.own.owntv.core.settings.SettingsRepository>()
+                val marker = getSharedPreferences("loungetv_brand", Context.MODE_PRIVATE)
+                if (!marker.getBoolean("blue_accent_initialised_v1", false)) {
+                    val accent = prefs.accent.first()
+                    val custom = prefs.customAccent.first()
+                    if (accent == tv.own.owntv.core.theme.AccentColor.TEAL && custom.isBlank()) {
+                        prefs.setCustomAccent("#007AFF")
+                    }
+                    marker.edit().putBoolean("blue_accent_initialised_v1", true).apply()
+                }
+                prefs.applyStageDefaults()
             }
         }
         // Sports: core decides from Auto rebuild whether the stored board is due ("on every app start",
