@@ -194,7 +194,7 @@ class BackupViewModel(
                         sourceDao.getAllOnce().forEach { source ->
                             catalogSyncScheduler.enqueueSync(
                                 sourceId = source.id,
-                                reason = "post_restore_catalog",
+                                reason = tv.own.owntv.core.sync.AutoRefresh.REASON,
                                 policy = ExistingWorkPolicy.KEEP,
                             )
                         }
