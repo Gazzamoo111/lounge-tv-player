@@ -129,7 +129,6 @@ private val CompactHeroHeight = 228.mpx - RowGap
 
 /** Where the rows start when there is no hero: just below the top-right cluster. */
 private val NoHeroTop = 110.mpx
-private const val HERO_ROTATION_MS = 20_000L
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -194,16 +193,7 @@ fun HomeScreen(
     // A Keep watching card plays its preview only after 3 s of continuous focus (the dwell below).
     var previewIndex by remember { mutableStateOf(-1) }
     var focusedHeroIndex by remember { mutableStateOf(-1) }
-    val trendingReady = state.trendingItems.size >= TrendingDao.MIN_ELIGIBLE_ITEMS
-    val hasCatalogueHero = state.catalogueFeatures.isNotEmpty()
-    val cinematicHeroAvailable = trendingReady || hasCatalogueHero
-    // The cinematic launch surface is content-driven, not dependent on a fragile optional row toggle.
-    // Existing configured rows remain in their chosen order below it.
-    val orderedRows = if (cinematicHeroAvailable) {
-        listOf(HomeRow.TRENDING) + state.config.visibleOrder.filterNot { it == HomeRow.TRENDING }
-    } else {
-        state.config.visibleOrder
-    }
+    val orderedRows = state.config.visibleOrder
     val heroVisible = HomeRow.HERO in orderedRows
     val hasNonHeroContent = orderedRows.any { it != HomeRow.HERO && rowHasData(it, state, sportsCards.size) }
     val showHeroFallback = heroVisible && state.heroItems.isEmpty() && !hasNonHeroContent
@@ -211,9 +201,10 @@ fun HomeScreen(
     val firstDataRow = renderRows.firstOrNull { it != HomeRow.HERO && rowHasData(it, state, sportsCards.size) }
     val showAllHiddenState = orderedRows.isEmpty()
     val showEmptyState = orderedRows.isNotEmpty() && renderRows.isEmpty()
-    val fullBleed = renderRows.firstOrNull() == HomeRow.TRENDING && cinematicHeroAvailable
+    val fullBleed = renderRows.firstOrNull() == HomeRow.TRENDING &&
+        state.config.trendingStyle == HomeTrendingStyle.HERO
     // Trending layout = Posters only: the folded line on top follows the focused poster.
-    val posterHero = !cinematicHeroAvailable && renderRows.firstOrNull() == HomeRow.TRENDING &&
+    val posterHero = renderRows.firstOrNull() == HomeRow.TRENDING &&
         state.config.trendingStyle == HomeTrendingStyle.POSTERS
     var posterIndex by remember { mutableIntStateOf(0) }
     val rowFocusRequester: (HomeRow) -> FocusRequester? = { row ->
@@ -318,14 +309,9 @@ fun HomeScreen(
         }
     }
 
-    if (state.isLoading) {
-        HomeLoadingState(modifier = modifier.fillMaxSize())
-        return
-    }
-    if (state.loadFailed) {
-        HomeErrorState(onRetry = vm::refresh, modifier = modifier.fillMaxSize())
-        return
-    }
+    // While the first load runs, nothing but the Stage background behind: not the empty state (which
+    // would look wrong, and vanish, for a user who does have history), and no placeholder blocks.
+    if (state.isLoading) return
     if (showAllHiddenState) {
         AllRowsHiddenState(modifier = modifier.fillMaxSize())
         return
@@ -354,9 +340,7 @@ fun HomeScreen(
         }
     }
     val trendingItem = state.trendingItems.getOrNull(state.activeTrendingIndex)
-        ?.takeIf { fullBleed && trendingReady }
-    val catalogueFeature = state.catalogueFeatures.getOrNull(state.activeCatalogueFeatureIndex)
-    val catalogueMetadata = catalogueFeature?.let { state.catalogueFeatureMetadata[catalogueFeatureKey(it)] }
+        ?.takeIf { fullBleed && state.trendingItems.size >= TrendingDao.MIN_ELIGIBLE_ITEMS }
     val posterItem = state.trendingItems.getOrNull(posterIndex)
         ?.takeIf { posterHero && state.trendingItems.size >= TrendingDao.MIN_ELIGIBLE_ITEMS }
     // ▲ from the row right under a folded hero unfolds it and lands on Play — there is nothing focusable
@@ -377,11 +361,6 @@ fun HomeScreen(
     // The Stage page itself is painted by the shell, full width, so it also runs under a docked rail.
     Box(modifier.fillMaxSize()) {
         trendingItem?.let { TrendingBackdrop(it, folded = inRows, modifier = Modifier.align(Alignment.TopEnd)) }
-        if (trendingItem == null && fullBleed) {
-            catalogueFeature?.let {
-                CatalogueBackdrop(it, catalogueMetadata, folded = inRows, modifier = Modifier.align(Alignment.TopEnd))
-            }
-        }
         posterItem?.let { TrendingBackdrop(it, folded = true, modifier = Modifier.align(Alignment.TopEnd)) }
         CompositionLocalProvider(LocalBringIntoViewSpec provides homeBringIntoViewSpec) {
             LazyColumn(
@@ -399,32 +378,8 @@ fun HomeScreen(
                     val firstItemFocusRequester = rowFocusRequester(row)
                     val rowModifier = if (row == firstRowUnderHero) unfoldOnUp else Modifier
                     when (row) {
-                        HomeRow.TRENDING -> if (!trendingReady) {
-                            CatalogueFallbackSection(
-                                features = state.catalogueFeatures,
-                                activeFeatureIndex = state.activeCatalogueFeatureIndex,
-                                featureMetadata = catalogueMetadata,
-                                movies = state.catalogueMovies,
-                                series = state.catalogueSeries,
-                                channels = state.catalogueLive,
-                                fullBleed = fullBleed,
-                                folded = inRows,
-                                start = contentStart,
-                                firstFocusRequester = firstItemFocusRequester,
-                                onPlayMovie = onPlayMovie,
-                                onOpenMovie = onOpenMovie,
-                                onOpenSeries = onOpenSeries,
-                                onPlayChannel = onPlayChannel,
-                                onNavigateFeature = vm::navigateCatalogueFeature,
-                                onHeroFocus = {
-                                    inRows = false
-                                    vm.setHeroFocused(false)
-                                    onChildFocused()
-                                },
-                                onRowFocus = onNonHeroFocused,
-                                track = track,
-                                modifier = rowModifier,
-                            )
+                        HomeRow.TRENDING -> if (state.trendingItems.size < TrendingDao.MIN_ELIGIBLE_ITEMS) {
+                            // Too few titles to be a "trending" row at all, so the row is not drawn.
                         } else if (!fullBleed || trendingItem == null) {
                             posterItem?.let { FoldedHeroLine(it, contentStart, height = CompactHeroHeight + RowGap) }
                             TrendingPosterRow(
@@ -686,9 +641,8 @@ fun HomeScreen(
     }
     InAppToast(trendingToast)
 }
-
 private fun rowHasData(row: HomeRow, state: HomeUiState, sportsCards: Int): Boolean = when (row) {
-    HomeRow.TRENDING -> state.trendingItems.size >= TrendingDao.MIN_ELIGIBLE_ITEMS || state.catalogueFeatures.isNotEmpty()
+    HomeRow.TRENDING -> state.trendingItems.size >= TrendingDao.MIN_ELIGIBLE_ITEMS
     HomeRow.LIVE_SPORTS -> sportsCards > 0
     HomeRow.HERO -> state.heroItems.isNotEmpty()
     HomeRow.RECENT_CHANNELS -> when (state.config.recentLiveMode) {
@@ -723,207 +677,6 @@ private fun trendingBackdrop(item: TrendingHomeItem): String? =
             is TrendingHomeItem.Movie -> item.movie.backdropUrl ?: item.movie.posterUrl
             is TrendingHomeItem.Series -> item.series.backdropUrl ?: item.series.posterUrl
         }
-
-private fun catalogueBackdrop(item: CatalogueFeature, metadata: HomeHeroMetadata?): String? = metadata?.backdropUrl ?: when (item) {
-    is CatalogueFeature.Movie -> item.movie.backdropUrl ?: item.movie.posterUrl
-    is CatalogueFeature.Series -> item.series.backdropUrl ?: item.series.posterUrl
-    is CatalogueFeature.Live -> item.channel.logoUrl
-}
-
-@Composable
-private fun CatalogueBackdrop(item: CatalogueFeature, metadata: HomeHeroMetadata?, folded: Boolean, modifier: Modifier = Modifier) {
-    val url = catalogueBackdrop(item, metadata) ?: return
-    BoxWithConstraints(modifier.fillMaxWidth(1500f / 1920f)) {
-        val height = maxWidth * (if (folded) 560f else 844f) / 1500f
-        Box(
-            Modifier.fillMaxWidth().height(height).alpha(if (folded) 0.55f else 1f)
-                .dissolveEdges(start = 0.34f, bottom = 0.38f),
-        ) {
-            AsyncImage(
-                model = url,
-                contentDescription = null,
-                contentScale = if (item is CatalogueFeature.Live) ContentScale.Fit else ContentScale.Crop,
-                modifier = if (item is CatalogueFeature.Live) {
-                    Modifier.fillMaxSize().padding(start = 360.mpx, top = 110.mpx, end = 110.mpx, bottom = 170.mpx)
-                } else {
-                    Modifier.fillMaxSize()
-                },
-            )
-            if (!folded) Box(Modifier.fillMaxSize().backdropLeftWash(0f to 0.70f, 0.30f to 0.35f, 0.60f to 0f, 1f to 0f))
-        }
-    }
-}
-
-@Composable
-private fun CatalogueFallbackSection(
-    features: List<CatalogueFeature>,
-    activeFeatureIndex: Int,
-    featureMetadata: HomeHeroMetadata?,
-    movies: List<MovieEntity>,
-    series: List<SeriesEntity>,
-    channels: List<ChannelEntity>,
-    fullBleed: Boolean,
-    folded: Boolean,
-    start: Dp,
-    firstFocusRequester: FocusRequester?,
-    onPlayMovie: (Long, Long) -> Unit,
-    onOpenMovie: (MovieEntity) -> Unit,
-    onOpenSeries: (SeriesEntity) -> Unit,
-    onPlayChannel: (Long, List<ChannelEntity>) -> Unit,
-    onNavigateFeature: (Int) -> Unit,
-    onHeroFocus: () -> Unit,
-    onRowFocus: () -> Unit,
-    track: (FocusRequester) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val playableChannels = remember(features, channels) {
-        (features.filterIsInstance<CatalogueFeature.Live>().map { it.channel } + channels).distinctBy { it.id }
-    }
-    var entryUsed = false
-    fun entry(): FocusRequester? = if (!entryUsed) firstFocusRequester.also { entryUsed = true } else null
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(RowGap)) {
-        val feature = features.getOrNull(activeFeatureIndex)
-        if (fullBleed && feature != null) {
-            CatalogueFeatureHero(
-                item = feature,
-                items = features,
-                activeIndex = activeFeatureIndex,
-                metadata = featureMetadata,
-                folded = folded,
-                start = start,
-                focusRequester = entry(),
-                channels = playableChannels,
-                onPlayMovie = onPlayMovie,
-                onOpenMovie = onOpenMovie,
-                onOpenSeries = onOpenSeries,
-                onPlayChannel = onPlayChannel,
-                onNavigate = onNavigateFeature,
-                onFocus = onHeroFocus,
-                track = track,
-            )
-        }
-        if (movies.isNotEmpty()) {
-            FavoritePosterRow(
-                title = stringResource(R.string.common_nav_movies), items = movies, key = { it.id }, name = { it.name }, poster = { it.posterUrl },
-                start = start, onItemClick = onOpenMovie, onFocus = onRowFocus,
-                firstItemFocusRequester = entry(), track = track,
-            )
-        }
-        if (series.isNotEmpty()) {
-            FavoritePosterRow(
-                title = stringResource(R.string.common_nav_series), items = series, key = { it.id }, name = { it.name }, poster = { it.posterUrl },
-                start = start, onItemClick = onOpenSeries, onFocus = onRowFocus,
-                firstItemFocusRequester = entry(), track = track,
-            )
-        }
-        if (channels.isNotEmpty()) {
-            HomeLiveRow(
-                title = stringResource(R.string.common_nav_live_tv), mode = HomeLiveRowMode.CARDS,
-                channels = channels, guide = tv.own.owntv.core.home.GuideSliceState(), onChannelClick = onPlayChannel,
-                onFocus = onRowFocus, firstItemFocusRequester = entry(), start = start, track = track,
-            )
-        }
-    }
-}
-
-@Composable
-private fun CatalogueFeatureHero(
-    item: CatalogueFeature,
-    items: List<CatalogueFeature>,
-    activeIndex: Int,
-    metadata: HomeHeroMetadata?,
-    folded: Boolean,
-    start: Dp,
-    focusRequester: FocusRequester?,
-    channels: List<ChannelEntity>,
-    onPlayMovie: (Long, Long) -> Unit,
-    onOpenMovie: (MovieEntity) -> Unit,
-    onOpenSeries: (SeriesEntity) -> Unit,
-    onPlayChannel: (Long, List<ChannelEntity>) -> Unit,
-    onNavigate: (Int) -> Unit,
-    onFocus: () -> Unit,
-    track: (FocusRequester) -> Unit,
-) {
-    var heroHasFocus by remember { mutableStateOf(false) }
-    LaunchedEffect(activeIndex, heroHasFocus, folded, items.size) {
-        if (heroHasFocus || folded || items.size < 2) return@LaunchedEffect
-        kotlinx.coroutines.delay(HERO_ROTATION_MS)
-        onNavigate((activeIndex + 1) % items.size)
-    }
-    val title = when (item) {
-        is CatalogueFeature.Movie -> item.movie.name
-        is CatalogueFeature.Series -> item.series.name
-        is CatalogueFeature.Live -> item.programme?.title ?: item.channel.name
-    }
-    if (folded) {
-        Box(Modifier.fillMaxWidth().height(CompactHeroHeight).padding(start = start, top = 64.mpx)) {
-            Text(title, style = stageText(60, 800, (-1.5).mpxSp), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-        return
-    }
-    val plot = metadata?.plot ?: when (item) {
-        is CatalogueFeature.Movie -> item.movie.plot
-        is CatalogueFeature.Series -> item.series.plot
-        is CatalogueFeature.Live -> item.programme?.description
-    }?.takeIf(String::isNotBlank)
-    val genres = metadata?.genres?.take(2)
-        ?.joinToString(stringResource(R.string.content_epg_bits_separator))?.ifBlank { null }
-    val meta = when (item) {
-        is CatalogueFeature.Movie -> listOfNotNull(item.movie.year?.toString(), genres, item.movie.rating?.let(::ratingText))
-        is CatalogueFeature.Series -> listOfNotNull(item.series.year?.toString(), genres, item.series.rating?.let(::ratingText))
-        is CatalogueFeature.Live -> listOfNotNull(item.channel.name.takeIf { item.programme != null })
-    }
-    Column(
-        Modifier.fillMaxWidth().height(HeroHeight).padding(start = start, top = 170.mpx - HeroLift)
-            .onFocusChanged { heroHasFocus = it.hasFocus }
-            .focusGroup()
-            .wrapContentHeight(Alignment.Top, unbounded = true),
-    ) {
-        val logoUrl = metadata?.logoUrl
-        var logoFailed by remember(logoUrl) { mutableStateOf(false) }
-        if (!logoUrl.isNullOrBlank() && !logoFailed) {
-            tv.own.owntv.ui.stage.StageTitleArt(
-                url = logoUrl,
-                contentDescription = title,
-                onFailed = { logoFailed = true },
-                modifier = Modifier.width(760.mpx).height(150.mpx),
-            )
-        } else {
-            Text(
-                title, style = stageText(82, 800, (-2).mpxSp), color = StageColors.Text,
-                maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 900.mpx),
-            )
-        }
-        if (meta.isNotEmpty()) {
-            Spacer(Modifier.height(16.mpx))
-            Text(meta.joinToString(stringResource(R.string.content_epg_bits_separator)), style = stageText(21, 600), color = StageColors.Body)
-        }
-        plot?.let {
-            Spacer(Modifier.height(18.mpx))
-            Text(it, style = stageText(22, 400), color = StageColors.Body, maxLines = 3, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 760.mpx))
-        }
-        Spacer(Modifier.height(30.mpx))
-        Row(horizontalArrangement = Arrangement.spacedBy(14.mpx)) {
-            val primary = Modifier
-                .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
-                .tracked(track = track)
-                .onFocusChanged { if (it.hasFocus) onFocus() }
-            when (item) {
-                is CatalogueFeature.Movie -> {
-                    StageButton(stringResource(R.string.home_trending_play), { onPlayMovie(item.movie.id, 0L) }, primary, OwnTVIcon.PLAY, iconFilled = true)
-                    StageButton(stringResource(R.string.home_trending_more_details), { onOpenMovie(item.movie) }, icon = OwnTVIcon.INFO)
-                }
-                is CatalogueFeature.Series -> {
-                    StageButton(stringResource(R.string.home_trending_open_episodes), { onOpenSeries(item.series) }, primary, OwnTVIcon.SERIES)
-                    StageButton(stringResource(R.string.home_trending_more_details), { onOpenSeries(item.series) }, icon = OwnTVIcon.INFO)
-                }
-                is CatalogueFeature.Live -> StageButton(
-                    stringResource(R.string.home_trending_play), { onPlayChannel(item.channel.id, channels) }, primary, OwnTVIcon.PLAY, iconFilled = true,
-                )
-            }
-        }
-    }
-}
 
 /** A rating as the design writes it: one decimal, in the user's number format ("8.4", "8,4"). */
 private fun ratingText(rating: Double): String = String.format(Locale.getDefault(), "%.1f", rating)
@@ -1013,7 +766,7 @@ private fun TrendingHero(
     var heroHasFocus by remember { mutableStateOf(false) }
     var resetClock by remember { mutableIntStateOf(0) }
     var progress by remember { mutableFloatStateOf(0f) }
-    val intervalMs = HERO_ROTATION_MS
+    val intervalMs = 10_000L
 
     fun navigate(index: Int) {
         onNavigate(index)
@@ -1021,7 +774,7 @@ private fun TrendingHero(
         resetClock++
     }
 
-    // The automatic advance, every 20 s. It waits while the hero holds focus, so the title never changes
+    // The automatic advance, every 10 s. It waits while the hero holds focus, so the title never changes
     // under the user's finger — and, folded, nothing of it is on screen to advance.
     LaunchedEffect(activeIndex, heroHasFocus, folded, resetClock, items.size) {
         if (heroHasFocus || folded || items.size < 2) return@LaunchedEffect
@@ -1105,11 +858,11 @@ private fun TrendingHero(
                 val metaStyle = stageText(21, 600)
                 val metaColor = stageTone(Color(0xFFD3DCD8), StageColors.Body)
                 meta.forEachIndexed { i, part ->
-                    if (i > 0) Text(stringResource(R.string.content_epg_bits_separator).trim(), style = metaStyle, color = metaColor.copy(alpha = 0.4f))
+                    if (i > 0) Text("•", style = metaStyle, color = metaColor.copy(alpha = 0.4f))
                     Text(part, style = metaStyle, color = metaColor, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 snapshot.rating?.let { rating ->
-                    if (meta.isNotEmpty()) Text(stringResource(R.string.content_epg_bits_separator).trim(), style = metaStyle, color = metaColor.copy(alpha = 0.4f))
+                    if (meta.isNotEmpty()) Text("•", style = metaStyle, color = metaColor.copy(alpha = 0.4f))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.mpx), verticalAlignment = Alignment.CenterVertically) {
                         Text("★", style = metaStyle, color = StageColors.RatingStar)
                         Text(ratingText(rating), style = metaStyle, color = metaColor)
@@ -1618,46 +1371,6 @@ private fun HeroFallbackPane(
                 color = tv.own.owntv.ui.theme.StageColors.Muted,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
-            )
-        }
-    }
-}
-
-@Composable
-private fun HomeLoadingState(modifier: Modifier = Modifier) {
-    Box(modifier.focusProperties { canFocus = false }, contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            BrandLockup(markSize = 84)
-            Spacer(Modifier.height(16.dp))
-            Text(
-                stringResource(R.string.sync_progress_syncing),
-                style = stageText(29, 500),
-                color = StageColors.Muted,
-            )
-        }
-    }
-}
-
-@Composable
-private fun HomeErrorState(onRetry: () -> Unit, modifier: Modifier = Modifier) {
-    val focus = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
-    Box(modifier.background(StageColors.GlassOff), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            BrandLockup(markSize = 84)
-            Spacer(Modifier.height(16.dp))
-            Text(
-                stringResource(R.string.home_no_preview),
-                style = stageText(34, 600),
-                color = StageColors.Text,
-            )
-            Spacer(Modifier.height(18.dp))
-            StageButton(
-                stringResource(R.string.common_retry),
-                onClick = onRetry,
-                icon = OwnTVIcon.REFRESH,
-                tinted = true,
-                modifier = Modifier.focusRequester(focus),
             )
         }
     }

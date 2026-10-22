@@ -1,13 +1,10 @@
 package tv.own.owntv.features.home
 
-import android.util.Log
 import androidx.compose.runtime.Immutable
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.ExistingWorkPolicy
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -28,7 +25,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import tv.own.owntv.core.database.dao.CategoryDao
 import tv.own.owntv.core.database.dao.ChannelDao
-import tv.own.owntv.core.database.dao.EpgDao
 import tv.own.owntv.core.database.dao.MovieDao
 import tv.own.owntv.core.database.dao.ProfileDao
 import tv.own.owntv.core.database.dao.SeriesDao
@@ -36,35 +32,27 @@ import tv.own.owntv.core.database.dao.SourceDao
 import tv.own.owntv.core.database.dao.TrendingDao
 import tv.own.owntv.core.database.dao.resolveExistingProfileId
 import tv.own.owntv.core.database.entity.ChannelEntity
-import tv.own.owntv.core.database.entity.EpgProgrammeEntity
 import tv.own.owntv.core.database.entity.MovieEntity
 import tv.own.owntv.core.database.entity.SeriesEntity
 import tv.own.owntv.core.database.entity.MetadataCacheEntity
-import tv.own.owntv.core.customize.CustomizationStore
-import tv.own.owntv.core.customize.CustomizeKeys
 import tv.own.owntv.core.home.GuideSliceState
 import tv.own.owntv.core.home.HeroItem
 import tv.own.owntv.core.home.HomeFeedReader
 import tv.own.owntv.core.home.TrendingHomeItem
 import tv.own.owntv.core.home.homeKey
-import tv.own.owntv.core.live.GuideReader
 import tv.own.owntv.core.launcher.LauncherContinuationItem
 import tv.own.owntv.core.model.HomeConfig
 import tv.own.owntv.core.model.MediaType
 import tv.own.owntv.core.metadata.MetadataImages
 import tv.own.owntv.core.metadata.MetadataRepository
 import tv.own.owntv.core.settings.SettingsRepository
-import tv.own.owntv.core.sync.AutoRefresh
-import tv.own.owntv.core.sync.work.CatalogSyncScheduler
 import tv.own.owntv.player.HeroPreviewEngine
-import java.util.Locale
 
 @Immutable
 data class HomeHeroMetadata(
     val backdropUrl: String? = null,
     val logoUrl: String? = null,
     val plot: String? = null,
-    val genres: List<String> = emptyList(),
 )
 
 /**
@@ -87,143 +75,6 @@ data class TrendingDetailsMetadata(
 )
 
 @Immutable
-sealed interface CatalogueFeature {
-    data class Movie(val movie: MovieEntity) : CatalogueFeature
-
-    data class Series(val series: SeriesEntity) : CatalogueFeature
-
-    data class Live(
-        val channel: ChannelEntity,
-        val programme: EpgProgrammeEntity?,
-    ) : CatalogueFeature
-}
-
-internal fun catalogueFeatureKey(item: CatalogueFeature): String = when (item) {
-    is CatalogueFeature.Movie -> "movie:${item.movie.id}"
-    is CatalogueFeature.Series -> "series:${item.series.id}"
-    is CatalogueFeature.Live -> "live:${item.channel.id}"
-}
-
-internal enum class CatalogueFeatureKind { MOVIE, SERIES, LIVE }
-
-internal data class CatalogueFeatureCandidate(
-    val kind: CatalogueFeatureKind,
-    val id: Long,
-    val name: String,
-    val sortOrder: Int,
-    val hasBackdrop: Boolean,
-    val hasArtwork: Boolean,
-    val year: Int? = null,
-    val rating: Double? = null,
-    val hasDescription: Boolean = false,
-    val categoryName: String? = null,
-)
-
-/**
- * Rank a provider catalogue without letting one provider folder dominate Home. Artwork, recent years
- * and ratings are useful signals; folder diversity is enforced separately. Halloween remains in the
- * catalogue, but is not allowed to consume the launch surface. The NZ live folder is similarly kept
- * available while the provider's broken streams are investigated.
- */
-internal fun rankCatalogueFeatureCandidates(
-    candidates: List<CatalogueFeatureCandidate>,
-    limit: Int,
-    currentYear: Int = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR),
-    maxPerCategory: Int = 3,
-): List<CatalogueFeatureCandidate> {
-    if (limit <= 0) return emptyList()
-    val sorted = candidates.sortedWith(
-        compareByDescending<CatalogueFeatureCandidate> { candidate ->
-            val category = candidate.categoryName.orEmpty().lowercase(Locale.ROOT)
-            val name = candidate.name.lowercase(Locale.ROOT)
-            val age = candidate.year?.let { currentYear - it }
-            (if (candidate.hasBackdrop) 120 else 0) +
-                (if (candidate.hasArtwork) 45 else 0) +
-                (if (candidate.hasDescription) 12 else 0) +
-                when {
-                    age == null -> 0
-                    age <= 1 -> 45
-                    age <= 3 -> 34
-                    age <= 6 -> 20
-                    else -> 0
-                } +
-                ((candidate.rating ?: 0.0) * 4).toInt() -
-                (if ("halloween" in category || "halloween" in name) 300 else 0) -
-                (if (candidate.kind == CatalogueFeatureKind.LIVE && isBlockedLivePromotionCategory(category)) 300 else 0)
-        }.thenBy { it.sortOrder }
-            .thenBy(String.CASE_INSENSITIVE_ORDER) { it.name }
-            .thenBy { it.id },
-    )
-    val categoryCounts = mutableMapOf<String, Int>()
-    val titleKeys = mutableSetOf<String>()
-    val selected = ArrayList<CatalogueFeatureCandidate>(limit)
-    for (candidate in sorted) {
-        val titleKey = candidate.name.lowercase(Locale.ROOT).replace(Regex("[^a-z0-9]+"), "")
-        if (titleKey.isNotEmpty() && !titleKeys.add(titleKey)) continue
-        val categoryKey = candidate.categoryName?.lowercase(Locale.ROOT) ?: "unknown:${candidate.kind}"
-        if (categoryCounts.getOrDefault(categoryKey, 0) >= maxPerCategory) continue
-        selected += candidate
-        categoryCounts[categoryKey] = categoryCounts.getOrDefault(categoryKey, 0) + 1
-        if (selected.size == limit) break
-    }
-    return selected
-}
-
-/** Provider artwork wins, with balanced catalogue ranking as the deterministic fallback. */
-internal fun chooseCatalogueFeatureCandidate(candidates: List<CatalogueFeatureCandidate>): CatalogueFeatureCandidate? =
-    rankCatalogueFeatureCandidates(candidates, limit = 1, maxPerCategory = 1).firstOrNull()
-
-internal fun hasUsableLiveHeroMetadata(title: String?): Boolean = !title.isNullOrBlank()
-
-internal fun isBlockedLivePromotionCategory(categoryName: String?): Boolean {
-    val category = categoryName.orEmpty().trim().lowercase(Locale.ROOT)
-    return category == "nz" || category.startsWith("nz|") || "new zealand" in category
-}
-
-internal data class LiveHeroMetadataCandidate(
-    val channelId: Long,
-    val channelName: String,
-    val sortOrder: Int,
-    val categoryName: String?,
-    val programmeId: Long,
-    val title: String?,
-    val description: String?,
-    val hasLogo: Boolean,
-)
-
-/** Prefer complete guide rows, but keep genuine current titles when the feed has no synopsis. */
-internal fun selectLiveHeroCandidates(
-    candidates: List<LiveHeroMetadataCandidate>,
-    limit: Int,
-): List<LiveHeroMetadataCandidate> {
-    if (limit <= 0) return emptyList()
-    val seenTitles = mutableSetOf<String>()
-    return candidates.asSequence()
-        .filter { hasUsableLiveHeroMetadata(it.title) }
-        .filterNot { isBlockedLivePromotionCategory(it.categoryName) }
-        .sortedWith(
-            compareByDescending<LiveHeroMetadataCandidate> { !it.description.isNullOrBlank() }
-                .thenByDescending { it.hasLogo }
-                .thenBy { it.sortOrder }
-                .thenBy(String.CASE_INSENSITIVE_ORDER) { it.channelName }
-                .thenBy { it.channelId },
-        )
-        .filter { candidate ->
-            val titleKey = candidate.title.orEmpty().trim().lowercase(Locale.ROOT)
-            titleKey.isEmpty() || seenTitles.add(titleKey)
-        }
-        .take(limit)
-        .toList()
-}
-
-private data class CatalogueObservationKey(
-    val profileId: Long,
-    val liveSourceIds: List<Long>,
-    val movieSourceIds: List<Long>,
-    val seriesSourceIds: List<Long>,
-)
-
-@Immutable
 data class HomeUiState(
     val trendingItems: List<TrendingHomeItem> = emptyList(),
     val activeTrendingIndex: Int = 0,
@@ -240,13 +91,6 @@ data class HomeUiState(
     val favoriteLive: List<ChannelEntity> = emptyList(),
     val favoriteMovies: List<MovieEntity> = emptyList(),
     val favoriteSeries: List<SeriesEntity> = emptyList(),
-    val catalogueMovies: List<MovieEntity> = emptyList(),
-    val catalogueSeries: List<SeriesEntity> = emptyList(),
-    val catalogueLive: List<ChannelEntity> = emptyList(),
-    val catalogueFeature: CatalogueFeature? = null,
-    val catalogueFeatures: List<CatalogueFeature> = emptyList(),
-    val activeCatalogueFeatureIndex: Int = 0,
-    val catalogueFeatureMetadata: Map<String, HomeHeroMetadata> = emptyMap(),
     val config: HomeConfig = HomeConfig(),
     val recentGuide: GuideSliceState = GuideSliceState(),
     val favoriteGuide: GuideSliceState = GuideSliceState(),
@@ -259,10 +103,9 @@ data class HomeUiState(
      * thereafter (refreshes don't blank it again).
      */
     val isLoading: Boolean = true,
-    val loadFailed: Boolean = false,
 )
 
-/** What the shared top-bar Continue chip points at. */
+/** What the shared top-bar Continue chip points at (Batch 7). */
 enum class ContinueKind { LIVE, MOVIE, EPISODE }
 enum class ContinueAction { RESUME, PLAY, NEXT_UP, LAST_CHANNEL }
 
@@ -285,9 +128,6 @@ class HomeViewModel(
     private val movieDao: MovieDao,
     private val seriesDao: SeriesDao,
     private val channelDao: ChannelDao,
-    private val epgDao: EpgDao,
-    private val guideReader: GuideReader,
-    private val customize: CustomizationStore,
     private val categoryDao: CategoryDao,
     private val sourceDao: SourceDao,
     private val settings: SettingsRepository,
@@ -299,7 +139,6 @@ class HomeViewModel(
     private val trendingDao: TrendingDao,
     private val favoriteDao: tv.own.owntv.core.database.dao.FavoriteDao,
     private val userDataWriter: tv.own.owntv.core.backup.UserDataWriter,
-    private val catalogSyncScheduler: CatalogSyncScheduler,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -343,7 +182,7 @@ class HomeViewModel(
         }
     }
 
-    // --- The single most-recent resumable item, for the shared top-bar Continue chip. ---
+    // --- Batch 7: the single most-recent resumable item, for the shared top-bar Continue chip. ---
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val continueTarget: StateFlow<ContinueTarget?> = settings.activeProfileId
         .flatMapLatest { pid ->
@@ -379,10 +218,6 @@ class HomeViewModel(
     private val _previewEnabled = MutableStateFlow(true)
     private val _lastHeroInteractionMs = MutableStateFlow(0L)
     private val resolvingHeroKeys = mutableSetOf<String>()
-    private val resolvingCatalogueFeatureKeys = mutableSetOf<String>()
-    private val recoveryAttemptedSources = mutableSetOf<Long>()
-    private var catalogueObserver: Job? = null
-    private var observedCatalogueKey: CatalogueObservationKey? = null
 
     val lastHeroInteractionMs: StateFlow<Long> = _lastHeroInteractionMs.asStateFlow()
 
@@ -410,16 +245,6 @@ class HomeViewModel(
         if (index !in items.indices) return
         _uiState.value = _uiState.value.copy(activeTrendingIndex = index)
         resolveTrendingExtras(items[index])
-    }
-
-    fun navigateCatalogueFeature(index: Int) {
-        val items = _uiState.value.catalogueFeatures
-        if (index !in items.indices) return
-        _uiState.value = _uiState.value.copy(
-            activeCatalogueFeatureIndex = index,
-            catalogueFeature = items[index],
-        )
-        resolveCatalogueFeatureMetadata(items[index])
     }
 
     /** Favourite ids per type, for the hero's ♥ (the same favourites Movies and Series show). */
@@ -551,10 +376,6 @@ class HomeViewModel(
      * gets the lookup.
      */
     fun refresh(profileId: Long? = null) {
-        if (_uiState.value.loadFailed) {
-            recoveryAttemptedSources.clear()
-            _uiState.value = _uiState.value.copy(isLoading = true, loadFailed = false)
-        }
         reloadRequests.tryEmit(profileId?.takeIf { it >= 0 })
     }
 
@@ -565,18 +386,8 @@ class HomeViewModel(
      */
     private suspend fun loadHomeData(profileId: Long) {
         val previous = _uiState.value
-        try {
-            val liveSourceIds = tv.own.owntv.core.repository.activeSourceIds(settings, sourceDao, profileId, MediaType.LIVE)
-            val movieSourceIds = tv.own.owntv.core.repository.activeSourceIds(settings, sourceDao, profileId, MediaType.MOVIE)
-            val seriesSourceIds = tv.own.owntv.core.repository.activeSourceIds(settings, sourceDao, profileId, MediaType.SERIES)
-            val data = feed.load(profileId)
-            val catalogueMovies = visibleMovies(profileId, movieSourceIds)
-            val catalogueSeries = visibleSeries(profileId, seriesSourceIds)
-            val catalogueLive = visibleChannels(profileId, liveSourceIds)
-            val features = chooseCatalogueFeatures(profileId, liveSourceIds, catalogueMovies, catalogueSeries)
-            val featureIndex = previous.activeCatalogueFeatureIndex
-                .coerceIn(0, (features.size - 1).coerceAtLeast(0))
-            _uiState.value = HomeUiState(
+        val data = feed.load(profileId)
+        _uiState.value = HomeUiState(
             trendingItems = data.trendingItems,
             activeTrendingIndex = previous.activeTrendingIndex
                 .coerceIn(0, (data.trendingItems.size - 1).coerceAtLeast(0)),
@@ -592,258 +403,15 @@ class HomeViewModel(
             favoriteLive = data.favoriteLive,
             favoriteMovies = data.favoriteMovies,
             favoriteSeries = data.favoriteSeries,
-            catalogueMovies = catalogueMovies,
-            catalogueSeries = catalogueSeries,
-            catalogueLive = catalogueLive,
-            catalogueFeature = features.getOrNull(featureIndex),
-            catalogueFeatures = features,
-            activeCatalogueFeatureIndex = featureIndex,
-            catalogueFeatureMetadata = previous.catalogueFeatureMetadata.filterKeys { key ->
-                features.any { catalogueFeatureKey(it) == key }
-            },
             config = data.config,
             recentGuide = data.recentGuide,
             favoriteGuide = data.favoriteGuide,
             isLoading = false,
-            loadFailed = false,
-            )
-            observeCatalogue(profileId, liveSourceIds, movieSourceIds, seriesSourceIds)
-            recoverMissingCatalogue(profileId)
-            tv.own.owntv.core.util.Perf.stamp("home-data")
-            _uiState.value.trendingItems.getOrNull(_uiState.value.activeTrendingIndex)?.let(::resolveTrendingExtras)
-            features.forEach(::resolveCatalogueFeatureMetadata)
-            // Keep watching shows every card as a still, so each needs its artwork up front, not on focus.
-            _uiState.value.heroItems.indices.forEach { resolveHeroMetadata(it) }
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (failure: Throwable) {
-            Log.w(HomeViewModel::class.java.simpleName, failure)
-            _uiState.value = previous.copy(isLoading = false, loadFailed = true)
-        }
-    }
-
-    private suspend fun visibleMovies(profileId: Long, sourceIds: List<Long>): List<MovieEntity> =
-        progressivelyFilter(
-            sourceIds = sourceIds,
-            load = { limit -> movieDao.searchList(String(), sourceIds, limit) },
-            allowed = { item -> tv.own.owntv.core.content.AdultCategoryClassifier.allows(profileId, item.categoryId, profileDao, categoryDao) },
-            group = { it.categoryId },
-        ).let { movies ->
-            val categories = categoryNames(movies.mapNotNull { it.categoryId }.toSet())
-            val ranked = rankCatalogueFeatureCandidates(
-                movies.map { it.toFeatureCandidate(categories[it.categoryId]) }, CATALOGUE_LIMIT, maxPerCategory = 4,
-            )
-            ranked.mapNotNull { candidate -> movies.firstOrNull { it.id == candidate.id } }
-        }
-
-    private suspend fun visibleSeries(profileId: Long, sourceIds: List<Long>): List<SeriesEntity> =
-        progressivelyFilter(
-            sourceIds = sourceIds,
-            load = { limit -> seriesDao.searchList(String(), sourceIds, limit) },
-            allowed = { item -> tv.own.owntv.core.content.AdultCategoryClassifier.allows(profileId, item.categoryId, profileDao, categoryDao) },
-            group = { it.categoryId },
-        ).let { series ->
-            val categories = categoryNames(series.mapNotNull { it.categoryId }.toSet())
-            val ranked = rankCatalogueFeatureCandidates(
-                series.map { it.toFeatureCandidate(categories[it.categoryId]) }, CATALOGUE_LIMIT, maxPerCategory = 4,
-            )
-            ranked.mapNotNull { candidate -> series.firstOrNull { it.id == candidate.id } }
-        }
-
-    private suspend fun visibleChannels(profileId: Long, sourceIds: List<Long>): List<ChannelEntity> =
-        progressivelyFilter(
-            sourceIds = sourceIds,
-            load = { limit -> channelDao.snapshotAll(sourceIds, limit) },
-            allowed = { item -> tv.own.owntv.core.content.AdultCategoryClassifier.allows(profileId, item.categoryId, profileDao, categoryDao) },
-            group = { it.categoryId },
-        ).let { channels ->
-            val categories = categoryNames(channels.mapNotNull { it.categoryId }.toSet())
-            val ranked = rankCatalogueFeatureCandidates(
-                channels.map {
-                    CatalogueFeatureCandidate(
-                        CatalogueFeatureKind.LIVE, it.id, it.name, it.sortOrder,
-                        hasBackdrop = false, hasArtwork = !it.logoUrl.isNullOrBlank(),
-                        categoryName = categories[it.categoryId],
-                    )
-                }, CATALOGUE_LIMIT, maxPerCategory = 3,
-            )
-            ranked.mapNotNull { candidate -> channels.firstOrNull { it.id == candidate.id } }
-        }
-
-    /** Keep widening the bounded DAO window until enough profile-visible entries are found or exhausted. */
-    private suspend fun <T> progressivelyFilter(
-        sourceIds: List<Long>,
-        load: suspend (Int) -> List<T>,
-        allowed: suspend (T) -> Boolean,
-        group: (T) -> Long?,
-    ): List<T> {
-        if (sourceIds.isEmpty()) return emptyList()
-        var limit = CATALOGUE_LIMIT * 2
-        while (true) {
-            val loaded = load(limit)
-            val visible = loaded.filter { allowed(it) }
-            val enoughItems = visible.size >= CATALOGUE_LIMIT
-            val enoughVariety = visible.map(group).distinct().size >= MIN_CATALOGUE_GROUPS
-            val diversityScanComplete = enoughItems && limit >= CATALOGUE_DIVERSITY_SCAN_LIMIT
-            if ((enoughItems && enoughVariety) || diversityScanComplete || loaded.size < limit || limit >= CATALOGUE_SCAN_LIMIT) {
-                return visible
-            }
-            limit = (limit * 2).coerceAtMost(CATALOGUE_SCAN_LIMIT)
-        }
-    }
-
-    private suspend fun chooseCatalogueFeatures(
-        profileId: Long,
-        liveSourceIds: List<Long>,
-        movies: List<MovieEntity>,
-        series: List<SeriesEntity>,
-    ): List<CatalogueFeature> {
-        val live = liveCatalogueFeatures(profileId, liveSourceIds)
-        if (live.isNotEmpty()) return live
-
-        val movieCandidates = movies.map { it.toFeatureCandidate(null) }
-        val seriesCandidates = series.map { it.toFeatureCandidate(null) }
-        val rankedMovies = rankCatalogueFeatureCandidates(movieCandidates, HERO_TYPE_LIMIT, maxPerCategory = HERO_TYPE_LIMIT)
-        val rankedSeries = rankCatalogueFeatureCandidates(seriesCandidates, HERO_TYPE_LIMIT, maxPerCategory = HERO_TYPE_LIMIT)
-        val mixed = buildList {
-            repeat(maxOf(rankedMovies.size, rankedSeries.size)) { index ->
-                rankedMovies.getOrNull(index)?.let(::add)
-                rankedSeries.getOrNull(index)?.let(::add)
-            }
-        }
-        return mixed.take(HERO_LIMIT).mapNotNull { candidate ->
-            when (candidate.kind) {
-                CatalogueFeatureKind.MOVIE -> movies.firstOrNull { it.id == candidate.id }?.let(CatalogueFeature::Movie)
-                CatalogueFeatureKind.SERIES -> series.firstOrNull { it.id == candidate.id }?.let(CatalogueFeature::Series)
-                CatalogueFeatureKind.LIVE -> null
-            }
-        }
-    }
-
-    /**
-     * Home's poster rail remains deliberately small, but Live hero discovery must not inherit that
-     * 20-row window. BEST catalogues are grouped by country and provider order, so a small prefix can
-     * contain no channels with a current guide row even though hundreds later in the same catalogue do.
-     */
-    private suspend fun liveCatalogueFeatures(profileId: Long, sourceIds: List<Long>): List<CatalogueFeature.Live> {
-        if (sourceIds.isEmpty()) return emptyList()
-        val channels = channelDao.snapshotAll(sourceIds, LIVE_HERO_SCAN_LIMIT)
-        if (channels.isEmpty()) return emptyList()
-        val categories = categoryNames(channels.mapNotNull { it.categoryId }.toSet())
-        val cust = customize.observe(profileId, MediaType.LIVE).first()
-        val promotable = channels
-            .filterNot { isBlockedLivePromotionCategory(categories[it.categoryId]) }
-            .filterNot { CustomizeKeys.channel(it) in cust.hiddenItems }
-        val epgIds = promotable.mapNotNull { channel ->
-            (cust.epgMatchResolver.epgIdFor(channel) ?: channel.epgChannelId)
-                ?.trim()?.lowercase(Locale.ROOT)?.takeIf(String::isNotBlank)
-        }.distinct()
-        val now = System.currentTimeMillis()
-        val programmesByChannel = guideReader.slice(
-            channels = promotable,
-            cust = cust,
-            globalShiftMinutes = settings.epgOffsetMinutes.first(),
-            from = now,
-            to = now + 1,
         )
-        val currentChannels = promotable.mapNotNull { channel ->
-            programmesByChannel[channel.id]?.maxByOrNull { it.startMs }?.let { channel to it }
-        }
-        val descriptions = currentChannels.map { it.second.id }.distinct().chunked(SQLITE_IN_BATCH)
-            .flatMap { ids -> epgDao.programmeDescriptions(ids) }
-            .associate { it.id to it.description }
-        val candidates = buildList {
-            for ((channel, programme) in currentChannels) {
-                if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(
-                        profileId, channel.categoryId, profileDao, categoryDao,
-                    )
-                ) continue
-                add(
-                    LiveHeroMetadataCandidate(
-                        channelId = channel.id,
-                        channelName = channel.name,
-                        sortOrder = channel.sortOrder,
-                        categoryName = categories[channel.categoryId],
-                        programmeId = programme.id,
-                        title = programme.title,
-                        description = descriptions[programme.id]?.takeIf(String::isNotBlank),
-                        hasLogo = !channel.logoUrl.isNullOrBlank(),
-                    ),
-                )
-            }
-        }
-        val selected = selectLiveHeroCandidates(candidates, HERO_LIMIT)
-        Log.i(
-            HomeViewModel::class.java.simpleName,
-            "liveHero channels=${channels.size} epgIds=${epgIds.size} current=${candidates.size} synopsis=${candidates.count { !it.description.isNullOrBlank() }} selected=${selected.size}",
-        )
-        return selected.mapNotNull { candidate ->
-            val channel = channels.firstOrNull { it.id == candidate.channelId } ?: return@mapNotNull null
-            val programme = programmesByChannel[channel.id]
-                ?.firstOrNull { it.id == candidate.programmeId } ?: return@mapNotNull null
-            CatalogueFeature.Live(
-                channel,
-                programme.copy(description = candidate.description.orEmpty()),
-            )
-        }
-    }
-
-    private suspend fun categoryNames(ids: Set<Long>): Map<Long, String> =
-        ids.associateWith { id -> categoryDao.getById(id)?.name.orEmpty() }
-
-    private fun MovieEntity.toFeatureCandidate(category: String?) = CatalogueFeatureCandidate(
-        CatalogueFeatureKind.MOVIE, id, name, sortOrder,
-        hasBackdrop = !backdropUrl.isNullOrBlank(), hasArtwork = !posterUrl.isNullOrBlank(),
-        year = year ?: parsedYear, rating = rating, hasDescription = !plot.isNullOrBlank(), categoryName = category,
-    )
-
-    private fun SeriesEntity.toFeatureCandidate(category: String?) = CatalogueFeatureCandidate(
-        CatalogueFeatureKind.SERIES, id, name, sortOrder,
-        hasBackdrop = !backdropUrl.isNullOrBlank(), hasArtwork = !posterUrl.isNullOrBlank(),
-        year = year ?: parsedYear, rating = rating, hasDescription = !plot.isNullOrBlank(), categoryName = category,
-    )
-
-    private fun observeCatalogue(
-        profileId: Long,
-        liveSourceIds: List<Long>,
-        movieSourceIds: List<Long>,
-        seriesSourceIds: List<Long>,
-    ) {
-        val key = CatalogueObservationKey(profileId, liveSourceIds.sorted(), movieSourceIds.sorted(), seriesSourceIds.sorted())
-        if (key == observedCatalogueKey) return
-        observedCatalogueKey = key
-        catalogueObserver?.cancel()
-        catalogueObserver = viewModelScope.launch {
-            combine(
-                channelDao.countAll(liveSourceIds),
-                movieDao.countAll(movieSourceIds),
-                seriesDao.countAll(seriesSourceIds),
-            ) { live, movies, series -> Triple(live, movies, series) }
-                .drop(1)
-                .collect { reloadRequests.emit(profileId) }
-        }
-    }
-
-    private fun recoverMissingCatalogue(profileId: Long) {
-        viewModelScope.launch(Dispatchers.IO) {
-            runCatching {
-                sourceDao.sourceIdsForProfile(profileId).forEach { sourceId ->
-                    val source = sourceDao.getById(sourceId) ?: return@forEach
-                    val missingEnabledContent =
-                        (source.syncLive && channelDao.countForSourceOnce(sourceId) == 0) ||
-                            (source.syncMovies && movieDao.countForSourceOnce(sourceId) == 0) ||
-                            (source.syncSeries && seriesDao.countForSourceOnce(sourceId) == 0)
-                    if (missingEnabledContent && sourceId !in recoveryAttemptedSources) {
-                        catalogSyncScheduler.enqueueSync(
-                            sourceId = sourceId,
-                            reason = AutoRefresh.REASON,
-                            policy = ExistingWorkPolicy.KEEP,
-                        )
-                        recoveryAttemptedSources.add(sourceId)
-                    }
-                }
-            }.onFailure { Log.w(HomeViewModel::class.java.simpleName, it) }
-        }
+        tv.own.owntv.core.util.Perf.stamp("home-data")
+        _uiState.value.trendingItems.getOrNull(_uiState.value.activeTrendingIndex)?.let(::resolveTrendingExtras)
+        // Keep watching shows every card as a still, so each needs its artwork up front, not on focus.
+        _uiState.value.heroItems.indices.forEach { resolveHeroMetadata(it) }
     }
 
     private fun resolveHeroMetadata(index: Int) {
@@ -866,41 +434,6 @@ class HomeViewModel(
                 )
             } finally {
                 resolvingHeroKeys.remove(key)
-            }
-        }
-    }
-
-    private fun resolveCatalogueFeatureMetadata(item: CatalogueFeature) {
-        if (item is CatalogueFeature.Live) return
-        val key = catalogueFeatureKey(item)
-        if (_uiState.value.catalogueFeatureMetadata.containsKey(key) || !resolvingCatalogueFeatureKeys.add(key)) return
-        viewModelScope.launch {
-            try {
-                delay(250)
-                if (_uiState.value.catalogueFeatures.none { catalogueFeatureKey(it) == key }) return@launch
-                val cache = withContext(Dispatchers.IO) {
-                    when (item) {
-                        is CatalogueFeature.Movie -> metadata.resolveMovie(item.movie)
-                        is CatalogueFeature.Series -> metadata.resolveSeries(item.series)
-                        is CatalogueFeature.Live -> null
-                    }
-                } ?: return@launch
-                val genres = cache.genresJson
-                    ?.let { json -> runCatching { org.json.JSONArray(json) }.getOrNull() }
-                    ?.let { array -> (0 until array.length()).mapNotNull { array.optString(it).takeIf(String::isNotBlank) } }
-                    .orEmpty()
-                _uiState.value = _uiState.value.copy(
-                    catalogueFeatureMetadata = _uiState.value.catalogueFeatureMetadata + (
-                        key to HomeHeroMetadata(
-                            backdropUrl = MetadataImages.backdrop(cache.backdropPath, size = "w1280"),
-                            logoUrl = MetadataImages.logo(cache.logoPath),
-                            plot = cache.overview?.takeIf(String::isNotBlank),
-                            genres = genres,
-                        )
-                    ),
-                )
-            } finally {
-                resolvingCatalogueFeatureKeys.remove(key)
             }
         }
     }
@@ -932,17 +465,6 @@ class HomeViewModel(
     private suspend fun currentProfileId(): Long? {
         val preferred = settings.activeProfileId.first()
         return if (preferred >= 0) profileDao.resolveExistingProfileId(preferred) else null
-    }
-
-    private companion object {
-        const val CATALOGUE_LIMIT = 20
-        const val CATALOGUE_SCAN_LIMIT = 16_384
-        const val CATALOGUE_DIVERSITY_SCAN_LIMIT = 640
-        const val MIN_CATALOGUE_GROUPS = 6
-        const val HERO_TYPE_LIMIT = 4
-        const val HERO_LIMIT = 6
-        const val LIVE_HERO_SCAN_LIMIT = 2_048
-        const val SQLITE_IN_BATCH = 400
     }
 
 }

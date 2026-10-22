@@ -63,7 +63,6 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          OWNTV_EDGE_KEY: ${{ secrets.OWNTV_EDGE_KEY }}
           VERSION_NAME: ${{ inputs.version_name }}
           PRODUCTION_SIGNING_REQUIRED: 'true'
           EXPECTED_PRODUCTION_CERT_SHA256: 7541bd80e141e48650e952cec62de1daa6491adcc4fab522613f1954fce8b6f9
