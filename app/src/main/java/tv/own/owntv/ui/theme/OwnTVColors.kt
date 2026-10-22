@@ -196,4 +196,4 @@ fun ownTvColors(
     }
 }
 
-val LocalOwnTVColors = staticCompositionLocalOf { ownTvColors(isDark = true, accent = AccentColor.TEAL) }
+val LocalOwnTVColors = staticCompositionLocalOf { ownTvColors(isDark = true, accent = AccentColor.BLUE) }
