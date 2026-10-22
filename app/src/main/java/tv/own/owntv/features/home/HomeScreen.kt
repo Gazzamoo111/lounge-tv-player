@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -54,7 +53,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
@@ -115,66 +113,6 @@ import java.util.Locale
  * Once focus goes down into the rows, the hero folds into one line (eyebrow + title) and the rows move up.
  * Both states are one list, so the focused card is the same composable before and after the fold.
  */
-
-/** Branded, automatically rotating full-bleed artwork from the active VOD library.
- * Used when the separate Trending feed has not yet populated (normal for fresh installs).
- */
-@Composable
-private fun LoungeFeaturedHero(
-    item: LoungeFeaturedItem,
-    start: Dp,
-    onFocusChange: (Boolean) -> Unit,
-    onExplore: (LoungeFeaturedItem) -> Unit,
-) {
-    Box(
-        Modifier.fillMaxWidth().height(510.mpx)
-            .clip(RoundedCornerShape(18.mpx))
-            .background(Color(0xFF050A14)),
-    ) {
-        AsyncImage(
-            model = item.imageUrl,
-            contentDescription = null,
-            // Posters are portrait. Never stretch them across the whole TV screen;
-            // true 16:9 backdrops fill the hero and HD metadata can replace the
-            // small provider images without interrupting carousel rotation.
-            contentScale = if (item.portraitFallback) ContentScale.Fit else ContentScale.Crop,
-            modifier = if (item.portraitFallback) {
-                Modifier.align(Alignment.CenterEnd).fillMaxWidth(0.56f).fillMaxHeight()
-            } else Modifier.fillMaxSize(),
-        )
-        Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(
-            colors = listOf(Color(0xFF050A14), Color(0xD8050A14), Color(0x00050A14)),
-        )))
-        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
-            colors = listOf(Color.Transparent, Color(0x44050A14), Color(0xFF050A14)),
-        )))
-        Column(
-            modifier = Modifier.align(Alignment.BottomStart)
-                .padding(start = start, bottom = 48.mpx),
-            verticalArrangement = Arrangement.spacedBy(18.mpx),
-        ) {
-            Text(
-                text = stringResource(R.string.loungetv_featured_eyebrow),
-                style = stageText(19, 700),
-                color = Color(0xFF42A4FF),
-            )
-            Text(
-                text = item.title,
-                style = stageText(53, 800),
-                color = Color.White,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.widthIn(max = 820.mpx),
-            )
-            StageButton(
-                text = stringResource(R.string.loungetv_featured_explore),
-                onClick = { onExplore(item) },
-                tinted = true,
-                modifier = Modifier.onFocusChanged { onFocusChange(it.hasFocus) },
-            )
-        }
-    }
-}
 
 /** The row gap; the headings' design positions below already include it. */
 private val RowGap = 40.mpx
@@ -258,28 +196,17 @@ fun HomeScreen(
     val orderedRows = state.config.visibleOrder
     val heroVisible = HomeRow.HERO in orderedRows
     val hasNonHeroContent = orderedRows.any { it != HomeRow.HERO && rowHasData(it, state, sportsCards.size) }
-    val showHeroFallback = heroVisible && state.heroItems.isEmpty() && !hasNonHeroContent && state.loungeFeatured.isEmpty()
+    val showHeroFallback = heroVisible && state.heroItems.isEmpty() && !hasNonHeroContent
     val renderRows = orderedRows.filter { rowCanRender(it, state, showHeroFallback, sportsCards.size) }
     val firstDataRow = renderRows.firstOrNull { it != HomeRow.HERO && rowHasData(it, state, sportsCards.size) }
     val showAllHiddenState = orderedRows.isEmpty()
-    val showEmptyState = orderedRows.isNotEmpty() && renderRows.isEmpty() && state.loungeFeatured.isEmpty()
+    val showEmptyState = orderedRows.isNotEmpty() && renderRows.isEmpty()
     val fullBleed = renderRows.firstOrNull() == HomeRow.TRENDING &&
-        state.config.trendingStyle == HomeTrendingStyle.HERO &&
-        state.trendingItems.size >= TrendingDao.MIN_ELIGIBLE_ITEMS
+        state.config.trendingStyle == HomeTrendingStyle.HERO
     // Trending layout = Posters only: the folded line on top follows the focused poster.
     val posterHero = renderRows.firstOrNull() == HomeRow.TRENDING &&
         state.config.trendingStyle == HomeTrendingStyle.POSTERS
     var posterIndex by remember { mutableIntStateOf(0) }
-    // HD artwork upgrades replace list entries asynchronously. Don't restart the
-    // carousel timer or reset to the first title every time one image improves.
-    var featuredIndex by remember { mutableIntStateOf(0) }
-    var featuredFocused by remember { mutableStateOf(false) }
-    LaunchedEffect(state.loungeFeatured.size, featuredFocused) {
-        while (!featuredFocused && state.loungeFeatured.size > 1) {
-            kotlinx.coroutines.delay(10_000L)
-            featuredIndex = (featuredIndex + 1) % state.loungeFeatured.size
-        }
-    }
     val rowFocusRequester: (HomeRow) -> FocusRequester? = { row ->
         if (row == renderRows.firstOrNull() && firstRowFocusRequester != null) {
             firstRowFocusRequester
@@ -363,8 +290,7 @@ fun HomeScreen(
             restoreFocus -> firstDataRow
             else -> null
         }
-        val featureOffset = if (state.loungeFeatured.isNotEmpty() && !fullBleed) 1 else 0
-        val targetIndex = targetRow?.let { renderRows.indexOf(it) + featureOffset } ?: 0
+        val targetIndex = targetRow?.let { renderRows.indexOf(it) } ?: 0
         runCatching { listState.scrollToItem(targetIndex.coerceAtLeast(0)) }
 
         // Only pull focus INTO the Home content when returning from the player (restoreFocus). On a cold
@@ -448,19 +374,6 @@ fun HomeScreen(
                 contentPadding = PaddingValues(top = if (fullBleed || posterItem != null) 0.dp else NoHeroTop, bottom = 48.mpx),
                 verticalArrangement = Arrangement.spacedBy(RowGap),
             ) {
-                if (state.loungeFeatured.isNotEmpty() && !fullBleed) {
-                    item(key = "lounge-featured") {
-                        LoungeFeaturedHero(
-                            item = state.loungeFeatured[featuredIndex.coerceIn(0, state.loungeFeatured.lastIndex)],
-                            start = contentStart,
-                            onFocusChange = { featuredFocused = it },
-                            onExplore = { selected ->
-                                selected.movie?.let(onOpenMovie)
-                                    ?: selected.series?.let(onOpenSeries)
-                            },
-                        )
-                    }
-                }
                 itemsIndexed(renderRows, key = { _, row -> row.name }) { _, row ->
                     val firstItemFocusRequester = rowFocusRequester(row)
                     val rowModifier = if (row == firstRowUnderHero) unfoldOnUp else Modifier
