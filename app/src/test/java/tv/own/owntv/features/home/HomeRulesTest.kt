@@ -113,6 +113,13 @@ class HomeRulesTest {
         assertSame(sport, rankCatalogueFeatureCandidates(listOf(nz, sport), 1, currentYear = 2026).single())
     }
 
+    @Test
+    fun `live hero requires a programme title and synopsis`() {
+        assertEquals(true, hasUsableLiveHeroMetadata("Breakfast", "News and weather from around New Zealand."))
+        assertEquals(false, hasUsableLiveHeroMetadata("Breakfast", " "))
+        assertEquals(false, hasUsableLiveHeroMetadata(null, "News and weather."))
+    }
+
     private fun candidate(
         kind: CatalogueFeatureKind,
         id: Long,

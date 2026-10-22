@@ -727,7 +727,7 @@ private fun trendingBackdrop(item: TrendingHomeItem): String? =
 private fun catalogueBackdrop(item: CatalogueFeature, metadata: HomeHeroMetadata?): String? = metadata?.backdropUrl ?: when (item) {
     is CatalogueFeature.Movie -> item.movie.backdropUrl ?: item.movie.posterUrl
     is CatalogueFeature.Series -> item.series.backdropUrl ?: item.series.posterUrl
-    is CatalogueFeature.Live -> null
+    is CatalogueFeature.Live -> item.channel.logoUrl
 }
 
 @Composable
@@ -739,7 +739,16 @@ private fun CatalogueBackdrop(item: CatalogueFeature, metadata: HomeHeroMetadata
             Modifier.fillMaxWidth().height(height).alpha(if (folded) 0.55f else 1f)
                 .dissolveEdges(start = 0.34f, bottom = 0.38f),
         ) {
-            AsyncImage(model = url, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            AsyncImage(
+                model = url,
+                contentDescription = null,
+                contentScale = if (item is CatalogueFeature.Live) ContentScale.Fit else ContentScale.Crop,
+                modifier = if (item is CatalogueFeature.Live) {
+                    Modifier.fillMaxSize().padding(start = 360.mpx, top = 110.mpx, end = 110.mpx, bottom = 170.mpx)
+                } else {
+                    Modifier.fillMaxSize()
+                },
+            )
             if (!folded) Box(Modifier.fillMaxSize().backdropLeftWash(0f to 0.70f, 0.30f to 0.35f, 0.60f to 0f, 1f to 0f))
         }
     }

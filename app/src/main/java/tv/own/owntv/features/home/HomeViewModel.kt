@@ -172,6 +172,9 @@ internal fun rankCatalogueFeatureCandidates(
 internal fun chooseCatalogueFeatureCandidate(candidates: List<CatalogueFeatureCandidate>): CatalogueFeatureCandidate? =
     rankCatalogueFeatureCandidates(candidates, limit = 1, maxPerCategory = 1).firstOrNull()
 
+internal fun hasUsableLiveHeroMetadata(title: String?, description: String?): Boolean =
+    !title.isNullOrBlank() && !description.isNullOrBlank()
+
 private data class CatalogueObservationKey(
     val profileId: Long,
     val liveSourceIds: List<Long>,
@@ -527,7 +530,7 @@ class HomeViewModel(
             val catalogueMovies = visibleMovies(profileId, movieSourceIds)
             val catalogueSeries = visibleSeries(profileId, seriesSourceIds)
             val catalogueLive = visibleChannels(profileId, liveSourceIds)
-            val features = chooseCatalogueFeatures(catalogueMovies, catalogueSeries)
+            val features = chooseCatalogueFeatures(catalogueLive, catalogueMovies, catalogueSeries)
             val featureIndex = previous.activeCatalogueFeatureIndex
                 .coerceIn(0, (features.size - 1).coerceAtLeast(0))
             _uiState.value = HomeUiState(
@@ -647,9 +650,28 @@ class HomeViewModel(
     }
 
     private suspend fun chooseCatalogueFeatures(
+        channels: List<ChannelEntity>,
         movies: List<MovieEntity>,
         series: List<SeriesEntity>,
     ): List<CatalogueFeature> {
+        val now = System.currentTimeMillis()
+        val epgIds = channels.mapNotNull { it.epgChannelId?.takeIf(String::isNotBlank) }.distinct()
+        val programmes = if (epgIds.isEmpty()) emptyList() else epgDao.programmeSummariesForChannels(epgIds, now, now + 1)
+        val descriptions = if (programmes.isEmpty()) {
+            emptyMap()
+        } else {
+            epgDao.programmeDescriptions(programmes.map { it.id }).associate { it.id to it.description }
+        }
+        val programmesByEpgId = programmes.associateBy { it.epgChannelId }
+        val live = channels.mapNotNull { channel ->
+            val epgId = channel.epgChannelId?.takeIf(String::isNotBlank) ?: return@mapNotNull null
+            val programme = programmesByEpgId[epgId] ?: return@mapNotNull null
+            val description = descriptions[programme.id]?.takeIf(String::isNotBlank)
+            if (!hasUsableLiveHeroMetadata(programme.title, description)) return@mapNotNull null
+            CatalogueFeature.Live(channel, programme.copy(description = description.orEmpty()))
+        }.take(HERO_LIMIT)
+        if (live.isNotEmpty()) return live
+
         val movieCandidates = movies.map { it.toFeatureCandidate(null) }
         val seriesCandidates = series.map { it.toFeatureCandidate(null) }
         val rankedMovies = rankCatalogueFeatureCandidates(movieCandidates, HERO_TYPE_LIMIT, maxPerCategory = HERO_TYPE_LIMIT)
