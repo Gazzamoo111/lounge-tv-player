@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- On Android 12+, the system renders the startup splash *before*
+         MainActivity and Compose start. Fit the approved full Lounge TV
+         lockup inside the platform's safely visible centre. No box. -->
+    <item
+        android:width="164dp"
+        android:height="92dp"
+        android:gravity="center">
+        <bitmap
+            android:src="@drawable/loungetv_original_full_logo"
+            android:gravity="fill" />
+    </item>
+</layer-list>
