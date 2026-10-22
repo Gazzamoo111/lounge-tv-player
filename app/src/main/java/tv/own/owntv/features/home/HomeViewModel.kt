@@ -431,7 +431,7 @@ class HomeViewModel(
                             Log.i("LoungeHomeRecovery", "Restored sourceId=$sourceId has no local VOD; enqueuing catalogue sync")
                             catalogSyncScheduler.enqueueSync(
                                 sourceId = sourceId,
-                                reason = "empty_restored_catalog",
+                                reason = tv.own.owntv.core.sync.AutoRefresh.REASON,
                                 policy = ExistingWorkPolicy.KEEP,
                             )
                         } else if (data.trendingItems.isEmpty() && settings.metadataConfig().enabled) {
