@@ -2,7 +2,9 @@ package tv.own.owntv.features.home
 
 import androidx.compose.runtime.Immutable
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.work.ExistingWorkPolicy
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -46,6 +48,7 @@ import tv.own.owntv.core.model.MediaType
 import tv.own.owntv.core.metadata.MetadataImages
 import tv.own.owntv.core.metadata.MetadataRepository
 import tv.own.owntv.core.settings.SettingsRepository
+import tv.own.owntv.core.sync.work.CatalogSyncScheduler
 import tv.own.owntv.player.HeroPreviewEngine
 
 @Immutable
@@ -139,7 +142,9 @@ class HomeViewModel(
     private val trendingDao: TrendingDao,
     private val favoriteDao: tv.own.owntv.core.database.dao.FavoriteDao,
     private val userDataWriter: tv.own.owntv.core.backup.UserDataWriter,
+    private val catalogSyncScheduler: CatalogSyncScheduler,
 ) : ViewModel() {
+    private val homeRecoveryCheckedProfiles = mutableSetOf<Long>()
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
@@ -409,6 +414,36 @@ class HomeViewModel(
             isLoading = false,
         )
         tv.own.owntv.core.util.Perf.stamp("home-data")
+        // Restore files transfer OwnTV settings, NOT the playlist catalogue.
+        // If the restored source has no local VOD rows, recover its catalogue
+        // without changing the upstream Home UI or replacing any player data.
+        // One check per profile/process. WorkManager KEEP prevents overlapping
+        // with automatic/manual syncs, and force-prune is never requested.
+        if (homeRecoveryCheckedProfiles.add(profileId)) {
+            viewModelScope.launch(Dispatchers.IO) {
+                runCatching {
+                    sourceDao.sourceIdsForProfile(profileId).forEach { sourceId ->
+                        val source = sourceDao.getById(sourceId) ?: return@forEach
+                        if (!source.syncMovies && !source.syncSeries) return@forEach
+                        val movieCount = movieDao.countForSourceOnce(sourceId)
+                        val seriesCount = seriesDao.countForSourceOnce(sourceId)
+                        if (movieCount + seriesCount == 0) {
+                            Log.i("LoungeHomeRecovery", "Restored sourceId=$sourceId has no local VOD; enqueuing catalogue sync")
+                            catalogSyncScheduler.enqueueSync(
+                                sourceId = sourceId,
+                                reason = tv.own.owntv.core.sync.AutoRefresh.REASON,
+                                policy = ExistingWorkPolicy.KEEP,
+                            )
+                        } else if (data.trendingItems.isEmpty() && settings.metadataConfig().enabled) {
+                            // Existing catalogue but no hero: allow OwnTV's native
+                            // TMDB matching worker to populate the original hero.
+                            Log.i("LoungeHomeRecovery", "SourceId=$sourceId VOD exists, refreshing native Trending")
+                            catalogSyncScheduler.enqueueTrendingRefresh(sourceId, force = false)
+                        }
+                    }
+                }.onFailure { Log.w("LoungeHomeRecovery", "Catalogue recovery check failed", it) }
+            }
+        }
         _uiState.value.trendingItems.getOrNull(_uiState.value.activeTrendingIndex)?.let(::resolveTrendingExtras)
         // Keep watching shows every card as a still, so each needs its artwork up front, not on focus.
         _uiState.value.heroItems.indices.forEach { resolveHeroMetadata(it) }
