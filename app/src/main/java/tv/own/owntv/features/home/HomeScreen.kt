@@ -125,12 +125,21 @@ private fun LoungeFeaturedHero(
     onFocusChange: (Boolean) -> Unit,
     onExplore: (LoungeFeaturedItem) -> Unit,
 ) {
-    Box(Modifier.fillMaxWidth().height(510.mpx).clip(RoundedCornerShape(18.mpx))) {
+    Box(
+        Modifier.fillMaxWidth().height(510.mpx)
+            .clip(RoundedCornerShape(18.mpx))
+            .background(Color(0xFF050A14)),
+    ) {
         AsyncImage(
             model = item.imageUrl,
             contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize(),
+            // Posters are portrait. Never stretch them across the whole TV screen;
+            // true 16:9 backdrops fill the hero and HD metadata can replace the
+            // small provider images without interrupting carousel rotation.
+            contentScale = if (item.portraitFallback) ContentScale.Fit else ContentScale.Crop,
+            modifier = if (item.portraitFallback) {
+                Modifier.align(Alignment.CenterEnd).fillMaxWidth(0.56f).fillMaxHeight()
+            } else Modifier.fillMaxSize(),
         )
         Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(
             colors = listOf(Color(0xFF050A14), Color(0xD8050A14), Color(0x00050A14)),
