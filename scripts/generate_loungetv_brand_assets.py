@@ -96,6 +96,21 @@ def main():
         raise SystemExit("Couch crop isn't transparent at corners. Inspect source instead of adding a box.")
 
     generated = []
+
+    # Android renders its *native* splash before any Kotlin/Compose code runs.
+    # The approved original full lockup has generous transparent canvas margins;
+    # a direct reference therefore looks tiny compared with the old second-stage
+    # Compose intro. Crop only transparent padding, then scale the exact same
+    # logo into the platform's safe icon region. No invented text or substitute.
+    full_alpha = full.getchannel("A").point(lambda a: 255 if a > 10 else 0)
+    full_box = full_alpha.getbbox()
+    if not full_box:
+        raise SystemExit("Approved Lounge TV full logo is blank")
+    original_lockup = full.crop(full_box)
+    splash = RES / "drawable-nodpi/loungetv_system_launch_art.png"
+    write_image(fit(original_lockup, 768, 768, .64), splash)
+    generated.append(splash)
+
     for name, style in STYLES.items():
         couch = tinted(crop, style)
         # A dedicated preview image for the icon-choice UI, same mark as the launcher.
