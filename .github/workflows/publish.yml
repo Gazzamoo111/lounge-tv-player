@@ -26,6 +26,10 @@ jobs:
         with:
           packages: 'platform-tools'
       - uses: gradle/actions/setup-gradle@v4
+      - name: Render transparent Lounge TV couch icons
+        run: |
+          python3 -m pip install --disable-pip-version-check Pillow
+          python3 scripts/generate_loungetv_brand_assets.py
       - name: Check branding and release version
         env:
           GH_TOKEN: ${{ github.token }}
