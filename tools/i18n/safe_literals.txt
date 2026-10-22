@@ -110,6 +110,7 @@
 2	technical	app/src/main/java/tv/own/owntv/features/home/HomeViewModel.kt	halloween
 1	performance	app/src/main/java/tv/own/owntv/features/home/HomeViewModel.kt	home-data
 1	technical	app/src/main/java/tv/own/owntv/features/home/HomeViewModel.kt	live:${item.channel.id}
+1	log	app/src/main/java/tv/own/owntv/features/home/HomeViewModel.kt	liveHero channels=${channels.size} epgIds=${epgIds.size} current=${candidates.size} synopsis=${candidates.count { !it.description.isNullOrBlank() }} selected=${selected.size}
 1	technical	app/src/main/java/tv/own/owntv/features/home/HomeViewModel.kt	movie:${item.movie.id}
 1	technical	app/src/main/java/tv/own/owntv/features/home/HomeViewModel.kt	new zealand
 1	technical	app/src/main/java/tv/own/owntv/features/home/HomeViewModel.kt	nz

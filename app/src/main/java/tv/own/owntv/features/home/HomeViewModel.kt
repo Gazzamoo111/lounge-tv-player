@@ -40,11 +40,14 @@ import tv.own.owntv.core.database.entity.EpgProgrammeEntity
 import tv.own.owntv.core.database.entity.MovieEntity
 import tv.own.owntv.core.database.entity.SeriesEntity
 import tv.own.owntv.core.database.entity.MetadataCacheEntity
+import tv.own.owntv.core.customize.CustomizationStore
+import tv.own.owntv.core.customize.CustomizeKeys
 import tv.own.owntv.core.home.GuideSliceState
 import tv.own.owntv.core.home.HeroItem
 import tv.own.owntv.core.home.HomeFeedReader
 import tv.own.owntv.core.home.TrendingHomeItem
 import tv.own.owntv.core.home.homeKey
+import tv.own.owntv.core.live.GuideReader
 import tv.own.owntv.core.launcher.LauncherContinuationItem
 import tv.own.owntv.core.model.HomeConfig
 import tv.own.owntv.core.model.MediaType
@@ -146,9 +149,7 @@ internal fun rankCatalogueFeatureCandidates(
                 } +
                 ((candidate.rating ?: 0.0) * 4).toInt() -
                 (if ("halloween" in category || "halloween" in name) 300 else 0) -
-                (if (candidate.kind == CatalogueFeatureKind.LIVE &&
-                    (category == "nz" || "new zealand" in category || category.startsWith("nz|"))
-                ) 300 else 0)
+                (if (candidate.kind == CatalogueFeatureKind.LIVE && isBlockedLivePromotionCategory(category)) 300 else 0)
         }.thenBy { it.sortOrder }
             .thenBy(String.CASE_INSENSITIVE_ORDER) { it.name }
             .thenBy { it.id },
@@ -172,8 +173,48 @@ internal fun rankCatalogueFeatureCandidates(
 internal fun chooseCatalogueFeatureCandidate(candidates: List<CatalogueFeatureCandidate>): CatalogueFeatureCandidate? =
     rankCatalogueFeatureCandidates(candidates, limit = 1, maxPerCategory = 1).firstOrNull()
 
-internal fun hasUsableLiveHeroMetadata(title: String?, description: String?): Boolean =
-    !title.isNullOrBlank() && !description.isNullOrBlank()
+internal fun hasUsableLiveHeroMetadata(title: String?): Boolean = !title.isNullOrBlank()
+
+internal fun isBlockedLivePromotionCategory(categoryName: String?): Boolean {
+    val category = categoryName.orEmpty().trim().lowercase(Locale.ROOT)
+    return category == "nz" || category.startsWith("nz|") || "new zealand" in category
+}
+
+internal data class LiveHeroMetadataCandidate(
+    val channelId: Long,
+    val channelName: String,
+    val sortOrder: Int,
+    val categoryName: String?,
+    val programmeId: Long,
+    val title: String?,
+    val description: String?,
+    val hasLogo: Boolean,
+)
+
+/** Prefer complete guide rows, but keep genuine current titles when the feed has no synopsis. */
+internal fun selectLiveHeroCandidates(
+    candidates: List<LiveHeroMetadataCandidate>,
+    limit: Int,
+): List<LiveHeroMetadataCandidate> {
+    if (limit <= 0) return emptyList()
+    val seenTitles = mutableSetOf<String>()
+    return candidates.asSequence()
+        .filter { hasUsableLiveHeroMetadata(it.title) }
+        .filterNot { isBlockedLivePromotionCategory(it.categoryName) }
+        .sortedWith(
+            compareByDescending<LiveHeroMetadataCandidate> { !it.description.isNullOrBlank() }
+                .thenByDescending { it.hasLogo }
+                .thenBy { it.sortOrder }
+                .thenBy(String.CASE_INSENSITIVE_ORDER) { it.channelName }
+                .thenBy { it.channelId },
+        )
+        .filter { candidate ->
+            val titleKey = candidate.title.orEmpty().trim().lowercase(Locale.ROOT)
+            titleKey.isEmpty() || seenTitles.add(titleKey)
+        }
+        .take(limit)
+        .toList()
+}
 
 private data class CatalogueObservationKey(
     val profileId: Long,
@@ -245,6 +286,8 @@ class HomeViewModel(
     private val seriesDao: SeriesDao,
     private val channelDao: ChannelDao,
     private val epgDao: EpgDao,
+    private val guideReader: GuideReader,
+    private val customize: CustomizationStore,
     private val categoryDao: CategoryDao,
     private val sourceDao: SourceDao,
     private val settings: SettingsRepository,
@@ -530,7 +573,7 @@ class HomeViewModel(
             val catalogueMovies = visibleMovies(profileId, movieSourceIds)
             val catalogueSeries = visibleSeries(profileId, seriesSourceIds)
             val catalogueLive = visibleChannels(profileId, liveSourceIds)
-            val features = chooseCatalogueFeatures(catalogueLive, catalogueMovies, catalogueSeries)
+            val features = chooseCatalogueFeatures(profileId, liveSourceIds, catalogueMovies, catalogueSeries)
             val featureIndex = previous.activeCatalogueFeatureIndex
                 .coerceIn(0, (features.size - 1).coerceAtLeast(0))
             _uiState.value = HomeUiState(
@@ -650,26 +693,12 @@ class HomeViewModel(
     }
 
     private suspend fun chooseCatalogueFeatures(
-        channels: List<ChannelEntity>,
+        profileId: Long,
+        liveSourceIds: List<Long>,
         movies: List<MovieEntity>,
         series: List<SeriesEntity>,
     ): List<CatalogueFeature> {
-        val now = System.currentTimeMillis()
-        val epgIds = channels.mapNotNull { it.epgChannelId?.takeIf(String::isNotBlank) }.distinct()
-        val programmes = if (epgIds.isEmpty()) emptyList() else epgDao.programmeSummariesForChannels(epgIds, now, now + 1)
-        val descriptions = if (programmes.isEmpty()) {
-            emptyMap()
-        } else {
-            epgDao.programmeDescriptions(programmes.map { it.id }).associate { it.id to it.description }
-        }
-        val programmesByEpgId = programmes.associateBy { it.epgChannelId }
-        val live = channels.mapNotNull { channel ->
-            val epgId = channel.epgChannelId?.takeIf(String::isNotBlank) ?: return@mapNotNull null
-            val programme = programmesByEpgId[epgId] ?: return@mapNotNull null
-            val description = descriptions[programme.id]?.takeIf(String::isNotBlank)
-            if (!hasUsableLiveHeroMetadata(programme.title, description)) return@mapNotNull null
-            CatalogueFeature.Live(channel, programme.copy(description = description.orEmpty()))
-        }.take(HERO_LIMIT)
+        val live = liveCatalogueFeatures(profileId, liveSourceIds)
         if (live.isNotEmpty()) return live
 
         val movieCandidates = movies.map { it.toFeatureCandidate(null) }
@@ -688,6 +717,74 @@ class HomeViewModel(
                 CatalogueFeatureKind.SERIES -> series.firstOrNull { it.id == candidate.id }?.let(CatalogueFeature::Series)
                 CatalogueFeatureKind.LIVE -> null
             }
+        }
+    }
+
+    /**
+     * Home's poster rail remains deliberately small, but Live hero discovery must not inherit that
+     * 20-row window. BEST catalogues are grouped by country and provider order, so a small prefix can
+     * contain no channels with a current guide row even though hundreds later in the same catalogue do.
+     */
+    private suspend fun liveCatalogueFeatures(profileId: Long, sourceIds: List<Long>): List<CatalogueFeature.Live> {
+        if (sourceIds.isEmpty()) return emptyList()
+        val channels = channelDao.snapshotAll(sourceIds, LIVE_HERO_SCAN_LIMIT)
+        if (channels.isEmpty()) return emptyList()
+        val categories = categoryNames(channels.mapNotNull { it.categoryId }.toSet())
+        val cust = customize.observe(profileId, MediaType.LIVE).first()
+        val promotable = channels
+            .filterNot { isBlockedLivePromotionCategory(categories[it.categoryId]) }
+            .filterNot { CustomizeKeys.channel(it) in cust.hiddenItems }
+        val epgIds = promotable.mapNotNull { channel ->
+            (cust.epgMatchResolver.epgIdFor(channel) ?: channel.epgChannelId)
+                ?.trim()?.lowercase(Locale.ROOT)?.takeIf(String::isNotBlank)
+        }.distinct()
+        val now = System.currentTimeMillis()
+        val programmesByChannel = guideReader.slice(
+            channels = promotable,
+            cust = cust,
+            globalShiftMinutes = settings.epgOffsetMinutes.first(),
+            from = now,
+            to = now + 1,
+        )
+        val currentChannels = promotable.mapNotNull { channel ->
+            programmesByChannel[channel.id]?.maxByOrNull { it.startMs }?.let { channel to it }
+        }
+        val descriptions = currentChannels.map { it.second.id }.distinct().chunked(SQLITE_IN_BATCH)
+            .flatMap { ids -> epgDao.programmeDescriptions(ids) }
+            .associate { it.id to it.description }
+        val candidates = buildList {
+            for ((channel, programme) in currentChannels) {
+                if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(
+                        profileId, channel.categoryId, profileDao, categoryDao,
+                    )
+                ) continue
+                add(
+                    LiveHeroMetadataCandidate(
+                        channelId = channel.id,
+                        channelName = channel.name,
+                        sortOrder = channel.sortOrder,
+                        categoryName = categories[channel.categoryId],
+                        programmeId = programme.id,
+                        title = programme.title,
+                        description = descriptions[programme.id]?.takeIf(String::isNotBlank),
+                        hasLogo = !channel.logoUrl.isNullOrBlank(),
+                    ),
+                )
+            }
+        }
+        val selected = selectLiveHeroCandidates(candidates, HERO_LIMIT)
+        Log.i(
+            HomeViewModel::class.java.simpleName,
+            "liveHero channels=${channels.size} epgIds=${epgIds.size} current=${candidates.size} synopsis=${candidates.count { !it.description.isNullOrBlank() }} selected=${selected.size}",
+        )
+        return selected.mapNotNull { candidate ->
+            val channel = channels.firstOrNull { it.id == candidate.channelId } ?: return@mapNotNull null
+            val programme = programmesByChannel[channel.id]
+                ?.firstOrNull { it.id == candidate.programmeId } ?: return@mapNotNull null
+            CatalogueFeature.Live(
+                channel,
+                programme.copy(description = candidate.description.orEmpty()),
+            )
         }
     }
 
@@ -844,6 +941,8 @@ class HomeViewModel(
         const val MIN_CATALOGUE_GROUPS = 6
         const val HERO_TYPE_LIMIT = 4
         const val HERO_LIMIT = 6
+        const val LIVE_HERO_SCAN_LIMIT = 2_048
+        const val SQLITE_IN_BATCH = 400
     }
 
 }

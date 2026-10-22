@@ -776,6 +776,9 @@ private fun CatalogueFallbackSection(
     track: (FocusRequester) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val playableChannels = remember(features, channels) {
+        (features.filterIsInstance<CatalogueFeature.Live>().map { it.channel } + channels).distinctBy { it.id }
+    }
     var entryUsed = false
     fun entry(): FocusRequester? = if (!entryUsed) firstFocusRequester.also { entryUsed = true } else null
     Column(modifier, verticalArrangement = Arrangement.spacedBy(RowGap)) {
@@ -789,7 +792,7 @@ private fun CatalogueFallbackSection(
                 folded = folded,
                 start = start,
                 focusRequester = entry(),
-                channels = channels,
+                channels = playableChannels,
                 onPlayMovie = onPlayMovie,
                 onOpenMovie = onOpenMovie,
                 onOpenSeries = onOpenSeries,

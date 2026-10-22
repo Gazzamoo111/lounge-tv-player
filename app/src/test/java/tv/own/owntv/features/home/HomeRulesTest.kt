@@ -4,6 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Test
+import tv.own.owntv.core.metadata.TitleNormalizer
 
 class HomeRulesTest {
 
@@ -114,10 +115,42 @@ class HomeRulesTest {
     }
 
     @Test
-    fun `live hero requires a programme title and synopsis`() {
-        assertEquals(true, hasUsableLiveHeroMetadata("Breakfast", "News and weather from around New Zealand."))
-        assertEquals(false, hasUsableLiveHeroMetadata("Breakfast", " "))
-        assertEquals(false, hasUsableLiveHeroMetadata(null, "News and weather."))
+    fun `live hero requires a real programme title but not a synopsis`() {
+        assertEquals(true, hasUsableLiveHeroMetadata("Breakfast"))
+        assertEquals(false, hasUsableLiveHeroMetadata(null))
+        assertEquals(false, hasUsableLiveHeroMetadata(" "))
+    }
+
+    @Test
+    fun `live hero prefers synopsis but retains title-only programmes`() {
+        val titleOnly = liveCandidate(1, "Channel One", 1, "Morning News", null)
+        val complete = liveCandidate(2, "Channel Two", 20, "Documentary", "A real synopsis.")
+
+        assertEquals(listOf(complete, titleOnly), selectLiveHeroCandidates(listOf(titleOnly, complete), 6))
+    }
+
+    @Test
+    fun `New Zealand folder is excluded from live promotion`() {
+        val nz = liveCandidate(1, "NZ One", 1, "Breakfast", "News.", category = "NZ|New Zealand")
+        val sport = liveCandidate(2, "Sport One", 2, "Live Match", null, category = "Sports")
+
+        assertEquals(listOf(sport), selectLiveHeroCandidates(listOf(nz, sport), 6))
+    }
+
+    @Test
+    fun `duplicate simulcast titles do not consume the hero`() {
+        val first = liveCandidate(1, "Channel One", 1, "World News", "Headlines.")
+        val simulcast = liveCandidate(2, "Channel Two", 2, "World News", "Headlines.")
+        val next = liveCandidate(3, "Channel Three", 3, "Weather", null)
+
+        assertEquals(listOf(first, next), selectLiveHeroCandidates(listOf(first, simulcast, next), 6))
+    }
+
+    @Test
+    fun `BEST movie and episode prefixes normalise for TMDB matching`() {
+        assertEquals("Matchbox The Movie", TitleNormalizer.normalize("A+ - Matchbox The Movie (2026) (MULTI-SUB)").query)
+        assertEquals(2026, TitleNormalizer.normalize("A+ - Matchbox The Movie (2026) (MULTI-SUB)").year)
+        assertEquals("Example Show", TitleNormalizer.normalize("4K - Example Show S02E05").query)
     }
 
     private fun candidate(
@@ -133,5 +166,23 @@ class HomeRulesTest {
     ) = CatalogueFeatureCandidate(
         kind, id, name, order, backdrop, artwork,
         year = year, rating = rating, categoryName = category,
+    )
+
+    private fun liveCandidate(
+        id: Long,
+        channel: String,
+        order: Int,
+        title: String?,
+        description: String?,
+        category: String? = "General",
+    ) = LiveHeroMetadataCandidate(
+        channelId = id,
+        channelName = channel,
+        sortOrder = order,
+        categoryName = category,
+        programmeId = id * 10,
+        title = title,
+        description = description,
+        hasLogo = true,
     )
 }
