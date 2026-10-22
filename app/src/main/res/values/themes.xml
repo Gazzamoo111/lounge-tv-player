@@ -24,30 +24,30 @@
         <item name="postSplashScreenTheme">@style/Theme.OwnTV</item>
     </style>
     <style name="Theme.OwnTV.Starting.Petrol">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/loungetv_system_launch_logo</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/loungetv_system_launch_art</item>
     </style>
     <style name="Theme.OwnTV.Starting.Sunflower">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/loungetv_system_launch_logo</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/loungetv_system_launch_art</item>
     </style>
     <style name="Theme.OwnTV.Starting.Cobalt">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/loungetv_system_launch_logo</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/loungetv_system_launch_art</item>
     </style>
     <style name="Theme.OwnTV.Starting.Tomato">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/loungetv_system_launch_logo</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/loungetv_system_launch_art</item>
     </style>
     <style name="Theme.OwnTV.Starting.Board">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/loungetv_system_launch_logo</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/loungetv_system_launch_art</item>
     </style>
     <style name="Theme.OwnTV.Starting.Eggshell">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/loungetv_system_launch_logo</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/loungetv_system_launch_art</item>
     </style>
     <style name="Theme.OwnTV.Starting.Olive">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/loungetv_system_launch_logo</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/loungetv_system_launch_art</item>
     </style>
     <style name="Theme.OwnTV.Starting.OliveCream">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/loungetv_system_launch_logo</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/loungetv_system_launch_art</item>
     </style>
     <style name="Theme.OwnTV.Starting.Pixel">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/loungetv_system_launch_logo</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/loungetv_system_launch_art</item>
     </style>
 </resources>
