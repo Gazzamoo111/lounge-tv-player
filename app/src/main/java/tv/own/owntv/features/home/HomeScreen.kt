@@ -270,9 +270,11 @@ fun HomeScreen(
     val posterHero = renderRows.firstOrNull() == HomeRow.TRENDING &&
         state.config.trendingStyle == HomeTrendingStyle.POSTERS
     var posterIndex by remember { mutableIntStateOf(0) }
-    var featuredIndex by remember(state.loungeFeatured) { mutableIntStateOf(0) }
+    // HD artwork upgrades replace list entries asynchronously. Don't restart the
+    // carousel timer or reset to the first title every time one image improves.
+    var featuredIndex by remember { mutableIntStateOf(0) }
     var featuredFocused by remember { mutableStateOf(false) }
-    LaunchedEffect(state.loungeFeatured, featuredFocused) {
+    LaunchedEffect(state.loungeFeatured.size, featuredFocused) {
         while (!featuredFocused && state.loungeFeatured.size > 1) {
             kotlinx.coroutines.delay(10_000L)
             featuredIndex = (featuredIndex + 1) % state.loungeFeatured.size
