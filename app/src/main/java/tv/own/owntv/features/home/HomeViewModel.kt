@@ -54,12 +54,14 @@ import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.core.sync.AutoRefresh
 import tv.own.owntv.core.sync.work.CatalogSyncScheduler
 import tv.own.owntv.player.HeroPreviewEngine
+import java.util.Locale
 
 @Immutable
 data class HomeHeroMetadata(
     val backdropUrl: String? = null,
     val logoUrl: String? = null,
     val plot: String? = null,
+    val genres: List<String> = emptyList(),
 )
 
 /**
@@ -93,6 +95,12 @@ sealed interface CatalogueFeature {
     ) : CatalogueFeature
 }
 
+internal fun catalogueFeatureKey(item: CatalogueFeature): String = when (item) {
+    is CatalogueFeature.Movie -> "movie:${item.movie.id}"
+    is CatalogueFeature.Series -> "series:${item.series.id}"
+    is CatalogueFeature.Live -> "live:${item.channel.id}"
+}
+
 internal enum class CatalogueFeatureKind { MOVIE, SERIES, LIVE }
 
 internal data class CatalogueFeatureCandidate(
@@ -102,18 +110,67 @@ internal data class CatalogueFeatureCandidate(
     val sortOrder: Int,
     val hasBackdrop: Boolean,
     val hasArtwork: Boolean,
+    val year: Int? = null,
+    val rating: Double? = null,
+    val hasDescription: Boolean = false,
+    val categoryName: String? = null,
 )
 
-/** Provider artwork wins, then provider order/name keeps the same fresh profile deterministic. */
-internal fun chooseCatalogueFeatureCandidate(candidates: List<CatalogueFeatureCandidate>): CatalogueFeatureCandidate? =
-    candidates.minWithOrNull(
-        compareByDescending<CatalogueFeatureCandidate> { it.hasBackdrop }
-            .thenByDescending { it.hasArtwork }
-            .thenBy { it.sortOrder }
+/**
+ * Rank a provider catalogue without letting one provider folder dominate Home. Artwork, recent years
+ * and ratings are useful signals; folder diversity is enforced separately. Halloween remains in the
+ * catalogue, but is not allowed to consume the launch surface. The NZ live folder is similarly kept
+ * available while the provider's broken streams are investigated.
+ */
+internal fun rankCatalogueFeatureCandidates(
+    candidates: List<CatalogueFeatureCandidate>,
+    limit: Int,
+    currentYear: Int = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR),
+    maxPerCategory: Int = 3,
+): List<CatalogueFeatureCandidate> {
+    if (limit <= 0) return emptyList()
+    val sorted = candidates.sortedWith(
+        compareByDescending<CatalogueFeatureCandidate> { candidate ->
+            val category = candidate.categoryName.orEmpty().lowercase(Locale.ROOT)
+            val name = candidate.name.lowercase(Locale.ROOT)
+            val age = candidate.year?.let { currentYear - it }
+            (if (candidate.hasBackdrop) 120 else 0) +
+                (if (candidate.hasArtwork) 45 else 0) +
+                (if (candidate.hasDescription) 12 else 0) +
+                when {
+                    age == null -> 0
+                    age <= 1 -> 45
+                    age <= 3 -> 34
+                    age <= 6 -> 20
+                    else -> 0
+                } +
+                ((candidate.rating ?: 0.0) * 4).toInt() -
+                (if ("halloween" in category || "halloween" in name) 300 else 0) -
+                (if (candidate.kind == CatalogueFeatureKind.LIVE &&
+                    (category == "nz" || "new zealand" in category || category.startsWith("nz|"))
+                ) 300 else 0)
+        }.thenBy { it.sortOrder }
             .thenBy(String.CASE_INSENSITIVE_ORDER) { it.name }
-            .thenBy { it.kind.ordinal }
             .thenBy { it.id },
     )
+    val categoryCounts = mutableMapOf<String, Int>()
+    val titleKeys = mutableSetOf<String>()
+    val selected = ArrayList<CatalogueFeatureCandidate>(limit)
+    for (candidate in sorted) {
+        val titleKey = candidate.name.lowercase(Locale.ROOT).replace(Regex("[^a-z0-9]+"), "")
+        if (titleKey.isNotEmpty() && !titleKeys.add(titleKey)) continue
+        val categoryKey = candidate.categoryName?.lowercase(Locale.ROOT) ?: "unknown:${candidate.kind}"
+        if (categoryCounts.getOrDefault(categoryKey, 0) >= maxPerCategory) continue
+        selected += candidate
+        categoryCounts[categoryKey] = categoryCounts.getOrDefault(categoryKey, 0) + 1
+        if (selected.size == limit) break
+    }
+    return selected
+}
+
+/** Provider artwork wins, with balanced catalogue ranking as the deterministic fallback. */
+internal fun chooseCatalogueFeatureCandidate(candidates: List<CatalogueFeatureCandidate>): CatalogueFeatureCandidate? =
+    rankCatalogueFeatureCandidates(candidates, limit = 1, maxPerCategory = 1).firstOrNull()
 
 private data class CatalogueObservationKey(
     val profileId: Long,
@@ -143,6 +200,9 @@ data class HomeUiState(
     val catalogueSeries: List<SeriesEntity> = emptyList(),
     val catalogueLive: List<ChannelEntity> = emptyList(),
     val catalogueFeature: CatalogueFeature? = null,
+    val catalogueFeatures: List<CatalogueFeature> = emptyList(),
+    val activeCatalogueFeatureIndex: Int = 0,
+    val catalogueFeatureMetadata: Map<String, HomeHeroMetadata> = emptyMap(),
     val config: HomeConfig = HomeConfig(),
     val recentGuide: GuideSliceState = GuideSliceState(),
     val favoriteGuide: GuideSliceState = GuideSliceState(),
@@ -273,6 +333,7 @@ class HomeViewModel(
     private val _previewEnabled = MutableStateFlow(true)
     private val _lastHeroInteractionMs = MutableStateFlow(0L)
     private val resolvingHeroKeys = mutableSetOf<String>()
+    private val resolvingCatalogueFeatureKeys = mutableSetOf<String>()
     private val recoveryAttemptedSources = mutableSetOf<Long>()
     private var catalogueObserver: Job? = null
     private var observedCatalogueKey: CatalogueObservationKey? = null
@@ -303,6 +364,16 @@ class HomeViewModel(
         if (index !in items.indices) return
         _uiState.value = _uiState.value.copy(activeTrendingIndex = index)
         resolveTrendingExtras(items[index])
+    }
+
+    fun navigateCatalogueFeature(index: Int) {
+        val items = _uiState.value.catalogueFeatures
+        if (index !in items.indices) return
+        _uiState.value = _uiState.value.copy(
+            activeCatalogueFeatureIndex = index,
+            catalogueFeature = items[index],
+        )
+        resolveCatalogueFeatureMetadata(items[index])
     }
 
     /** Favourite ids per type, for the hero's ♥ (the same favourites Movies and Series show). */
@@ -456,7 +527,9 @@ class HomeViewModel(
             val catalogueMovies = visibleMovies(profileId, movieSourceIds)
             val catalogueSeries = visibleSeries(profileId, seriesSourceIds)
             val catalogueLive = visibleChannels(profileId, liveSourceIds)
-            val feature = chooseCatalogueFeature(catalogueMovies, catalogueSeries, catalogueLive)
+            val features = chooseCatalogueFeatures(catalogueMovies, catalogueSeries)
+            val featureIndex = previous.activeCatalogueFeatureIndex
+                .coerceIn(0, (features.size - 1).coerceAtLeast(0))
             _uiState.value = HomeUiState(
             trendingItems = data.trendingItems,
             activeTrendingIndex = previous.activeTrendingIndex
@@ -476,7 +549,12 @@ class HomeViewModel(
             catalogueMovies = catalogueMovies,
             catalogueSeries = catalogueSeries,
             catalogueLive = catalogueLive,
-            catalogueFeature = feature,
+            catalogueFeature = features.getOrNull(featureIndex),
+            catalogueFeatures = features,
+            activeCatalogueFeatureIndex = featureIndex,
+            catalogueFeatureMetadata = previous.catalogueFeatureMetadata.filterKeys { key ->
+                features.any { catalogueFeatureKey(it) == key }
+            },
             config = data.config,
             recentGuide = data.recentGuide,
             favoriteGuide = data.favoriteGuide,
@@ -487,6 +565,7 @@ class HomeViewModel(
             recoverMissingCatalogue(profileId)
             tv.own.owntv.core.util.Perf.stamp("home-data")
             _uiState.value.trendingItems.getOrNull(_uiState.value.activeTrendingIndex)?.let(::resolveTrendingExtras)
+            features.forEach(::resolveCatalogueFeatureMetadata)
             // Keep watching shows every card as a still, so each needs its artwork up front, not on focus.
             _uiState.value.heroItems.indices.forEach { resolveHeroMetadata(it) }
         } catch (cancelled: CancellationException) {
@@ -502,62 +581,108 @@ class HomeViewModel(
             sourceIds = sourceIds,
             load = { limit -> movieDao.searchList(String(), sourceIds, limit) },
             allowed = { item -> tv.own.owntv.core.content.AdultCategoryClassifier.allows(profileId, item.categoryId, profileDao, categoryDao) },
-        )
+            group = { it.categoryId },
+        ).let { movies ->
+            val categories = categoryNames(movies.mapNotNull { it.categoryId }.toSet())
+            val ranked = rankCatalogueFeatureCandidates(
+                movies.map { it.toFeatureCandidate(categories[it.categoryId]) }, CATALOGUE_LIMIT, maxPerCategory = 4,
+            )
+            ranked.mapNotNull { candidate -> movies.firstOrNull { it.id == candidate.id } }
+        }
 
     private suspend fun visibleSeries(profileId: Long, sourceIds: List<Long>): List<SeriesEntity> =
         progressivelyFilter(
             sourceIds = sourceIds,
             load = { limit -> seriesDao.searchList(String(), sourceIds, limit) },
             allowed = { item -> tv.own.owntv.core.content.AdultCategoryClassifier.allows(profileId, item.categoryId, profileDao, categoryDao) },
-        )
+            group = { it.categoryId },
+        ).let { series ->
+            val categories = categoryNames(series.mapNotNull { it.categoryId }.toSet())
+            val ranked = rankCatalogueFeatureCandidates(
+                series.map { it.toFeatureCandidate(categories[it.categoryId]) }, CATALOGUE_LIMIT, maxPerCategory = 4,
+            )
+            ranked.mapNotNull { candidate -> series.firstOrNull { it.id == candidate.id } }
+        }
 
     private suspend fun visibleChannels(profileId: Long, sourceIds: List<Long>): List<ChannelEntity> =
         progressivelyFilter(
             sourceIds = sourceIds,
             load = { limit -> channelDao.snapshotAll(sourceIds, limit) },
             allowed = { item -> tv.own.owntv.core.content.AdultCategoryClassifier.allows(profileId, item.categoryId, profileDao, categoryDao) },
-        )
+            group = { it.categoryId },
+        ).let { channels ->
+            val categories = categoryNames(channels.mapNotNull { it.categoryId }.toSet())
+            val ranked = rankCatalogueFeatureCandidates(
+                channels.map {
+                    CatalogueFeatureCandidate(
+                        CatalogueFeatureKind.LIVE, it.id, it.name, it.sortOrder,
+                        hasBackdrop = false, hasArtwork = !it.logoUrl.isNullOrBlank(),
+                        categoryName = categories[it.categoryId],
+                    )
+                }, CATALOGUE_LIMIT, maxPerCategory = 3,
+            )
+            ranked.mapNotNull { candidate -> channels.firstOrNull { it.id == candidate.id } }
+        }
 
     /** Keep widening the bounded DAO window until enough profile-visible entries are found or exhausted. */
     private suspend fun <T> progressivelyFilter(
         sourceIds: List<Long>,
         load: suspend (Int) -> List<T>,
         allowed: suspend (T) -> Boolean,
+        group: (T) -> Long?,
     ): List<T> {
         if (sourceIds.isEmpty()) return emptyList()
         var limit = CATALOGUE_LIMIT * 2
         while (true) {
             val loaded = load(limit)
             val visible = loaded.filter { allowed(it) }
-            if (visible.size >= CATALOGUE_LIMIT || loaded.size < limit || limit >= CATALOGUE_SCAN_LIMIT) {
-                return visible.take(CATALOGUE_LIMIT)
+            val enoughItems = visible.size >= CATALOGUE_LIMIT
+            val enoughVariety = visible.map(group).distinct().size >= MIN_CATALOGUE_GROUPS
+            val diversityScanComplete = enoughItems && limit >= CATALOGUE_DIVERSITY_SCAN_LIMIT
+            if ((enoughItems && enoughVariety) || diversityScanComplete || loaded.size < limit || limit >= CATALOGUE_SCAN_LIMIT) {
+                return visible
             }
             limit = (limit * 2).coerceAtMost(CATALOGUE_SCAN_LIMIT)
         }
     }
 
-    private suspend fun chooseCatalogueFeature(
+    private suspend fun chooseCatalogueFeatures(
         movies: List<MovieEntity>,
         series: List<SeriesEntity>,
-        channels: List<ChannelEntity>,
-    ): CatalogueFeature? {
-        val candidate = chooseCatalogueFeatureCandidate(
-            movies.map { CatalogueFeatureCandidate(CatalogueFeatureKind.MOVIE, it.id, it.name, it.sortOrder, !it.backdropUrl.isNullOrBlank(), !it.posterUrl.isNullOrBlank()) } +
-                series.map { CatalogueFeatureCandidate(CatalogueFeatureKind.SERIES, it.id, it.name, it.sortOrder, !it.backdropUrl.isNullOrBlank(), !it.posterUrl.isNullOrBlank()) } +
-                channels.map { CatalogueFeatureCandidate(CatalogueFeatureKind.LIVE, it.id, it.name, it.sortOrder, false, !it.logoUrl.isNullOrBlank()) },
-        ) ?: return null
-        return when (candidate.kind) {
-            CatalogueFeatureKind.MOVIE -> CatalogueFeature.Movie(movies.first { it.id == candidate.id })
-            CatalogueFeatureKind.SERIES -> CatalogueFeature.Series(series.first { it.id == candidate.id })
-            CatalogueFeatureKind.LIVE -> {
-                val channel = channels.first { it.id == candidate.id }
-                val programme = channel.epgChannelId?.takeIf(String::isNotBlank)?.let { epgId ->
-                    runCatching { epgDao.nowPlaying(epgId, System.currentTimeMillis()) }.getOrNull()
-                }
-                CatalogueFeature.Live(channel, programme)
+    ): List<CatalogueFeature> {
+        val movieCandidates = movies.map { it.toFeatureCandidate(null) }
+        val seriesCandidates = series.map { it.toFeatureCandidate(null) }
+        val rankedMovies = rankCatalogueFeatureCandidates(movieCandidates, HERO_TYPE_LIMIT, maxPerCategory = HERO_TYPE_LIMIT)
+        val rankedSeries = rankCatalogueFeatureCandidates(seriesCandidates, HERO_TYPE_LIMIT, maxPerCategory = HERO_TYPE_LIMIT)
+        val mixed = buildList {
+            repeat(maxOf(rankedMovies.size, rankedSeries.size)) { index ->
+                rankedMovies.getOrNull(index)?.let(::add)
+                rankedSeries.getOrNull(index)?.let(::add)
+            }
+        }
+        return mixed.take(HERO_LIMIT).mapNotNull { candidate ->
+            when (candidate.kind) {
+                CatalogueFeatureKind.MOVIE -> movies.firstOrNull { it.id == candidate.id }?.let(CatalogueFeature::Movie)
+                CatalogueFeatureKind.SERIES -> series.firstOrNull { it.id == candidate.id }?.let(CatalogueFeature::Series)
+                CatalogueFeatureKind.LIVE -> null
             }
         }
     }
+
+    private suspend fun categoryNames(ids: Set<Long>): Map<Long, String> =
+        ids.associateWith { id -> categoryDao.getById(id)?.name.orEmpty() }
+
+    private fun MovieEntity.toFeatureCandidate(category: String?) = CatalogueFeatureCandidate(
+        CatalogueFeatureKind.MOVIE, id, name, sortOrder,
+        hasBackdrop = !backdropUrl.isNullOrBlank(), hasArtwork = !posterUrl.isNullOrBlank(),
+        year = year ?: parsedYear, rating = rating, hasDescription = !plot.isNullOrBlank(), categoryName = category,
+    )
+
+    private fun SeriesEntity.toFeatureCandidate(category: String?) = CatalogueFeatureCandidate(
+        CatalogueFeatureKind.SERIES, id, name, sortOrder,
+        hasBackdrop = !backdropUrl.isNullOrBlank(), hasArtwork = !posterUrl.isNullOrBlank(),
+        year = year ?: parsedYear, rating = rating, hasDescription = !plot.isNullOrBlank(), categoryName = category,
+    )
 
     private fun observeCatalogue(
         profileId: Long,
@@ -626,6 +751,41 @@ class HomeViewModel(
         }
     }
 
+    private fun resolveCatalogueFeatureMetadata(item: CatalogueFeature) {
+        if (item is CatalogueFeature.Live) return
+        val key = catalogueFeatureKey(item)
+        if (_uiState.value.catalogueFeatureMetadata.containsKey(key) || !resolvingCatalogueFeatureKeys.add(key)) return
+        viewModelScope.launch {
+            try {
+                delay(250)
+                if (_uiState.value.catalogueFeatures.none { catalogueFeatureKey(it) == key }) return@launch
+                val cache = withContext(Dispatchers.IO) {
+                    when (item) {
+                        is CatalogueFeature.Movie -> metadata.resolveMovie(item.movie)
+                        is CatalogueFeature.Series -> metadata.resolveSeries(item.series)
+                        is CatalogueFeature.Live -> null
+                    }
+                } ?: return@launch
+                val genres = cache.genresJson
+                    ?.let { json -> runCatching { org.json.JSONArray(json) }.getOrNull() }
+                    ?.let { array -> (0 until array.length()).mapNotNull { array.optString(it).takeIf(String::isNotBlank) } }
+                    .orEmpty()
+                _uiState.value = _uiState.value.copy(
+                    catalogueFeatureMetadata = _uiState.value.catalogueFeatureMetadata + (
+                        key to HomeHeroMetadata(
+                            backdropUrl = MetadataImages.backdrop(cache.backdropPath, size = "w1280"),
+                            logoUrl = MetadataImages.logo(cache.logoPath),
+                            plot = cache.overview?.takeIf(String::isNotBlank),
+                            genres = genres,
+                        )
+                    ),
+                )
+            } finally {
+                resolvingCatalogueFeatureKeys.remove(key)
+            }
+        }
+    }
+
     private suspend fun heroMetadata(item: HeroItem): HomeHeroMetadata? = when (item) {
         is HeroItem.MovieHero -> metadata.resolveMovie(item.movie)?.let { cache ->
             HomeHeroMetadata(
@@ -658,6 +818,10 @@ class HomeViewModel(
     private companion object {
         const val CATALOGUE_LIMIT = 20
         const val CATALOGUE_SCAN_LIMIT = 16_384
+        const val CATALOGUE_DIVERSITY_SCAN_LIMIT = 640
+        const val MIN_CATALOGUE_GROUPS = 6
+        const val HERO_TYPE_LIMIT = 4
+        const val HERO_LIMIT = 6
     }
 
 }

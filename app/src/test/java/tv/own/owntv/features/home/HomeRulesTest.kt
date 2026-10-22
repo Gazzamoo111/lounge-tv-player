@@ -79,6 +79,40 @@ class HomeRulesTest {
     @Test
     fun `empty catalogue has no fallback`() = assertNull(chooseCatalogueFeatureCandidate(emptyList()))
 
+    @Test
+    fun `recent quality title outranks provider-first halloween title`() {
+        val halloween = candidate(
+            CatalogueFeatureKind.MOVIE, 1, "Halloween marathon", 0,
+            backdrop = true, artwork = true, year = 2025, rating = 8.0, category = "Halloween",
+        )
+        val recent = candidate(
+            CatalogueFeatureKind.MOVIE, 2, "Current release", 900,
+            backdrop = true, artwork = true, year = 2026, rating = 7.5, category = "New releases",
+        )
+
+        assertSame(recent, rankCatalogueFeatureCandidates(listOf(halloween, recent), 1, currentYear = 2026).single())
+    }
+
+    @Test
+    fun `balanced row caps a single provider category`() {
+        val action = (1L..5L).map { candidate(CatalogueFeatureKind.MOVIE, it, "Action $it", it.toInt(), category = "Action") }
+        val comedy = candidate(CatalogueFeatureKind.MOVIE, 9, "Comedy", 99, category = "Comedy")
+
+        val ranked = rankCatalogueFeatureCandidates(action + comedy, limit = 4, currentYear = 2026, maxPerCategory = 2)
+
+        assertEquals(3, ranked.size)
+        assertEquals(2, ranked.count { it.categoryName == "Action" })
+        assertEquals(1, ranked.count { it.categoryName == "Comedy" })
+    }
+
+    @Test
+    fun `broken New Zealand live folder is retained but not promoted`() {
+        val nz = candidate(CatalogueFeatureKind.LIVE, 1, "NZ One", 0, artwork = true, category = "NZ|New Zealand")
+        val sport = candidate(CatalogueFeatureKind.LIVE, 2, "Sport One", 50, artwork = true, category = "Sport")
+
+        assertSame(sport, rankCatalogueFeatureCandidates(listOf(nz, sport), 1, currentYear = 2026).single())
+    }
+
     private fun candidate(
         kind: CatalogueFeatureKind,
         id: Long,
@@ -86,5 +120,11 @@ class HomeRulesTest {
         order: Int,
         backdrop: Boolean = false,
         artwork: Boolean = false,
-    ) = CatalogueFeatureCandidate(kind, id, name, order, backdrop, artwork)
+        year: Int? = null,
+        rating: Double? = null,
+        category: String? = null,
+    ) = CatalogueFeatureCandidate(
+        kind, id, name, order, backdrop, artwork,
+        year = year, rating = rating, categoryName = category,
+    )
 }
