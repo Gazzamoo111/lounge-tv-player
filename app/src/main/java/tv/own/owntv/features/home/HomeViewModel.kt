@@ -6,6 +6,12 @@ import androidx.paging.PagingSource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -441,38 +447,53 @@ class HomeViewModel(
             settings, sourceDao, profileId, MediaType.SERIES,
         )
         val movies: List<MovieEntity> = if (movieIds.isEmpty()) emptyList() else {
-            val page = movieDao.pagingAllDateAdded(movieIds).load(
+            val page = movieDao.pagingAllRating(movieIds).load(
                 PagingSource.LoadParams.Refresh(key = null, loadSize = 72, placeholdersEnabled = false),
             )
             (page as? PagingSource.LoadResult.Page<Int, MovieEntity>)?.data.orEmpty()
         }
         val shows: List<SeriesEntity> = if (seriesIds.isEmpty()) emptyList() else {
-            val page = seriesDao.pagingAllDateAdded(seriesIds).load(
+            val page = seriesDao.pagingAllRating(seriesIds).load(
                 PagingSource.LoadParams.Refresh(key = null, loadSize = 48, placeholdersEnabled = false),
             )
             (page as? PagingSource.LoadResult.Page<Int, SeriesEntity>)?.data.orEmpty()
         }
-        val filmEntries = mutableListOf<LoungeFeaturedItem>()
-        for (movie in movies) {
-            val art = movie.backdropUrl ?: movie.posterUrl ?: continue
-            if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(
-                    profileId, movie.categoryId, profileDao, categoryDao,
-                )) continue
-            filmEntries += LoungeFeaturedItem(movie.name, art, movie = movie)
-            if (filmEntries.size >= 8) break
+        // Provider artwork may be a tiny thumbnail, even when labelled as a backdrop:
+        // it looked very soft and excessively cropped on the 4K Fire TV.
+        // Resolve a limited set of popular titles against TMDB and use only proper
+        // widescreen backdrops at their ORIGINAL resolution. Never upscale posters.
+        val shortlist = (0 until maxOf(movies.size, shows.size)).flatMap { index ->
+            listOfNotNull(
+                movies.getOrNull(index)?.let { LoungeFeaturedItem(it.name, "", movie = it) },
+                shows.getOrNull(index)?.let { LoungeFeaturedItem(it.name, "", series = it) },
+            )
+        }.take(16)
+
+        val limiter = Semaphore(3)
+        return coroutineScope {
+            shortlist.map { candidate ->
+                async(Dispatchers.IO) {
+                    limiter.withPermit {
+                        val category = candidate.movie?.categoryId ?: candidate.series?.categoryId
+                        if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(
+                                profileId, category, profileDao, categoryDao,
+                            )) return@withPermit null
+
+                        // Fail softly when a title is unknown to TMDB, or metadata access
+                        // is disabled/offline; do not degrade to a blurry provider thumbnail.
+                        val backdropPath = withTimeoutOrNull(5_000L) {
+                            runCatching {
+                                candidate.movie?.let { metadata.resolveMovie(it)?.backdropPath }
+                                    ?: candidate.series?.let { metadata.resolveSeries(it)?.backdropPath }
+                            }.getOrNull()
+                        }
+                        val highRes = MetadataImages.backdrop(backdropPath, size = "original")
+                            ?: return@withPermit null
+                        candidate.copy(imageUrl = highRes)
+                    }
+                }
+            }.awaitAll().filterNotNull().take(10)
         }
-        val seriesEntries = mutableListOf<LoungeFeaturedItem>()
-        for (series in shows) {
-            val art = series.backdropUrl ?: series.posterUrl ?: continue
-            if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(
-                    profileId, series.categoryId, profileDao, categoryDao,
-                )) continue
-            seriesEntries += LoungeFeaturedItem(series.name, art, series = series)
-            if (seriesEntries.size >= 8) break
-        }
-        return (0 until maxOf(filmEntries.size, seriesEntries.size)).flatMap { index ->
-            listOfNotNull(filmEntries.getOrNull(index), seriesEntries.getOrNull(index))
-        }.take(12)
     }
 
     private fun resolveHeroMetadata(index: Int) {
