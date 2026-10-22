@@ -85,6 +85,7 @@ data class TrendingDetailsMetadata(
 data class LoungeFeaturedItem(
     val title: String,
     val imageUrl: String,
+    val portraitFallback: Boolean = false,
     val movie: MovieEntity? = null,
     val series: SeriesEntity? = null,
 )
@@ -433,8 +434,29 @@ class HomeViewModel(
         // Still showcase actual VOD artwork when a movie/series catalogue exists.
         viewModelScope.launch(Dispatchers.IO) {
             val featured = runCatching { loadLoungeFeatured(profileId) }.getOrDefault(emptyList())
-            if (settings.activeProfileId.first() == profileId) {
-                _uiState.value = _uiState.value.copy(loungeFeatured = featured)
+            if (settings.activeProfileId.first() != profileId) return@launch
+            // Show real catalogue art immediately, even when TMDB is unavailable.
+            _uiState.value = _uiState.value.copy(loungeFeatured = featured)
+            // Optional enhancement: replace provider stills with original-size TMDB
+            // widescreen backdrops one by one. Never gate the hero on metadata.
+            for (candidate in featured.take(10)) {
+                if (settings.activeProfileId.first() != profileId) return@launch
+                val backdropPath = withTimeoutOrNull(3_500L) {
+                    runCatching {
+                        candidate.movie?.let { metadata.resolveMovie(it)?.backdropPath }
+                            ?: candidate.series?.let { metadata.resolveSeries(it)?.backdropPath }
+                    }.getOrNull()
+                }
+                val tmdbArt = MetadataImages.backdrop(backdropPath, size = "original")
+                    ?: continue
+                _uiState.value = _uiState.value.copy(
+                    loungeFeatured = _uiState.value.loungeFeatured.map { existing ->
+                        if (existing.movie?.id == candidate.movie?.id && candidate.movie != null ||
+                            existing.series?.id == candidate.series?.id && candidate.series != null
+                        ) existing.copy(imageUrl = tmdbArt, portraitFallback = false)
+                        else existing
+                    },
+                )
             }
         }
     }
@@ -458,42 +480,45 @@ class HomeViewModel(
             )
             (page as? PagingSource.LoadResult.Page<Int, SeriesEntity>)?.data.orEmpty()
         }
-        // Provider artwork may be a tiny thumbnail, even when labelled as a backdrop:
-        // it looked very soft and excessively cropped on the 4K Fire TV.
-        // Resolve a limited set of popular titles against TMDB and use only proper
-        // widescreen backdrops at their ORIGINAL resolution. Never upscale posters.
-        val shortlist = (0 until maxOf(movies.size, shows.size)).flatMap { index ->
-            listOfNotNull(
-                movies.getOrNull(index)?.let { LoungeFeaturedItem(it.name, "", movie = it) },
-                shows.getOrNull(index)?.let { LoungeFeaturedItem(it.name, "", series = it) },
-            )
-        }.take(16)
-
-        val limiter = Semaphore(3)
-        return coroutineScope {
-            shortlist.map { candidate ->
-                async(Dispatchers.IO) {
-                    limiter.withPermit {
-                        val category = candidate.movie?.categoryId ?: candidate.series?.categoryId
-                        if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(
-                                profileId, category, profileDao, categoryDao,
-                            )) return@withPermit null
-
-                        // Fail softly when a title is unknown to TMDB, or metadata access
-                        // is disabled/offline; do not degrade to a blurry provider thumbnail.
-                        val backdropPath = withTimeoutOrNull(5_000L) {
-                            runCatching {
-                                candidate.movie?.let { metadata.resolveMovie(it)?.backdropPath }
-                                    ?: candidate.series?.let { metadata.resolveSeries(it)?.backdropPath }
-                            }.getOrNull()
-                        }
-                        val highRes = MetadataImages.backdrop(backdropPath, size = "original")
-                            ?: return@withPermit null
-                        candidate.copy(imageUrl = highRes)
-                    }
-                }
-            }.awaitAll().filterNotNull().take(10)
-        }
+        // A real user can have VOD and zero TMDB/trending metadata. Never make
+        // the home hero dependent on network enrichment or configured TMDB keys.
+        // Prefer landscapes, and use portraits only when that is all a provider has.
+        val filmEntries = movies.asSequence()
+            .filter { it.backdropUrl?.isNotBlank() == true || it.posterUrl?.isNotBlank() == true }
+            .filter {
+                tv.own.owntv.core.content.AdultCategoryClassifier.allows(
+                    profileId, it.categoryId, profileDao, categoryDao,
+                )
+            }.take(10).map { movie ->
+                LoungeFeaturedItem(
+                    title = movie.name,
+                    imageUrl = movie.backdropUrl?.takeIf(String::isNotBlank)
+                        ?: movie.posterUrl.orEmpty(),
+                    portraitFallback = movie.backdropUrl.isNullOrBlank(),
+                    movie = movie,
+                )
+            }.toList()
+        val seriesEntries = shows.asSequence()
+            .filter { it.backdropUrl?.isNotBlank() == true || it.posterUrl?.isNotBlank() == true }
+            .filter {
+                tv.own.owntv.core.content.AdultCategoryClassifier.allows(
+                    profileId, it.categoryId, profileDao, categoryDao,
+                )
+            }.take(10).map { series ->
+                LoungeFeaturedItem(
+                    title = series.name,
+                    imageUrl = series.backdropUrl?.takeIf(String::isNotBlank)
+                        ?: series.posterUrl.orEmpty(),
+                    portraitFallback = series.backdropUrl.isNullOrBlank(),
+                    series = series,
+                )
+            }.toList()
+        val featured = (0 until maxOf(filmEntries.size, seriesEntries.size)).flatMap { index ->
+            listOfNotNull(filmEntries.getOrNull(index), seriesEntries.getOrNull(index))
+        }.take(12)
+        android.util.Log.i("LoungeHomeHero", "Featured carousel: " +
+            "${featured.size} titles from ${movies.size} movies and ${shows.size} series")
+        return featured
     }
 
     private fun resolveHeroMetadata(index: Int) {
