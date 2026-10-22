@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+<string name="common_own_tv_user">Lounge TV erabiltzailea</string>
+<string name="content_exit_owntv">Lounge TV itxi?</string>
+<string name="content_storage_folder_fallback">Zure deskarga-karpeta ez dago eskuragarri oraintxe, beraz deskargak Lounge TVren karpeta propioan gordetzen ari dira berriro eskuragarri egon arte.</string>
+<string name="content_epg_own_player">Lounge TV erreproduzigailua</string>
+<string name="update_ready">Lounge TV v<xliff:g id="available">%1$s</xliff:g> prest dago (v<xliff:g id="current">%2$s</xliff:g> duzu).</string>
+<string name="recovery_title">Lounge TVk ezin izan du bere datu-basea ireki</string>
+<string name="settings_recording_timers_inexact">Gailu honek ez dio Lounge TVri alarma zehatzak ezartzen uzten, beraz baliteke grabazio bat minutu batzuk berandu hastea. Grabazioak lehenago hasten dira hori konpentsatzeko.</string>
+<string name="recording_failed_drm">Kanal hau DRM bidez babestuta dago, beraz ikusi daiteke baina ezin da grabatu. Babesa zure hornitzailearengandik dator, ez Lounge TVtik.</string>
+<string name="sports_alerts_when_closed">Alertak Lounge TV itxita dagoenean</string>
+<string name="sports_alerts_footnote">Lounge TV itxita dagoenean, alertak minutu batean iristen dira normalean. Telefonoa denbora luzez geldi eta pantaila itzalita egon bada, Androidek 15 minutu inguru atzera ditzake. Zuzeneko emaitza-txartela ez da atzeratzen.</string>
+<string name="sports_no_playlist_body">Emaitzak, sailkapenak eta alertak gabe ere badabiltza. Zerrenda batekin, Lounge TVk partida hau ematen duen kate oro aurkitzen du.</string>
+<string name="sports_sport_buttons_description">Nire kirolak: zuk aukeratutakoa soilik. Kirol guztiak: Lounge TV-k ezagutzen dituen liga guztiak, kargatzeko denbora gehiago behar dute.</string>
+<string name="player_trailer_blocked_title">Trailer hau ezin da ikusi Lounge TV-n</string>
+<string name="settings_proxy_description">Bidali Lounge TVren trafiko eta erreprodukzio guztia HTTP proxy baten bidez.</string>
+<string name="settings_metadata_shared_worker_description">Lounge TV Worker · konfiguraziorik gabe</string>
+<string name="settings_open_subtitles_access_priority">Utzi bietan hutsik Lounge TVren Worker partekatua erabiltzeko. Worker URL pertsonalizatu batek lehentasuna du zuzeneko API gako baten aurretik. Kontu-saioak profilarekiko espezifikoak izaten jarraitzen dute.</string>
+<string name="settings_metadata_clear_advanced_message">Zure TMDB API gakoa eta auto-ostatatutako zerbitzariaren helbidea gailu honetatik ezabatuko dira, eta Lounge TV barneko zerbitzu partekatura itzuliko da bere eguneko kuotarekin.</string>
+<string name="settings_metadata_fair_share">Barneko zerbitzua Lounge TV erabiltzen duten guztien artean partekatzen da. Minutuko, orduko edo eguneko kuota agortzen bada, TMDB xehetasunak pausatu egiten dira leiho hori berrezarri arte; erreprodukzio-zerrendako informazioak funtzionatzen jarraitzen du. Zure gakoak edo Workerrak kuota hau kentzen du.</string>
+<string name="settings_auto_frame_rate_warning_description">Gailu honek Android <xliff:g id="android_version">%1$s</xliff:g> exekutatzen du. Android 12 baino lehenagoko bertsioetan telebistak ezin dio Lounge TVri esan zein freskatze-maiztasunetara alda dezakeen leun, beraz maiztasuna aldatzeak pantaila segundo bat edo bi beltz utz dezake — batzuetan programa batean zehar behin baino gehiagotan.\n\nHemen Fotograma-maiztasun automatikoa desaktibatuta uztea gomendatzen dugu. Zure telebistak garbi aldatzen badu, aktibatu eta probatu: edonoiz alda dezakezu berriro.</string>
+<string name="settings_auto_frame_rate_warning_description_mobile">Gailu honek Android <xliff:g id="android_version">%1$s</xliff:g> exekutatzen du. Android 12 baino lehenagoko bertsioetan gailuak ezin dio Lounge TVri esan zein freskatze-maiztasunetara alda dezakeen leun, beraz maiztasuna aldatzeak pantaila segundo bat edo bi beltz utz dezake — batzuetan programa batean zehar behin baino gehiagotan.\n\nHemen Fotograma-maiztasun automatikoa desaktibatuta uztea gomendatzen dugu. Zure pantailak garbi aldatzen badu, aktibatu eta probatu: edonoiz alda dezakezu berriro.</string>
+<string name="settings_app_startup_description">Zer irekitzen duen Lounge TVk abiatzean</string>
+<string name="settings_restore_remote_description">Wi-Fi sare berean dagoen telefono, tableta edo ordenagailu batean, eskaneatu QRa (edo ireki URLa), idatzi PIN hau, aukeratu zure Lounge TV babeskopia-fitxategia eta sakatu Bidali telebistara. Ondoren, hemen aukeratuko duzu zer leheneratu.</string>
+<string name="settings_catchup_player_internal">Lounge TV erreproduzigailua</string>
+<string name="settings_sources_probe_warning">Hornitzaile askok ez dute inoiz esaten zenbat kanal ikus ditzakezun aldi berean, beraz Lounge TVk hainbat ireki eta zeintzuk irauten duten ikusiz jakiten du. Orain erreproduzitzen ari den guztia gelditu egingo da, eta honek bi minutu arte iraun dezake.</string>
+<string name="settings_sources_probe_unknown">Lounge TVk ezin izan du jakin hornitzaile honek zenbat kanal onartzen dituen.</string>
+<string name="settings_dns_toggle_description">Ebatzi Lounge TVren domeinu-bilaketa guztiak DNS zerbitzari pertsonalizatu baten bidez.</string>
+<string name="settings_live_tune_timeout_description">Zuzeneko kanal batek ordu honetarako irudirik erakutsi ez badu, Lounge TVk saiatzeari uzten dio eta jakinarazten dizu, pantaila beltza utzi beharrean bere erreproduzigailu guztiak probatzen dituen bitartean. Inoiz ez saiatzen jarraitzen du, eta horrek minutu bat baino gehiago iraun dezake zure hornitzaileak kendu duen kanal batean. Hornitzaileak eskatutako itxaronaldiak ez dira kontatzen.</string>
+<string name="settings_surround_forced_description">Surround — bidali Dolby/DTS benetako 5.1/7.1 hartzaile bati. Isildu edo eten-etenka egiten badu, Lounge TVk estereora itzultzen da eta jakinarazten dizu.</string>
+<string name="settings_language_help_translate">Lagundu Lounge TV zure hizkuntzara itzultzen</string>
+<string name="settings_language_contribution_description">Eskaneatu QR kodea edo ireki esteka erabilgarri dagoen edozein hizkuntza aukeratzeko eta Lounge TVren sei itzulpen-osagaietan guztietan laguntzeko.</string>
+<string name="settings_language_contribution_qr_description">Lounge TV itzulpen-proiektuaren ikuspegi orokorraren QR kodea</string>
+<string name="local_sync_error_unreachable">Gailu hori ezin izan da atzitu. Bertan, ireki Lounge TV → Ezarpenak → Datuak → Tokiko sinkronizazioa eta aktibatu Sinkronizazio modua. Bi gailuak Wi-Fi sare berean egon behar dute.</string>
+<string name="settings_app_icon_summary">Lounge TVren ikonoaren eta logoaren kolorea</string>
+<string name="settings_app_icon_sheet_mobile">Nola agertzen den Lounge TV hasierako pantailan. Aplikazioa behin berrabiaraziko da.</string>
+<string name="app_icon_restart_title">Lounge TV berrabiarazi?</string>
+<string name="app_icon_restart_message">Ikono eta logo berri bat aukeratu duzu. Lounge TV berrabiarazi ondoren izango dute eragina.</string>
+<string name="setup_disclaimer">Lounge TV multimedia-erreproduzigailu hutsa da. Ez du kanalik, erreprodukzio-zerrendarik edo edukirik barne hartzen. Zure ardura da legez atzitu ditzakezun Xtream, M3U edo Stalker iturburuak gehitzea.</string>
+<string name="setup_set_up_owntv">Konfiguratu Lounge TV</string>
+<string name="setup_sync_device_description">Kopiatu dena zure beste Lounge TV gailutik Wi-Fi bidez</string>
+<string name="setup_byo_source_description">Lounge TV erreproduzigailua da — ekarri zure Xtream, M3U edo Stalker iturburua.</string>
+<string name="companion_pin_page_title">Lounge TV — Idatzi PINa</string>
+<string name="companion_add_page_title">Lounge TV — Gehitu iturburua</string>
+<string name="companion_saved_page_title">Lounge TV — Bidalita</string>
+<string name="companion_backup_page_title">Lounge TV — Leheneratu babeskopia</string>
+<string name="companion_backup_description">Aukeratu Lounge TV babeskopia-fitxategi bat (.own, edo .json zaharrago bat) eta sakatu Bidali. Telebistara transferitzen da — hartu urrutiko agintea eta aukeratu bertan zer leheneratu.</string>
+<string name="companion_image_page_title">Lounge TV — Atzealdeko irudia</string>
+<string name="companion_download_page_title">Lounge TV — Deskargatu babeskopia</string>
+<string name="companion_download_description">Zure telebistak Lounge TV babeskopia-fitxategi bat prestatu du. Sakatu botoia gailu honetan gordetzeko (owntv-backup.own). Gorde leku seguru batean — geroago leheneratu dezakezu.</string>
+<string name="local_sync_browser_title">Lounge TV tokiko sinkronizazioa</string>
+<string name="local_sync_browser_body">Helbide hau zure beste gailuko Lounge TV aplikaziorako da. Ireki Tokiko sinkronizazioa bertan eta aukeratu gailu hau zerrendatik.</string>
+<string name="setup_line_app_icon_mobile">Nola agertzen den Lounge TV hasierako pantailan</string>
+</resources>

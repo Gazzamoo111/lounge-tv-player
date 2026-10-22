@@ -1,0 +1,8 @@
+{
+  "upstream": "ahXN00/OwnTV",
+  "upstream_tag": "v5.2.0",
+  "app_id": "com.loungetv.player.qa",
+  "release_repo": "Gazzamoo111/lounge-tv-android",
+  "stage": "qa",
+  "core_dependency": "OwnTV_Core artifact as pinned by upstream"
+}

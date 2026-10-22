@@ -57,3 +57,12 @@ replay_pid*.log
 
 # Local-only archive (old detailed changelogs etc.), never committed
 /archive/
+
+# Lounge TV local signing and secrets (never upload)
+*.keystore
+*.jks
+*.apk
+*.aab
+.env
+.env.*
+local.properties

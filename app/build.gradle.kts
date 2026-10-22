@@ -32,7 +32,7 @@ plugins {
 android {
     namespace = "tv.own.owntv"
     compileSdk {
-        version = release(37)
+        version = release(37) { minorApiLevel = 2 }
     }
 
     // Signing credentials AND local-only build switches, kept in a standalone properties file OUTSIDE
@@ -44,7 +44,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "tv.own.owntv"
+        applicationId = "com.loungetv.player"
         minSdk = 26
         targetSdk = 36
         // CI injects these from the git tag (see .github/workflows/android.yml) so releases never

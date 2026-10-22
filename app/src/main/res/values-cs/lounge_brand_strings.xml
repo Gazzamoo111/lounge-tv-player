@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+<string name="common_own_tv_user">Uživatel Lounge TV</string>
+<string name="content_exit_owntv">Ukončit Lounge TV?</string>
+<string name="content_storage_folder_fallback">Složka pro stahování teď není dostupná, takže se stahování ukládá do vlastní složky Lounge TV, dokud nebude zpět.</string>
+<string name="content_epg_own_player">Přehrávač Lounge TV</string>
+<string name="update_ready">Lounge TV v<xliff:g id="available">%1$s</xliff:g> je připravena (máte v<xliff:g id="current">%2$s</xliff:g>).</string>
+<string name="recovery_title">Lounge TV nemohla otevřít svou databázi</string>
+<string name="settings_recording_timers_inexact">Toto zařízení nedovoluje aplikaci Lounge TV nastavovat přesné budíky, takže nahrávání může začít o pár minut později. Nahrávky proto začínají dříve.</string>
+<string name="recording_failed_drm">Tento kanál je chráněný technologií DRM, takže jej lze sledovat, ale ne nahrávat. Ochranu uplatňuje váš poskytovatel, nikoli Lounge TV.</string>
+<string name="sports_alerts_when_closed">Upozornění při zavřeném Lounge TV</string>
+<string name="sports_alerts_footnote">Při zavřeném Lounge TV dorazí upozornění obvykle do minuty. Pokud telefon dlouho leží se zhasnutou obrazovkou, Android je může zdržet až asi o 15 minut. Karta s živým výsledkem se nezdržuje.</string>
+<string name="sports_no_playlist_body">Výsledky, tabulky a upozornění fungují i bez něj. S playlistem Lounge TV najde každý kanál, který zápas vysílá.</string>
+<string name="sports_sport_buttons_description">Moje sporty: jen to, co jste vybrali. Všechny sporty: každá soutěž, kterou Lounge TV zná, načítání trvá déle.</string>
+<string name="player_trailer_blocked_title">Tento trailer nelze v Lounge TV přehrát</string>
+<string name="settings_proxy_description">Odesílat veškerý provoz Lounge TV i přehrávání přes HTTP proxy.</string>
+<string name="settings_metadata_shared_worker_description">Lounge TV Worker · bez nastavování</string>
+<string name="settings_metadata_clear_advanced_message">Váš klíč API TMDB a adresa vlastního serveru budou z tohoto zařízení smazány a Lounge TV se vrátí k vestavěné sdílené službě s jejím denním podílem.</string>
+<string name="settings_metadata_fair_share">Vestavěnou službu metadat sdílejí všichni uživatelé Lounge TV, takže každé zařízení dostává každý den vlastní podíl. Pokud svůj podíl vyčerpáte, plakáty a popisy se pozastaví, dokud se podíl neobnoví — informace z vaší vlastní playlistu fungují dál normálně. Přidání vlastního klíče API TMDB nebo serveru toto omezení odstraní: je zdarma a osobní klíč prakticky žádný limit nemá.</string>
+<string name="settings_app_startup_description">Co Lounge TV otevře při spuštění</string>
+<string name="settings_open_subtitles_access_priority">Pro společný Worker Lounge TV nechte obojí prázdné. Vlastní adresa Workeru má přednost před přímým klíčem API. Přihlášení k účtu zůstává specifické pro profil.</string>
+<string name="settings_restore_remote_description">Na libovolném zařízení s prohlížečem ve stejné Wi-Fi — telefonu, počítači nebo jiné televizi — naskenujte QR (nebo otevřete adresu), zadejte tento PIN, vyberte soubor zálohy Lounge TV a odešlete ho. Co obnovit, pak zvolíte zde.</string>
+<string name="settings_catchup_player_internal">Přehrávač Lounge TV</string>
+<string name="settings_sources_probe_warning">Mnozí poskytovatelé nikdy neuvedou, kolik kanálů můžete sledovat najednou, a tak to Lounge TV zjistí tím, že jich několik otevře a sleduje, které vydrží. Vše, co právě běží, se zastaví a může to trvat až dvě minuty.</string>
+<string name="settings_sources_probe_unknown">Lounge TV nedokázal zjistit, kolik kanálů tento poskytovatel dovolí.</string>
+<string name="settings_dns_toggle_description">Všechna vyhledávání domén Lounge TV provádět prostřednictvím vlastního serveru DNS.</string>
+<string name="settings_live_tune_timeout_description">Pokud se u živého kanálu do této doby neobjeví obraz, Lounge TV to vzdá a dá vám vědět, místo aby nechal černou obrazovku, zatímco zkouší všechny své přehrávače. Volba „Nikdy“ zkouší dál, což u kanálu, který váš poskytovatel zrušil, může trvat výrazně přes minutu. Čekání, o které si řekne poskytovatel, se nezapočítává.</string>
+<string name="settings_surround_forced_description">Prostorový zvuk – posílejte Dolby/DTS do skutečného přijímače 5.1/7.1. Pokud ztichne nebo se zadrhává, Lounge TV se i tak vrátí ke stereu a dá vám vědět.</string>
+<string name="settings_language_help_translate">Pomozte přeložit Lounge TV do vašeho jazyka</string>
+<string name="settings_language_contribution_description">Naskenujte QR kód nebo otevřete odkaz, zvolte libovolný dostupný jazyk a přispějte ve všech šesti překladových komponentách Lounge TV.</string>
+<string name="settings_language_contribution_qr_description">QR kód pro přehled překladatelského projektu Lounge TV</string>
+<string name="settings_auto_frame_rate_warning_description">Toto zařízení běží na Androidu <xliff:g id="android_version">%1$s</xliff:g>. Na Androidu nižším než 12 televizor nedokáže Lounge TV sdělit, které obnovovací frekvence umí plynule přepínat, takže změna frekvence může na vteřinu nebo dvě zhasnout obrazovku – někdy i vícekrát během jednoho pořadu.\n\nDoporučujeme zde nechat automatickou snímkovou frekvenci vypnutou. Pokud váš televizor přepíná bez problémů, zapněte ji a uvidíte: můžete to kdykoli změnit zpět.</string>
+<string name="settings_auto_frame_rate_warning_description_mobile">Toto zařízení běží na Androidu <xliff:g id="android_version">%1$s</xliff:g>. Na Androidu nižším než 12 zařízení nedokáže Lounge TV sdělit, které obnovovací frekvence umí plynule přepínat, takže změna frekvence může na vteřinu nebo dvě zhasnout obrazovku – někdy i vícekrát během jednoho pořadu.\n\nDoporučujeme zde nechat automatickou snímkovou frekvenci vypnutou. Pokud vaše obrazovka přepíná bez problémů, zapněte ji a uvidíte: můžete to kdykoli změnit zpět.</string>
+<string name="local_sync_error_unreachable">Toto zařízení se nepodařilo kontaktovat. Otevřete na něm Lounge TV → Nastavení → Data → Místní synchronizace a zapněte Režim synchronizace. Obě zařízení musí být na stejné Wi-Fi.</string>
+<string name="settings_app_icon_summary">Barva ikony a loga Lounge TV</string>
+<string name="settings_app_icon_sheet_mobile">Jak se Lounge TV zobrazí na vaší domovské obrazovce. Aplikace se jednou restartuje.</string>
+<string name="app_icon_restart_title">Restartovat Lounge TV?</string>
+<string name="app_icon_restart_message">Vybrali jste novou ikonu a logo. Projeví se po restartu Lounge TV.</string>
+<string name="settings_help_theme">Lounge TV je navržen pro tmavý motiv. Systém se řídí nastavením televize, pokud ho má; světlý se hodí do světlé místnosti.</string>
+<string name="settings_help_fonts">Písmo používané v celém Lounge TV a velikost textu. Vyskakovací okna používají stejné písmo.</string>
+<string name="settings_help_app_icon">Ikona Lounge TV na domovské obrazovce televize. Spouštěči může chvíli trvat, než změnu zobrazí.</string>
+<string name="settings_help_brand_accent">Logo Lounge TV v nabídce, v sekci O aplikaci a v nastavení ukazuje trojúhelník přehrávání ve vaší barvě zvýraznění. Ikona na domovské obrazovce si ponechá své barvy.</string>
+<string name="settings_help_startup">Co Lounge TV zobrazí po spuštění: Domů, naposledy sledovaný kanál, oblíbené, nebo kanál, který vyberete.</string>
+<string name="settings_help_check_updates">Hned vyhledá na GitHubu novější Lounge TV a nabídne instalaci. Playlisty, oblíbené a nastavení zůstanou, jak jsou.</string>
+<string name="settings_help_update_startup">Při každém spuštění Lounge TV hledá novou verzi a dá vědět, když nějaká je. Bez zeptání se nic nenainstaluje.</string>
+<plurals name="settings_help_language">
+        <item quantity="one">Jazyk všech nabídek a zpráv v Lounge TV. <xliff:g id="count">%1$d</xliff:g> jazyk; dokud nějaký nevyberete, řídí se jazykem televize.</item>
+        <item quantity="few">Jazyk všech nabídek a zpráv v Lounge TV. <xliff:g id="count">%1$d</xliff:g> jazyky; dokud nějaký nevyberete, řídí se jazykem televize.</item>
+        <item quantity="many">Jazyk všech nabídek a zpráv v Lounge TV. <xliff:g id="count">%1$d</xliff:g> jazyků; dokud nějaký nevyberete, řídí se jazykem televize.</item>
+        <item quantity="other">Jazyk všech nabídek a zpráv v Lounge TV. <xliff:g id="count">%1$d</xliff:g> jazyků; dokud nějaký nevyberete, řídí se jazykem televize.</item>
+    </plurals>
+<string name="settings_language_system_help">Lounge TV používá jazyk televize (nyní <xliff:g id="language">%1$s</xliff:g>). Vyberte níže jazyk, který chcete používat jen v Lounge TV.</string>
+<string name="settings_language_pick_help">Používat <xliff:g id="language">%1$s</xliff:g> v Lounge TV bez ohledu na jazyk televize.</string>
+<string name="settings_help_bg_background">Stage ukazuje vlastní jemné barvy Lounge TV. Obrázek ukazuje váš obrázek za každou obrazovkou. Prosté je plochá tmavá výplň.</string>
+<string name="setup_disclaimer">Lounge TV je pouze přehrávač médií. Neobsahuje žádné kanály, playlisty ani obsah. Za přidání vlastních legálně dostupných zdrojů Xtream, M3U nebo Stalker odpovídáte vy.</string>
+<string name="setup_set_up_owntv">Nastavení Lounge TV</string>
+<string name="setup_sync_device_description">Zkopírujte vše z druhého zařízení Lounge TV přes Wi-Fi</string>
+<string name="setup_byo_source_description">Lounge TV je přehrávač — přidejte vlastní zdroj Xtream, M3U nebo Stalker.</string>
+<string name="companion_pin_page_title">Lounge TV — Zadat PIN</string>
+<string name="companion_add_page_title">Lounge TV — Přidat zdroj</string>
+<string name="companion_saved_page_title">Lounge TV — Odesláno</string>
+<string name="companion_backup_page_title">Lounge TV — Obnovení ze zálohy</string>
+<string name="companion_backup_description">Vyberte soubor zálohy Lounge TV (.own nebo starší .json) a stiskněte Odeslat. Přenese se do televizoru — vezměte dálkový ovladač a vyberte tam, co chcete obnovit.</string>
+<string name="companion_image_page_title">Lounge TV — Obrázek na pozadí</string>
+<string name="companion_download_page_title">Lounge TV — Stáhnout zálohu</string>
+<string name="companion_download_description">Televizor připravil soubor zálohy Lounge TV. Klepnutím na tlačítko jej uložte do tohoto zařízení (owntv-backup.own). Uchovávejte jej na bezpečném místě — později z něj můžete provést obnovení.</string>
+<string name="local_sync_browser_title">Místní synchronizace Lounge TV</string>
+<string name="local_sync_browser_body">Tato adresa je určená pro aplikaci Lounge TV na druhém zařízení. Otevřete tam Místní synchronizaci a vyberte ze seznamu toto zařízení.</string>
+<string name="setup_welcome_title">Vítejte v Lounge TV</string>
+<string name="setup_line_app_icon">Jak se Lounge TV zobrazí na domovské obrazovce televize</string>
+<string name="setup_line_app_icon_mobile">Jak se Lounge TV zobrazí na vaší domovské obrazovce</string>
+</resources>

@@ -57,23 +57,11 @@ private fun accentTriangle(): Color? {
  */
 @Composable
 fun BrandMark(icon: AppIcon, size: Dp, modifier: Modifier = Modifier, followAccent: Boolean = true) {
-    val small = size <= 32.dp
-    val accent = accentTriangle().takeIf { followAccent }
-    if (icon == AppIcon.PIXEL && !small) {
-        PixelMark(modifier.size(size), triangle = accent ?: Color(icon.accent))
-        return
-    }
-    Box(modifier.size(size)) {
-        Image(painterResource(if (small) icon.markSmall else icon.mark), contentDescription = null, modifier = Modifier.fillMaxSize())
-        if (accent != null && icon.isCard(small)) {
-            Image(
-                painterResource(if (small) R.drawable.owntv_mark_play_small else R.drawable.owntv_mark_play),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                colorFilter = ColorFilter.tint(accent),
-            )
-        }
-    }
+    Image(
+        painter = painterResource(R.drawable.loungetv_original_icon),
+        contentDescription = null,
+        modifier = modifier.size(size),
+    )
 }
 
 /**
@@ -106,10 +94,11 @@ private val PixelPower = Color(CorePixelMark.POWER)
  */
 @Composable
 fun Wordmark(width: Dp, modifier: Modifier = Modifier, tv: Color = stageAccent.accent, own: Color = WordmarkCream) {
-    Box(modifier.width(width).height(width * 182f / 988f)) {
-        Image(painterResource(R.drawable.owntv_wordmark_own), null, Modifier.fillMaxSize(), colorFilter = ColorFilter.tint(own))
-        Image(painterResource(R.drawable.owntv_wordmark_tv), null, Modifier.fillMaxSize(), colorFilter = ColorFilter.tint(tv))
-    }
+    Image(
+        painter = painterResource(R.drawable.loungetv_original_wordmark_only),
+        contentDescription = null,
+        modifier = modifier.width(width).height(width * 173f / 1595f),
+    )
 }
 
 val WordmarkCream = Color(0xFFFFF6EE)
@@ -120,28 +109,25 @@ val WordmarkCream = Color(0xFFFFF6EE)
  * puts the mark above with a 0.2 × gap.
  */
 @Composable
-fun BrandLockup(
-    modifier: Modifier = Modifier,
-    markSize: Int = 36,
-    stacked: Boolean = false,
-) {
+fun BrandLockup(modifier: Modifier = Modifier, markSize: Int = 36, stacked: Boolean = false) {
     val icon = rememberAppliedIcon()
-    val parts = @Composable {
-        BrandMark(icon, markSize.dp)
-        // On a light theme "own" takes the text colour; the cream is for dark surfaces.
-        Wordmark((markSize * 2.75f).dp, own = if (tv.own.owntv.ui.theme.LocalStagePalette.current.isLight) tv.own.owntv.ui.theme.StageColors.Text else WordmarkCream)
-    }
     if (stacked) {
         Column(
             modifier = modifier,
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy((markSize * 0.2f).dp),
-        ) { parts() }
+            verticalArrangement = Arrangement.spacedBy((markSize * 0.18f).dp),
+        ) {
+            BrandMark(icon, markSize.dp)
+            Wordmark((markSize * 4.1f).dp)
+        }
     } else {
         Row(
             modifier = modifier,
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy((markSize * 0.23f).dp),
-        ) { parts() }
+            horizontalArrangement = Arrangement.spacedBy((markSize * 0.20f).dp),
+        ) {
+            BrandMark(icon, markSize.dp)
+            Wordmark((markSize * 4.1f).dp)
+        }
     }
 }

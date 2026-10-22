@@ -1,0 +1,84 @@
+name: Check OwnTV upstream
+on:
+  schedule:
+    - cron: '15 20 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+concurrency:
+  group: loungetv-upstream
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - name: Check upstream and prepare a review branch
+        id: sync
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG=$(gh api repos/ahXN00/OwnTV/releases/latest --jq .tag_name)
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Unexpected upstream tag: $TAG"; exit 1; }
+          CURRENT=$(cat .loungetv/upstream-version)
+          echo "Upstream: $TAG; last incorporated: $CURRENT"
+          if [ "$TAG" = "$CURRENT" ]; then echo 'changed=false' >> "$GITHUB_OUTPUT"; exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git remote add upstream https://github.com/ahXN00/OwnTV.git
+          git fetch --no-tags upstream "refs/tags/$TAG:refs/tags/$TAG"
+          BRANCH="sync/owntv-${TAG#v}"
+          if git ls-remote --exit-code origin "refs/heads/$BRANCH" >/dev/null; then
+            echo "Already prepared $BRANCH"
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git switch -c "$BRANCH"
+          if ! git merge --no-edit --no-ff "$TAG"; then
+            git merge --abort || true
+            echo 'conflict=true' >> "$GITHUB_OUTPUT"
+            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          printf '%s\n' "$TAG" > .loungetv/upstream-version
+          python3 scripts/brand_config.py
+          # Disallow upstream workflows from running inside our commercial release pipeline.
+          for f in .github/workflows/*.yml .github/workflows/*.yaml; do
+            [ -f "$f" ] || continue
+            case "${f##*/}" in ci.yml|upstream-sync.yml|publish.yml) ;; *) git rm -f "$f" ;; esac
+          done
+          # Asset hashes and source release configuration remain protected by QA.
+          python3 scripts/check_branding.py
+          git add -A
+          git commit -m "Sync OwnTV $TAG; preserve Lounge TV identity" || true
+          git push --set-upstream origin "$BRANCH"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo 'changed=true' >> "$GITHUB_OUTPUT"
+      - name: Open review PR
+        if: steps.sync.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ steps.sync.outputs.branch }}
+          TAG: ${{ steps.sync.outputs.tag }}
+        run: |
+          if ! gh pr create --base main --head "$BRANCH" \
+            --title "Review OwnTV $TAG for Lounge TV" \
+            --body "Upstream OwnTV release $TAG merged cleanly. **Do not merge without QA and a real Fire TV regression test.** Check artwork, splash, EPG, favourites, switching, playback, updates and user data. A passing CI build is not approval to publish."; then
+            gh issue create --title "OwnTV $TAG ready, but GitHub blocked automatic PR" \
+              --body "Branch $BRANCH is ready. Open a PR into main manually. GitHub may require enabling Actions pull request creation in repository settings."
+          fi
+      - name: Record upstream conflict
+        if: steps.sync.outputs.conflict == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.sync.outputs.tag }}
+        run: |
+          gh issue create --title "Manual upstream merge required: $TAG" \
+            --body "Automatic merge conflicted. Compare our branded fork with ahXN00/OwnTV $TAG; resolve locally, rerun branding guards, test on Fire TV, then open a PR. No production update has been released."

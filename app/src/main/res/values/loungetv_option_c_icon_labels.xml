@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_icon_eggshell" translatable="false">Lounge TV Original</string>
+    <string name="app_icon_petrol" translatable="false">Lounge TV Original</string>
+    <string name="app_icon_sunflower" translatable="false">Lounge TV Original</string>
+    <string name="app_icon_cobalt" translatable="false">Lounge TV Original</string>
+    <string name="app_icon_tomato" translatable="false">Lounge TV Original</string>
+    <string name="app_icon_pixel" translatable="false">Lounge TV Original</string>
+    <string name="app_icon_board" translatable="false">Lounge TV Original</string>
+    <string name="app_icon_olive" translatable="false">Lounge TV Original</string>
+    <string name="app_icon_olive_cream" translatable="false">Lounge TV Original</string>
+</resources>
