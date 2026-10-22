@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.ref_name }}
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -95,6 +95,7 @@ jobs:
           path: dist/*
           if-no-files-found: error
   publish:
+    if: github.ref == 'refs/heads/main'
     needs: candidate
     runs-on: ubuntu-latest
     environment: production
