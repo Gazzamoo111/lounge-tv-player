@@ -39,7 +39,7 @@ jobs:
           VERSION_CODE=$(python3 scripts/version_code.py "$VERSION_NAME")
           echo "VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
           python3 scripts/check_branding.py
-          if gh release view "v$VERSION_NAME" >/dev/null 2>&1; then
+          if gh release view "v$VERSION_NAME" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "Release v$VERSION_NAME exists; refusing to overwrite."
             exit 1
           fi
@@ -86,6 +86,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
+      # gh release commands require repository context. This job runs on a new
+      # runner, separate from candidate, so it must check out the repo itself.
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: LoungeTV-signed-candidate
@@ -98,11 +101,11 @@ jobs:
           set -euo pipefail
           VERSION_CODE=$(python3 -c 'import sys; s=list(map(int,sys.argv[1].split("."))); print(s[0]*1000000+s[1]*10000+s[2]*100+s[3])' "$VERSION_NAME")
           sha256sum -c dist/SHA256SUMS.txt --ignore-missing
-          if gh release view "v$VERSION_NAME" >/dev/null 2>&1; then
+          if gh release view "v$VERSION_NAME" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "Release v$VERSION_NAME already exists; refusing to overwrite."
             exit 1
           fi
           gh release create "v$VERSION_NAME" dist/LoungeTV.apk "dist/LoungeTV-x86_64-v$VERSION_NAME.apk" dist/SHA256SUMS.txt \
             --title "Lounge TV v$VERSION_NAME" \
             --notes "Android versionCode: $VERSION_CODE. Lounge TV update. Based on OwnTV (GPLv3). Source and build files in this repository." \
-            --target "$GITHUB_SHA" --latest
+            --target "$GITHUB_SHA" --latest -R "$GITHUB_REPOSITORY"
