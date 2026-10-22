@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="owntv_icon_bg_eggshell">#020917</color>
-    <color name="owntv_icon_bg_petrol">#020917</color>
-    <color name="owntv_icon_bg_sunflower">#020917</color>
-    <color name="owntv_icon_bg_cobalt">#020917</color>
-    <color name="owntv_icon_bg_tomato">#020917</color>
-    <color name="owntv_icon_bg_pixel">#020917</color>
-    <color name="owntv_icon_bg_board">#020917</color>
-    <color name="owntv_icon_bg_olive">#020917</color>
-    <color name="owntv_icon_bg_olive_cream">#020917</color>
+    <color name="owntv_icon_bg_eggshell">#00000000</color>
+    <color name="owntv_icon_bg_petrol">#00000000</color>
+    <color name="owntv_icon_bg_sunflower">#00000000</color>
+    <color name="owntv_icon_bg_cobalt">#00000000</color>
+    <color name="owntv_icon_bg_tomato">#00000000</color>
+    <color name="owntv_icon_bg_pixel">#00000000</color>
+    <color name="owntv_icon_bg_board">#00000000</color>
+    <color name="owntv_icon_bg_olive">#00000000</color>
+    <color name="owntv_icon_bg_olive_cream">#00000000</color>
 </resources>
