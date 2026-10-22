@@ -41,10 +41,13 @@ jobs:
           fi
           git switch -c "$BRANCH"
           if ! git merge --no-edit --no-ff "$TAG"; then
-            git merge --abort || true
-            echo 'conflict=true' >> "$GITHUB_OUTPUT"
-            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-            exit 0
+            # Only the releaseRepo setting is expected to conflict with upstream.
+            # A strict verifier refuses any additional Lounge TV changes or conflicts.
+            if ! python3 scripts/resolve_upstream_app_conflict.py "$TAG"; then
+              git merge --abort || true
+              echo "::error::Upstream $TAG has a conflict beyond the known update-repo line. Resolve manually."
+              exit 1
+            fi
           fi
           printf '%s\n' "$TAG" > .loungetv/upstream-version
           python3 scripts/brand_config.py
@@ -70,9 +73,9 @@ jobs:
         run: |
           if ! gh pr create --base main --head "$BRANCH" \
             --title "Review OwnTV $TAG for Lounge TV" \
-            --body "Upstream OwnTV release $TAG merged cleanly. **Do not merge without QA and a real Fire TV regression test.** Check artwork, splash, EPG, favourites, switching, playback, updates and user data. A passing CI build is not approval to publish."; then
-            gh issue create --title "OwnTV $TAG ready, but GitHub blocked automatic PR" \
-              --body "Branch $BRANCH is ready. Open a PR into main manually. GitHub may require enabling Actions pull request creation in repository settings."
+            --body "Upstream OwnTV release $TAG merged with our updater-repository setting restored. **Do not merge without QA and a real Fire TV regression test.** Check artwork, splash, EPG, favourites, switching, playback, updates and user data. A passing CI build is not approval to publish."; then
+            echo "::warning::GitHub Actions cannot create pull requests. Branch $BRANCH was pushed; open the PR manually."
+            echo "Review URL: https://github.com/${GITHUB_REPOSITORY}/compare/main...${BRANCH}" >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Record upstream conflict
         if: steps.sync.outputs.conflict == 'true'
@@ -80,5 +83,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.sync.outputs.tag }}
         run: |
-          gh issue create --title "Manual upstream merge required: $TAG" \
-            --body "Automatic merge conflicted. Compare our branded fork with ahXN00/OwnTV $TAG; resolve locally, rerun branding guards, test on Fire TV, then open a PR. No production update has been released."
+          echo "::error::Manual upstream merge required for $TAG. No customer update was released."
