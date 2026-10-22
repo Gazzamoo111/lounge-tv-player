@@ -1,6 +1,7 @@
 package tv.own.owntv.features.home
 
 import androidx.compose.runtime.Immutable
+import androidx.paging.PagingSource
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -75,6 +76,14 @@ data class TrendingDetailsMetadata(
 )
 
 @Immutable
+data class LoungeFeaturedItem(
+    val title: String,
+    val imageUrl: String,
+    val movie: MovieEntity? = null,
+    val series: SeriesEntity? = null,
+)
+
+@Immutable
 data class HomeUiState(
     val trendingItems: List<TrendingHomeItem> = emptyList(),
     val activeTrendingIndex: Int = 0,
@@ -83,6 +92,7 @@ data class HomeUiState(
     /** Keyed by [TrendingHomeItem.stableKey]; filled for the title on screen. */
     val trendingExtras: Map<String, TrendingExtras> = emptyMap(),
     val heroItems: List<HeroItem> = emptyList(),
+    val loungeFeatured: List<LoungeFeaturedItem> = emptyList(),
     val activeHeroIndex: Int = 0,
     val continueMovies: List<LauncherContinuationItem> = emptyList(),
     val continueSeries: List<LauncherContinuationItem> = emptyList(),
@@ -395,6 +405,7 @@ class HomeViewModel(
             trendingSeasonCounts = data.trendingSeasonCounts,
             trendingExtras = previous.trendingExtras.filterKeys { key -> data.trendingItems.any { it.stableKey == key } },
             heroItems = data.heroItems,
+            loungeFeatured = previous.loungeFeatured,
             activeHeroIndex = 0,
             continueMovies = data.continueMovies,
             continueSeries = data.continueSeries,
@@ -412,6 +423,56 @@ class HomeViewModel(
         _uiState.value.trendingItems.getOrNull(_uiState.value.activeTrendingIndex)?.let(::resolveTrendingExtras)
         // Keep watching shows every card as a still, so each needs its artwork up front, not on focus.
         _uiState.value.heroItems.indices.forEach { resolveHeroMetadata(it) }
+        // New customers have no watch history and might have no Trending cache.
+        // Still showcase actual VOD artwork when a movie/series catalogue exists.
+        viewModelScope.launch(Dispatchers.IO) {
+            val featured = runCatching { loadLoungeFeatured(profileId) }.getOrDefault(emptyList())
+            if (settings.activeProfileId.first() == profileId) {
+                _uiState.value = _uiState.value.copy(loungeFeatured = featured)
+            }
+        }
+    }
+
+    private suspend fun loadLoungeFeatured(profileId: Long): List<LoungeFeaturedItem> {
+        val movieIds = tv.own.owntv.core.repository.activeSourceIds(
+            settings, sourceDao, profileId, MediaType.MOVIE,
+        )
+        val seriesIds = tv.own.owntv.core.repository.activeSourceIds(
+            settings, sourceDao, profileId, MediaType.SERIES,
+        )
+        val movies: List<MovieEntity> = if (movieIds.isEmpty()) emptyList() else {
+            val page = movieDao.pagingAllDateAdded(movieIds).load(
+                PagingSource.LoadParams.Refresh(key = null, loadSize = 72, placeholdersEnabled = false),
+            )
+            (page as? PagingSource.LoadResult.Page<Int, MovieEntity>)?.data.orEmpty()
+        }
+        val shows: List<SeriesEntity> = if (seriesIds.isEmpty()) emptyList() else {
+            val page = seriesDao.pagingAllDateAdded(seriesIds).load(
+                PagingSource.LoadParams.Refresh(key = null, loadSize = 48, placeholdersEnabled = false),
+            )
+            (page as? PagingSource.LoadResult.Page<Int, SeriesEntity>)?.data.orEmpty()
+        }
+        val filmEntries = mutableListOf<LoungeFeaturedItem>()
+        for (movie in movies) {
+            val art = movie.backdropUrl ?: movie.posterUrl ?: continue
+            if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(
+                    profileId, movie.categoryId, profileDao, categoryDao,
+                )) continue
+            filmEntries += LoungeFeaturedItem(movie.name, art, movie = movie)
+            if (filmEntries.size >= 8) break
+        }
+        val seriesEntries = mutableListOf<LoungeFeaturedItem>()
+        for (series in shows) {
+            val art = series.backdropUrl ?: series.posterUrl ?: continue
+            if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(
+                    profileId, series.categoryId, profileDao, categoryDao,
+                )) continue
+            seriesEntries += LoungeFeaturedItem(series.name, art, series = series)
+            if (seriesEntries.size >= 8) break
+        }
+        return (0 until maxOf(filmEntries.size, seriesEntries.size)).flatMap { index ->
+            listOfNotNull(filmEntries.getOrNull(index), seriesEntries.getOrNull(index))
+        }.take(12)
     }
 
     private fun resolveHeroMetadata(index: Int) {
