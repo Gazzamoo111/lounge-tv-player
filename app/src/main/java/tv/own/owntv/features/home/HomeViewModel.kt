@@ -1,17 +1,10 @@
 package tv.own.owntv.features.home
 
 import androidx.compose.runtime.Immutable
-import androidx.paging.PagingSource
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -82,15 +75,6 @@ data class TrendingDetailsMetadata(
 )
 
 @Immutable
-data class LoungeFeaturedItem(
-    val title: String,
-    val imageUrl: String,
-    val portraitFallback: Boolean = false,
-    val movie: MovieEntity? = null,
-    val series: SeriesEntity? = null,
-)
-
-@Immutable
 data class HomeUiState(
     val trendingItems: List<TrendingHomeItem> = emptyList(),
     val activeTrendingIndex: Int = 0,
@@ -99,7 +83,6 @@ data class HomeUiState(
     /** Keyed by [TrendingHomeItem.stableKey]; filled for the title on screen. */
     val trendingExtras: Map<String, TrendingExtras> = emptyMap(),
     val heroItems: List<HeroItem> = emptyList(),
-    val loungeFeatured: List<LoungeFeaturedItem> = emptyList(),
     val activeHeroIndex: Int = 0,
     val continueMovies: List<LauncherContinuationItem> = emptyList(),
     val continueSeries: List<LauncherContinuationItem> = emptyList(),
@@ -412,7 +395,6 @@ class HomeViewModel(
             trendingSeasonCounts = data.trendingSeasonCounts,
             trendingExtras = previous.trendingExtras.filterKeys { key -> data.trendingItems.any { it.stableKey == key } },
             heroItems = data.heroItems,
-            loungeFeatured = previous.loungeFeatured,
             activeHeroIndex = 0,
             continueMovies = data.continueMovies,
             continueSeries = data.continueSeries,
@@ -430,95 +412,6 @@ class HomeViewModel(
         _uiState.value.trendingItems.getOrNull(_uiState.value.activeTrendingIndex)?.let(::resolveTrendingExtras)
         // Keep watching shows every card as a still, so each needs its artwork up front, not on focus.
         _uiState.value.heroItems.indices.forEach { resolveHeroMetadata(it) }
-        // New customers have no watch history and might have no Trending cache.
-        // Still showcase actual VOD artwork when a movie/series catalogue exists.
-        viewModelScope.launch(Dispatchers.IO) {
-            val featured = runCatching { loadLoungeFeatured(profileId) }.getOrDefault(emptyList())
-            if (settings.activeProfileId.first() != profileId) return@launch
-            // Show real catalogue art immediately, even when TMDB is unavailable.
-            _uiState.value = _uiState.value.copy(loungeFeatured = featured)
-            // Optional enhancement: replace provider stills with original-size TMDB
-            // widescreen backdrops one by one. Never gate the hero on metadata.
-            for (candidate in featured.take(10)) {
-                if (settings.activeProfileId.first() != profileId) return@launch
-                val backdropPath = withTimeoutOrNull(3_500L) {
-                    runCatching {
-                        candidate.movie?.let { metadata.resolveMovie(it)?.backdropPath }
-                            ?: candidate.series?.let { metadata.resolveSeries(it)?.backdropPath }
-                    }.getOrNull()
-                }
-                val tmdbArt = MetadataImages.backdrop(backdropPath, size = "original")
-                    ?: continue
-                _uiState.value = _uiState.value.copy(
-                    loungeFeatured = _uiState.value.loungeFeatured.map { existing ->
-                        if (existing.movie?.id == candidate.movie?.id && candidate.movie != null ||
-                            existing.series?.id == candidate.series?.id && candidate.series != null
-                        ) existing.copy(imageUrl = tmdbArt, portraitFallback = false)
-                        else existing
-                    },
-                )
-            }
-        }
-    }
-
-    private suspend fun loadLoungeFeatured(profileId: Long): List<LoungeFeaturedItem> {
-        val movieIds = tv.own.owntv.core.repository.activeSourceIds(
-            settings, sourceDao, profileId, MediaType.MOVIE,
-        )
-        val seriesIds = tv.own.owntv.core.repository.activeSourceIds(
-            settings, sourceDao, profileId, MediaType.SERIES,
-        )
-        val movies: List<MovieEntity> = if (movieIds.isEmpty()) emptyList() else {
-            val page = movieDao.pagingAllRating(movieIds).load(
-                PagingSource.LoadParams.Refresh(key = null, loadSize = 72, placeholdersEnabled = false),
-            )
-            (page as? PagingSource.LoadResult.Page<Int, MovieEntity>)?.data.orEmpty()
-        }
-        val shows: List<SeriesEntity> = if (seriesIds.isEmpty()) emptyList() else {
-            val page = seriesDao.pagingAllRating(seriesIds).load(
-                PagingSource.LoadParams.Refresh(key = null, loadSize = 48, placeholdersEnabled = false),
-            )
-            (page as? PagingSource.LoadResult.Page<Int, SeriesEntity>)?.data.orEmpty()
-        }
-        // A real user can have VOD and zero TMDB/trending metadata. Never make
-        // the home hero dependent on network enrichment or configured TMDB keys.
-        // Prefer landscapes, and use portraits only when that is all a provider has.
-        val filmEntries = mutableListOf<LoungeFeaturedItem>()
-        for (movie in movies) {
-            val backdrop = movie.backdropUrl?.takeIf { it.isNotBlank() }
-            val artwork = backdrop ?: movie.posterUrl?.takeIf { it.isNotBlank() } ?: continue
-            if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(
-                    profileId, movie.categoryId, profileDao, categoryDao,
-                )) continue
-            filmEntries += LoungeFeaturedItem(
-                title = movie.name,
-                imageUrl = artwork,
-                portraitFallback = backdrop == null,
-                movie = movie,
-            )
-            if (filmEntries.size >= 10) break
-        }
-        val seriesEntries = mutableListOf<LoungeFeaturedItem>()
-        for (series in shows) {
-            val backdrop = series.backdropUrl?.takeIf { it.isNotBlank() }
-            val artwork = backdrop ?: series.posterUrl?.takeIf { it.isNotBlank() } ?: continue
-            if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(
-                    profileId, series.categoryId, profileDao, categoryDao,
-                )) continue
-            seriesEntries += LoungeFeaturedItem(
-                title = series.name,
-                imageUrl = artwork,
-                portraitFallback = backdrop == null,
-                series = series,
-            )
-            if (seriesEntries.size >= 10) break
-        }
-        val featured = (0 until maxOf(filmEntries.size, seriesEntries.size)).flatMap { index ->
-            listOfNotNull(filmEntries.getOrNull(index), seriesEntries.getOrNull(index))
-        }.take(12)
-        android.util.Log.i("LoungeHomeHero", "Featured carousel: " +
-            "${featured.size} titles from ${movies.size} movies and ${shows.size} series")
-        return featured
     }
 
     private fun resolveHeroMetadata(index: Int) {
