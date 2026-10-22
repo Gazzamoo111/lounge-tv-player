@@ -483,36 +483,36 @@ class HomeViewModel(
         // A real user can have VOD and zero TMDB/trending metadata. Never make
         // the home hero dependent on network enrichment or configured TMDB keys.
         // Prefer landscapes, and use portraits only when that is all a provider has.
-        val filmEntries = movies.asSequence()
-            .filter { it.backdropUrl?.isNotBlank() == true || it.posterUrl?.isNotBlank() == true }
-            .filter {
-                tv.own.owntv.core.content.AdultCategoryClassifier.allows(
-                    profileId, it.categoryId, profileDao, categoryDao,
-                )
-            }.take(10).map { movie ->
-                LoungeFeaturedItem(
-                    title = movie.name,
-                    imageUrl = movie.backdropUrl?.takeIf(String::isNotBlank)
-                        ?: movie.posterUrl.orEmpty(),
-                    portraitFallback = movie.backdropUrl.isNullOrBlank(),
-                    movie = movie,
-                )
-            }.toList()
-        val seriesEntries = shows.asSequence()
-            .filter { it.backdropUrl?.isNotBlank() == true || it.posterUrl?.isNotBlank() == true }
-            .filter {
-                tv.own.owntv.core.content.AdultCategoryClassifier.allows(
-                    profileId, it.categoryId, profileDao, categoryDao,
-                )
-            }.take(10).map { series ->
-                LoungeFeaturedItem(
-                    title = series.name,
-                    imageUrl = series.backdropUrl?.takeIf(String::isNotBlank)
-                        ?: series.posterUrl.orEmpty(),
-                    portraitFallback = series.backdropUrl.isNullOrBlank(),
-                    series = series,
-                )
-            }.toList()
+        val filmEntries = mutableListOf<LoungeFeaturedItem>()
+        for (movie in movies) {
+            val backdrop = movie.backdropUrl?.takeIf { it.isNotBlank() }
+            val artwork = backdrop ?: movie.posterUrl?.takeIf { it.isNotBlank() } ?: continue
+            if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(
+                    profileId, movie.categoryId, profileDao, categoryDao,
+                )) continue
+            filmEntries += LoungeFeaturedItem(
+                title = movie.name,
+                imageUrl = artwork,
+                portraitFallback = backdrop == null,
+                movie = movie,
+            )
+            if (filmEntries.size >= 10) break
+        }
+        val seriesEntries = mutableListOf<LoungeFeaturedItem>()
+        for (series in shows) {
+            val backdrop = series.backdropUrl?.takeIf { it.isNotBlank() }
+            val artwork = backdrop ?: series.posterUrl?.takeIf { it.isNotBlank() } ?: continue
+            if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(
+                    profileId, series.categoryId, profileDao, categoryDao,
+                )) continue
+            seriesEntries += LoungeFeaturedItem(
+                title = series.name,
+                imageUrl = artwork,
+                portraitFallback = backdrop == null,
+                series = series,
+            )
+            if (seriesEntries.size >= 10) break
+        }
         val featured = (0 until maxOf(filmEntries.size, seriesEntries.size)).flatMap { index ->
             listOfNotNull(filmEntries.getOrNull(index), seriesEntries.getOrNull(index))
         }.take(12)
