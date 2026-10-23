@@ -81,4 +81,27 @@
         <item>The Big Bang Theory</item>
         <item>The Rookie</item>
     </string-array>
+    <!-- These are specific playlist channels, not categories. Missing feeds are skipped. -->
+    <string-array name="lounge_live_highlight_channels" translatable="false">
+        <item>Sky Sport 1</item>
+        <item>Sky Sport 2</item>
+        <item>Sky Sport 3</item>
+        <item>Sky Sport 4</item>
+        <item>Fox League 502</item>
+        <item>Fox Cricket</item>
+        <item>TNT Sports 1</item>
+        <item>TNT Sports 2</item>
+        <item>ESPN</item>
+        <item>ESPN 2</item>
+        <item>BBC One</item>
+        <item>Discovery Channel</item>
+        <item>National Geographic</item>
+        <item>Sky News</item>
+        <item>Cartoon Network</item>
+        <item>History Channel</item>
+    </string-array>
+    <string-array name="lounge_live_highlight_exclusions" translatable="false">
+        <item>TVNZ</item>
+        <item>TV NZ</item>
+    </string-array>
 </resources>
