@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.channels.BufferOverflow
@@ -43,9 +44,15 @@ import tv.own.owntv.core.home.homeKey
 import tv.own.owntv.core.launcher.LauncherContinuationItem
 import tv.own.owntv.core.model.HomeConfig
 import tv.own.owntv.core.model.MediaType
+import tv.own.owntv.core.model.HomeRow
 import tv.own.owntv.core.metadata.MetadataImages
 import tv.own.owntv.core.metadata.MetadataRepository
 import tv.own.owntv.core.settings.SettingsRepository
+import tv.own.owntv.core.repository.SourceRepository
+import tv.own.owntv.core.sync.SyncContentTypes
+import tv.own.owntv.core.sync.work.CatalogSyncScheduler
+import tv.own.owntv.core.sync.work.ContentIndexWorker
+import tv.own.owntv.core.sync.work.TrendingRefreshWorker
 import tv.own.owntv.player.HeroPreviewEngine
 
 @Immutable
@@ -139,7 +146,13 @@ class HomeViewModel(
     private val trendingDao: TrendingDao,
     private val favoriteDao: tv.own.owntv.core.database.dao.FavoriteDao,
     private val userDataWriter: tv.own.owntv.core.backup.UserDataWriter,
+    private val sourceRepository: SourceRepository,
+    private val catalogSyncScheduler: CatalogSyncScheduler,
+    private val context: android.content.Context,
 ) : ViewModel() {
+    // One automatic recovery attempt per playlist per Home VM lifetime.
+    // A normal provider sync or backfill still owns its own Trending updates.
+    private val attemptedMissingTrending = java.util.Collections.synchronizedSet(mutableSetOf<Long>())
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
@@ -412,6 +425,41 @@ class HomeViewModel(
         _uiState.value.trendingItems.getOrNull(_uiState.value.activeTrendingIndex)?.let(::resolveTrendingExtras)
         // Keep watching shows every card as a still, so each needs its artwork up front, not on focus.
         _uiState.value.heroItems.indices.forEach { resolveHeroMetadata(it) }
+        // Core SourceImporter's direct first-run import can finish without enqueuing Trending.
+        // Repair that path in the background (also self-heals existing blank Home installs),
+        // while leaving the freshly painted Home view completely non-blocking.
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching { bootstrapMissingTrending(profileId) }
+                .onFailure { android.util.Log.w(javaClass.simpleName, it) }
+        }
+    }
+
+    private suspend fun bootstrapMissingTrending(profileId: Long) {
+        if (!settings.metadataConfig().enabled) return
+        if (HomeRow.TRENDING in settings.homeConfig(profileId).first().hidden) return
+        val worker = WorkManager.getInstance(context)
+        for (sourceId in sourceDao.sourceIdsForProfile(profileId)) {
+            val source = sourceDao.getById(sourceId) ?: continue
+            if (source.lastSyncAt == null || trendingDao.getState(sourceId) != null) continue
+            val types = SyncContentTypes.enabledFor(source)
+            if (!types.movies && !types.series) continue
+            if (movieDao.countForSourceOnce(sourceId) + seriesDao.countForSourceOnce(sourceId) == 0) continue
+            // Stalker sources can still have pages draining after the first import;
+            // their backfill worker queues Trending when the catalogue is complete.
+            if (!sourceRepository.catalogueComplete(sourceId)) continue
+            if (!attemptedMissingTrending.add(sourceId)) continue
+
+            // On a fresh import, a separate worker creates the content search indexes.
+            // Wait for it instead of racing the matching stage against unbuilt indexes.
+            worker.getWorkInfosForUniqueWorkFlow(ContentIndexWorker.workName())
+                .first { infos -> infos.none { !it.state.isFinished } }
+            val trendingAlreadyRunning = worker
+                .getWorkInfosForUniqueWorkFlow(TrendingRefreshWorker.workName(sourceId))
+                .first().any { !it.state.isFinished }
+            if (!trendingAlreadyRunning && trendingDao.getState(sourceId) == null) {
+                catalogSyncScheduler.enqueueTrendingRefresh(sourceId)
+            }
+        }
     }
 
     private fun resolveHeroMetadata(index: Int) {
