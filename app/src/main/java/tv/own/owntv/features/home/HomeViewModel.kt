@@ -102,6 +102,8 @@ data class HomeUiState(
     val featuredMovies: List<MovieEntity> = emptyList(),
     val popularSeries: List<SeriesEntity> = emptyList(),
     val liveHighlights: List<ChannelEntity> = emptyList(),
+    val featuredMovieNames: Map<Long, String> = emptyMap(),
+    val popularSeriesNames: Map<Long, String> = emptyMap(),
     val config: HomeConfig = HomeConfig(),
     val recentGuide: GuideSliceState = GuideSliceState(),
     val favoriteGuide: GuideSliceState = GuideSliceState(),
@@ -435,13 +437,15 @@ class HomeViewModel(
             try {
                 val selection = LoungeHomeHighlightsReader(
                     movieDao, seriesDao, channelDao, categoryDao,
-                    profileDao, sourceDao, settings, customizations,
+                    profileDao, sourceDao, settings, customizations, context,
                 ).load(profileId)
                 if (currentProfileId() == profileId) {
                     _uiState.value = _uiState.value.copy(
                         featuredMovies = selection.movies,
                         popularSeries = selection.series,
                         liveHighlights = selection.channels,
+                        featuredMovieNames = selection.movieNames,
+                        popularSeriesNames = selection.seriesNames,
                     )
                 }
             } catch (cancelled: kotlinx.coroutines.CancellationException) {

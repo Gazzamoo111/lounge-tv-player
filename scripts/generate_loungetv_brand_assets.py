@@ -140,3 +140,10 @@ def main():
 
 if __name__ == "__main__":
     main()
+    # Overlay the SHA-256-locked, user-approved Option 4 art after OwnTV's
+    # existing build-time generator. Leave older originals untouched.
+    import subprocess, sys
+    subprocess.run(
+        [sys.executable, str(Path(__file__).with_name("apply_option4_brand_assets.py"))],
+        check=True,
+    )
