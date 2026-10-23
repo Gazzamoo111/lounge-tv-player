@@ -88,13 +88,21 @@ fun ChannelListOverlay(
     /** History only: channel id → when it was last watched, shown at the row's end. */
     watchedAt: Map<Long, Long>? = null,
     onOpenCategories: (() -> Unit)? = null,
+    /** The last highlighted channel in this category, even if it was not played. */
+    initialFocusedChannelId: Long? = null,
+    onChannelFocused: ((ChannelEntity) -> Unit)? = null,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val dismissDirection = if (alignEnd) HorizontalDirection.END else HorizontalDirection.START
     val history = watchedAt != null
     val playingIndex = remember(channels, currentId) { channels.indexOfFirst { it.id == currentId } }
+    // Snapshot focus when this panel opens, not on every focus callback:
+    // updating the remembered channel must not reset the focus requester mid-scroll.
     val currentIndex = remember(channels, playingIndex, history) {
-        when {
+        val remembered = initialFocusedChannelId?.let { id ->
+            channels.indexOfFirst { it.id == id }.takeIf { it >= 0 }
+        }
+        remembered ?: when {
             history && playingIndex == 0 && channels.size > 1 -> 1
             else -> playingIndex.coerceAtLeast(0)
         }
@@ -217,7 +225,10 @@ fun ChannelListOverlay(
                         isFavorite = ch.id in favoriteIds,
                         showNumber = showNumbers,
                         mark = playlistMarks[ch.sourceId],
-                        onFocus = { focusedIndex = index },
+                        onFocus = {
+                            focusedIndex = index
+                            onChannelFocused?.invoke(ch)
+                        },
                         onClick = { onSelect(ch) },
                         onLongClick = {},
                         trailing = watchedAt?.let { times ->
