@@ -129,6 +129,25 @@ class OwnTVApp : Application(), SingletonImageLoader.Factory, androidx.work.Conf
             scope = appScope,
             settings = GlobalContext.get().get(),
         )
+        // OwnTV's shared default TMDB Worker currently rejects uncredentialled fork builds.
+        // Initialise a Lounge TV-owned gateway once, only when the customer has NOT supplied
+        // their own TMDB key or server. Everything stays in private app settings; never put
+        // a TMDB API key into BuildConfig, the APK, or the repository.
+        //
+        // A one-time marker matters: clearing the gateway in Settings is an explicit user
+        // choice, and must not be silently reversed each time they open the app.
+        appScope.launch {
+            runCatching {
+                val settings = GlobalContext.get().get<tv.own.owntv.core.settings.SettingsRepository>()
+                val marker = getSharedPreferences("loungetv_metadata", Context.MODE_PRIVATE)
+                if (!marker.getBoolean("gateway_initialised_v1", false)) {
+                    if (settings.tmdbApiKey.first().isBlank() && settings.metadataServerUrl.first().isBlank()) {
+                        settings.setMetadataServerUrl("https://metadata.loungetv.nz")
+                    }
+                    marker.edit().putBoolean("gateway_initialised_v1", true).apply()
+                }
+            }.onFailure { android.util.Log.w("LoungeTVMetadata", "Default gateway setup failed; retry on next launch", it) }
+        }
         // One-time brand migration. Preserve any customised accent; only replace
         // the untouched OwnTV teal with Lounge TV's electric blue.
         appScope.launch {
