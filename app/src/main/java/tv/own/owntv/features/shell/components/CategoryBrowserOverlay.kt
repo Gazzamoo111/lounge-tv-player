@@ -65,7 +65,7 @@ fun CategoryBrowserOverlay(
     val layoutDirection = LocalLayoutDirection.current
     val (entries, groupsHeading) = liveCategoryEntries(railItems, railCounts)
     val keys = entries.map { it.item.key }
-    val selectedIndex = remember(keys, currentKey) { keys.indexOf(currentKey).coerceAtLeast(0) }
+    val selectedIndex = remember(keys, currentKey) { keys.indexOfFirst { it == currentKey }.coerceAtLeast(0) }
     // Take the initial focus snapshot only on opening (or when the rail changes).
     // Focus callbacks must not re-anchor this panel while the user is scrolling.
     val initialFocusIndex = remember(keys, currentKey) {
