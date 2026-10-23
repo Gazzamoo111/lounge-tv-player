@@ -48,6 +48,17 @@ with Image.open(logo) as splash:
     visible_center_y = (bbox[1] + bbox[3]) / 2
     assert abs(visible_center_x - center_x) <= width * .01, 'Native splash is not horizontally centred'
     assert abs(visible_center_y - center_y) <= height * .01, 'Native splash is not vertically centred'
+
+# The icon picker offers different palettes. The locked Eggshell icon is unchanged,
+# but the other choices must not all be the same copied PNG.
+variants = [
+    R/'app/src/main/res/drawable-nodpi'/f'loungetv_icon_variant_{name}.png'
+    for name in ('eggshell', 'petrol', 'sunflower', 'cobalt', 'tomato', 'board',
+                 'olive', 'olive_cream', 'pixel')
+]
+assert len({hashlib.sha256(path.read_bytes()).hexdigest() for path in variants}) >= 6, (
+    'Lounge TV icon choices are not distinct colours'
+)
 for theme in ['values/themes.xml', 'values-v31/themes.xml']:
     theme_text = (R/'app/src/main/res'/theme).read_text()
     assert theme_text.count('@drawable/loungetv_system_launch_art') >= 9, f'Native splash missing on some icon styles: {theme}'
