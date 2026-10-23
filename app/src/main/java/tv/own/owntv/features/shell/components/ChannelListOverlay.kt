@@ -99,13 +99,7 @@ fun ChannelListOverlay(
     // Snapshot focus when this panel opens, not on every focus callback:
     // updating the remembered channel must not reset the focus requester mid-scroll.
     val currentIndex = remember(channels, playingIndex, history) {
-        val remembered = initialFocusedChannelId?.let { id ->
-            channels.indexOfFirst { it.id == id }.takeIf { it >= 0 }
-        }
-        remembered ?: when {
-            history && playingIndex == 0 && channels.size > 1 -> 1
-            else -> playingIndex.coerceAtLeast(0)
-        }
+        channelOverlayInitialIndex(channels, playingIndex, history, initialFocusedChannelId)
     }
     val listState = rememberLazyListState()
     val focusTarget = remember { FocusRequester() }
@@ -265,5 +259,21 @@ fun ChannelListOverlay(
                 modifier = Modifier.padding(start = 14.mpx, top = 14.mpx),
             )
         }
+    }
+}
+
+/** Pure focus choice for the fullscreen browse list. Browsing must never retune a channel. */
+internal fun channelOverlayInitialIndex(
+    channels: List<ChannelEntity>,
+    playingIndex: Int,
+    history: Boolean,
+    previouslyFocusedId: Long?,
+): Int {
+    val savedIndex = previouslyFocusedId?.let { id ->
+        channels.indexOfFirst { it.id == id }.takeIf { it >= 0 }
+    }
+    return savedIndex ?: when {
+        history && playingIndex == 0 && channels.size > 1 -> 1
+        else -> playingIndex.coerceAtLeast(0)
     }
 }
