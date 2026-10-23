@@ -1367,4 +1367,5 @@
 1	regex	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	\\s+
 1	regex	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	^(?i)(?:(?:D\\+|NF|AMZN|APTV|HBO|DSNY|ATV|NETFLIX|DISNEY\\+|PRIME|APPLE TV)\\s+)+
 
-1	regex	app/src/main/java/tv/own/owntv/ui/components/LoungeVodTitles.kt	^(?i)(?:(?:D\\+|NF|AMZN|APTV|HBO|DSNY|ATV|NETFLIX|DISNEY\\+|PRIME|APPLE\\s?TV|HULU|PEACOCK|PARAMOUNT\\+|STAN)\\s+)+1	empty	app/src/main/java/tv/own/owntv/ui/components/LoungeVodTitles.kt	\0
+1	regex	app/src/main/java/tv/own/owntv/ui/components/LoungeVodTitles.kt	^(?i)(?:(?:D\\+|NF|AMZN|APTV|HBO|DSNY|ATV|NETFLIX|DISNEY\\+|PRIME|APPLE\\s?TV|HULU|PEACOCK|PARAMOUNT\\+|STAN)\\s+)+
+1	empty	app/src/main/java/tv/own/owntv/ui/components/LoungeVodTitles.kt	\0
