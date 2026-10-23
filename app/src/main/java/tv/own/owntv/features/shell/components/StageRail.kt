@@ -3,6 +3,7 @@ package tv.own.owntv.features.shell.components
 import androidx.compose.ui.draw.clip
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -50,6 +51,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.tv.material3.Text
@@ -312,15 +314,15 @@ private fun ColumnScope.RailBrand(open: Boolean) {
         BrandMark(icon, 50.mpx, Modifier.padding(bottom = 12.mpx))
         return
     }
-    Row(
-        Modifier.padding(start = 10.mpx, end = 10.mpx, bottom = 18.mpx),
-        horizontalArrangement = Arrangement.spacedBy(14.mpx),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        BrandMark(icon, 50.mpx)
-        // The wordmark, 130 wide (`.brandrow`, `wordmarkC()`).
-        Wordmark(130.mpx)
-    }
+    // Approved Option 4 horizontal artwork, displayed as one undistorted lockup.
+    Image(
+        painter = painterResource(R.drawable.loungetv_locked_horizontal),
+        contentDescription = null,
+        modifier = Modifier
+            .padding(start = 10.mpx, end = 10.mpx, bottom = 18.mpx)
+            .width(204.mpx)
+            .height(55.mpx),
+    )
 }
 
 @Composable
