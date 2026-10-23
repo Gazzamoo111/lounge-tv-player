@@ -3,6 +3,7 @@ package tv.own.owntv.features.shell
 import tv.own.owntv.ui.stage.stageGlass
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -321,6 +322,10 @@ fun OwnTVShell(
     // Preserve the highlighted row per category even if OK was never pressed.
     // Scope to the active profile so one customer's browse focus cannot leak to another.
     val lastBrowsedChannel = remember(activeProfileId) { mutableStateMapOf<LiveKey, Long>() }
+    // The category being browsed is independent of the channel still playing behind the panel.
+    // Keep its focus AND viewport when temporarily opening the category's channel list.
+    var lastBrowsedCategory by remember(activeProfileId) { mutableStateOf<LiveKey?>(null) }
+    val categoryBrowseListState = remember(activeProfileId) { LazyListState() }
     // In-player watch-history list (Right while controls hidden, live only).
     var showHistoryList by remember { mutableStateOf(false) }
     // Multiview: the grid, while it is up, and which tile is waiting for a channel to be picked.
@@ -1836,7 +1841,11 @@ fun OwnTVShell(
                             railCounts = browserRailCounts,
                             // The list the player zaps in: a built-in rail or custom category when it came from one.
                             currentKey = zapListKey ?: previewChannel?.categoryId?.let { tv.own.owntv.core.live.LiveKey.Folder(it) },
+                            initialFocusedKey = lastBrowsedCategory,
+                            onCategoryFocused = { lastBrowsedCategory = it },
+                            listState = categoryBrowseListState,
                             onSelect = { key ->
+                                lastBrowsedCategory = key
                                 browsedIntoCategory = true
                                 liveVm.loadChannelsForCategory(key)
                             },
