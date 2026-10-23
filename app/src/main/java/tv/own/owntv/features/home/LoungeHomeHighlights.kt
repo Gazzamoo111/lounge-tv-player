@@ -1,6 +1,5 @@
 package tv.own.owntv.features.home
 
-import androidx.paging.PagingSource
 import kotlinx.coroutines.flow.first
 import tv.own.owntv.core.content.AdultCategoryClassifier
 import tv.own.owntv.core.customize.CustomizationStore
@@ -15,6 +14,7 @@ import tv.own.owntv.core.database.entity.ChannelEntity
 import tv.own.owntv.core.database.entity.MovieEntity
 import tv.own.owntv.core.database.entity.SeriesEntity
 import tv.own.owntv.core.model.MediaType
+import tv.own.owntv.core.metadata.TitleNormalizer
 import tv.own.owntv.core.repository.activeSourceIds
 import tv.own.owntv.core.settings.SettingsRepository
 
@@ -23,6 +23,8 @@ internal data class LoungeHomeHighlights(
     val movies: List<MovieEntity> = emptyList(),
     val series: List<SeriesEntity> = emptyList(),
     val channels: List<ChannelEntity> = emptyList(),
+    val movieNames: Map<Long, String> = emptyMap(),
+    val seriesNames: Map<Long, String> = emptyMap(),
 )
 
 internal class LoungeHomeHighlightsReader(
@@ -45,27 +47,31 @@ internal class LoungeHomeHighlightsReader(
         val seriesVisibility = visibleFor(profileId, seriesIds, MediaType.SERIES, kids)
         val channelVisibility = visibleFor(profileId, channelIds, MediaType.LIVE, kids)
 
-        val featuredMovies = if (movieIds.isEmpty()) emptyList() else {
-            val candidates = firstPage(movies.pagingAllRating(movieIds)) +
-                firstPage(movies.pagingAllDateAdded(movieIds))
-            candidates.asSequence()
-                .filter { it.posterUrl?.isNotBlank() == true }
-                .filter { movieVisibility.allows(it.categoryId, CustomizeKeys.movie(it)) }
-                .distinctBy { it.canonicalTitle.ifBlank { it.name }.lowercase() }
-                .take(24)
-                .toList()
-        }
-
-        val popularSeries = if (seriesIds.isEmpty()) emptyList() else {
-            val candidates = firstPage(series.pagingAllRating(seriesIds)) +
-                firstPage(series.pagingAllDateAdded(seriesIds))
-            candidates.asSequence()
-                .filter { it.posterUrl?.isNotBlank() == true }
-                .filter { seriesVisibility.allows(it.categoryId, CustomizeKeys.series(it)) }
-                .distinctBy { it.canonicalTitle.ifBlank { it.name }.lowercase() }
-                .take(24)
-                .toList()
-        }
+        // A provider's numeric ratings aren't a measure of popularity: their highest-rated
+        // films were obscure titles on BEST. Only pick recognisable editorially curated titles,
+        // and only when an exact playable match exists in the customer's own playlist.
+        val moviePicks = pickFamous(
+            movieIds, POPULAR_MOVIES,
+            query = { title -> movies.searchListFts(phrase(title), movieIds, 15) },
+            key = { item: MovieEntity -> titleKey(item.canonicalTitle.ifBlank { item.name }) },
+            valid = { item: MovieEntity ->
+                item.posterUrl?.isNotBlank() == true &&
+                    movieVisibility.allows(item.categoryId, CustomizeKeys.movie(item))
+            },
+            id = { item: MovieEntity -> item.id },
+            quality = { item: MovieEntity -> item.qualityRank },
+        )
+        val seriesPicks = pickFamous(
+            seriesIds, POPULAR_SERIES,
+            query = { title -> series.searchListFts(phrase(title), seriesIds, 15) },
+            key = { item: SeriesEntity -> titleKey(item.canonicalTitle.ifBlank { item.name }) },
+            valid = { item: SeriesEntity ->
+                item.posterUrl?.isNotBlank() == true &&
+                    seriesVisibility.allows(item.categoryId, CustomizeKeys.series(item))
+            },
+            id = { item: SeriesEntity -> item.id },
+            quality = { item: SeriesEntity -> item.qualityRank },
+        )
 
         // Every result comes from the installed provider, never a decorative remote feed.
         // Use short targeted searches rather than materialising a 16k-channel catalogue.
@@ -91,9 +97,11 @@ internal class LoungeHomeHighlightsReader(
         }
 
         return LoungeHomeHighlights(
-            movies = featuredMovies,
-            series = popularSeries,
+            movies = moviePicks.map { it.first },
+            series = seriesPicks.map { it.first },
             channels = highlights.distinctBy { it.id }.take(20),
+            movieNames = moviePicks.associate { it.first.id to it.second },
+            seriesNames = seriesPicks.associate { it.first.id to it.second },
         )
     }
 
@@ -121,15 +129,82 @@ internal class LoungeHomeHighlightsReader(
             (categoryId == null || categoryId !in hiddenCategories) && itemKey !in hiddenKeys
     }
 
-    private suspend fun <T : Any> firstPage(source: PagingSource<Int, T>): List<T> =
-        when (val result = source.load(
-            PagingSource.LoadParams.Refresh(
-                key = null,
-                loadSize = 120,
-                placeholdersEnabled = false,
-            ),
-        )) {
-            is PagingSource.LoadResult.Page -> result.data
-            else -> emptyList()
+    /**
+     * Each title is matched exactly after provider-name normalisation; a loose substring match
+     * such as "The Batman" -> "Batman vs..." never becomes a recommendation.
+     */
+    private suspend fun <T : Any> pickFamous(
+        sourceIds: List<Long>,
+        names: List<String>,
+        query: suspend (String) -> List<T>,
+        key: (T) -> String,
+        valid: (T) -> Boolean,
+        id: (T) -> Long,
+        quality: (T) -> Int,
+    ): List<Pair<T, String>> {
+        if (sourceIds.isEmpty()) return emptyList()
+        val result = mutableListOf<Pair<T, String>>()
+        val pickedNames = mutableSetOf<String>()
+        for (title in names) {
+            val normalized = titleKey(title)
+            if (normalized in pickedNames) continue
+            val match = query(title)
+                .asSequence()
+                .filter(valid)
+                .filter { key(it) == normalized }
+                .maxByOrNull(quality)
+            if (match != null) {
+                result += match to title
+                pickedNames += normalized
+            }
+            if (result.size == MAX_FEATURED_ITEMS) break
         }
+        return result
+    }
+
+    private fun phrase(title: String): String = "\"" + title.replace("\"", "\"\"") + "\""
+
+    private fun titleKey(raw: String): String {
+        // BEST prefixes such as "D+ ", "NF " and "AMZN " aren't part of a title.
+        val stripped = raw.replace(PLATFORM_PREFIX, "")
+        val clean = TitleNormalizer.normalize(stripped).query
+        return clean.lowercase()
+            .replace(Regex("[^\\p{L}\\p{N}]+"), " ")
+            .trim()
+            .replace(Regex("\\s+"), " ")
+    }
+
+    companion object {
+        private const val MAX_FEATURED_ITEMS = 18
+        private val PLATFORM_PREFIX = Regex(
+            "^(?i)(?:(?:D\\+|NF|AMZN|APTV|HBO|DSNY|ATV|NETFLIX|DISNEY\\+|PRIME|APPLE TV)\\s+)+",
+        )
+        // Editorial order, not provider ratings. Missing titles are skipped, never faked.
+        private val POPULAR_MOVIES = listOf(
+            "Dune: Part Two", "Oppenheimer", "Top Gun: Maverick", "The Dark Knight",
+            "Interstellar", "Inception", "Avatar: The Way of Water", "Barbie",
+            "The Batman", "John Wick: Chapter 4", "Spider-Man: No Way Home",
+            "Avengers: Endgame", "Deadpool & Wolverine", "Inside Out 2",
+            "The Shawshank Redemption", "The Godfather", "The Matrix",
+            "Gladiator", "The Lord of the Rings: The Fellowship of the Ring",
+            "The Lord of the Rings: The Two Towers", "The Lord of the Rings: The Return of the King",
+            "Pulp Fiction", "Titanic", "Forrest Gump", "The Lion King",
+            "The Super Mario Bros. Movie", "Despicable Me 4", "Moana",
+            "The Avengers", "The Prestige", "The Departed", "Joker",
+            "Wicked", "Gladiator II", "Jurassic Park", "Saving Private Ryan",
+            "Mission: Impossible – Fallout", "The Wolf of Wall Street",
+        )
+        private val POPULAR_SERIES = listOf(
+            "Breaking Bad", "Stranger Things", "The Last of Us", "The Boys",
+            "The White Lotus", "House of the Dragon", "Game of Thrones",
+            "The Bear", "Severance", "Reacher", "Fallout", "Shogun",
+            "Wednesday", "The Pitt", "Yellowstone", "The Sopranos",
+            "Better Call Saul", "The Walking Dead", "The Office",
+            "Peaky Blinders", "Succession", "Ted Lasso", "Squid Game",
+            "Only Murders in the Building", "Andor", "Silo", "The Mandalorian",
+            "The Penguin", "True Detective", "Ozark", "Vikings",
+            "The Crown", "The Witcher", "Chernobyl", "Friends",
+            "Dexter", "The Big Bang Theory", "The Rookie",
+        )
+    }
 }
