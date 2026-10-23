@@ -2,6 +2,8 @@
 
 package tv.own.owntv.features.series
 
+import tv.own.owntv.ui.components.loungeVodTitle
+
 import tv.own.owntv.ui.stage.backdropLeftWash
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.heightIn
@@ -676,7 +678,7 @@ private fun SeriesGrid(
                                 items(count = series.itemCount, key = series.itemKey { it.id }, contentType = series.itemContentType { "series" }) { index ->
                                     val show = series[index] ?: return@items
                                     StagePoster(
-                                        title = show.name,
+                                        title = loungeVodTitle(show.name),
                                         rating = show.rating?.takeIf { it > 0 }?.let(::vodRating),
                                         width = 196.mpx, height = 294.mpx,
                                         progress = seriesProgress[show.id],
@@ -790,7 +792,7 @@ private fun SeriesGrid(
                             items(count = series.itemCount, key = series.itemKey { it.id }, contentType = series.itemContentType { "series" }) { index ->
                                 val show = series[index] ?: return@items
                                 VodListRow(
-                                    title = show.name,
+                                    title = loungeVodTitle(show.name),
                                     line = vodLine(show.year, show.rating, null),
                                     posterUrl = posterOf(show),
                                     placeholder = OwnTVIcon.SERIES,
@@ -840,7 +842,7 @@ private fun SeriesGrid(
                             items(count = series.itemCount, key = series.itemKey { it.id }, contentType = series.itemContentType { "series" }) { index ->
                                 val show = series[index] ?: return@items
                                 StagePoster(
-                                    title = show.name,
+                                    title = loungeVodTitle(show.name),
                                     rating = show.rating?.takeIf { it > 0 }?.let(::vodRating),
                                     width = posterW, height = posterW * 1.5f,
                                     compact = true,
@@ -967,7 +969,7 @@ private fun SeriesGrid(
             }
         }
         VodOptionsMenu(
-            title = s.name,
+            title = loungeVodTitle(s.name),
             subtitle = listOfNotNull(
                 s.year?.toString(),
                 s.categoryId?.let { id -> categoryEntries.firstOrNull { it.item.key == LiveKey.Folder(id) }?.label },
@@ -1170,7 +1172,7 @@ private fun buildSeriesDetails(
         else s.rating?.takeIf { it > 0 } ?: meta?.rating?.takeIf { it > 0 }
     val metaLine = listOfNotNull(year?.let { localizedInteger(it, grouping = false) }, rating?.let { stringResource(R.string.content_rating, it) }).joinToString(stringResource(R.string.content_metadata_separator))
     return tv.own.owntv.features.shell.components.MediaDetailsUi(
-        title = s.name,
+        title = loungeVodTitle(s.name),
         backdropUrl = backdrop,
         logoUrl = tv.own.owntv.core.metadata.MetadataImages.logo(meta?.logoPath),
         posterUrl = poster,
@@ -1426,7 +1428,7 @@ private fun EpisodeView(
         Column(Modifier.padding(start = fx(84), top = 104.mpx).width(fx(980))) {
             // At most 170 high, the room the films' hero gives its title, so two lines shrink rather than
             // push the episodes down.
-            tv.own.owntv.features.shell.components.VodHeroTitle(series.name, Modifier.heightIn(max = 170.mpx))
+            tv.own.owntv.features.shell.components.VodHeroTitle(loungeVodTitle(series.name), Modifier.heightIn(max = 170.mpx))
             VodMeta(
                 parts = listOfNotNull(
                     info.year?.toString(),
@@ -1716,7 +1718,7 @@ private fun EpisodeView(
         val title = epName(ep, seasonMeta[ep.id])
         VodOptionsMenu(
             title = stringResource(R.string.content_episode_numbered, localizedInteger(ep.episodeNumber, grouping = false), title),
-            subtitle = series.name + " · " + if (ep.seasonNumber == 0) stringResource(R.string.content_season_specials) else stringResource(R.string.content_season, ep.seasonNumber),
+            subtitle = loungeVodTitle(series.name) + " · " + if (ep.seasonNumber == 0) stringResource(R.string.content_season_specials) else stringResource(R.string.content_season, ep.seasonNumber),
             posterUrl = episodeStillUrl(seasonMeta[ep.id], series, "w300"),
             x = 1290f,
             menu = ContentMenu.EPISODE,
@@ -1787,7 +1789,7 @@ private fun EpisodeView(
             }
         }
         VodOptionsMenu(
-            title = series.name,
+            title = loungeVodTitle(series.name),
             subtitle = listOfNotNull(info.year?.toString(), categoryName).joinToString(" · ").ifBlank { null },
             posterUrl = info.posterUrl,
             x = 1300f,
@@ -1829,7 +1831,7 @@ private fun EpisodeView(
             )
         }
     }
-    trailerVideoKey?.let { key -> TrailerPlayerScreen(videoKey = key, title = series.name, onExit = { trailerVideoKey = null }) }
+    trailerVideoKey?.let { key -> TrailerPlayerScreen(videoKey = key, title = loungeVodTitle(series.name), onExit = { trailerVideoKey = null }) }
 
     // Per-episode "Delete subtitles" popup — individual deletion; closes when none remain.
     if (showEpisodeDeleteSubs) {
@@ -1900,7 +1902,7 @@ internal fun seriesTitleInfo(
     val providerPoster = series.posterUrl?.takeIf { it.isNotBlank() }
     val tmdbPoster = tv.own.owntv.core.metadata.MetadataImages.poster(meta?.posterPath)
     return VodTitleInfo(
-        title = series.name,
+        title = loungeVodTitle(series.name),
         logoUrl = tv.own.owntv.core.metadata.MetadataImages.logo(meta?.logoPath),
         backdropUrl = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath, size = "w1280")
             ?: series.backdropUrl?.takeIf { it.isNotBlank() },

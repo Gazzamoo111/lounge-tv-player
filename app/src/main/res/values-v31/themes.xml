@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Android 12+: the launch screen plays the flip (core's owntv_splash_<colour>, 800 ms) and shows the
-         wordmark at the bottom (owntv_splash_name_<colour>), the pass-6 mockup's launch animation. -->
+    <!-- Android 12+: use the approved full Lounge TV lockup with transparent padding that keeps every
+         pixel inside the platform's circular icon mask. The background matches the app handoff. -->
     <style name="Theme.OwnTV.Starting.Petrol">
         <item name="windowSplashScreenAnimatedIcon">@drawable/loungetv_system_launch_art</item>
         <item name="windowSplashScreenAnimationDuration">800</item>

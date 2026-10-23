@@ -111,9 +111,9 @@ private val PixelPower = Color(CorePixelMark.POWER)
 @Composable
 fun Wordmark(width: Dp, modifier: Modifier = Modifier, tv: Color = stageAccent.accent, own: Color = WordmarkCream) {
     Image(
-        painter = painterResource(R.drawable.loungetv_original_wordmark_only),
+        painter = painterResource(R.drawable.loungetv_locked_wordmark),
         contentDescription = null,
-        modifier = modifier.width(width).height(width * 173f / 1595f),
+        modifier = modifier.width(width).height(width * 193f / 966f),
     )
 }
 

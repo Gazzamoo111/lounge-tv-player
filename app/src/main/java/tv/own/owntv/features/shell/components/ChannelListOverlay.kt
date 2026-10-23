@@ -88,16 +88,18 @@ fun ChannelListOverlay(
     /** History only: channel id → when it was last watched, shown at the row's end. */
     watchedAt: Map<Long, Long>? = null,
     onOpenCategories: (() -> Unit)? = null,
+    /** The last highlighted channel in this category, even if it was not played. */
+    initialFocusedChannelId: Long? = null,
+    onChannelFocused: ((ChannelEntity) -> Unit)? = null,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val dismissDirection = if (alignEnd) HorizontalDirection.END else HorizontalDirection.START
     val history = watchedAt != null
     val playingIndex = remember(channels, currentId) { channels.indexOfFirst { it.id == currentId } }
+    // Snapshot focus when this panel opens, not on every focus callback:
+    // updating the remembered channel must not reset the focus requester mid-scroll.
     val currentIndex = remember(channels, playingIndex, history) {
-        when {
-            history && playingIndex == 0 && channels.size > 1 -> 1
-            else -> playingIndex.coerceAtLeast(0)
-        }
+        channelOverlayInitialIndex(channels, playingIndex, history, initialFocusedChannelId)
     }
     val listState = rememberLazyListState()
     val focusTarget = remember { FocusRequester() }
@@ -217,7 +219,10 @@ fun ChannelListOverlay(
                         isFavorite = ch.id in favoriteIds,
                         showNumber = showNumbers,
                         mark = playlistMarks[ch.sourceId],
-                        onFocus = { focusedIndex = index },
+                        onFocus = {
+                            focusedIndex = index
+                            onChannelFocused?.invoke(ch)
+                        },
                         onClick = { onSelect(ch) },
                         onLongClick = {},
                         trailing = watchedAt?.let { times ->
@@ -254,5 +259,21 @@ fun ChannelListOverlay(
                 modifier = Modifier.padding(start = 14.mpx, top = 14.mpx),
             )
         }
+    }
+}
+
+/** Pure focus choice for the fullscreen browse list. Browsing must never retune a channel. */
+internal fun channelOverlayInitialIndex(
+    channels: List<ChannelEntity>,
+    playingIndex: Int,
+    history: Boolean,
+    previouslyFocusedId: Long?,
+): Int {
+    val savedIndex = previouslyFocusedId?.let { id ->
+        channels.indexOfFirst { it.id == id }.takeIf { it >= 0 }
+    }
+    return savedIndex ?: when {
+        history && playingIndex == 0 && channels.size > 1 -> 1
+        else -> playingIndex.coerceAtLeast(0)
     }
 }

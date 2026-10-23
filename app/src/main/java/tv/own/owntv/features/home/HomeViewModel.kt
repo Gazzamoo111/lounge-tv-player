@@ -1,9 +1,12 @@
 package tv.own.owntv.features.home
 
+import tv.own.owntv.ui.components.loungeVodTitle
+
 import androidx.compose.runtime.Immutable
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.WorkManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.channels.BufferOverflow
@@ -24,6 +27,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import tv.own.owntv.core.database.dao.CategoryDao
+import tv.own.owntv.core.customize.CustomizationStore
 import tv.own.owntv.core.database.dao.ChannelDao
 import tv.own.owntv.core.database.dao.MovieDao
 import tv.own.owntv.core.database.dao.ProfileDao
@@ -43,9 +47,15 @@ import tv.own.owntv.core.home.homeKey
 import tv.own.owntv.core.launcher.LauncherContinuationItem
 import tv.own.owntv.core.model.HomeConfig
 import tv.own.owntv.core.model.MediaType
+import tv.own.owntv.core.model.HomeRow
 import tv.own.owntv.core.metadata.MetadataImages
 import tv.own.owntv.core.metadata.MetadataRepository
 import tv.own.owntv.core.settings.SettingsRepository
+import tv.own.owntv.core.repository.SourceRepository
+import tv.own.owntv.core.sync.SyncContentTypes
+import tv.own.owntv.core.sync.work.CatalogSyncScheduler
+import tv.own.owntv.core.sync.work.ContentIndexWorker
+import tv.own.owntv.core.sync.work.TrendingRefreshWorker
 import tv.own.owntv.player.HeroPreviewEngine
 
 @Immutable
@@ -91,6 +101,11 @@ data class HomeUiState(
     val favoriteLive: List<ChannelEntity> = emptyList(),
     val favoriteMovies: List<MovieEntity> = emptyList(),
     val favoriteSeries: List<SeriesEntity> = emptyList(),
+    val featuredMovies: List<MovieEntity> = emptyList(),
+    val popularSeries: List<SeriesEntity> = emptyList(),
+    val liveHighlights: List<ChannelEntity> = emptyList(),
+    val featuredMovieNames: Map<Long, String> = emptyMap(),
+    val popularSeriesNames: Map<Long, String> = emptyMap(),
     val config: HomeConfig = HomeConfig(),
     val recentGuide: GuideSliceState = GuideSliceState(),
     val favoriteGuide: GuideSliceState = GuideSliceState(),
@@ -105,7 +120,7 @@ data class HomeUiState(
     val isLoading: Boolean = true,
 )
 
-/** What the shared top-bar Continue chip points at. */
+/** What the shared top-bar Continue chip points at (Batch 7). */
 enum class ContinueKind { LIVE, MOVIE, EPISODE }
 enum class ContinueAction { RESUME, PLAY, NEXT_UP, LAST_CHANNEL }
 
@@ -139,7 +154,14 @@ class HomeViewModel(
     private val trendingDao: TrendingDao,
     private val favoriteDao: tv.own.owntv.core.database.dao.FavoriteDao,
     private val userDataWriter: tv.own.owntv.core.backup.UserDataWriter,
+    private val sourceRepository: SourceRepository,
+    private val catalogSyncScheduler: CatalogSyncScheduler,
+    private val context: android.content.Context,
+    private val customizations: CustomizationStore,
 ) : ViewModel() {
+    // One automatic recovery attempt per playlist per Home VM lifetime.
+    // A normal provider sync or backfill still owns its own Trending updates.
+    private val attemptedMissingTrending = java.util.Collections.synchronizedSet(mutableSetOf<Long>())
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
@@ -182,7 +204,7 @@ class HomeViewModel(
         }
     }
 
-    // --- The single most-recent resumable item, for the shared top-bar Continue chip. ---
+    // --- Batch 7: the single most-recent resumable item, for the shared top-bar Continue chip. ---
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val continueTarget: StateFlow<ContinueTarget?> = settings.activeProfileId
         .flatMapLatest { pid ->
@@ -198,13 +220,13 @@ class HomeViewModel(
         MediaType.MOVIE -> movieDao.getById(h.itemId)?.let { m ->
             if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, m.categoryId, profileDao, categoryDao)) return@let null
             val pos = progressDao.get(pid, MediaType.MOVIE, m.id)?.positionMs ?: 0L
-            ContinueTarget(ContinueKind.MOVIE, m.name, if (pos > 0) ContinueAction.RESUME else ContinueAction.PLAY, movieId = m.id, positionMs = pos)
+            ContinueTarget(ContinueKind.MOVIE, loungeVodTitle(m.name), if (pos > 0) ContinueAction.RESUME else ContinueAction.PLAY, movieId = m.id, positionMs = pos)
         }
         MediaType.EPISODE -> seriesDao.getEpisodeById(h.itemId)?.let { ep ->
             seriesDao.getSeriesById(ep.seriesId)?.let { s ->
                 if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, s.categoryId, profileDao, categoryDao)) return@let null
                 val pos = progressDao.get(pid, MediaType.EPISODE, ep.id)?.positionMs ?: 0L
-                ContinueTarget(ContinueKind.EPISODE, s.name, if (pos > 0) ContinueAction.RESUME else ContinueAction.NEXT_UP, seriesId = ep.seriesId, episodeId = ep.id, positionMs = pos)
+                ContinueTarget(ContinueKind.EPISODE, loungeVodTitle(s.name), if (pos > 0) ContinueAction.RESUME else ContinueAction.NEXT_UP, seriesId = ep.seriesId, episodeId = ep.id, positionMs = pos)
             }
         }
         MediaType.LIVE -> channelDao.getById(h.itemId)?.let { c ->
@@ -412,6 +434,63 @@ class HomeViewModel(
         _uiState.value.trendingItems.getOrNull(_uiState.value.activeTrendingIndex)?.let(::resolveTrendingExtras)
         // Keep watching shows every card as a still, so each needs its artwork up front, not on focus.
         _uiState.value.heroItems.indices.forEach { resolveHeroMetadata(it) }
+        // Bounded read-only catalogue shelves. Painting Trending must never wait for these.
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val selection = LoungeHomeHighlightsReader(
+                    movieDao, seriesDao, channelDao, categoryDao,
+                    profileDao, sourceDao, settings, customizations, context,
+                ).load(profileId)
+                if (currentProfileId() == profileId) {
+                    _uiState.value = _uiState.value.copy(
+                        featuredMovies = selection.movies,
+                        popularSeries = selection.series,
+                        liveHighlights = selection.channels,
+                        featuredMovieNames = selection.movieNames,
+                        popularSeriesNames = selection.seriesNames,
+                    )
+                }
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                android.util.Log.w("LoungeHomeHighlights", "Catalogue highlights unavailable", failure)
+            }
+        }
+        // Core SourceImporter's direct first-run import can finish without enqueuing Trending.
+        // Repair that path in the background (also self-heals existing blank Home installs),
+        // while leaving the freshly painted Home view completely non-blocking.
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching { bootstrapMissingTrending(profileId) }
+                .onFailure { android.util.Log.w(javaClass.simpleName, it) }
+        }
+    }
+
+    private suspend fun bootstrapMissingTrending(profileId: Long) {
+        if (!settings.metadataConfig().enabled) return
+        if (HomeRow.TRENDING in settings.homeConfig(profileId).first().hidden) return
+        val worker = WorkManager.getInstance(context)
+        for (sourceId in sourceDao.sourceIdsForProfile(profileId)) {
+            val source = sourceDao.getById(sourceId) ?: continue
+            if (source.lastSyncAt == null || trendingDao.getState(sourceId) != null) continue
+            val types = SyncContentTypes.enabledFor(source)
+            if (!types.movies && !types.series) continue
+            if (movieDao.countForSourceOnce(sourceId) + seriesDao.countForSourceOnce(sourceId) == 0) continue
+            // Stalker sources can still have pages draining after the first import;
+            // their backfill worker queues Trending when the catalogue is complete.
+            if (!sourceRepository.catalogueComplete(sourceId)) continue
+            if (!attemptedMissingTrending.add(sourceId)) continue
+
+            // On a fresh import, a separate worker creates the content search indexes.
+            // Wait for it instead of racing the matching stage against unbuilt indexes.
+            worker.getWorkInfosForUniqueWorkFlow(ContentIndexWorker.workName())
+                .first { infos -> infos.none { !it.state.isFinished } }
+            val trendingAlreadyRunning = worker
+                .getWorkInfosForUniqueWorkFlow(TrendingRefreshWorker.workName(sourceId))
+                .first().any { !it.state.isFinished }
+            if (!trendingAlreadyRunning && trendingDao.getState(sourceId) == null) {
+                catalogSyncScheduler.enqueueTrendingRefresh(sourceId)
+            }
+        }
     }
 
     private fun resolveHeroMetadata(index: Int) {

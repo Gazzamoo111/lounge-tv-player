@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Editorial, exact-match search seeds. Only playable BEST catalogue matches appear on Home. -->
+    <string-array name="lounge_popular_movies">
+        <item>Dune: Part Two</item>
+        <item>Oppenheimer</item>
+        <item>Top Gun: Maverick</item>
+        <item>The Dark Knight</item>
+        <item>Interstellar</item>
+        <item>Inception</item>
+        <item>Avatar: The Way of Water</item>
+        <item>Barbie</item>
+        <item>The Batman</item>
+        <item>John Wick: Chapter 4</item>
+        <item>Spider-Man: No Way Home</item>
+        <item>Avengers: Endgame</item>
+        <item>Deadpool &amp; Wolverine</item>
+        <item>Inside Out 2</item>
+        <item>The Shawshank Redemption</item>
+        <item>The Godfather</item>
+        <item>The Matrix</item>
+        <item>Gladiator</item>
+        <item>The Lord of the Rings: The Fellowship of the Ring</item>
+        <item>The Lord of the Rings: The Two Towers</item>
+        <item>The Lord of the Rings: The Return of the King</item>
+        <item>Pulp Fiction</item>
+        <item>Titanic</item>
+        <item>Forrest Gump</item>
+        <item>The Lion King</item>
+        <item>The Super Mario Bros. Movie</item>
+        <item>Despicable Me 4</item>
+        <item>Moana</item>
+        <item>The Avengers</item>
+        <item>The Prestige</item>
+        <item>The Departed</item>
+        <item>Joker</item>
+        <item>Wicked</item>
+        <item>Gladiator II</item>
+        <item>Jurassic Park</item>
+        <item>Saving Private Ryan</item>
+        <item>Mission: Impossible – Fallout</item>
+        <item>The Wolf of Wall Street</item>
+    </string-array>
+    <string-array name="lounge_popular_series">
+        <item>Breaking Bad</item>
+        <item>Stranger Things</item>
+        <item>The Last of Us</item>
+        <item>The Boys</item>
+        <item>The White Lotus</item>
+        <item>House of the Dragon</item>
+        <item>Game of Thrones</item>
+        <item>The Bear</item>
+        <item>Severance</item>
+        <item>Reacher</item>
+        <item>Fallout</item>
+        <item>Shogun</item>
+        <item>Wednesday</item>
+        <item>The Pitt</item>
+        <item>Yellowstone</item>
+        <item>The Sopranos</item>
+        <item>Better Call Saul</item>
+        <item>The Walking Dead</item>
+        <item>The Office</item>
+        <item>Peaky Blinders</item>
+        <item>Succession</item>
+        <item>Ted Lasso</item>
+        <item>Squid Game</item>
+        <item>Only Murders in the Building</item>
+        <item>Andor</item>
+        <item>Silo</item>
+        <item>The Mandalorian</item>
+        <item>The Penguin</item>
+        <item>True Detective</item>
+        <item>Ozark</item>
+        <item>Vikings</item>
+        <item>The Crown</item>
+        <item>The Witcher</item>
+        <item>Chernobyl</item>
+        <item>Friends</item>
+        <item>Dexter</item>
+        <item>The Big Bang Theory</item>
+        <item>The Rookie</item>
+    </string-array>
+    <!-- These are specific playlist channels, not categories. Missing feeds are skipped. -->
+    <string-array name="lounge_live_highlight_channels" translatable="false">
+        <item>Sky Sport 1</item>
+        <item>Sky Sport 2</item>
+        <item>Sky Sport 3</item>
+        <item>Sky Sport 4</item>
+        <item>Fox League 502</item>
+        <item>Fox Cricket</item>
+        <item>TNT Sports 1</item>
+        <item>TNT Sports 2</item>
+        <item>ESPN</item>
+        <item>ESPN 2</item>
+        <item>BBC One</item>
+        <item>Discovery Channel</item>
+        <item>National Geographic</item>
+        <item>Sky News</item>
+        <item>Cartoon Network</item>
+        <item>History Channel</item>
+    </string-array>
+    <string-array name="lounge_live_highlight_exclusions" translatable="false">
+        <item>TVNZ</item>
+        <item>TV NZ</item>
+    </string-array>
+</resources>

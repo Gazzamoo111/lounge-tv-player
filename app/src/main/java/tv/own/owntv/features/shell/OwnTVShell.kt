@@ -3,6 +3,7 @@ package tv.own.owntv.features.shell
 import tv.own.owntv.ui.stage.stageGlass
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
@@ -314,6 +316,16 @@ fun OwnTVShell(
     }.collectAsStateWithLifecycle(emptyList())
     // In-player channel-list overlay (Left while controls hidden, live only).
     var showChannelList by remember { mutableStateOf(false) }
+    // Back from a category's channels returns to categories; the original playing
+    // channel list still closes directly to video. No changes to playback or zap order.
+    var browsedIntoCategory by remember { mutableStateOf(false) }
+    // Preserve the highlighted row per category even if OK was never pressed.
+    // Scope to the active profile so one customer's browse focus cannot leak to another.
+    val lastBrowsedChannel = remember(activeProfileId) { mutableStateMapOf<LiveKey, Long>() }
+    // The category being browsed is independent of the channel still playing behind the panel.
+    // Keep its focus AND viewport when temporarily opening the category's channel list.
+    var lastBrowsedCategory by remember(activeProfileId) { mutableStateOf<LiveKey?>(null) }
+    val categoryBrowseListState = remember(activeProfileId) { LazyListState() }
     // In-player watch-history list (Right while controls hidden, live only).
     var showHistoryList by remember { mutableStateOf(false) }
     // Multiview: the grid, while it is up, and which tile is waiting for a channel to be picked.
@@ -545,6 +557,7 @@ fun OwnTVShell(
         resumeVideo() // restore mpv `vid=auto` before stop so the next played item isn't left video-less
         playerMode = PlayerMode.NONE
         showChannelList = false
+        browsedIntoCategory = false
         showHistoryList = false
         liveVm.hideCategoryBrowser()
         liveVm.onFullscreenExited() // no longer full-screen on ExoPlayer → let the preview re-take the engine
@@ -1623,7 +1636,7 @@ fun OwnTVShell(
                     inert = showChannelList || showHistoryList || showCategoryBrowser || showSubtitleSearch || showLocalSubPicker || showOtherChannels,
                     onChannelUp = zap?.let { z -> { z(-1) } },
                     onChannelDown = zap?.let { z -> { z(1) } },
-                    onOpenChannelList = if (isTunedLive && liveCanZap) { { showChannelList = true } } else null,
+                    onOpenChannelList = if (isTunedLive && liveCanZap) { { browsedIntoCategory = false; showChannelList = true } } else null,
                     // Live channels only, and only once Multiview is switched on: the channel on screen
                     // becomes tile 1 and the grid takes over. Everything it needs is already tuned.
                     onMultiview = if (multiviewEnabled && isTunedLive && previewChannel != null) {
@@ -1828,13 +1841,28 @@ fun OwnTVShell(
                             railCounts = browserRailCounts,
                             // The list the player zaps in: a built-in rail or custom category when it came from one.
                             currentKey = zapListKey ?: previewChannel?.categoryId?.let { tv.own.owntv.core.live.LiveKey.Folder(it) },
-                            onSelect = { key -> liveVm.loadChannelsForCategory(key) },
-                            onDismiss = { liveVm.hideCategoryBrowser() },
+                            initialFocusedKey = lastBrowsedCategory,
+                            onCategoryFocused = { lastBrowsedCategory = it },
+                            listState = categoryBrowseListState,
+                            onSelect = { key ->
+                                lastBrowsedCategory = key
+                                browsedIntoCategory = true
+                                liveVm.loadChannelsForCategory(key)
+                            },
+                            onDismiss = {
+                                liveVm.hideCategoryBrowser()
+                                if (browsedIntoCategory) {
+                                    // Categories are the outermost level of this browse session.
+                                    showChannelList = false
+                                    browsedIntoCategory = false
+                                }
+                            },
                             modifier = Modifier.fillMaxSize(),
                         )
                     } else if (zapChannels.isNotEmpty()) {
-                        // First Left — the channels of the current category. A browsed-to category may
-                        // hold a single channel, so this renders for any non-empty list.
+                        // Back from an opened category goes up one level instead of
+                        // abandoning all browsing and re-anchoring on the playing channel.
+                        val browsingKey = zapListKey ?: previewChannel?.categoryId?.let { LiveKey.Folder(it) }
                         tv.own.owntv.features.shell.components.ChannelListOverlay(
                             channels = zapChannels,
                             currentId = previewChannel?.id,
@@ -1844,8 +1872,19 @@ fun OwnTVShell(
                             playlistMarks = overlayPlaylistMarks,
                             title = zapOverlayTitle,
                             showNumbers = directTuneEnabled,
-                            onSelect = { liveVm.ensurePlaying(it); showChannelList = false },
-                            onDismiss = { showChannelList = false },
+                            initialFocusedChannelId = browsingKey?.let { lastBrowsedChannel[it] },
+                            onChannelFocused = { channel ->
+                                browsingKey?.let { lastBrowsedChannel[it] = channel.id }
+                            },
+                            onSelect = {
+                                liveVm.ensurePlaying(it)
+                                showChannelList = false
+                                browsedIntoCategory = false
+                            },
+                            onDismiss = {
+                                if (browsedIntoCategory) liveVm.showCategories()
+                                else showChannelList = false
+                            },
                             onOpenCategories = { liveVm.showCategories() },
                             modifier = Modifier.fillMaxSize(),
                         )

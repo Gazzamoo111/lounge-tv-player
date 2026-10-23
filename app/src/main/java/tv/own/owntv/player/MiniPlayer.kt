@@ -1,5 +1,7 @@
 package tv.own.owntv.player
 
+import tv.own.owntv.ui.components.loungeVodTitle
+
 import tv.own.owntv.ui.theme.hudOnAccent
 import tv.own.owntv.ui.theme.hudAccent
 import tv.own.owntv.ui.theme.hudShade
@@ -119,7 +121,7 @@ fun MiniPlayer(
                 .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
         ) {
             Text(
-                meta.title ?: "",
+                meta.title?.let { if (duration > 0L) loungeVodTitle(it) else it } ?: "",
                 style = tv.own.owntv.ui.theme.stageText(22, 700),
                 color = hudInk,
                 maxLines = 1,

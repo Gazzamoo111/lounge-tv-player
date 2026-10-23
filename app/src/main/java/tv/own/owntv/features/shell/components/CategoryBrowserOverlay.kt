@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -55,15 +56,25 @@ fun CategoryBrowserOverlay(
     onSelect: (LiveKey) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    /** A separately remembered browsing position, never derived from the playing channel. */
+    initialFocusedKey: LiveKey? = null,
+    onCategoryFocused: ((LiveKey) -> Unit)? = null,
+    /** Hoisted in the fullscreen player so exiting a category does not lose the scroll offset. */
+    listState: LazyListState = rememberLazyListState(),
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val (entries, groupsHeading) = liveCategoryEntries(railItems, railCounts)
-    val selectedIndex = remember(entries, currentKey) { entries.indexOfFirst { it.item.key == currentKey }.coerceAtLeast(0) }
-    val listState = rememberLazyListState()
+    val keys = entries.map { it.item.key }
+    val selectedIndex = remember(keys, currentKey) { keys.indexOfFirst { it == currentKey }.coerceAtLeast(0) }
+    // Take the initial focus snapshot only on opening (or when the rail changes).
+    // Focus callbacks must not re-anchor this panel while the user is scrolling.
+    val initialFocusIndex = remember(keys, currentKey) {
+        categoryOverlayInitialIndex(keys, currentKey, initialFocusedKey)
+    }
     val listFocus = remember { FocusRequester() }
     // Paging moves focus by setting the row to land on; the sheet scrolls to it and reports back.
     var focusRow by remember { mutableStateOf<Int?>(null) }
-    var focusedIndex by remember(selectedIndex) { mutableIntStateOf(selectedIndex) }
+    var focusedIndex by remember(initialFocusIndex) { mutableIntStateOf(initialFocusIndex) }
     var hasFocus by remember { mutableStateOf(false) }
     // While the search is being typed in, ◀/▶ move the text cursor; OK or Back ends typing first.
     var typing by remember { mutableStateOf(false) }
@@ -72,13 +83,12 @@ fun CategoryBrowserOverlay(
     val chNavUpSkip by settingsVm.chNavUpSkip.collectAsStateWithLifecycle()
     val chNavDownSkip by settingsVm.chNavDownSkip.collectAsStateWithLifecycle()
 
-    // Entering the sheet's list lands on the selected category (its focusProperties.onEnter). Focusing
-    // it scrolls it to the top edge, hiding the search and the fixed entries above it; when the
-    // selected row fits on the first screen, keep the list at its top as the Live TV sheet shows it.
+    // Entering the sheet restores the last browsed category rather than jumping back to
+    // the tuned channel's category. Keep the search visible near the top of the rail.
     LaunchedEffect(Unit) {
         runCatching { listFocus.requestFocus() }
         withFrameNanos { }
-        if (selectedIndex < FIRST_SCREEN_ROWS) runCatching { listState.scrollToItem(0) }
+        if (initialFocusIndex < FIRST_SCREEN_ROWS) runCatching { listState.scrollToItem(0) }
     }
 
     BackHandler { onDismiss() }
@@ -92,6 +102,7 @@ fun CategoryBrowserOverlay(
         LiveCategories(
             entries = entries,
             selectedIndex = selectedIndex,
+            entryFocusIndex = initialFocusIndex,
             groupsHeading = groupsHeading,
             sheet = true,
             listState = listState,
@@ -101,7 +112,10 @@ fun CategoryBrowserOverlay(
             focusRequester = listFocus,
             focusRowIndex = focusRow,
             onRowFocused = { focusRow = null },
-            onRowFocus = { focusedIndex = it },
+            onRowFocus = {
+                focusedIndex = it
+                onCategoryFocused?.invoke(keys[it])
+            },
             onSearchEditingChange = { typing = it },
             modifier = Modifier
                 .align(Alignment.CenterStart)
@@ -130,3 +144,14 @@ fun CategoryBrowserOverlay(
 
 /** Rows that fit on the sheet's first screen below the search field, the fixed entries included. */
 private const val FIRST_SCREEN_ROWS = 10
+
+/** Restore focus from the browsed category; only fall back to the playing category if absent. */
+internal fun categoryOverlayInitialIndex(
+    keys: List<LiveKey>,
+    playingKey: LiveKey?,
+    lastBrowsedKey: LiveKey?,
+): Int {
+    val browsedIndex = lastBrowsedKey?.let(keys::indexOf) ?: -1
+    if (browsedIndex >= 0) return browsedIndex
+    return playingKey?.let(keys::indexOf)?.takeIf { it >= 0 } ?: 0
+}

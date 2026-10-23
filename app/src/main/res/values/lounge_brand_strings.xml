@@ -67,4 +67,6 @@
 <string name="setup_welcome_title">Welcome to Lounge TV</string>
 <string name="setup_line_app_icon">How Lounge TV appears on the TV’s home screen</string>
 <string name="setup_line_app_icon_mobile">How Lounge TV appears on your home screen</string>
+    <!-- Use English text when TMDB supplies non-English Spider-Man title art. -->
+    <string name="lounge_brand_new_day_english_title" translatable="false">Spider-Man: Brand New Day</string>
 </resources>

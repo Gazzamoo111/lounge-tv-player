@@ -9,7 +9,7 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: loungetv-release
+  group: loungetv-release-${{ github.ref }}
   cancel-in-progress: false
 jobs:
   candidate:
@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.ref_name }}
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -39,6 +39,7 @@ jobs:
           VERSION_CODE=$(python3 scripts/version_code.py "$VERSION_NAME")
           echo "VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
           python3 scripts/check_branding.py
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/tests -p 'test_*.py'
           if gh release view "v$VERSION_NAME" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             echo "Release v$VERSION_NAME exists; refusing to overwrite."
             exit 1
@@ -63,17 +64,29 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           VERSION_NAME: ${{ inputs.version_name }}
+          PRODUCTION_SIGNING_REQUIRED: 'true'
+          EXPECTED_PRODUCTION_CERT_SHA256: 7541bd80e141e48650e952cec62de1daa6491adcc4fab522613f1954fce8b6f9
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          [ -n "$EXPECTED_PRODUCTION_CERT_SHA256" ] || { echo "Missing PRODUCTION_CERT_SHA256 repository variable"; exit 1; }
           chmod +x ./gradlew
-          ./gradlew :app:assembleStandardRelease :app:assembleX86_64Release -x :app:verifyI18nLiterals --stacktrace
+          ./gradlew :app:assembleStandardRelease :app:assembleX86_64Release --stacktrace
           mkdir -p dist
           cp app/build/outputs/apk/standard/release/*.apk dist/LoungeTV.apk
           cp app/build/outputs/apk/x86_64/release/*.apk "dist/LoungeTV-x86_64-v${VERSION_NAME}.apk"
-          BUILD_TOOLS=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)
-          "$BUILD_TOOLS/apksigner" verify --print-certs dist/LoungeTV.apk
-          "$BUILD_TOOLS/apksigner" verify --print-certs "dist/LoungeTV-x86_64-v${VERSION_NAME}.apk"
-          "$BUILD_TOOLS/aapt" dump badging dist/LoungeTV.apk | grep -q "package: name='com.loungetv.player'"
+          previous_tag=$(gh release view --json tagName --jq .tagName -R "$GITHUB_REPOSITORY")
+          mkdir -p previous
+          gh release download "$previous_tag" --pattern LoungeTV.apk --dir previous -R "$GITHUB_REPOSITORY"
+          python3 scripts/verify_update_compatibility.py dist/LoungeTV.apk \
+            --previous previous/LoungeTV.apk \
+            --expected-package com.loungetv.player \
+            --expected-cert-sha256 "$EXPECTED_PRODUCTION_CERT_SHA256" \
+            --expected-version-code "$VERSION_CODE"
+          python3 scripts/verify_update_compatibility.py "dist/LoungeTV-x86_64-v${VERSION_NAME}.apk" \
+            --expected-package com.loungetv.player \
+            --expected-cert-sha256 "$EXPECTED_PRODUCTION_CERT_SHA256" \
+            --expected-version-code "$VERSION_CODE"
           sha256sum dist/*.apk > dist/SHA256SUMS.txt
       - name: Save exact release candidate for review
         uses: actions/upload-artifact@v4
@@ -82,12 +95,11 @@ jobs:
           path: dist/*
           if-no-files-found: error
   publish:
+    if: github.ref == 'refs/heads/main'
     needs: candidate
     runs-on: ubuntu-latest
     environment: production
     steps:
-      # gh release commands require repository context. This job runs on a new
-      # runner, separate from candidate, so it must check out the repo itself.
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
