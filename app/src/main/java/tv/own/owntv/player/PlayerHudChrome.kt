@@ -1,5 +1,7 @@
 package tv.own.owntv.player
 
+import tv.own.owntv.ui.components.loungeVodTitle
+
 import tv.own.owntv.ui.theme.hudAccent
 import tv.own.owntv.ui.theme.hudShade
 import tv.own.owntv.ui.theme.hudInk
@@ -76,7 +78,7 @@ internal fun TopBar(
 ) {
     // Reactive meta so the title row updates instantly on a channel zap (the plain vars aren't observed).
     val meta by player.currentMeta.collectAsStateWithLifecycle()
-    val displayTitle = meta.title?.takeIf { it.isNotBlank() }
+    val displayTitle = meta.title?.takeIf { it.isNotBlank() }?.let { if (isLive) it else loungeVodTitle(it) }
         ?: meta.episodeNumber?.let { stringResource(R.string.player_episode_number, it) }
         ?: ""
     val localizedSubtitle = meta.localizedSubtitle()
