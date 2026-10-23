@@ -437,7 +437,7 @@ class HomeViewModel(
             try {
                 val selection = LoungeHomeHighlightsReader(
                     movieDao, seriesDao, channelDao, categoryDao,
-                    profileDao, sourceDao, settings, customizations,
+                    profileDao, sourceDao, settings, customizations, context,
                 ).load(profileId)
                 if (currentProfileId() == profileId) {
                     _uiState.value = _uiState.value.copy(
