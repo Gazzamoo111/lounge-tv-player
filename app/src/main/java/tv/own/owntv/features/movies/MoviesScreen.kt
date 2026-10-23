@@ -2,6 +2,8 @@
 
 package tv.own.owntv.features.movies
 
+import tv.own.owntv.ui.components.loungeVodTitle
+
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.CompositionLocalProvider
@@ -617,7 +619,7 @@ fun MoviesScreen(
                                     val prog = movieProgress[movie.id]
                                     val done = prog?.let { vm.isMovieCompleted(it) } == true
                                     StagePoster(
-                                        title = movie.name,
+                                        title = loungeVodTitle(movie.name),
                                         rating = movie.rating?.takeIf { it > 0 }?.let(::vodRating),
                                         width = 196.mpx, height = 294.mpx,
                                         progress = prog?.takeIf { it.durationMs > 0 }?.let { it.positionMs.toFloat() / it.durationMs },
@@ -734,7 +736,7 @@ fun MoviesScreen(
                                 val prog = movieProgress[movie.id]
                                 val done = prog?.let { vm.isMovieCompleted(it) } == true
                                 VodListRow(
-                                    title = movie.name,
+                                    title = loungeVodTitle(movie.name),
                                     line = vodLine(movie.year, movie.rating, movie.durationSecs),
                                     posterUrl = posterOf(movie),
                                     placeholder = OwnTVIcon.MOVIES,
@@ -786,7 +788,7 @@ fun MoviesScreen(
                                 val prog = movieProgress[movie.id]
                                 val done = prog?.let { vm.isMovieCompleted(it) } == true
                                 StagePoster(
-                                    title = movie.name,
+                                    title = loungeVodTitle(movie.name),
                                     rating = movie.rating?.takeIf { it > 0 }?.let(::vodRating),
                                     width = posterW, height = posterW * 1.5f,
                                     compact = true,
@@ -944,7 +946,7 @@ fun MoviesScreen(
             })
         }
         VodOptionsMenu(
-            title = m.name,
+            title = loungeVodTitle(m.name),
             subtitle = listOfNotNull(
                 m.year?.toString(),
                 m.categoryId?.let { id -> categoryEntries.firstOrNull { it.item.key == LiveKey.Folder(id) }?.label },
@@ -1177,7 +1179,7 @@ private fun buildMovieDetails(
         ?: movie.backdropUrl?.takeIf { it.isNotBlank() }
     val plot = if (tmdbWins) meta?.overview ?: movie.plot else movie.plot?.takeIf { it.isNotBlank() } ?: meta?.overview
     return tv.own.owntv.features.shell.components.MediaDetailsUi(
-        title = movie.name,
+        title = loungeVodTitle(movie.name),
         backdropUrl = backdrop,
         logoUrl = tv.own.owntv.core.metadata.MetadataImages.logo(meta?.logoPath),
         posterUrl = poster,
@@ -1210,7 +1212,7 @@ internal fun movieTitleInfo(
     val providerPoster = movie.posterUrl?.takeIf { it.isNotBlank() }
     val tmdbPoster = tv.own.owntv.core.metadata.MetadataImages.poster(meta?.posterPath)
     return VodTitleInfo(
-        title = movie.name,
+        title = loungeVodTitle(movie.name),
         logoUrl = tv.own.owntv.core.metadata.MetadataImages.logo(meta?.logoPath),
         backdropUrl = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath, size = "w1280")
             ?: movie.backdropUrl?.takeIf { it.isNotBlank() },
