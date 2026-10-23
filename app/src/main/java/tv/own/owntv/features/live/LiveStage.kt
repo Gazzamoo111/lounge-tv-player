@@ -446,7 +446,7 @@ internal fun liveCategoryEntries(railItems: List<LiveRailItem>, railCounts: Map<
  * "GROUPS · DE" and the provider groups with their tags, counts and playlist marks. The selected
  * category is accent text plus the dot (sheet) or the 4 px bar (column).
  *
- * Focus rules: entering lands on the open category, never a row only browsed;
+ * Focus rules: entering lands on the requested row (last browsed in the player, otherwise selected);
  * vertical exits are trapped; Right hands focus to the channel list ([onNavigateRight]).
  */
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
@@ -466,6 +466,8 @@ internal fun LiveCategories(
     onRowFocused: () -> Unit = {},
     /** Which row has focus as the user moves (Movies / Series: CH± steps from it without selecting). */
     onRowFocus: (Int) -> Unit = {},
+    /** Initial focus can differ from the playing/selected category in the fullscreen browser. */
+    entryFocusIndex: Int = selectedIndex,
     /** The sheet's heading and the line beside it; the TV Guide says "Guide category · Same list as Live TV". */
     sheetTitle: String = stringResource(R.string.content_category_browser_title),
     sheetHint: String = stringResource(R.string.common_nav_live_tv),
@@ -488,8 +490,8 @@ internal fun LiveCategories(
     val scope = rememberCoroutineScope()
     // CH+/− in the categories changes the selection; the highlight follows it there.
     var hasFocus by remember { mutableStateOf(false) }
-    LaunchedEffect(selectedIndex) {
-        val pos = visible.indexOf(selectedIndex)
+    LaunchedEffect(entryFocusIndex) {
+        val pos = visible.indexOf(entryFocusIndex)
         if (!hasFocus || pos < 0) return@LaunchedEffect
         runCatching { listState.scrollToItem(pos + 1) } // +1: the search field is item 0
         withFrameNanos { }
@@ -548,7 +550,7 @@ internal fun LiveCategories(
                 .onFocusChanged { hasFocus = it.hasFocus }
                 .focusProperties {
                     onEnter = {
-                        val pos = visible.indexOf(selectedIndex)
+                        val pos = visible.indexOf(entryFocusIndex)
                         val target = if (pos in rowFocusers.indices) rowFocusers[pos] else searchFocus
                         if (!runCatching { target.requestFocus() }.getOrDefault(false)) {
                             scope.launch {
