@@ -1,5 +1,7 @@
 package tv.own.owntv.features.search
 
+import tv.own.owntv.ui.components.loungeVodTitle
+
 import tv.own.owntv.ui.theme.stageTone
 import tv.own.owntv.ui.theme.stageShadow
 import androidx.activity.compose.BackHandler
@@ -425,7 +427,7 @@ fun SearchScreen(
                             )
                         }
                         is Entry.Movie -> SearchRow(
-                            title = e.movie.name,
+                            title = loungeVodTitle(e.movie.name),
                             line = vodRowLine(e.movie.year, e.movie.rating, e.movie.categoryId?.let { categoryNames[it] }),
                             tags = emptyList(), mark = marks[e.movie.sourceId],
                             onClick = { goTo(e) },
@@ -433,7 +435,7 @@ fun SearchScreen(
                             modifier = rowModifier,
                         )
                         is Entry.Series -> SearchRow(
-                            title = e.series.name,
+                            title = loungeVodTitle(e.series.name),
                             line = vodRowLine(e.series.year, e.series.rating, e.series.categoryId?.let { categoryNames[it] }),
                             tags = emptyList(), mark = marks[e.series.sourceId],
                             onClick = { goTo(e) },

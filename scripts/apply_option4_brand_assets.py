@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Resize/crop the approved 23 Oct 2026 Option 4 art; never redraw or recolour it."""
+"""Render approved Option 4 artwork with distinct selectable icon colours."""
 from pathlib import Path
 import hashlib, json
 from PIL import Image, ImageChops
@@ -57,13 +57,54 @@ write(logo, RES/'drawable-nodpi/loungetv_locked_horizontal.png')
 write(wordmark, RES/'drawable-nodpi/loungetv_locked_wordmark.png')
 write(couch, RES/'drawable-nodpi/loungetv_locked_couch.png')
 write(app_icon, RES/'drawable-nodpi/loungetv_locked_app_icon.png')
-write(fit(logo,768,768,.57),RES/'drawable-nodpi/loungetv_system_launch_art.png')
-styles = ['eggshell','petrol','sunflower','cobalt','tomato','board','olive','olive_cream','pixel']
-for name in styles:
-    write(fit(couch,512,512,.86),RES/f'drawable-nodpi/loungetv_icon_variant_{name}.png')
+# Android's native splash masks the image to a circular safe area. .625 is
+# the largest reliable fit for this wide logo (about 10% larger, no clipped L).
+write(fit(logo,768,768,.625),RES/'drawable-nodpi/loungetv_system_launch_art.png')
+# Keep Eggshell the exact approved Option 4 blue. The remaining choices are
+# intentionally distinct, recolouring the approved couch rather than replacing it.
+ICON_COLOURS = {
+    'eggshell': None,
+    'petrol': (12, 215, 192),       # teal
+    'sunflower': (255, 185, 35),    # gold
+    'cobalt': (62, 101, 255),       # royal blue
+    'tomato': (255, 80, 94),        # coral red
+    'board': (205, 220, 230),       # platinum
+    'olive': (125, 192, 66),        # green
+    'olive_cream': (225, 154, 212), # rose
+    'pixel': (185, 88, 255),        # violet
+}
+def coloured(im, colour):
+    if colour is None:
+        return im.copy()
+    out = im.copy()
+    px = out.load()
+    for y in range(out.height):
+        for x in range(out.width):
+            r, g, b, a = px[x, y]
+            if a == 0:
+                continue
+            # Only recolour blue couch pixels, not the approved white launcher tile.
+            if b < r + 12 or b < g + 7:
+                continue
+            strength = max(0.0, min(1.0, (b - min(r, g)) / 85.0))
+            brightness = max(r, g, b) / 255.0
+            scale = .30 + .70 * brightness
+            desired = tuple(min(255, round(v * scale)) for v in colour)
+            px[x, y] = (
+                round(r * (1-strength) + desired[0] * strength),
+                round(g * (1-strength) + desired[1] * strength),
+                round(b * (1-strength) + desired[2] * strength),
+                a,
+            )
+    return out
+
+for name, colour in ICON_COLOURS.items():
+    variant_couch = coloured(couch, colour)
+    variant_app_icon = coloured(app_icon, colour)
+    write(fit(variant_couch,512,512,.86),RES/f'drawable-nodpi/loungetv_icon_variant_{name}.png')
     for density,factor in [('mdpi',1),('hdpi',1.5),('xhdpi',2),('xxhdpi',3),('xxxhdpi',4)]:
         n = round(108*factor)
-        write(fit(app_icon,n,n,.81),RES/f'mipmap-{density}/owntv_icon_{name}_foreground.png')
+        write(fit(variant_app_icon,n,n,.81),RES/f'mipmap-{density}/owntv_icon_{name}_foreground.png')
         write(fit(logo,round(320*factor),round(180*factor),.88),RES/f'drawable-{density}/owntv_banner_{name}.png')
 # Keep GitHub's existing protected source hashes and extend the record with
 # the locked original masters plus deterministic deployment derivatives.

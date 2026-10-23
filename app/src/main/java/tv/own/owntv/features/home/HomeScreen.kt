@@ -90,6 +90,7 @@ import tv.own.owntv.features.shell.components.MediaDetailsScreen
 import tv.own.owntv.features.shell.components.MediaDetailsUi
 import tv.own.owntv.player.HeroPreviewEngine
 import tv.own.owntv.ui.components.BrandLockup
+import tv.own.owntv.ui.components.loungeVodTitle
 import tv.own.owntv.ui.components.InAppToast
 import tv.own.owntv.ui.components.OwnTVIcon
 import tv.own.owntv.ui.components.TrailerPlayerScreen
@@ -198,15 +199,25 @@ fun HomeScreen(
     // A Keep watching card plays its preview only after 3 s of continuous focus (the dwell below).
     var previewIndex by remember { mutableStateOf(-1) }
     var focusedHeroIndex by remember { mutableStateOf(-1) }
+    // Keep Watching comes immediately after the featured hero. Follow with live,
+    // favourites, then editorial VOD; retain other configured rows below.
+    // Do not resurrect any user-hidden existing Home rows.
     val orderedRows: List<Any> = buildList {
         val originalRows = state.config.visibleOrder
-        if (originalRows.isNotEmpty() && HomeRow.TRENDING !in originalRows) {
-            addAll(LoungeHomeRow.entries)
+        val preferred = listOf<Any>(
+            HomeRow.TRENDING,
+            HomeRow.HERO,
+            LoungeHomeRow.LIVE_HIGHLIGHTS,
+            HomeRow.FAVORITE_CHANNELS,
+            HomeRow.FAVORITE_MOVIES,
+            HomeRow.FAVORITE_SERIES,
+            LoungeHomeRow.FEATURED_MOVIES,
+            LoungeHomeRow.POPULAR_SERIES,
+        )
+        preferred.forEach { row ->
+            if (row is LoungeHomeRow || (row is HomeRow && row in originalRows)) add(row)
         }
-        originalRows.forEach { row ->
-            add(row)
-            if (row == HomeRow.TRENDING) addAll(LoungeHomeRow.entries)
-        }
+        originalRows.forEach { row -> if (row !in this) add(row) }
     }
     val heroVisible = HomeRow.HERO in orderedRows
     val hasNonHeroContent = orderedRows.any { it != HomeRow.HERO && rowHasData(it, state, sportsCards.size) }
@@ -398,7 +409,7 @@ fun HomeScreen(
                             title = stringResource(R.string.lounge_home_featured_movies),
                             items = state.featuredMovies,
                             key = { it.id },
-                            name = { state.featuredMovieNames[it.id] ?: it.canonicalTitle.ifBlank { it.name } },
+                            name = { loungeVodTitle(state.featuredMovieNames[it.id] ?: it.canonicalTitle.ifBlank { it.name }) },
                             poster = { it.posterUrl },
                             start = contentStart,
                             onItemClick = onOpenMovie,
@@ -412,7 +423,7 @@ fun HomeScreen(
                             title = stringResource(R.string.lounge_home_popular_series),
                             items = state.popularSeries,
                             key = { it.id },
-                            name = { state.popularSeriesNames[it.id] ?: it.canonicalTitle.ifBlank { it.name } },
+                            name = { loungeVodTitle(state.popularSeriesNames[it.id] ?: it.canonicalTitle.ifBlank { it.name }) },
                             poster = { it.posterUrl },
                             start = contentStart,
                             onItemClick = onOpenSeries,
@@ -602,7 +613,7 @@ fun HomeScreen(
                             title = (row as HomeRow).displayTitle(),
                             items = state.favoriteMovies,
                             key = { it.id },
-                            name = { it.name },
+                            name = { loungeVodTitle(it.name) },
                             poster = { it.posterUrl },
                             start = contentStart,
                             onItemClick = onOpenMovie,
@@ -616,7 +627,7 @@ fun HomeScreen(
                             title = (row as HomeRow).displayTitle(),
                             items = state.favoriteSeries,
                             key = { it.id },
-                            name = { it.name },
+                            name = { loungeVodTitle(it.name) },
                             poster = { it.posterUrl },
                             start = contentStart,
                             onItemClick = onOpenSeries,
@@ -835,10 +846,11 @@ private fun TrendingHero(
         resetClock++
     }
 
-    // The automatic advance, every 10 s. It waits while the hero holds focus, so the title never changes
-    // under the user's finger — and, folded, nothing of it is on screen to advance.
-    LaunchedEffect(activeIndex, heroHasFocus, folded, resetClock, items.size) {
-        if (heroHasFocus || folded || items.size < 2) return@LaunchedEffect
+    // Advance every 10 seconds even when the hero's Play button has initial focus.
+    // Focus previously disabled the timer, leaving Home stuck on the first title.
+    // Manual left/right navigation resets the clock for the newly selected item.
+    LaunchedEffect(activeIndex, resetClock, items.size) {
+        if (items.size < 2) return@LaunchedEffect
         val startProgress = progress.coerceIn(0f, 1f)
         val duration = (intervalMs * (1f - startProgress)).toLong().coerceAtLeast(1L)
         val startedAt = System.nanoTime()
@@ -858,6 +870,10 @@ private fun TrendingHero(
     }
 
     val snapshot = item.snapshot
+    val englishBrandNewDay = stringResource(R.string.lounge_brand_new_day_english_title)
+    val forceEnglishText = snapshot.localizedTitle.contains(englishBrandNewDay, ignoreCase = true) ||
+        snapshot.canonicalTitle.contains(englishBrandNewDay, ignoreCase = true)
+    val heroTitle = loungeVodTitle(if (forceEnglishText) englishBrandNewDay else snapshot.localizedTitle)
     val quality = ProviderVariantParser.displaySignals(snapshot.providerRawName).quality.label
     val runtime = when (item) {
         is TrendingHomeItem.Movie -> item.movie.durationSecs?.takeIf { it >= 60 }?.let { durationText(it / 60L) }
@@ -868,7 +884,7 @@ private fun TrendingHero(
         extras.genres.take(2).joinToString(", ").ifBlank { null },
         runtime,
     )
-    var titleLines by remember(snapshot.localizedTitle) { mutableIntStateOf(1) }
+    var titleLines by remember(heroTitle) { mutableIntStateOf(1) }
 
     Box(
         Modifier
@@ -893,17 +909,17 @@ private fun TrendingHero(
             // The title art when TMDB has it, as the films and series hero do; the text title otherwise,
             // and if the art fails to load. 170 high, the room the films hero gives it.
             var logoFailed by remember(extras.logoUrl) { mutableStateOf(false) }
-            val showLogo = !extras.logoUrl.isNullOrBlank() && !logoFailed
+            val showLogo = !extras.logoUrl.isNullOrBlank() && !logoFailed && !forceEnglishText
             if (showLogo) {
                 tv.own.owntv.ui.stage.StageTitleArt(
                     url = extras.logoUrl,
-                    contentDescription = snapshot.localizedTitle,
+                    contentDescription = heroTitle,
                     onFailed = { logoFailed = true },
                     modifier = Modifier.fillMaxWidth().height(170.mpx),
                 )
             } else {
                 Text(
-                    snapshot.localizedTitle,
+                    heroTitle,
                     style = stageText(112, 800, (-3).mpxSp).copy(
                         lineHeight = 112.mpxSp,
                         lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.Both),
@@ -1013,7 +1029,7 @@ private fun FoldedHeroLine(item: TrendingHomeItem, start: Dp, height: Dp = Compa
             // Chrome's (measured on the TV).
             Spacer(Modifier.height(21.mpx))
             Text(
-                item.snapshot.localizedTitle,
+                loungeVodTitle(item.snapshot.localizedTitle),
                 style = stageText(60, 800, (-1.5).mpxSp), color = StageColors.Text,
                 maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 1100.mpx),
             )
@@ -1107,8 +1123,8 @@ private fun KeepWatchingRow(
                 }
                 StageStill(
                     title = when (item) {
-                        is HeroItem.MovieHero -> item.item.title
-                        is HeroItem.SeriesHero -> item.series.name
+                        is HeroItem.MovieHero -> loungeVodTitle(item.item.title)
+                        is HeroItem.SeriesHero -> loungeVodTitle(item.series.name)
                         is HeroItem.LiveHero -> item.channel.name
                     },
                     line = keepWatchingLine(item),
@@ -1237,7 +1253,7 @@ private fun ContinuePosterRow(
         ) {
             itemsIndexed(items, key = { _, item -> item.stableKey }) { index, item ->
                 StagePoster(
-                    title = item.title,
+                    title = loungeVodTitle(item.title),
                     onClick = { onItemClick(item) },
                     width = 196.mpx,
                     height = 294.mpx,
@@ -1321,8 +1337,8 @@ private fun TrendingPosterRow(
             itemsIndexed(items, key = { _, item -> item.stableKey }) { index, item ->
                 StagePoster(
                     title = when (item) {
-                        is TrendingHomeItem.Movie -> item.movie.name
-                        is TrendingHomeItem.Series -> item.series.name
+                        is TrendingHomeItem.Movie -> loungeVodTitle(item.movie.name)
+                        is TrendingHomeItem.Series -> loungeVodTitle(item.series.name)
                     },
                     onClick = { onItemClick(item) },
                     width = 196.mpx,
@@ -1366,8 +1382,8 @@ private fun TrendingHomeItem.toDetailsUi(meta: MetadataCacheEntity?, tmdbWins: B
         is TrendingHomeItem.Series -> series.backdropUrl
     }
     val providerTitle = when (this) {
-        is TrendingHomeItem.Movie -> movie.name
-        is TrendingHomeItem.Series -> series.name
+        is TrendingHomeItem.Movie -> loungeVodTitle(movie.name)
+        is TrendingHomeItem.Series -> loungeVodTitle(series.name)
     }
     val providerPlot = when (this) {
         is TrendingHomeItem.Movie -> movie.plot?.takeIf { it.isNotBlank() }

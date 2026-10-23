@@ -78,21 +78,24 @@ internal class LoungeHomeHighlightsReader(
         // Use short targeted searches rather than materialising a 16k-channel catalogue.
         val highlights = mutableListOf<ChannelEntity>()
         if (channelIds.isNotEmpty()) {
-            val searches = listOf(
-                "TVNZ 1", "TVNZ 2", "Three", "Sky Sport",
-                "Fox League", "Fox Cricket", "TNT Sports",
-                "ESPN", "BBC One", "Discovery", "National Geographic",
-            )
+            // Search individual broadcast channels, not broad category headings.
+            // Only channels with actual artwork and a visible playlist entry are shown.
+            val searches = context.resources.getStringArray(R.array.lounge_live_highlight_channels)
+            val excluded = context.resources.getStringArray(R.array.lounge_live_highlight_exclusions)
             for (term in searches) {
-                val found = channels.searchList(term, channelIds, 10)
+                val found = channels.searchList(term, channelIds, 12)
                     .filter { channelVisibility.allows(it.categoryId, CustomizeKeys.channel(it)) }
                     .filter { it.name.contains(term, ignoreCase = true) }
+                    .filter { it.logoUrl?.isNotBlank() == true }
+                    .filter { channel -> excluded.none { channel.name.contains(it, ignoreCase = true) } }
                     .sortedWith(compareByDescending<ChannelEntity> {
                         it.name.contains("RAW", ignoreCase = true)
                     }.thenByDescending {
                         it.name.contains("HD", ignoreCase = true)
                     })
-                highlights += found.take(if (term == "Sky Sport") 3 else 2)
+                // One best stream per named channel. No generic TVNZ or provider
+                // category labels, and no duplicates of the same playlist item.
+                found.firstOrNull()?.let { highlights += it }
                 if (highlights.size >= 20) break
             }
         }

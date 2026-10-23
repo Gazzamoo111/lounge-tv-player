@@ -1358,17 +1358,6 @@
 2	empty	app/src/main/java/tv/own/owntv/ui/theme/Theme.kt	\0
 1	log	app/src/main/java/tv/own/owntv/features/home/HomeViewModel.kt	LoungeHomeHighlights
 1	log	app/src/main/java/tv/own/owntv/features/home/HomeViewModel.kt	Catalogue highlights unavailable
-1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	TVNZ 1
-1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	TVNZ 2
-1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	Three
-2	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	Sky Sport
-1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	Fox League
-1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	Fox Cricket
-1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	TNT Sports
-1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	ESPN
-1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	BBC One
-1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	Discovery
-1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	National Geographic
 1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	RAW
 1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	HD
 3	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	"
@@ -1377,3 +1366,6 @@
 1	regex	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	[^\\p{L}\\p{N}]+
 1	regex	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	\\s+
 1	regex	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	^(?i)(?:(?:D\\+|NF|AMZN|APTV|HBO|DSNY|ATV|NETFLIX|DISNEY\\+|PRIME|APPLE TV)\\s+)+
+
+1	regex	app/src/main/java/tv/own/owntv/ui/components/LoungeVodTitles.kt	^(?i)(?:(?:D\\+|NF|AMZN|APTV|HBO|DSNY|ATV|NETFLIX|DISNEY\\+|PRIME|APPLE\\s?TV|HULU|PEACOCK|PARAMOUNT\\+|STAN)\\s+)+
+1	empty	app/src/main/java/tv/own/owntv/ui/components/LoungeVodTitles.kt	\0
