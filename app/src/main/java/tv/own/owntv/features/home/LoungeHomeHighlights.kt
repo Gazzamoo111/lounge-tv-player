@@ -118,7 +118,7 @@ internal class LoungeHomeHighlightsReader(
         val hiddenKeys: Set<String> = emptySet(),
     ) {
         fun allows(categoryId: Long?, itemKey: String): Boolean =
-            categoryId !in hiddenCategories && itemKey !in hiddenKeys
+            (categoryId == null || categoryId !in hiddenCategories) && itemKey !in hiddenKeys
     }
 
     private suspend fun <T : Any> firstPage(source: PagingSource<Int, T>): List<T> =
