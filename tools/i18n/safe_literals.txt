@@ -1356,3 +1356,18 @@
 1	technical	app/src/main/java/tv/own/owntv/ui/theme/Glass.kt	glassPosition
 2	empty	app/src/main/java/tv/own/owntv/ui/theme/OwnTVColors.kt	\0
 2	empty	app/src/main/java/tv/own/owntv/ui/theme/Theme.kt	\0
+1	log	app/src/main/java/tv/own/owntv/features/home/HomeViewModel.kt	LoungeHomeHighlights
+1	log	app/src/main/java/tv/own/owntv/features/home/HomeViewModel.kt	Catalogue highlights unavailable
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	TVNZ 1
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	TVNZ 2
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	Three
+2	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	Sky Sport
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	Fox League
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	Fox Cricket
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	TNT Sports
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	ESPN
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	BBC One
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	Discovery
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	National Geographic
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	RAW
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	HD
