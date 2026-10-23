@@ -1,6 +1,8 @@
 package tv.own.owntv.features.home
 
+import android.content.Context
 import kotlinx.coroutines.flow.first
+import tv.own.owntv.R
 import tv.own.owntv.core.content.AdultCategoryClassifier
 import tv.own.owntv.core.customize.CustomizationStore
 import tv.own.owntv.core.customize.CustomizeKeys
@@ -36,6 +38,7 @@ internal class LoungeHomeHighlightsReader(
     private val sources: SourceDao,
     private val settings: SettingsRepository,
     private val customizations: CustomizationStore,
+    private val context: Context,
 ) {
     suspend fun load(profileId: Long): LoungeHomeHighlights {
         val movieIds = activeSourceIds(settings, sources, profileId, MediaType.MOVIE).toList()
@@ -51,25 +54,23 @@ internal class LoungeHomeHighlightsReader(
         // films were obscure titles on BEST. Only pick recognisable editorially curated titles,
         // and only when an exact playable match exists in the customer's own playlist.
         val moviePicks = pickFamous(
-            movieIds, POPULAR_MOVIES,
+            movieIds, context.resources.getStringArray(R.array.lounge_popular_movies).toList(),
             query = { title -> movies.searchListFts(phrase(title), movieIds, 15) },
             key = { item: MovieEntity -> titleKey(item.canonicalTitle.ifBlank { item.name }) },
             valid = { item: MovieEntity ->
                 item.posterUrl?.isNotBlank() == true &&
                     movieVisibility.allows(item.categoryId, CustomizeKeys.movie(item))
             },
-            id = { item: MovieEntity -> item.id },
             quality = { item: MovieEntity -> item.qualityRank },
         )
         val seriesPicks = pickFamous(
-            seriesIds, POPULAR_SERIES,
+            seriesIds, context.resources.getStringArray(R.array.lounge_popular_series).toList(),
             query = { title -> series.searchListFts(phrase(title), seriesIds, 15) },
             key = { item: SeriesEntity -> titleKey(item.canonicalTitle.ifBlank { item.name }) },
             valid = { item: SeriesEntity ->
                 item.posterUrl?.isNotBlank() == true &&
                     seriesVisibility.allows(item.categoryId, CustomizeKeys.series(item))
             },
-            id = { item: SeriesEntity -> item.id },
             quality = { item: SeriesEntity -> item.qualityRank },
         )
 
@@ -139,7 +140,6 @@ internal class LoungeHomeHighlightsReader(
         query: suspend (String) -> List<T>,
         key: (T) -> String,
         valid: (T) -> Boolean,
-        id: (T) -> Long,
         quality: (T) -> Int,
     ): List<Pair<T, String>> {
         if (sourceIds.isEmpty()) return emptyList()
@@ -180,31 +180,5 @@ internal class LoungeHomeHighlightsReader(
             "^(?i)(?:(?:D\\+|NF|AMZN|APTV|HBO|DSNY|ATV|NETFLIX|DISNEY\\+|PRIME|APPLE TV)\\s+)+",
         )
         // Editorial order, not provider ratings. Missing titles are skipped, never faked.
-        private val POPULAR_MOVIES = listOf(
-            "Dune: Part Two", "Oppenheimer", "Top Gun: Maverick", "The Dark Knight",
-            "Interstellar", "Inception", "Avatar: The Way of Water", "Barbie",
-            "The Batman", "John Wick: Chapter 4", "Spider-Man: No Way Home",
-            "Avengers: Endgame", "Deadpool & Wolverine", "Inside Out 2",
-            "The Shawshank Redemption", "The Godfather", "The Matrix",
-            "Gladiator", "The Lord of the Rings: The Fellowship of the Ring",
-            "The Lord of the Rings: The Two Towers", "The Lord of the Rings: The Return of the King",
-            "Pulp Fiction", "Titanic", "Forrest Gump", "The Lion King",
-            "The Super Mario Bros. Movie", "Despicable Me 4", "Moana",
-            "The Avengers", "The Prestige", "The Departed", "Joker",
-            "Wicked", "Gladiator II", "Jurassic Park", "Saving Private Ryan",
-            "Mission: Impossible – Fallout", "The Wolf of Wall Street",
-        )
-        private val POPULAR_SERIES = listOf(
-            "Breaking Bad", "Stranger Things", "The Last of Us", "The Boys",
-            "The White Lotus", "House of the Dragon", "Game of Thrones",
-            "The Bear", "Severance", "Reacher", "Fallout", "Shogun",
-            "Wednesday", "The Pitt", "Yellowstone", "The Sopranos",
-            "Better Call Saul", "The Walking Dead", "The Office",
-            "Peaky Blinders", "Succession", "Ted Lasso", "Squid Game",
-            "Only Murders in the Building", "Andor", "Silo", "The Mandalorian",
-            "The Penguin", "True Detective", "Ozark", "Vikings",
-            "The Crown", "The Witcher", "Chernobyl", "Friends",
-            "Dexter", "The Big Bang Theory", "The Rookie",
-        )
     }
 }
