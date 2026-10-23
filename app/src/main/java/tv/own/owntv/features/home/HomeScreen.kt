@@ -1253,7 +1253,7 @@ private fun ContinuePosterRow(
         ) {
             itemsIndexed(items, key = { _, item -> item.stableKey }) { index, item ->
                 StagePoster(
-                    title = item.title,
+                    title = loungeVodTitle(item.title),
                     onClick = { onItemClick(item) },
                     width = 196.mpx,
                     height = 294.mpx,
@@ -1337,8 +1337,8 @@ private fun TrendingPosterRow(
             itemsIndexed(items, key = { _, item -> item.stableKey }) { index, item ->
                 StagePoster(
                     title = when (item) {
-                        is TrendingHomeItem.Movie -> item.movie.name
-                        is TrendingHomeItem.Series -> item.series.name
+                        is TrendingHomeItem.Movie -> loungeVodTitle(item.movie.name)
+                        is TrendingHomeItem.Series -> loungeVodTitle(item.series.name)
                     },
                     onClick = { onItemClick(item) },
                     width = 196.mpx,
@@ -1382,8 +1382,8 @@ private fun TrendingHomeItem.toDetailsUi(meta: MetadataCacheEntity?, tmdbWins: B
         is TrendingHomeItem.Series -> series.backdropUrl
     }
     val providerTitle = when (this) {
-        is TrendingHomeItem.Movie -> movie.name
-        is TrendingHomeItem.Series -> series.name
+        is TrendingHomeItem.Movie -> loungeVodTitle(movie.name)
+        is TrendingHomeItem.Series -> loungeVodTitle(series.name)
     }
     val providerPlot = when (this) {
         is TrendingHomeItem.Movie -> movie.plot?.takeIf { it.isNotBlank() }
