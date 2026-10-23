@@ -1,6 +1,9 @@
-# OwnTV TMDB caching proxy — Cloudflare Worker config.
-# Deploy with:  npx wrangler deploy
-# Set the secret once:  npx wrangler secret put TMDB_KEY
-name = "my-owntv-meta"
+name = "loungetv-metadata"
 main = "index.js"
-compatibility_date = "2026-01-01"
+compatibility_date = "2026-10-23"
+
+# Cloudflare automatically creates the DNS record for the custom domain.
+# Do not point this at loungetv.nz itself: the public site stays separate.
+[[routes]]
+pattern = "metadata.loungetv.nz"
+custom_domain = true
