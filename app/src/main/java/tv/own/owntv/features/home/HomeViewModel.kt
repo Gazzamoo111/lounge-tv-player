@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import tv.own.owntv.core.database.dao.CategoryDao
+import tv.own.owntv.core.customize.CustomizationStore
 import tv.own.owntv.core.database.dao.ChannelDao
 import tv.own.owntv.core.database.dao.MovieDao
 import tv.own.owntv.core.database.dao.ProfileDao
@@ -98,6 +99,9 @@ data class HomeUiState(
     val favoriteLive: List<ChannelEntity> = emptyList(),
     val favoriteMovies: List<MovieEntity> = emptyList(),
     val favoriteSeries: List<SeriesEntity> = emptyList(),
+    val featuredMovies: List<MovieEntity> = emptyList(),
+    val popularSeries: List<SeriesEntity> = emptyList(),
+    val liveHighlights: List<ChannelEntity> = emptyList(),
     val config: HomeConfig = HomeConfig(),
     val recentGuide: GuideSliceState = GuideSliceState(),
     val favoriteGuide: GuideSliceState = GuideSliceState(),
@@ -149,6 +153,7 @@ class HomeViewModel(
     private val sourceRepository: SourceRepository,
     private val catalogSyncScheduler: CatalogSyncScheduler,
     private val context: android.content.Context,
+    private val customizations: CustomizationStore,
 ) : ViewModel() {
     // One automatic recovery attempt per playlist per Home VM lifetime.
     // A normal provider sync or backfill still owns its own Trending updates.
@@ -425,6 +430,26 @@ class HomeViewModel(
         _uiState.value.trendingItems.getOrNull(_uiState.value.activeTrendingIndex)?.let(::resolveTrendingExtras)
         // Keep watching shows every card as a still, so each needs its artwork up front, not on focus.
         _uiState.value.heroItems.indices.forEach { resolveHeroMetadata(it) }
+        // Bounded read-only catalogue shelves. Painting Trending must never wait for these.
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val selection = LoungeHomeHighlightsReader(
+                    movieDao, seriesDao, channelDao, categoryDao,
+                    profileDao, sourceDao, settings, customizations,
+                ).load(profileId)
+                if (currentProfileId() == profileId) {
+                    _uiState.value = _uiState.value.copy(
+                        featuredMovies = selection.movies,
+                        popularSeries = selection.series,
+                        liveHighlights = selection.channels,
+                    )
+                }
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                android.util.Log.w("LoungeHomeHighlights", "Catalogue highlights unavailable", failure)
+            }
+        }
         // Core SourceImporter's direct first-run import can finish without enqueuing Trending.
         // Repair that path in the background (also self-heals existing blank Home installs),
         // while leaving the freshly painted Home view completely non-blocking.

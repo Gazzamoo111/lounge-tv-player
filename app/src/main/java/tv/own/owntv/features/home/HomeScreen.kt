@@ -78,6 +78,7 @@ import tv.own.owntv.core.database.entity.MovieEntity
 import tv.own.owntv.core.database.entity.SeriesEntity
 import tv.own.owntv.core.database.entity.MetadataCacheEntity
 import tv.own.owntv.core.home.HeroItem
+import tv.own.owntv.core.home.GuideSliceState
 import tv.own.owntv.core.home.TrendingHomeItem
 import tv.own.owntv.core.launcher.LauncherContinuationItem
 import tv.own.owntv.core.metadata.MetadataImages
@@ -116,6 +117,9 @@ import java.util.Locale
 
 /** The row gap; the headings' design positions below already include it. */
 private val RowGap = 40.mpx
+
+/** Lounge TV's first-login rails use the existing card widgets, without altering OwnTV Core. */
+private enum class LoungeHomeRow { FEATURED_MOVIES, POPULAR_SERIES, LIVE_HIGHLIGHTS }
 
 /** How far the full hero's text sits above the design's (`top: 170px`), and the rows with it: the
  *  top-left corner is empty, and the rows below are what the screen is short of. */
@@ -190,10 +194,20 @@ fun HomeScreen(
     // Focus has gone down into the rows: the hero folds into its one-line form.
     var inRows by remember { mutableStateOf(false) }
     val rowFirstFocusRequesters = remember { HomeRow.entries.associateWith { FocusRequester() } }
+    val loungeFirstFocusRequesters = remember { LoungeHomeRow.entries.associateWith { FocusRequester() } }
     // A Keep watching card plays its preview only after 3 s of continuous focus (the dwell below).
     var previewIndex by remember { mutableStateOf(-1) }
     var focusedHeroIndex by remember { mutableStateOf(-1) }
-    val orderedRows = state.config.visibleOrder
+    val orderedRows: List<Any> = buildList {
+        val originalRows = state.config.visibleOrder
+        if (originalRows.isNotEmpty() && HomeRow.TRENDING !in originalRows) {
+            addAll(LoungeHomeRow.entries)
+        }
+        originalRows.forEach { row ->
+            add(row)
+            if (row == HomeRow.TRENDING) addAll(LoungeHomeRow.entries)
+        }
+    }
     val heroVisible = HomeRow.HERO in orderedRows
     val hasNonHeroContent = orderedRows.any { it != HomeRow.HERO && rowHasData(it, state, sportsCards.size) }
     val showHeroFallback = heroVisible && state.heroItems.isEmpty() && !hasNonHeroContent
@@ -207,7 +221,7 @@ fun HomeScreen(
     val posterHero = renderRows.firstOrNull() == HomeRow.TRENDING &&
         state.config.trendingStyle == HomeTrendingStyle.POSTERS
     var posterIndex by remember { mutableIntStateOf(0) }
-    val rowFocusRequester: (HomeRow) -> FocusRequester? = { row ->
+    val rowFocusRequester: (Any) -> FocusRequester? = { row ->
         if (row == renderRows.firstOrNull() && firstRowFocusRequester != null) {
             firstRowFocusRequester
         } else when (row) {
@@ -217,7 +231,9 @@ fun HomeScreen(
                 showHeroFallback -> fallbackFocus
                 else -> null
             }
-            else -> rowFirstFocusRequesters[row]
+            is LoungeHomeRow -> loungeFirstFocusRequesters[row]
+            is HomeRow -> rowFirstFocusRequesters[row]
+            else -> null
         }
     }
     val playFocus = rowFocusRequester(HomeRow.TRENDING) ?: trendingPrimaryFocus
@@ -374,10 +390,51 @@ fun HomeScreen(
                 contentPadding = PaddingValues(top = if (fullBleed || posterItem != null) 0.dp else NoHeroTop, bottom = 48.mpx),
                 verticalArrangement = Arrangement.spacedBy(RowGap),
             ) {
-                itemsIndexed(renderRows, key = { _, row -> row.name }) { _, row ->
+                itemsIndexed(renderRows, key = { _, row -> row.toString() }) { _, row ->
                     val firstItemFocusRequester = rowFocusRequester(row)
                     val rowModifier = if (row == firstRowUnderHero) unfoldOnUp else Modifier
                     when (row) {
+                        LoungeHomeRow.FEATURED_MOVIES -> FavoritePosterRow(
+                            title = stringResource(R.string.lounge_home_featured_movies),
+                            items = state.featuredMovies,
+                            key = { it.id },
+                            name = { it.name },
+                            poster = { it.posterUrl },
+                            start = contentStart,
+                            onItemClick = onOpenMovie,
+                            onFocus = onNonHeroFocused,
+                            firstItemFocusRequester = firstItemFocusRequester,
+                            track = track,
+                            modifier = rowModifier,
+                        )
+
+                        LoungeHomeRow.POPULAR_SERIES -> FavoritePosterRow(
+                            title = stringResource(R.string.lounge_home_popular_series),
+                            items = state.popularSeries,
+                            key = { it.id },
+                            name = { it.name },
+                            poster = { it.posterUrl },
+                            start = contentStart,
+                            onItemClick = onOpenSeries,
+                            onFocus = onNonHeroFocused,
+                            firstItemFocusRequester = firstItemFocusRequester,
+                            track = track,
+                            modifier = rowModifier,
+                        )
+
+                        LoungeHomeRow.LIVE_HIGHLIGHTS -> HomeLiveRow(
+                            title = stringResource(R.string.lounge_home_live_highlights),
+                            mode = HomeLiveRowMode.CARDS,
+                            channels = state.liveHighlights,
+                            guide = GuideSliceState(),
+                            onChannelClick = onPlayChannel,
+                            onFocus = onNonHeroFocused,
+                            firstItemFocusRequester = firstItemFocusRequester,
+                            start = contentStart,
+                            track = track,
+                            modifier = rowModifier,
+                        )
+
                         HomeRow.TRENDING -> if (state.trendingItems.size < TrendingDao.MIN_ELIGIBLE_ITEMS) {
                             // Too few titles to be a "trending" row at all, so the row is not drawn.
                         } else if (!fullBleed || trendingItem == null) {
@@ -388,7 +445,7 @@ fun HomeScreen(
                                 // Compose's one-line poster title is 10 px shorter than Chrome's (measured).
                                 bottomGap = if (posterItem != null) 10.mpx else 0.dp,
                                 onItemFocused = { posterIndex = it },
-                                title = row.displayTitle(),
+                                title = (row as HomeRow).displayTitle(),
                                 items = state.trendingItems,
                                 start = contentStart,
                                 onItemClick = { item ->
@@ -462,7 +519,7 @@ fun HomeScreen(
 
                         HomeRow.HERO -> if (state.heroItems.isNotEmpty()) {
                             KeepWatchingRow(
-                                title = row.displayTitle(),
+                                title = (row as HomeRow).displayTitle(),
                                 items = state.heroItems,
                                 big = fullBleed && !inRows,
                                 start = contentStart,
@@ -516,7 +573,7 @@ fun HomeScreen(
                         )
 
                         HomeRow.RECENT_CHANNELS -> HomeLiveRow(
-                            title = row.displayTitle(),
+                            title = (row as HomeRow).displayTitle(),
                             mode = state.config.recentLiveMode,
                             channels = state.recentLive,
                             guide = state.recentGuide,
@@ -529,7 +586,7 @@ fun HomeScreen(
                         )
 
                         HomeRow.FAVORITE_CHANNELS -> HomeLiveRow(
-                            title = row.displayTitle(),
+                            title = (row as HomeRow).displayTitle(),
                             mode = state.config.favoriteLiveMode,
                             channels = state.favoriteLive,
                             guide = state.favoriteGuide,
@@ -542,7 +599,7 @@ fun HomeScreen(
                         )
 
                         HomeRow.FAVORITE_MOVIES -> FavoritePosterRow(
-                            title = row.displayTitle(),
+                            title = (row as HomeRow).displayTitle(),
                             items = state.favoriteMovies,
                             key = { it.id },
                             name = { it.name },
@@ -556,7 +613,7 @@ fun HomeScreen(
                         )
 
                         HomeRow.FAVORITE_SERIES -> FavoritePosterRow(
-                            title = row.displayTitle(),
+                            title = (row as HomeRow).displayTitle(),
                             items = state.favoriteSeries,
                             key = { it.id },
                             name = { it.name },
@@ -570,7 +627,7 @@ fun HomeScreen(
                         )
 
                         HomeRow.CONTINUE_MOVIES -> ContinuePosterRow(
-                            title = row.displayTitle(),
+                            title = (row as HomeRow).displayTitle(),
                             items = state.continueMovies,
                             start = contentStart,
                             onItemClick = { onPlayMovie(it.sourceItemId, it.positionMs) },
@@ -581,7 +638,7 @@ fun HomeScreen(
                         )
 
                         HomeRow.CONTINUE_SERIES -> ContinuePosterRow(
-                            title = row.displayTitle(),
+                            title = (row as HomeRow).displayTitle(),
                             items = state.continueSeries,
                             start = contentStart,
                             onItemClick = { onPlayEpisode(0L, it.targetItemId, it.positionMs) },
@@ -641,7 +698,10 @@ fun HomeScreen(
     }
     InAppToast(trendingToast)
 }
-private fun rowHasData(row: HomeRow, state: HomeUiState, sportsCards: Int): Boolean = when (row) {
+private fun rowHasData(row: Any, state: HomeUiState, sportsCards: Int): Boolean = when (row) {
+    LoungeHomeRow.FEATURED_MOVIES -> state.featuredMovies.isNotEmpty()
+    LoungeHomeRow.POPULAR_SERIES -> state.popularSeries.isNotEmpty()
+    LoungeHomeRow.LIVE_HIGHLIGHTS -> state.liveHighlights.isNotEmpty()
     HomeRow.TRENDING -> state.trendingItems.size >= TrendingDao.MIN_ELIGIBLE_ITEMS
     HomeRow.LIVE_SPORTS -> sportsCards > 0
     HomeRow.HERO -> state.heroItems.isNotEmpty()
@@ -657,9 +717,10 @@ private fun rowHasData(row: HomeRow, state: HomeUiState, sportsCards: Int): Bool
     HomeRow.FAVORITE_SERIES -> state.favoriteSeries.isNotEmpty()
     HomeRow.CONTINUE_MOVIES -> state.continueMovies.isNotEmpty()
     HomeRow.CONTINUE_SERIES -> state.continueSeries.isNotEmpty()
+    else -> false
 }
 
-private fun rowCanRender(row: HomeRow, state: HomeUiState, showHeroFallback: Boolean, sportsCards: Int): Boolean =
+private fun rowCanRender(row: Any, state: HomeUiState, showHeroFallback: Boolean, sportsCards: Int): Boolean =
     when (row) {
         HomeRow.HERO -> state.heroItems.isNotEmpty() || showHeroFallback
         else -> rowHasData(row, state, sportsCards)
