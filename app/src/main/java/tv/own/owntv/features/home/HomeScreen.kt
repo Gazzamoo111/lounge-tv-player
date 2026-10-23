@@ -873,7 +873,7 @@ private fun TrendingHero(
     val englishBrandNewDay = stringResource(R.string.lounge_brand_new_day_english_title)
     val forceEnglishText = snapshot.localizedTitle.contains(englishBrandNewDay, ignoreCase = true) ||
         snapshot.canonicalTitle.contains(englishBrandNewDay, ignoreCase = true)
-    val heroTitle = if (forceEnglishText) englishBrandNewDay else snapshot.localizedTitle
+    val heroTitle = loungeVodTitle(if (forceEnglishText) englishBrandNewDay else snapshot.localizedTitle)
     val quality = ProviderVariantParser.displaySignals(snapshot.providerRawName).quality.label
     val runtime = when (item) {
         is TrendingHomeItem.Movie -> item.movie.durationSecs?.takeIf { it >= 60 }?.let { durationText(it / 60L) }
@@ -1029,7 +1029,7 @@ private fun FoldedHeroLine(item: TrendingHomeItem, start: Dp, height: Dp = Compa
             // Chrome's (measured on the TV).
             Spacer(Modifier.height(21.mpx))
             Text(
-                item.snapshot.localizedTitle,
+                loungeVodTitle(item.snapshot.localizedTitle),
                 style = stageText(60, 800, (-1.5).mpxSp), color = StageColors.Text,
                 maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 1100.mpx),
             )
