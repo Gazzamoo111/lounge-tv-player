@@ -105,7 +105,7 @@ internal class LoungeHomeHighlightsReader(
         // broadcasts; generic numbered PPV slots and misleading side-event labels are excluded.
         // Stay bounded to avoid traversing the provider's entire catalogue on the Home thread.
         val combatFeeds = if (channelIds.isEmpty() || kids) emptyList() else
-            listOf("UFC", "BKFC", "PFL", "Bellator").flatMap { term ->
+            listOf("UFC", "BKFC", "PFL", "Bellator", "Boxing", "Matchroom").flatMap { term ->
                 channels.searchList(term, channelIds, 150)
             }.filter { channelVisibility.allows(it.categoryId, CustomizeKeys.channel(it)) }
         val combatEvents = LoungeEventDiscovery.group(
