@@ -124,11 +124,11 @@ private enum class LoungeHomeRow { CATEGORIES, COMBAT_EVENTS, SPORTS_EVENTS, FEA
 
 /** Category shortcuts open existing destinations, without duplicating their playback or catalogues. */
 enum class LoungeExploreCategory(val titleRes: Int, val subtitleRes: Int) {
-    PPV(R.string.lounge_explore_ppv, R.string.lounge_explore_ppv_sub),
     SPORTS(R.string.lounge_explore_sports, R.string.lounge_explore_sports_sub),
-    MOVIES(R.string.lounge_explore_movies, R.string.lounge_explore_movies_sub),
-    SERIES(R.string.lounge_explore_entertainment, R.string.lounge_explore_entertainment_sub),
-    KIDS(R.string.lounge_explore_kids, R.string.lounge_explore_kids_sub),
+    RUGBY(R.string.lounge_explore_rugby, R.string.lounge_explore_rugby_sub),
+    PPV(R.string.lounge_explore_ppv, R.string.lounge_explore_ppv_sub),
+    CRICKET(R.string.lounge_explore_cricket, R.string.lounge_explore_cricket_sub),
+    LIVE_TV(R.string.lounge_explore_live_channels, R.string.lounge_explore_live_channels_sub),
 }
 
 /** How far the full hero's text sits above the design's (`top: 170px`), and the rows with it: the
@@ -210,21 +210,22 @@ fun HomeScreen(
     // A Keep watching card plays its preview only after 3 s of continuous focus (the dwell below).
     var previewIndex by remember { mutableStateOf(-1) }
     var focusedHeroIndex by remember { mutableStateOf(-1) }
-    // Keep Watching comes immediately after the featured hero. Follow with live,
-    // favourites, then editorial VOD; retain other configured rows below.
-    // Do not resurrect any user-hidden existing Home rows.
+    // Preserve the existing Home experience (hero, Keep Watching, live, films, series,
+    // favourites and every customised row) and ADD only two compact sports sections.
+    // Unverified PPV candidates are deliberately not featured as playable live events.
     val orderedRows: List<Any> = buildList {
         val originalRows = state.config.visibleOrder
         val preferred = listOf<Any>(
             HomeRow.TRENDING,
             HomeRow.HERO,
-            LoungeHomeRow.COMBAT_EVENTS,
+            LoungeHomeRow.LIVE_HIGHLIGHTS,
             LoungeHomeRow.SPORTS_EVENTS,
             LoungeHomeRow.CATEGORIES,
-            LoungeHomeRow.LIVE_HIGHLIGHTS,
             HomeRow.FAVORITE_CHANNELS,
             HomeRow.FAVORITE_MOVIES,
             HomeRow.FAVORITE_SERIES,
+            LoungeHomeRow.FEATURED_MOVIES,
+            LoungeHomeRow.POPULAR_SERIES,
         )
         preferred.forEach { row ->
             if (row is LoungeHomeRow || (row is HomeRow && row in originalRows)) add(row)
@@ -420,15 +421,7 @@ fun HomeScreen(
                         LoungeHomeRow.CATEGORIES -> LoungeCategoryRow(
                             start = contentStart,
                             onSelect = { category ->
-                                if (category == LoungeExploreCategory.PPV && LoungeHomeRow.COMBAT_EVENTS in renderRows) {
-                                    homeScope.launch {
-                                        listState.animateScrollToItem(renderRows.indexOf(LoungeHomeRow.COMBAT_EVENTS))
-                                        kotlinx.coroutines.delay(60)
-                                        runCatching { loungeFirstFocusRequesters.getValue(LoungeHomeRow.COMBAT_EVENTS).requestFocus() }
-                                    }
-                                } else {
-                                    onExplore(category)
-                                }
+                                onExplore(category)
                             },
                             onFocus = onNonHeroFocused,
                             firstItemFocusRequester = firstItemFocusRequester,
@@ -761,7 +754,7 @@ private fun LoungeCategoryRow(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier) {
-        HomeRowHeader(stringResource(R.string.lounge_explore_heading), small = null, start = start)
+        HomeRowHeader(stringResource(R.string.lounge_explore_sports_shortcuts), small = null, start = start)
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(18.mpx),
             contentPadding = PaddingValues(start = start, end = 64.mpx),
