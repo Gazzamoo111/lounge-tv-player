@@ -1369,3 +1369,25 @@
 
 1	regex	app/src/main/java/tv/own/owntv/ui/components/LoungeVodTitles.kt	^(?i)(?:(?:D\\+|NF|AMZN|APTV|HBO|DSNY|ATV|NETFLIX|DISNEY\\+|PRIME|APPLE\\s?TV|HULU|PEACOCK|PARAMOUNT\\+|STAN)\\s+)+
 1	empty	app/src/main/java/tv/own/owntv/ui/components/LoungeVodTitles.kt	\0
+
+# Dated PPV and event discovery: internal matching syntax/provider labels only.
+1	regex	app/src/main/java/tv/own/owntv/features/home/LoungeEventDiscovery.kt	\b(UFC|BKFC|PFL|Bellator)\s*[-:#]?\s*(\d{1,4})\b
+1	regex	app/src/main/java/tv/own/owntv/features/home/LoungeEventDiscovery.kt	\b(boxing|matchroom|dazn|top\s*rank)\b
+1	regex	app/src/main/java/tv/own/owntv/features/home/LoungeEventDiscovery.kt	\b([A-Za-z][A-Za-z'-]{2,24})\s+(?:vs?\.?|versus)\s+([A-Za-z][A-Za-z'-]{2,24})\b
+1	regex	app/src/main/java/tv/own/owntv/features/home/LoungeEventDiscovery.kt	\b(20\d{2}-\d{2}-\d{2})\b
+1	regex	app/src/main/java/tv/own/owntv/features/home/LoungeEventDiscovery.kt	press\s*conference|weigh[_\s-]*in|ceremonial|face\s*off|preview|countdown|highlights|replay|multiview|em\s+portugu[eê]s|en\s+espa[nñ]ol|spanish|french|arabic
+1	locale	app/src/main/java/tv/own/owntv/features/home/LoungeEventDiscovery.kt	yyyy-MM-dd
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeEventDiscovery.kt	${event.groupValues[1].uppercase(Locale.ROOT)} ${event.groupValues[2]}
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeEventDiscovery.kt	English
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeEventDiscovery.kt	RAW
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeEventDiscovery.kt	HD
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	UFC
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	BKFC
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	PFL
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	Bellator
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	Boxing
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	Matchroom
+1	technical	app/src/main/java/tv/own/owntv/features/shell/OwnTVShell.kt	UFC
+2	technical	app/src/main/java/tv/own/owntv/features/shell/OwnTVShell.kt	kids
+2	technical	app/src/main/java/tv/own/owntv/features/shell/OwnTVShell.kt	children
+2	technical	app/src/main/java/tv/own/owntv/features/shell/OwnTVShell.kt	family
