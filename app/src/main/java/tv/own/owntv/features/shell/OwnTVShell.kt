@@ -1228,6 +1228,26 @@ fun OwnTVShell(
                                 sportsMatchRequests.pendingMatch.value = m to null
                                 onSelectSection(MainSection.SPORTS)
                             },
+                            onSportsShortcut = { shortcut ->
+                                when (shortcut) {
+                                    tv.own.owntv.features.home.LoungeSportsShortcut.SPORTS ->
+                                        onSelectSection(MainSection.SPORTS)
+                                    tv.own.owntv.features.home.LoungeSportsShortcut.CHANNELS ->
+                                        onSelectSection(MainSection.LIVE_TV)
+                                    tv.own.owntv.features.home.LoungeSportsShortcut.RUGBY -> {
+                                        searchVm.setQuery("rugby")
+                                        onSelectSection(MainSection.SEARCH)
+                                    }
+                                    tv.own.owntv.features.home.LoungeSportsShortcut.COMBAT -> {
+                                        searchVm.setQuery("UFC")
+                                        onSelectSection(MainSection.SEARCH)
+                                    }
+                                    tv.own.owntv.features.home.LoungeSportsShortcut.CRICKET -> {
+                                        searchVm.setQuery("cricket")
+                                        onSelectSection(MainSection.SEARCH)
+                                    }
+                                }
+                            },
                             contentStart = if (navStyle == tv.own.owntv.core.settings.SettingsRepository.NavStyle.DOCKED) 64.mpx else 150.mpx,
                             modifier = Modifier.fillMaxSize(),
                         )
