@@ -7,6 +7,8 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+env:
+  ISOLATED_EVENT_QA: ${{ github.event_name == 'pull_request' }}
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -81,7 +83,7 @@ jobs:
             # Debug-signed preflight can never be installed as a stable QA update.
             AAPT=$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)
             APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)
-            "$AAPT" dump badging "$QA_APK" | grep -q "package: name='com.loungetv.player.qa' versionCode='$VERSION_CODE'"
+            "$AAPT" dump badging "$QA_APK" | grep -q "package: name='com.loungetv.player.eventqa' versionCode='$VERSION_CODE'"
             "$APKSIGNER" verify "$QA_APK"
           else
             python3 scripts/verify_update_compatibility.py "$QA_APK" \
@@ -92,6 +94,6 @@ jobs:
       - name: Upload test APK
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event_name == 'pull_request' && 'lounge-tv-pr-debug-preflight' || 'lounge-tv-qa' }}
+          name: ${{ github.event_name == 'pull_request' && 'lounge-tv-eventqa-preflight' || 'lounge-tv-qa' }}
           path: app/build/outputs/apk/standard/debug/*.apk
           if-no-files-found: error
