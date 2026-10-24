@@ -177,7 +177,7 @@ class SportsViewModel(
      */
     val featuredHomeEvents: StateFlow<List<Match>> = flow {
         delay(HOME_ROW_DELAY_MS)
-        emitAll(combine(repository.observe(Demand.HomeRow), config) { board, preference ->
+        emitAll(combine(repository.observe(Demand.Hub), config) { board, preference ->
             val now = System.currentTimeMillis()
             val followed = preference.leagues.toSet()
             board.matches.asSequence()
