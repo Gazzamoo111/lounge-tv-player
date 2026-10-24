@@ -81,19 +81,21 @@ def coloured(im, colour):
     for y in range(out.height):
         for x in range(out.width):
             r, g, b, a = px[x, y]
-            if a == 0:
+            if a <= 12:
                 continue
-            # Only recolour blue couch pixels, not the approved white launcher tile.
-            if b < r + 12 or b < g + 7:
+            # Keep the approved white icon tile and neutral white highlights.
+            # The prior blue-only threshold skipped most of the couch, leaving
+            # every advertised icon colour looking like the same blue variant.
+            if min(r, g, b) > 220 and max(r, g, b) - min(r, g, b) < 28:
                 continue
-            strength = max(0.0, min(1.0, (b - min(r, g)) / 85.0))
-            brightness = max(r, g, b) / 255.0
-            scale = .30 + .70 * brightness
-            desired = tuple(min(255, round(v * scale)) for v in colour)
+            luminance = (.2126*r + .7152*g + .0722*b) / 255.0
+            shade = .36 + .64*luminance
+            # Recolour every visible couch pixel to a recognisable palette
+            # while retaining shading, edge opacity and the original shape.
             px[x, y] = (
-                round(r * (1-strength) + desired[0] * strength),
-                round(g * (1-strength) + desired[1] * strength),
-                round(b * (1-strength) + desired[2] * strength),
+                round(colour[0] * shade),
+                round(colour[1] * shade),
+                round(colour[2] * shade),
                 a,
             )
     return out
