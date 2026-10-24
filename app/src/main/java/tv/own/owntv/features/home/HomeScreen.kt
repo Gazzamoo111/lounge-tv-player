@@ -9,6 +9,8 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.Arrangement
@@ -758,7 +760,11 @@ private fun LoungeSportsQuickLinks(
     track: (FocusRequester) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier) {
+    // Request space for the WHOLE row, including the labels below its cards.
+    // Focusing a card alone only brings its image into view on TV.
+    val fullRow = remember { BringIntoViewRequester() }
+    val scope = rememberCoroutineScope()
+    Column(modifier.bringIntoViewRequester(fullRow)) {
         HomeRowHeader(stringResource(R.string.lounge_sports_quick_links), small = null, start = start)
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(18.mpx),
@@ -777,7 +783,12 @@ private fun LoungeSportsQuickLinks(
                     modifier = Modifier
                         .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
                         .tracked(track = track)
-                        .onFocusChanged { if (it.hasFocus) onFocus() },
+                        .onFocusChanged {
+                            if (it.hasFocus) {
+                                onFocus()
+                                scope.launch { fullRow.bringIntoView() }
+                            }
+                        },
                 ) {
                     Box(Modifier.fillMaxSize().background(tv.own.owntv.ui.stage.stageStillBack), contentAlignment = Alignment.Center) {
                         Text(stringResource(item.title), style = stageText(22, 800), color = StageColors.Text, maxLines = 1)
