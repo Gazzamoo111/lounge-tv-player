@@ -86,6 +86,7 @@ internal class LoungeHomeHighlightsReader(
                 val found = channels.searchList(term, channelIds, 12)
                     .filter { channelVisibility.allows(it.categoryId, CustomizeKeys.channel(it)) }
                     .filter { it.name.contains(term, ignoreCase = true) }
+                    .filter { isEnglishHomeHighlight(it.name) }
                     .filter { it.logoUrl?.isNotBlank() == true }
                     .filter { channel -> excluded.none { channel.name.contains(it, ignoreCase = true) } }
                     .sortedWith(compareByDescending<ChannelEntity> {
@@ -184,4 +185,14 @@ internal class LoungeHomeHighlightsReader(
         )
         // Editorial order, not provider ratings. Missing titles are skipped, never faked.
     }
+}
+
+
+/** Prevent foreign-language duplicates (e.g. 'DE - Sky Sports') on Home.
+ * Only affects automated Home highlights, never Live TV or Search. */
+internal fun isEnglishHomeHighlight(name: String): Boolean {
+    val prefix = Regex("""^\s*(?:DE|GER|DEUTSCH|ES|ESP|FR|FRA|IT|ITA|PT|POR)\s*[-:|]\s*""", RegexOption.IGNORE_CASE)
+    val language = Regex("""\b(?:german|deutsch|spanish|español|french|français|italian|italiano|portuguese|português)\b""", RegexOption.IGNORE_CASE)
+    val suffix = Regex("""[\[(](?:DE|GER|ES|FR|IT|PT)[\])]""", RegexOption.IGNORE_CASE)
+    return !prefix.containsMatchIn(name) && !language.containsMatchIn(name) && !suffix.containsMatchIn(name)
 }
