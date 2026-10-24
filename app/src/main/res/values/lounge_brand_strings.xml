@@ -69,4 +69,21 @@
 <string name="setup_line_app_icon_mobile">How Lounge TV appears on your home screen</string>
     <!-- Use English text when TMDB supplies non-English Spider-Man title art. -->
     <string name="lounge_brand_new_day_english_title" translatable="false">Spider-Man: Brand New Day</string>
+    <!-- Home discovery: ordinary consumer categories and explicitly unverified provider candidates. -->
+    <string name="lounge_explore_heading">Explore Lounge TV</string>
+    <string name="lounge_explore_ppv">Combat &amp; PPV</string>
+    <string name="lounge_explore_ppv_sub">Dated event feeds</string>
+    <string name="lounge_explore_sports">Live Sports</string>
+    <string name="lounge_explore_sports_sub">Matches and fixtures</string>
+    <string name="lounge_explore_movies">Movies</string>
+    <string name="lounge_explore_movies_sub">Films by genre</string>
+    <string name="lounge_explore_entertainment">Entertainment</string>
+    <string name="lounge_explore_entertainment_sub">TV shows and series</string>
+    <string name="lounge_explore_kids">Kids &amp; Family</string>
+    <string name="lounge_explore_kids_sub">Family channels</string>
+    <string name="lounge_explore_event_candidates">Combat &amp; PPV · Feeds not verified</string>
+    <plurals name="lounge_explore_possible_feeds">
+        <item quantity="one">%d possible feed</item>
+        <item quantity="other">%d possible feeds</item>
+    </plurals>
 </resources>
