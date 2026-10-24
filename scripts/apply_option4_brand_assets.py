@@ -2,7 +2,7 @@
 """Render approved Option 4 artwork with distinct selectable icon colours."""
 from pathlib import Path
 import hashlib, json
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
 RES = ROOT / 'app/src/main/res'
@@ -57,9 +57,27 @@ write(logo, RES/'drawable-nodpi/loungetv_locked_horizontal.png')
 write(wordmark, RES/'drawable-nodpi/loungetv_locked_wordmark.png')
 write(couch, RES/'drawable-nodpi/loungetv_locked_couch.png')
 write(app_icon, RES/'drawable-nodpi/loungetv_locked_app_icon.png')
-# Android's native splash masks the image to a circular safe area. .625 is
-# the largest reliable fit for this wide logo (about 10% larger, no clipped L).
-write(fit(logo,768,768,.625),RES/'drawable-nodpi/loungetv_system_launch_art.png')
+# Request a 25% larger splash, but don't let the platform's circular
+# splash mask clip the couch or the first/last letters on Android TV.
+# Use the largest size that actually fits the entire approved horizontal logo.
+def platform_safe_splash(im):
+    canvas_size = 768
+    safe = Image.new('L', (canvas_size, canvas_size), 0)
+    edge = round(canvas_size * (.5 - .318))
+    ImageDraw.Draw(safe).ellipse(
+        (edge, edge, canvas_size - edge, canvas_size - edge), fill=255,
+    )
+    # Try 125% first; Android's hardware mask may force a smaller maximum.
+    for size in range(0, 35):
+        fill = .625 * 1.25 - size * .005
+        if fill < .625:
+            break
+        proposed = fit(im, canvas_size, canvas_size, fill)
+        if ImageChops.subtract(proposed.getchannel('A'), safe).getbbox() is None:
+            return proposed
+    return fit(im, canvas_size, canvas_size, .625)
+
+write(platform_safe_splash(logo),RES/'drawable-nodpi/loungetv_system_launch_art.png')
 # Keep Eggshell the exact approved Option 4 blue. The remaining choices are
 # intentionally distinct, recolouring the approved couch rather than replacing it.
 ICON_COLOURS = {
