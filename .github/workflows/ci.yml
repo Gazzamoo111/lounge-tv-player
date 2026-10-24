@@ -83,7 +83,27 @@ jobs:
             # Debug-signed preflight can never be installed as a stable QA update.
             AAPT=$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)
             APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)
-            APK_ID=$("$AAPT" dump badging "$QA_APK" | head -n 1)
+            APK_BADGING=$("$AAPT" dump badging "$QA_APK")
+            APK_ID="${APK_BADGING%%
+            echo "Built APK identity: $APK_ID"
+            case "$APK_ID" in
+              "package: name='com.loungetv.player.eventqa' versionCode='$VERSION_CODE' "*) ;;
+              *) echo "Expected isolated eventqa package, got: $APK_ID"; exit 1 ;;
+            esac
+            "$APKSIGNER" verify "$QA_APK"
+          else
+            python3 scripts/verify_update_compatibility.py "$QA_APK" \
+              --expected-package com.loungetv.player.qa \
+              --expected-cert-sha256 "$EXPECTED_QA_CERT_SHA256" \
+              --expected-version-code "$VERSION_CODE"
+          fi
+      - name: Upload test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event_name == 'pull_request' && 'lounge-tv-eventqa-preflight' || 'lounge-tv-qa' }}
+          path: app/build/outputs/apk/standard/debug/*.apk
+          if-no-files-found: error
+\\n'*}"
             echo "Built APK identity: $APK_ID"
             case "$APK_ID" in
               "package: name='com.loungetv.player.eventqa' versionCode='$VERSION_CODE' "*) ;;
