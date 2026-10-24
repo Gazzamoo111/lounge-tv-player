@@ -218,7 +218,8 @@ android {
     buildTypes {
         debug {
             // Keep debug builds isolated from production (different signing keys and data).
-            // Draft PR builds install alongside production and stable QA, never over either.\n            applicationIdSuffix = if (System.getenv("ISOLATED_EVENT_QA") == "true") ".eventqa" else ".qa"
+            // Draft PR builds install alongside production and stable QA, never over either.
+            applicationIdSuffix = if (System.getenv("ISOLATED_EVENT_QA") == "true") ".eventqa" else ".qa"
             versionNameSuffix = "-qa"
             if (qaSigning.isComplete) {
                 signingConfig = signingConfigs.getByName("qa")
