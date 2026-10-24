@@ -120,7 +120,7 @@ import java.util.Locale
 private val RowGap = 40.mpx
 
 /** Lounge TV's first-login rails use the existing card widgets, without altering OwnTV Core. */
-private enum class LoungeHomeRow { CATEGORIES, COMBAT_EVENTS, FEATURED_MOVIES, POPULAR_SERIES, LIVE_HIGHLIGHTS }
+private enum class LoungeHomeRow { CATEGORIES, COMBAT_EVENTS, SPORTS_EVENTS, FEATURED_MOVIES, POPULAR_SERIES, LIVE_HIGHLIGHTS }
 
 /** Category shortcuts open existing destinations, without duplicating their playback or catalogues. */
 enum class LoungeExploreCategory(val title: String, val subtitle: String) {
@@ -175,9 +175,10 @@ fun HomeScreen(
     sportsVm: tv.own.owntv.features.sports.SportsViewModel = org.koin.androidx.compose.koinViewModel(),
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
-    // Asked for only while the row is switched on (Layout → Home rows); off costs nothing.
-    val sportsCards = if (HomeRow.LIVE_SPORTS in state.config.visibleOrder) {
-        sportsVm.homeRow.collectAsStateWithLifecycle().value
+    // Users who haven't followed leagues still see live and upcoming fixtures.
+    // Explicitly hidden Home sports remain hidden.
+    val sportsCards = if (HomeRow.LIVE_SPORTS !in state.config.hidden) {
+        sportsVm.featuredHomeEvents.collectAsStateWithLifecycle().value
     } else emptyList()
     val trendingUnavailableMessage = stringResource(R.string.home_trending_unavailable)
     val heroPreviewEngine = koinInject<HeroPreviewEngine>()
@@ -218,7 +219,7 @@ fun HomeScreen(
             HomeRow.TRENDING,
             HomeRow.HERO,
             LoungeHomeRow.COMBAT_EVENTS,
-            HomeRow.LIVE_SPORTS,
+            LoungeHomeRow.SPORTS_EVENTS,
             LoungeHomeRow.CATEGORIES,
             LoungeHomeRow.LIVE_HIGHLIGHTS,
             HomeRow.FAVORITE_CHANNELS,
@@ -228,7 +229,7 @@ fun HomeScreen(
         preferred.forEach { row ->
             if (row is LoungeHomeRow || (row is HomeRow && row in originalRows)) add(row)
         }
-        originalRows.forEach { row -> if (row !in this) add(row) }
+        originalRows.forEach { row -> if (row != HomeRow.LIVE_SPORTS && row !in this) add(row) }
     }
     val heroVisible = HomeRow.HERO in orderedRows
     val hasNonHeroContent = orderedRows.any { it != HomeRow.HERO && rowHasData(it, state, sportsCards.size) }
@@ -608,7 +609,7 @@ fun HomeScreen(
                             )
                         }
 
-                        HomeRow.LIVE_SPORTS -> tv.own.owntv.features.sports.LiveSportsRow(
+                        HomeRow.LIVE_SPORTS, LoungeHomeRow.SPORTS_EVENTS -> tv.own.owntv.features.sports.LiveSportsRow(
                             cards = sportsCards,
                             config = sportsVm.sportsConfig.collectAsStateWithLifecycle().value,
                             start = contentStart,
@@ -827,6 +828,7 @@ private fun rowHasData(row: Any, state: HomeUiState, sportsCards: Int): Boolean 
     LoungeHomeRow.POPULAR_SERIES -> state.popularSeries.isNotEmpty()
     LoungeHomeRow.LIVE_HIGHLIGHTS -> state.liveHighlights.isNotEmpty()
     LoungeHomeRow.COMBAT_EVENTS -> state.combatEvents.isNotEmpty()
+    LoungeHomeRow.SPORTS_EVENTS -> sportsCards > 0
     LoungeHomeRow.CATEGORIES -> !state.isLoading && (
         state.heroItems.isNotEmpty() || state.liveHighlights.isNotEmpty() ||
         state.trendingItems.isNotEmpty() || state.featuredMovies.isNotEmpty() ||
