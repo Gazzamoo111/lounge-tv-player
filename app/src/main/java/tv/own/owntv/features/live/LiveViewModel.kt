@@ -634,7 +634,7 @@ class LiveViewModel(
                 val cust = cs.cust
                 val hiddenCats = cs.hiddenCats
                 val movedFrom = cust.movedFromOrigin
-                if (cust.hiddenItems.isEmpty() && cust.itemNames.isEmpty() && hiddenCats.isEmpty() && movedFrom.isEmpty()) paging
+                val customized = if (cust.hiddenItems.isEmpty() && cust.itemNames.isEmpty() && hiddenCats.isEmpty() && movedFrom.isEmpty()) paging
                 else paging
                     .filter { ch ->
                         isChannelVisible(ch, cust, hiddenCats, key) &&
@@ -644,6 +644,20 @@ class LiveViewModel(
                             } ?: true)
                     }
                     .map { ch -> cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
+
+                // When the tested NZ Freeview source is installed, don't present BEST's
+                // broken TVNZ duplicate feeds. Keep the complete provider DB untouched,
+                // and restore BEST entries automatically if the alternative is removed.
+                val nzFreeviewInstalled = c.sourceIds.any { sourceId ->
+                    sourceById[sourceId]?.let { source ->
+                        source.type == SourceType.M3U &&
+                            source.url.contains("i.mjh.nz/nz/kodi-tv.m3u8", ignoreCase = true)
+                    } == true
+                }
+                if (nzFreeviewInstalled) customized.filter { ch ->
+                    sourceById[ch.sourceId]?.type != SourceType.XTREAM ||
+                        !isBrokenBestTvnzLabel(ch.name)
+                } else customized
             }
         }
         .cachedIn(viewModelScope)
@@ -2173,4 +2187,11 @@ class LiveViewModel(
         const val MAX_NOW_PLAYING = 2_000
 
     }
+}
+
+/** Only the three TVNZ feeds confirmed broken on BEST, never Sky Sport or unrelated channels. */
+internal fun isBrokenBestTvnzLabel(name: String): Boolean {
+    val compact = name.lowercase().replace(Regex("[^a-z0-9]+"), "")
+    return compact.contains("tvnz1") || compact.contains("tvnz2") ||
+        compact.contains("tvnzduke") || compact == "nzduke"
 }
