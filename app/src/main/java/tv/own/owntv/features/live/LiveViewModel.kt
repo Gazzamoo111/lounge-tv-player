@@ -600,7 +600,18 @@ class LiveViewModel(
                 )
                 val multiSourceNames = c.sourceNames.takeIf { it.size > 1 }.orEmpty()
                 val categoriesById = cats.associateBy { it.id }
-                railWithCatchup(catchupCount > 0) + folders.map { e ->
+                // A working independent NZ source should be the first NZ category
+                // customers reach, ahead of BEST's currently unreliable NZ feeds.
+                val nzIds = cats.asSequence().filter { category ->
+                    sourceById[category.sourceId]?.let { source ->
+                        source.type == SourceType.M3U &&
+                            source.url.contains(NZ_FREEVIEW_PATH, ignoreCase = true)
+                    } == true
+                }.map { it.id }.toSet()
+                val preferredNz = folders.filter { it.categoryId in nzIds }
+                val displayFolders = if (preferredNz.isEmpty()) folders else
+                    preferredNz + folders.filterNot { it.categoryId in nzIds }
+                railWithCatchup(catchupCount > 0) + displayFolders.map { e ->
                     LiveRailItem(
                         key = e.categoryId?.let { LiveKey.Folder(it) } ?: LiveKey.Custom(e.customId!!),
                         title = e.displayName,
@@ -651,7 +662,7 @@ class LiveViewModel(
                 val nzFreeviewInstalled = c.sourceIds.any { sourceId ->
                     sourceById[sourceId]?.let { source ->
                         source.type == SourceType.M3U &&
-                            source.url.contains("i.mjh.nz/nz/kodi-tv.m3u8", ignoreCase = true)
+                            source.url.contains(NZ_FREEVIEW_PATH, ignoreCase = true)
                     } == true
                 }
                 if (nzFreeviewInstalled) customized.filter { ch ->
@@ -2188,6 +2199,8 @@ class LiveViewModel(
 
     }
 }
+
+private const val NZ_FREEVIEW_PATH = "i.mjh.nz/nz/kodi-tv.m3u8"
 
 /** Only the three TVNZ feeds confirmed broken on BEST, never Sky Sport or unrelated channels. */
 internal fun isBrokenBestTvnzLabel(name: String): Boolean {
