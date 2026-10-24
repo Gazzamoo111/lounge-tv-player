@@ -25,6 +25,7 @@ internal data class LoungeHomeHighlights(
     val movies: List<MovieEntity> = emptyList(),
     val series: List<SeriesEntity> = emptyList(),
     val channels: List<ChannelEntity> = emptyList(),
+    val combatEvents: List<LoungeEventDiscovery.Group<ChannelEntity>> = emptyList(),
     val movieNames: Map<Long, String> = emptyMap(),
     val seriesNames: Map<Long, String> = emptyMap(),
 )
@@ -100,10 +101,22 @@ internal class LoungeHomeHighlightsReader(
             }
         }
 
+        // Discover only explicitly dated combat-event feeds. These are candidates, not verified
+        // broadcasts; generic numbered PPV slots and misleading side-event labels are excluded.
+        // Stay bounded to avoid traversing the provider's entire catalogue on the Home thread.
+        val combatFeeds = if (channelIds.isEmpty() || kids) emptyList() else
+            listOf("UFC", "BKFC", "PFL", "Bellator").flatMap { term ->
+                channels.searchList(term, channelIds, 150)
+            }.filter { channelVisibility.allows(it.categoryId, CustomizeKeys.channel(it)) }
+        val combatEvents = LoungeEventDiscovery.group(
+            combatFeeds, System.currentTimeMillis(), { it.name }, { it.id },
+        )
+
         return LoungeHomeHighlights(
             movies = moviePicks.map { it.first },
             series = seriesPicks.map { it.first },
             channels = highlights.distinctBy { it.id }.take(20),
+            combatEvents = combatEvents,
             movieNames = moviePicks.associate { it.first.id to it.second },
             seriesNames = seriesPicks.associate { it.first.id to it.second },
         )
