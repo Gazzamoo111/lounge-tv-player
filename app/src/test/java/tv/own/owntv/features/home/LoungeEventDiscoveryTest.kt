@@ -22,6 +22,7 @@ class LoungeEventDiscoveryTest {
         assertNull(LoungeEventDiscovery.parse("UFC 275 English", now))
         assertNull(LoungeEventDiscovery.parse("UFC 275 English 2022-06-11", now))
         assertNull(LoungeEventDiscovery.parse("UFC 333 English 2026-02-31", now))
+        assertEquals("Boxing: Fury vs Usyk", LoungeEventDiscovery.parse("Matchroom Boxing Fury vs Usyk 2026-10-25", now)?.title)
     }
 
     @Test fun groupsCandidateAlternativesAndPrefersEnglishButDoesNotVerifyThem() {
