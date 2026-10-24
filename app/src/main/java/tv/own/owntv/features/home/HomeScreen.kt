@@ -773,10 +773,12 @@ private fun LoungeCategoryRow(
                     line = stringResource(category.subtitleRes),
                     width = 276.mpx,
                     height = 165.mpx,
+                    titleSize = 20,
+                    lineSize = 15,
                     onClick = { onSelect(category) },
                     modifier = Modifier
                         .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
-                        .tracked(track)
+                        .tracked(track = track)
                         .onFocusChanged { if (it.hasFocus) onFocus() },
                 ) {
                     Box(Modifier.fillMaxSize().background(tv.own.owntv.ui.stage.stageStillBack), contentAlignment = Alignment.Center) {
@@ -813,9 +815,11 @@ private fun LoungeCombatEventsRow(
                     onClick = { onPlay(event) },
                     width = 330.mpx,
                     height = 185.mpx,
+                    titleSize = 22,
+                    lineSize = 16,
                     modifier = Modifier
                         .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
-                        .tracked(track)
+                        .tracked(track = track)
                         .onFocusChanged { if (it.hasFocus) onFocus() },
                 ) {
                     Box(Modifier.fillMaxSize().background(tv.own.owntv.ui.stage.stageStillBack), contentAlignment = Alignment.Center) {
