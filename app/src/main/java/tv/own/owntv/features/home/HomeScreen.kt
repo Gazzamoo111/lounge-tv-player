@@ -421,7 +421,11 @@ fun HomeScreen(
                             start = contentStart,
                             onSelect = { category ->
                                 if (category == LoungeExploreCategory.PPV && LoungeHomeRow.COMBAT_EVENTS in renderRows) {
-                                    homeScope.launch { listState.animateScrollToItem(renderRows.indexOf(LoungeHomeRow.COMBAT_EVENTS)) }
+                                    homeScope.launch {
+                                        listState.animateScrollToItem(renderRows.indexOf(LoungeHomeRow.COMBAT_EVENTS))
+                                        kotlinx.coroutines.delay(60)
+                                        runCatching { loungeFirstFocusRequesters.getValue(LoungeHomeRow.COMBAT_EVENTS).requestFocus() }
+                                    }
                                 } else {
                                     onExplore(category)
                                 }
