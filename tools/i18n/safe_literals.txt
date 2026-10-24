@@ -1381,18 +1381,11 @@
 1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeEventDiscovery.kt	English
 1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeEventDiscovery.kt	RAW
 1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeEventDiscovery.kt	HD
-1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	UFC
-1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	BKFC
-1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	PFL
-1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	Bellator
-1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	Boxing
-1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	Matchroom
 1	technical	app/src/main/java/tv/own/owntv/features/shell/OwnTVShell.kt	UFC
-2	technical	app/src/main/java/tv/own/owntv/features/shell/OwnTVShell.kt	kids
-2	technical	app/src/main/java/tv/own/owntv/features/shell/OwnTVShell.kt	children
-2	technical	app/src/main/java/tv/own/owntv/features/shell/OwnTVShell.kt	family
 
 # Language-prefix matching is technical: never display source regex as UI text.
 1	regex	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	^\s*(?:DE|GER|DEUTSCH|ES|ESP|FR|FRA|IT|ITA|PT|POR)\s*(?:[-:|]|\s+[|:])
 1	regex	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	\b(?:german|deutsch|spanish|español|french|français|italian|italiano|portuguese|português)\b
 1	regex	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	[\[(](?:DE|GER|ES|FR|IT|PT)[\])]
+1	technical	app/src/main/java/tv/own/owntv/features/shell/OwnTVShell.kt	rugby
+1	technical	app/src/main/java/tv/own/owntv/features/shell/OwnTVShell.kt	cricket
