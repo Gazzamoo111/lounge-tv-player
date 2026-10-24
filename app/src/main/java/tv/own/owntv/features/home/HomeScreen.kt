@@ -127,7 +127,7 @@ enum class LoungeExploreCategory(val title: String, val subtitle: String) {
     PPV("Combat & PPV", "Dated event feeds"),
     SPORTS("Live Sports", "Matches and fixtures"),
     MOVIES("Movies", "Films by genre"),
-    SERIES("TV Shows", "Series and episodes"),
+    SERIES("Entertainment", "TV shows and series"),
     KIDS("Kids & Family", "Family channels"),
 }
 
