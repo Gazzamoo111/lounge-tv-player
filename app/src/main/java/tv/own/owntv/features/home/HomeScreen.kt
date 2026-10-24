@@ -123,12 +123,12 @@ private val RowGap = 40.mpx
 private enum class LoungeHomeRow { CATEGORIES, COMBAT_EVENTS, SPORTS_EVENTS, FEATURED_MOVIES, POPULAR_SERIES, LIVE_HIGHLIGHTS }
 
 /** Category shortcuts open existing destinations, without duplicating their playback or catalogues. */
-enum class LoungeExploreCategory(val title: String, val subtitle: String) {
-    PPV("Combat & PPV", "Dated event feeds"),
-    SPORTS("Live Sports", "Matches and fixtures"),
-    MOVIES("Movies", "Films by genre"),
-    SERIES("Entertainment", "TV shows and series"),
-    KIDS("Kids & Family", "Family channels"),
+enum class LoungeExploreCategory(val titleRes: Int, val subtitleRes: Int) {
+    PPV(R.string.lounge_explore_ppv, R.string.lounge_explore_ppv_sub),
+    SPORTS(R.string.lounge_explore_sports, R.string.lounge_explore_sports_sub),
+    MOVIES(R.string.lounge_explore_movies, R.string.lounge_explore_movies_sub),
+    SERIES(R.string.lounge_explore_entertainment, R.string.lounge_explore_entertainment_sub),
+    KIDS(R.string.lounge_explore_kids, R.string.lounge_explore_kids_sub),
 }
 
 /** How far the full hero's text sits above the design's (`top: 170px`), and the rows with it: the
@@ -761,7 +761,7 @@ private fun LoungeCategoryRow(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier) {
-        HomeRowHeader("Explore Lounge TV", small = null, start = start)
+        HomeRowHeader(stringResource(R.string.lounge_explore_heading), small = null, start = start)
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(18.mpx),
             contentPadding = PaddingValues(start = start, end = 64.mpx),
@@ -769,8 +769,8 @@ private fun LoungeCategoryRow(
         ) {
             itemsIndexed(LoungeExploreCategory.entries, key = { _, category -> category.name }) { index, category ->
                 StageStill(
-                    title = category.title,
-                    line = category.subtitle,
+                    title = stringResource(category.titleRes),
+                    line = stringResource(category.subtitleRes),
                     width = 276.mpx,
                     height = 165.mpx,
                     onClick = { onSelect(category) },
@@ -780,7 +780,7 @@ private fun LoungeCategoryRow(
                         .onFocusChanged { if (it.hasFocus) onFocus() },
                 ) {
                     Box(Modifier.fillMaxSize().background(tv.own.owntv.ui.stage.stageStillBack), contentAlignment = Alignment.Center) {
-                        Text(category.title, style = stageText(22, 800), color = StageColors.Dim, maxLines = 1)
+                        Text(stringResource(category.titleRes), style = stageText(22, 800), color = StageColors.Dim, maxLines = 1)
                     }
                 }
             }
@@ -800,7 +800,7 @@ private fun LoungeCombatEventsRow(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier) {
-        HomeRowHeader("Combat & PPV · Feeds not verified", small = null, start = start)
+        HomeRowHeader(stringResource(R.string.lounge_explore_event_candidates), small = null, start = start)
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(18.mpx),
             contentPadding = PaddingValues(start = start, end = 64.mpx),
@@ -809,7 +809,7 @@ private fun LoungeCombatEventsRow(
             itemsIndexed(events, key = { _, event -> event.title }) { index, event ->
                 StageStill(
                     title = event.title,
-                    line = "${event.feeds.size} possible ${if (event.feeds.size == 1) "feed" else "feeds"}",
+                    line = pluralStringResource(R.plurals.lounge_explore_possible_feeds, event.feeds.size, event.feeds.size),
                     onClick = { onPlay(event) },
                     width = 330.mpx,
                     height = 185.mpx,
