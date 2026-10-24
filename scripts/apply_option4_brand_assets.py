@@ -2,7 +2,7 @@
 """Render approved Option 4 artwork with distinct selectable icon colours."""
 from pathlib import Path
 import hashlib, json
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
 RES = ROOT / 'app/src/main/res'
@@ -57,9 +57,25 @@ write(logo, RES/'drawable-nodpi/loungetv_locked_horizontal.png')
 write(wordmark, RES/'drawable-nodpi/loungetv_locked_wordmark.png')
 write(couch, RES/'drawable-nodpi/loungetv_locked_couch.png')
 write(app_icon, RES/'drawable-nodpi/loungetv_locked_app_icon.png')
-# Android's native splash masks the image to a circular safe area. .625 is
-# the largest reliable fit for this wide logo (about 10% larger, no clipped L).
-write(fit(logo,768,768,.625),RES/'drawable-nodpi/loungetv_system_launch_art.png')
+# Request a quarter-larger native splash, subject to Android's circular icon mask.
+# Select the largest scale which shows the entire existing approved wordmark.
+def safe_splash(art):
+    size = 768
+    safe_mask = Image.new('L', (size, size), 0)
+    margin = round(size * (.5 - .32))
+    ImageDraw.Draw(safe_mask).ellipse(
+        (margin, margin, size - margin, size - margin), fill=255,
+    )
+    for step in range(45):
+        fill = .625 * 1.25 - step * .004
+        if fill < .625:
+            break
+        candidate = fit(art, size, size, fill)
+        if ImageChops.subtract(candidate.getchannel('A'), safe_mask).getbbox() is None:
+            return candidate
+    return fit(art, size, size, .625)
+
+write(safe_splash(logo),RES/'drawable-nodpi/loungetv_system_launch_art.png')
 # Keep Eggshell the exact approved Option 4 blue. The remaining choices are
 # intentionally distinct, recolouring the approved couch rather than replacing it.
 ICON_COLOURS = {
@@ -77,23 +93,22 @@ def coloured(im, colour):
     if colour is None:
         return im.copy()
     out = im.copy()
-    px = out.load()
+    pixels = out.load()
     for y in range(out.height):
         for x in range(out.width):
-            r, g, b, a = px[x, y]
-            if a == 0:
+            r, g, b, a = pixels[x, y]
+            if a <= 12:
                 continue
-            # Only recolour blue couch pixels, not the approved white launcher tile.
-            if b < r + 12 or b < g + 7:
+            # Preserve neutral highlights/white tile; colour the couch itself.
+            # The previous only-blue rule left most choices blue.
+            if min(r, g, b) > 220 and max(r, g, b) - min(r, g, b) < 28:
                 continue
-            strength = max(0.0, min(1.0, (b - min(r, g)) / 85.0))
-            brightness = max(r, g, b) / 255.0
-            scale = .30 + .70 * brightness
-            desired = tuple(min(255, round(v * scale)) for v in colour)
-            px[x, y] = (
-                round(r * (1-strength) + desired[0] * strength),
-                round(g * (1-strength) + desired[1] * strength),
-                round(b * (1-strength) + desired[2] * strength),
+            luminance = (.2126*r + .7152*g + .0722*b) / 255.0
+            shade = .36 + .64*luminance
+            pixels[x, y] = (
+                round(colour[0]*shade),
+                round(colour[1]*shade),
+                round(colour[2]*shade),
                 a,
             )
     return out

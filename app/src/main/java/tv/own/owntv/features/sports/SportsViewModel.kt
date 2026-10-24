@@ -170,6 +170,22 @@ class SportsViewModel(
         )
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /** Small Home-only fixture rail; does not alter the existing personalised Sports row. */
+    val featuredHomeEvents: StateFlow<List<Match>> = flow {
+        delay(HOME_ROW_DELAY_MS)
+        emitAll(combine(repository.observe(Demand.Hub), config) { board, preference ->
+            val now = System.currentTimeMillis()
+            val followed = preference.leagues.toSet()
+            board.matches.asSequence()
+                .filter { it.isLive || (it.startMs in now..(now + 90 * 60_000L)) }
+                .distinctBy { it.key }
+                .sortedWith(compareBy<Match>({ !it.isLive }, { it.feed !in followed }, { it.startMs }))
+                .take(10)
+                .toList()
+        })
+    }.flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     // --- The match page ------------------------------------------------------------------------------
 
     private val openMatch = MutableStateFlow<Match?>(null)

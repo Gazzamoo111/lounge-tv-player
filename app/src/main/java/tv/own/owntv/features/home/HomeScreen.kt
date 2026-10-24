@@ -9,6 +9,8 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.gestures.BringIntoViewSpec
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.Arrangement
@@ -120,7 +122,16 @@ import java.util.Locale
 private val RowGap = 40.mpx
 
 /** Lounge TV's first-login rails use the existing card widgets, without altering OwnTV Core. */
-private enum class LoungeHomeRow { FEATURED_MOVIES, POPULAR_SERIES, LIVE_HIGHLIGHTS }
+private enum class LoungeHomeRow { FEATURED_MOVIES, POPULAR_SERIES, LIVE_HIGHLIGHTS, SPORTS_LINKS, SPORTS_FIXTURES }
+
+/** Quick links only: every destination already exists in the v5.2.2.11 app. */
+enum class LoungeSportsShortcut(val title: Int, val subtitle: Int) {
+    SPORTS(R.string.lounge_sports_all, R.string.lounge_sports_all_sub),
+    RUGBY(R.string.lounge_sports_rugby, R.string.lounge_sports_rugby_sub),
+    COMBAT(R.string.lounge_sports_combat, R.string.lounge_sports_combat_sub),
+    CRICKET(R.string.lounge_sports_cricket, R.string.lounge_sports_cricket_sub),
+    CHANNELS(R.string.lounge_sports_channels, R.string.lounge_sports_channels_sub),
+}
 
 /** How far the full hero's text sits above the design's (`top: 170px`), and the rows with it: the
  *  top-left corner is empty, and the rows below are what the screen is short of. */
@@ -161,13 +172,18 @@ fun HomeScreen(
     onEntryHook: (((() -> Boolean)?) -> Unit)? = null,
     /** Sports Hub: ▶ on a Live sports card opens its match page. */
     onOpenMatch: (tv.own.owntv.core.sports.model.Match) -> Unit = {},
+    onSportsShortcut: (LoungeSportsShortcut) -> Unit = {},
     modifier: Modifier = Modifier,
     sportsVm: tv.own.owntv.features.sports.SportsViewModel = org.koin.androidx.compose.koinViewModel(),
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
-    // Asked for only while the row is switched on (Layout → Home rows); off costs nothing.
-    val sportsCards = if (HomeRow.LIVE_SPORTS in state.config.visibleOrder) {
+    // Existing followed-sports row is unchanged. If it is not configured, show
+    // live/soon fixtures as a small ADDITIONAL row at the very bottom of Home.
+    val existingSportsRow = HomeRow.LIVE_SPORTS in state.config.visibleOrder
+    val sportsCards = if (existingSportsRow) {
         sportsVm.homeRow.collectAsStateWithLifecycle().value
+    } else if (state.config.visibleOrder.isNotEmpty() && !state.isLoading) {
+        sportsVm.featuredHomeEvents.collectAsStateWithLifecycle().value
     } else emptyList()
     val trendingUnavailableMessage = stringResource(R.string.home_trending_unavailable)
     val heroPreviewEngine = koinInject<HeroPreviewEngine>()
@@ -218,6 +234,11 @@ fun HomeScreen(
             if (row is LoungeHomeRow || (row is HomeRow && row in originalRows)) add(row)
         }
         originalRows.forEach { row -> if (row !in this) add(row) }
+        // Append only. Never move/remove the hero, films, series, recent or favourites.
+        if (originalRows.isNotEmpty()) {
+            add(LoungeHomeRow.SPORTS_LINKS)
+            if (HomeRow.LIVE_SPORTS !in originalRows) add(LoungeHomeRow.SPORTS_FIXTURES)
+        }
     }
     val heroVisible = HomeRow.HERO in orderedRows
     val hasNonHeroContent = orderedRows.any { it != HomeRow.HERO && rowHasData(it, state, sportsCards.size) }
@@ -405,6 +426,26 @@ fun HomeScreen(
                     val firstItemFocusRequester = rowFocusRequester(row)
                     val rowModifier = if (row == firstRowUnderHero) unfoldOnUp else Modifier
                     when (row) {
+                        LoungeHomeRow.SPORTS_LINKS -> LoungeSportsQuickLinks(
+                            start = contentStart,
+                            onSelect = onSportsShortcut,
+                            onFocus = onNonHeroFocused,
+                            firstItemFocusRequester = firstItemFocusRequester,
+                            track = track,
+                            modifier = rowModifier,
+                        )
+
+                        LoungeHomeRow.SPORTS_FIXTURES -> tv.own.owntv.features.sports.LiveSportsRow(
+                            cards = sportsCards,
+                            config = sportsVm.sportsConfig.collectAsStateWithLifecycle().value,
+                            start = contentStart,
+                            onOpenMatch = onOpenMatch,
+                            onFocus = onNonHeroFocused,
+                            firstItemFocusRequester = firstItemFocusRequester,
+                            track = track,
+                            modifier = rowModifier,
+                        )
+
                         LoungeHomeRow.FEATURED_MOVIES -> FavoritePosterRow(
                             title = stringResource(R.string.lounge_home_featured_movies),
                             items = state.featuredMovies,
@@ -709,7 +750,58 @@ fun HomeScreen(
     }
     InAppToast(trendingToast)
 }
+/** Sports navigation is additive; these cards do not pretend a provider feed is verified. */
+@Composable
+private fun LoungeSportsQuickLinks(
+    start: Dp,
+    onSelect: (LoungeSportsShortcut) -> Unit,
+    onFocus: () -> Unit,
+    firstItemFocusRequester: FocusRequester?,
+    track: (FocusRequester) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    // Request space for the WHOLE row, including the labels below its cards.
+    // Focusing a card alone only brings its image into view on TV.
+    val fullRow = remember { BringIntoViewRequester() }
+    val scope = rememberCoroutineScope()
+    Column(modifier.bringIntoViewRequester(fullRow)) {
+        HomeRowHeader(stringResource(R.string.lounge_sports_quick_links), small = null, start = start)
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(18.mpx),
+            contentPadding = PaddingValues(start = start, end = 64.mpx),
+            modifier = Modifier.focusRestorer().focusGroup(),
+        ) {
+            itemsIndexed(LoungeSportsShortcut.entries, key = { _, item -> item.name }) { index, item ->
+                StageStill(
+                    title = stringResource(item.title),
+                    line = stringResource(item.subtitle),
+                    width = 276.mpx,
+                    height = 165.mpx,
+                    titleSize = 20,
+                    lineSize = 15,
+                    onClick = { onSelect(item) },
+                    modifier = Modifier
+                        .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
+                        .tracked(track = track)
+                        .onFocusChanged {
+                            if (it.hasFocus) {
+                                onFocus()
+                                scope.launch { fullRow.bringIntoView() }
+                            }
+                        },
+                ) {
+                    Box(Modifier.fillMaxSize().background(tv.own.owntv.ui.stage.stageStillBack), contentAlignment = Alignment.Center) {
+                        Text(stringResource(item.title), style = stageText(22, 800), color = StageColors.Text, maxLines = 1)
+                    }
+                }
+            }
+        }
+    }
+}
+
 private fun rowHasData(row: Any, state: HomeUiState, sportsCards: Int): Boolean = when (row) {
+    LoungeHomeRow.SPORTS_LINKS -> !state.isLoading
+    LoungeHomeRow.SPORTS_FIXTURES -> sportsCards > 0
     LoungeHomeRow.FEATURED_MOVIES -> state.featuredMovies.isNotEmpty()
     LoungeHomeRow.POPULAR_SERIES -> state.popularSeries.isNotEmpty()
     LoungeHomeRow.LIVE_HIGHLIGHTS -> state.liveHighlights.isNotEmpty()
