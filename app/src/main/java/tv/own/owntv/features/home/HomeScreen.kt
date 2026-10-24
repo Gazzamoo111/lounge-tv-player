@@ -120,7 +120,16 @@ import java.util.Locale
 private val RowGap = 40.mpx
 
 /** Lounge TV's first-login rails use the existing card widgets, without altering OwnTV Core. */
-private enum class LoungeHomeRow { FEATURED_MOVIES, POPULAR_SERIES, LIVE_HIGHLIGHTS }
+private enum class LoungeHomeRow { CATEGORIES, COMBAT_EVENTS, FEATURED_MOVIES, POPULAR_SERIES, LIVE_HIGHLIGHTS }
+
+/** Category shortcuts open existing destinations, without duplicating their playback or catalogues. */
+enum class LoungeExploreCategory(val title: String, val subtitle: String) {
+    PPV("Combat & PPV", "Dated event feeds"),
+    SPORTS("Live Sports", "Matches and fixtures"),
+    MOVIES("Movies", "Films by genre"),
+    SERIES("TV Shows", "Series and episodes"),
+    KIDS("Kids & Family", "Family channels"),
+}
 
 /** How far the full hero's text sits above the design's (`top: 170px`), and the rows with it: the
  *  top-left corner is empty, and the rows below are what the screen is short of. */
@@ -161,6 +170,7 @@ fun HomeScreen(
     onEntryHook: (((() -> Boolean)?) -> Unit)? = null,
     /** Sports Hub: ▶ on a Live sports card opens its match page. */
     onOpenMatch: (tv.own.owntv.core.sports.model.Match) -> Unit = {},
+    onExplore: (LoungeExploreCategory) -> Unit = {},
     modifier: Modifier = Modifier,
     sportsVm: tv.own.owntv.features.sports.SportsViewModel = org.koin.androidx.compose.koinViewModel(),
 ) {
@@ -207,12 +217,13 @@ fun HomeScreen(
         val preferred = listOf<Any>(
             HomeRow.TRENDING,
             HomeRow.HERO,
+            LoungeHomeRow.COMBAT_EVENTS,
+            HomeRow.LIVE_SPORTS,
+            LoungeHomeRow.CATEGORIES,
             LoungeHomeRow.LIVE_HIGHLIGHTS,
             HomeRow.FAVORITE_CHANNELS,
             HomeRow.FAVORITE_MOVIES,
             HomeRow.FAVORITE_SERIES,
-            LoungeHomeRow.FEATURED_MOVIES,
-            LoungeHomeRow.POPULAR_SERIES,
         )
         preferred.forEach { row ->
             if (row is LoungeHomeRow || (row is HomeRow && row in originalRows)) add(row)
@@ -405,6 +416,31 @@ fun HomeScreen(
                     val firstItemFocusRequester = rowFocusRequester(row)
                     val rowModifier = if (row == firstRowUnderHero) unfoldOnUp else Modifier
                     when (row) {
+                        LoungeHomeRow.CATEGORIES -> LoungeCategoryRow(
+                            start = contentStart,
+                            onSelect = { category ->
+                                if (category == LoungeExploreCategory.PPV && LoungeHomeRow.COMBAT_EVENTS in renderRows) {
+                                    homeScope.launch { listState.animateScrollToItem(renderRows.indexOf(LoungeHomeRow.COMBAT_EVENTS)) }
+                                } else {
+                                    onExplore(category)
+                                }
+                            },
+                            onFocus = onNonHeroFocused,
+                            firstItemFocusRequester = firstItemFocusRequester,
+                            track = track,
+                            modifier = rowModifier,
+                        )
+
+                        LoungeHomeRow.COMBAT_EVENTS -> LoungeCombatEventsRow(
+                            events = state.combatEvents,
+                            start = contentStart,
+                            onPlay = { event -> onPlayChannel(event.feeds.first().id, event.feeds) },
+                            onFocus = onNonHeroFocused,
+                            firstItemFocusRequester = firstItemFocusRequester,
+                            track = track,
+                            modifier = rowModifier,
+                        )
+
                         LoungeHomeRow.FEATURED_MOVIES -> FavoritePosterRow(
                             title = stringResource(R.string.lounge_home_featured_movies),
                             items = state.featuredMovies,
@@ -709,10 +745,93 @@ fun HomeScreen(
     }
     InAppToast(trendingToast)
 }
+/** High-signal destinations replace rows of random individual VOD titles. */
+@Composable
+private fun LoungeCategoryRow(
+    start: Dp,
+    onSelect: (LoungeExploreCategory) -> Unit,
+    onFocus: () -> Unit,
+    firstItemFocusRequester: FocusRequester?,
+    track: (FocusRequester) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier) {
+        HomeRowHeader("Explore Lounge TV", small = null, start = start)
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(18.mpx),
+            contentPadding = PaddingValues(start = start, end = 64.mpx),
+            modifier = Modifier.focusRestorer().focusGroup(),
+        ) {
+            itemsIndexed(LoungeExploreCategory.entries, key = { _, category -> category.name }) { index, category ->
+                StageStill(
+                    title = category.title,
+                    line = category.subtitle,
+                    width = 276.mpx,
+                    height = 165.mpx,
+                    onClick = { onSelect(category) },
+                    modifier = Modifier
+                        .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
+                        .tracked(track)
+                        .onFocusChanged { if (it.hasFocus) onFocus() },
+                ) {
+                    Box(Modifier.fillMaxSize().background(tv.own.owntv.ui.stage.stageStillBack), contentAlignment = Alignment.Center) {
+                        Text(category.title, style = stageText(22, 800), color = StageColors.Dim, maxLines = 1)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Candidate feeds share a clean event label, never a fabricated Verified or Live badge. */
+@Composable
+private fun LoungeCombatEventsRow(
+    events: List<LoungeEventDiscovery.Group<ChannelEntity>>,
+    start: Dp,
+    onPlay: (LoungeEventDiscovery.Group<ChannelEntity>) -> Unit,
+    onFocus: () -> Unit,
+    firstItemFocusRequester: FocusRequester?,
+    track: (FocusRequester) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier) {
+        HomeRowHeader("Combat & PPV · Feeds not verified", small = null, start = start)
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(18.mpx),
+            contentPadding = PaddingValues(start = start, end = 64.mpx),
+            modifier = Modifier.focusRestorer().focusGroup(),
+        ) {
+            itemsIndexed(events, key = { _, event -> event.title }) { index, event ->
+                StageStill(
+                    title = event.title,
+                    line = "${event.feeds.size} possible ${if (event.feeds.size == 1) "feed" else "feeds"}",
+                    onClick = { onPlay(event) },
+                    width = 330.mpx,
+                    height = 185.mpx,
+                    modifier = Modifier
+                        .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
+                        .tracked(track)
+                        .onFocusChanged { if (it.hasFocus) onFocus() },
+                ) {
+                    Box(Modifier.fillMaxSize().background(tv.own.owntv.ui.stage.stageStillBack), contentAlignment = Alignment.Center) {
+                        Text(event.title, style = stageText(35, 800), color = StageColors.Text, maxLines = 1)
+                    }
+                }
+            }
+        }
+    }
+}
+
 private fun rowHasData(row: Any, state: HomeUiState, sportsCards: Int): Boolean = when (row) {
     LoungeHomeRow.FEATURED_MOVIES -> state.featuredMovies.isNotEmpty()
     LoungeHomeRow.POPULAR_SERIES -> state.popularSeries.isNotEmpty()
     LoungeHomeRow.LIVE_HIGHLIGHTS -> state.liveHighlights.isNotEmpty()
+    LoungeHomeRow.COMBAT_EVENTS -> state.combatEvents.isNotEmpty()
+    LoungeHomeRow.CATEGORIES -> !state.isLoading && (
+        state.heroItems.isNotEmpty() || state.liveHighlights.isNotEmpty() ||
+        state.trendingItems.isNotEmpty() || state.featuredMovies.isNotEmpty() ||
+        state.popularSeries.isNotEmpty() || state.recentLive.isNotEmpty()
+    )
     HomeRow.TRENDING -> state.trendingItems.size >= TrendingDao.MIN_ELIGIBLE_ITEMS
     HomeRow.LIVE_SPORTS -> sportsCards > 0
     HomeRow.HERO -> state.heroItems.isNotEmpty()
