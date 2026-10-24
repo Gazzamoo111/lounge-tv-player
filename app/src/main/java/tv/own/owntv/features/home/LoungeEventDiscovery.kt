@@ -11,7 +11,7 @@ import kotlin.math.abs
  * verified event/source mapping may ever be advertised as "verified" or used for automatic failover.
  * Never expose bare numbered PPV feeds as featured events.
  */
-internal object LoungeEventDiscovery {
+object LoungeEventDiscovery {
     private val numbered = Regex("""\b(UFC|BKFC|PFL|Bellator)\s*[-:#]?\s*(\d{1,4})\b""", RegexOption.IGNORE_CASE)
     private val boxingContext = Regex("""\b(boxing|matchroom|dazn|top\s*rank)\b""", RegexOption.IGNORE_CASE)
     private val bout = Regex("""\b([A-Za-z][A-Za-z'-]{2,24})\s+(?:vs?\.?|versus)\s+([A-Za-z][A-Za-z'-]{2,24})\b""", RegexOption.IGNORE_CASE)
@@ -23,9 +23,9 @@ internal object LoungeEventDiscovery {
     private val day = 86_400_000L
 
     internal data class Name(val title: String, val startDayMs: Long, val preference: Int)
-    internal data class Group<T>(val title: String, val feeds: List<T>)
+    data class Group<T>(val title: String, val feeds: List<T>)
 
-    fun parse(name: String, nowMs: Long): Name? {
+    internal fun parse(name: String, nowMs: Long): Name? {
         if (excluded.containsMatchIn(name)) return null
         val event = numbered.find(name)
         val boxing = if (event == null && boxingContext.containsMatchIn(name)) bout.find(name) else null
@@ -46,7 +46,7 @@ internal object LoungeEventDiscovery {
         return Name(title, eventDay, preference)
     }
 
-    fun <T> group(
+    internal fun <T> group(
         items: List<T>,
         nowMs: Long,
         name: (T) -> String,
