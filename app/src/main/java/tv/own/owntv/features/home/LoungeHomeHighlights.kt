@@ -87,6 +87,7 @@ internal class LoungeHomeHighlightsReader(
                 val found = channels.searchList(term, channelIds, 12)
                     .filter { channelVisibility.allows(it.categoryId, CustomizeKeys.channel(it)) }
                     .filter { it.name.contains(term, ignoreCase = true) }
+                    .filter { englishBroadcastName(it.name) }
                     .filter { it.logoUrl?.isNotBlank() == true }
                     .filter { channel -> excluded.none { channel.name.contains(it, ignoreCase = true) } }
                     .sortedWith(compareByDescending<ChannelEntity> {
@@ -101,23 +102,13 @@ internal class LoungeHomeHighlightsReader(
             }
         }
 
-        // Discover only explicitly dated combat-event feeds. These are candidates, not verified
-        // broadcasts; generic numbered PPV slots and misleading side-event labels are excluded.
-        // Stay bounded to avoid traversing the provider's entire catalogue on the Home thread.
-        val combatFeeds = if (channelIds.isEmpty() || kids) emptyList() else
-            listOf("UFC", "BKFC", "PFL", "Bellator", "Boxing", "Matchroom").flatMap { term ->
-                channels.searchList(term, channelIds, 150)
-            }.filter { channelVisibility.allows(it.categoryId, CustomizeKeys.channel(it)) }
-        val combatEvents = LoungeEventDiscovery.group(
-            combatFeeds, System.currentTimeMillis(), { it.name }, { it.id },
-        )
+        // Unverified combat streams are not promoted as live Home recommendations.
 
         return LoungeHomeHighlights(
             movies = moviePicks.map { it.first },
             series = seriesPicks.map { it.first },
             channels = highlights.distinctBy { it.id }.take(20),
-            combatEvents = combatEvents,
-            movieNames = moviePicks.associate { it.first.id to it.second },
+             movieNames = moviePicks.associate { it.first.id to it.second },
             seriesNames = seriesPicks.associate { it.first.id to it.second },
         )
     }
@@ -197,4 +188,15 @@ internal class LoungeHomeHighlightsReader(
         )
         // Editorial order, not provider ratings. Missing titles are skipped, never faked.
     }
+}
+
+/** Don't promote dubbed foreign-language copies in the Home live highlights.
+ * The full imported catalogue remains available through Live TV and Search. */
+internal fun englishBroadcastName(name: String): Boolean {
+    val foreignPrefix = Regex("""^\s*(?:DE|GER|DEUTSCH|ES|ESP|FR|FRA|IT|ITA|PT|POR)\s*(?:[-:|]|\s+[|:])""", RegexOption.IGNORE_CASE)
+    val foreignWords = Regex("""\b(?:german|deutsch|spanish|español|french|français|italian|italiano|portuguese|português)\b""", RegexOption.IGNORE_CASE)
+    val foreignTag = Regex("""[\[(](?:DE|GER|ES|FR|IT|PT)[\])]""", RegexOption.IGNORE_CASE)
+    return !foreignPrefix.containsMatchIn(name) &&
+        !foreignWords.containsMatchIn(name) &&
+        !foreignTag.containsMatchIn(name)
 }
