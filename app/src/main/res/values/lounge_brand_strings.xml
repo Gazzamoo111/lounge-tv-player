@@ -71,6 +71,13 @@
     <string name="lounge_brand_new_day_english_title" translatable="false">Spider-Man: Brand New Day</string>
     <!-- Home discovery: ordinary consumer categories and explicitly unverified provider candidates. -->
     <string name="lounge_explore_heading">Explore Lounge TV</string>
+    <string name="lounge_explore_sports_shortcuts">Find Live Sports</string>
+    <string name="lounge_explore_rugby">Rugby</string>
+    <string name="lounge_explore_rugby_sub">Find rugby channels</string>
+    <string name="lounge_explore_cricket">Cricket</string>
+    <string name="lounge_explore_cricket_sub">Find cricket channels</string>
+    <string name="lounge_explore_live_channels">Sports Channels</string>
+    <string name="lounge_explore_live_channels_sub">Browse live channels</string>
     <string name="lounge_explore_ppv">Combat &amp; PPV</string>
     <string name="lounge_explore_ppv_sub">Dated event feeds</string>
     <string name="lounge_explore_sports">Live Sports</string>
