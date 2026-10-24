@@ -38,7 +38,7 @@ object LoungeEventDiscovery {
         val title = if (event != null) {
             "${event.groupValues[1].uppercase(Locale.ROOT)} ${event.groupValues[2]}"
         } else {
-            "Boxing: ${boxing!!.groupValues[1]} vs ${boxing.groupValues[2]}"
+            boxing!!.value
         }
         val preference = (if (name.contains("English", true)) 80 else 0) +
             (if (name.contains("RAW", true)) 20 else 0) +
