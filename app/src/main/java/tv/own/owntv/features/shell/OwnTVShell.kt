@@ -1230,34 +1230,22 @@ fun OwnTVShell(
                             },
                             onExplore = { category ->
                                 when (category) {
-                                    tv.own.owntv.features.home.LoungeExploreCategory.SPORTS -> onSelectSection(MainSection.SPORTS)
-                                    tv.own.owntv.features.home.LoungeExploreCategory.MOVIES -> onSelectSection(MainSection.MOVIES)
-                                    tv.own.owntv.features.home.LoungeExploreCategory.SERIES -> onSelectSection(MainSection.SERIES)
+                                    tv.own.owntv.features.home.LoungeExploreCategory.SPORTS ->
+                                        onSelectSection(MainSection.SPORTS)
+                                    tv.own.owntv.features.home.LoungeExploreCategory.RUGBY -> {
+                                        searchVm.setQuery("rugby")
+                                        onSelectSection(MainSection.SEARCH)
+                                    }
                                     tv.own.owntv.features.home.LoungeExploreCategory.PPV -> {
                                         searchVm.setQuery("UFC")
                                         onSelectSection(MainSection.SEARCH)
                                     }
-                                    tv.own.owntv.features.home.LoungeExploreCategory.KIDS -> {
-                                        // Take the viewer to a real visible kids category, not a
-                                        // fabricated category containing channels outside their profile.
-                                        onSelectSection(MainSection.LIVE_TV)
-                                        scope.launch {
-                                            val target = kotlinx.coroutines.withTimeoutOrNull(2_000L) {
-                                                liveVm.railItems.first { items ->
-                                                    items.any { item ->
-                                                        item.title.orEmpty().contains("kids", true) ||
-                                                            item.title.orEmpty().contains("children", true) ||
-                                                            item.title.orEmpty().contains("family", true)
-                                                    }
-                                                }.firstOrNull { item ->
-                                                    item.title.orEmpty().contains("kids", true) ||
-                                                        item.title.orEmpty().contains("children", true) ||
-                                                        item.title.orEmpty().contains("family", true)
-                                                }
-                                            }
-                                            target?.let { liveVm.select(it.key) }
-                                        }
+                                    tv.own.owntv.features.home.LoungeExploreCategory.CRICKET -> {
+                                        searchVm.setQuery("cricket")
+                                        onSelectSection(MainSection.SEARCH)
                                     }
+                                    tv.own.owntv.features.home.LoungeExploreCategory.LIVE_TV ->
+                                        onSelectSection(MainSection.LIVE_TV)
                                 }
                             },
                             contentStart = if (navStyle == tv.own.owntv.core.settings.SettingsRepository.NavStyle.DOCKED) 64.mpx else 150.mpx,
