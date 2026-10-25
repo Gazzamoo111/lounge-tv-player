@@ -4,7 +4,21 @@ import kotlinx.coroutines.CancellationException
 import tv.own.owntv.core.database.entity.SourceEntity
 import tv.own.owntv.core.epg.EpgSourceStore
 import tv.own.owntv.core.repository.EpgRepository
+import tv.own.owntv.core.model.SourceType
+import tv.own.owntv.core.settings.EpgAutoRefresh
+import tv.own.owntv.core.settings.EpgRefresh
+import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.core.util.classifySyncFailure
+
+/**
+ * Our own XMLTV complement to the authenticated BEST Xtream guide.
+ * It is published as programme listings only: the provider remains BEST.
+ */
+internal const val LOUNGE_EPG_URL =
+    "https://raw.githubusercontent.com/Gazzamoo111/lounge-tv-feed/main/docs/epg6-live.xml"
+
+internal fun guideUrlsWithLounge(sourceType: SourceType, providerUrls: List<String>): List<String> =
+    (providerUrls + if (sourceType == SourceType.XTREAM) listOf(LOUNGE_EPG_URL) else emptyList()).distinct()
 
 /**
  * Shared semi-auto EPG sync used by both onboarding and Settings → Playlists. Registers the playlist's own
@@ -16,11 +30,13 @@ suspend fun runSemiAutoEpgSync(
     source: SourceEntity,
     epgRepository: EpgRepository,
     store: EpgSourceStore,
+    settings: SettingsRepository,
     setState: (EpgSyncUi) -> Unit,
 ) {
     // A playlist header may advertise several feeds in one comma-separated url-tvg; each is its own
     // EPG source, since only one address can be downloaded at a time.
-    val urls = epgRepository.guideUrls(source)
+    // BEST first; Lounge fills channels missing from the provider's XMLTV.
+    val urls = guideUrlsWithLounge(source.type, epgRepository.guideUrls(source))
     if (urls.isEmpty()) { setState(EpgSyncUi.Done); return }
     setState(EpgSyncUi.Syncing(0))
     var total = 0
@@ -29,9 +45,16 @@ suspend fun runSemiAutoEpgSync(
     for (url in urls) {
         // Show up in Settings → EPG Sources like any other feed (so the user can re-sync / delete it there).
         // Two feeds of one playlist share its name and are told apart by the URL shown beneath it.
-        val epgSource = store.getAll().firstOrNull { it.url == url } ?: store.add(source.name, url, source.userAgent)
+        val existing = store.getAll().firstOrNull { it.url == url }
+        val epgSource = existing ?: store.add(
+            source.name,
+            url,
+            if (url == LOUNGE_EPG_URL) null else source.userAgent,
+        )
         val now = System.currentTimeMillis()
         try {
+            // Auto-refresh every six hours for new guides, never override an existing preference.
+            if (existing == null) settings.setEpgAutoRefresh(epgSource.id, EpgRefresh(EpgAutoRefresh.HOURS_6))
             val written = epgRepository.refreshUrl(epgSource.id, epgSource.url, epgSource.userAgent) { _, count ->
                 setState(EpgSyncUi.Syncing(total + count))
             }
