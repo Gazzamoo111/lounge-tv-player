@@ -2216,9 +2216,13 @@ class LiveViewModel(
 private const val NZ_FREEVIEW_PATH = "i.mjh.nz/nz/kodi-tv.m3u8"
 
 /** Hide BEST NZ folders except Sky Sport groups that carry RAW or HD feeds. */
+internal fun isAllowedBestNzSportsCategory(sourceType: SourceType?, name: String): Boolean =
+    sourceType == SourceType.XTREAM && isBestNzLabel(name) &&
+        isSkySportLabel(name) && isRawOrHdLabel(name)
+
 internal fun shouldHideBestNzCategory(sourceType: SourceType?, name: String): Boolean =
     sourceType == SourceType.XTREAM && isBestNzLabel(name) &&
-        !(isSkySportLabel(name) && isRawOrHdLabel(name))
+        !isAllowedBestNzSportsCategory(sourceType, name)
 
 /**
  * A provider RAW/HD folder may name its streams simply "Sky Sport 1" or even "SS1".
