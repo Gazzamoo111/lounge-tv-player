@@ -80,4 +80,5 @@
     <string name="lounge_sports_cricket_sub">Find cricket channels</string>
     <string name="lounge_sports_channels">Sports Channels</string>
     <string name="lounge_sports_channels_sub">Browse live TV</string>
+    <string name="loungetv_qa_update_manual">This is a Lounge TV test build. In-app updates install the production app, so updates for this test version must be installed from GitHub Actions.</string>
 </resources>
