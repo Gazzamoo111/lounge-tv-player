@@ -84,4 +84,5 @@
     <string name="more_lounge_help_title">Lounge TV Help &amp; Setup</string>
     <string name="more_lounge_help_url" translatable="false">loungetv.nz/setup-guide</string>
     <string name="more_lounge_help_instruction">Open this address on your phone for setup and help. For account or channel problems, contact Lounge TV using the support details supplied with your subscription.</string>
+    <string name="loungetv_qa_update_manual">This is a Lounge TV test build. In-app updates install the production app, so updates for this test version must be installed from GitHub Actions.</string>
 </resources>
