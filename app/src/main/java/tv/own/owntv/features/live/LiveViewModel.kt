@@ -656,19 +656,13 @@ class LiveViewModel(
                     }
                     .map { ch -> cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
 
-                // When the tested NZ Freeview source is installed, don't present BEST's
-                // broken TVNZ duplicate feeds. Keep the complete provider DB untouched,
-                // and restore BEST entries automatically if the alternative is removed.
-                val nzFreeviewInstalled = c.sourceIds.any { sourceId ->
-                    sourceById[sourceId]?.let { source ->
-                        source.type == SourceType.M3U &&
-                            source.url.contains(NZ_FREEVIEW_PATH, ignoreCase = true)
-                    } == true
+                // BEST's confirmed broken TVNZ streams should not be the first thing
+                // customers see on Live TV. Filter the Xtream duplicates regardless
+                // of whether an alternative Freeview playlist has been added.
+                // The database, favourites and working M3U alternatives stay intact.
+                customized.filter { ch ->
+                    !shouldHideBrokenBestTvnz(sourceById[ch.sourceId]?.type, ch.name)
                 }
-                if (nzFreeviewInstalled) customized.filter { ch ->
-                    sourceById[ch.sourceId]?.type != SourceType.XTREAM ||
-                        !isBrokenBestTvnzLabel(ch.name)
-                } else customized
             }
         }
         .cachedIn(viewModelScope)
@@ -2201,6 +2195,10 @@ class LiveViewModel(
 }
 
 private const val NZ_FREEVIEW_PATH = "i.mjh.nz/nz/kodi-tv.m3u8"
+
+/** Keep this limited to confirmed failing TVNZ streams, not Sky Sport or other NZ channels. */
+internal fun shouldHideBrokenBestTvnz(sourceType: SourceType?, name: String): Boolean =
+    sourceType == SourceType.XTREAM && isBrokenBestTvnzLabel(name)
 
 /** Only the three TVNZ feeds confirmed broken on BEST, never Sky Sport or unrelated channels. */
 internal fun isBrokenBestTvnzLabel(name: String): Boolean {
