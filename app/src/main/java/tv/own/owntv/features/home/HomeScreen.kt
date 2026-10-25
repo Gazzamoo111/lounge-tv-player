@@ -291,6 +291,24 @@ fun HomeScreen(
         }
     }
 
+    // Focus-based scrolling sees only the match/card, not its subtitle or the full
+    // bottom rail. Align the actual LazyColumn item after the focus scroll settles.
+    // This keeps the entire Sports row visible on Fire TV, regardless of card height.
+    val onSportsRowFocused: (Any) -> Unit = { row ->
+        onNonHeroFocused()
+        val rowIndex = renderRows.indexOf(row)
+        if (rowIndex >= 0) {
+            homeScope.launch {
+                kotlinx.coroutines.delay(60L)
+                if (renderRows.getOrNull(rowIndex) == row &&
+                    (listState.firstVisibleItemIndex != rowIndex || listState.firstVisibleItemScrollOffset != 0)
+                ) {
+                    listState.scrollToItem(rowIndex)
+                }
+            }
+        }
+    }
+
     LaunchedEffect(focusedHeroIndex) {
         if (focusedHeroIndex != -1) return@LaunchedEffect
         // Focus moves between cards very quickly (old loses focus before new gains). Debounce the
@@ -429,7 +447,7 @@ fun HomeScreen(
                         LoungeHomeRow.SPORTS_LINKS -> LoungeSportsQuickLinks(
                             start = contentStart,
                             onSelect = onSportsShortcut,
-                            onFocus = onNonHeroFocused,
+                            onFocus = { onSportsRowFocused(LoungeHomeRow.SPORTS_LINKS) },
                             firstItemFocusRequester = firstItemFocusRequester,
                             track = track,
                             modifier = rowModifier,
@@ -440,7 +458,7 @@ fun HomeScreen(
                             config = sportsVm.sportsConfig.collectAsStateWithLifecycle().value,
                             start = contentStart,
                             onOpenMatch = onOpenMatch,
-                            onFocus = onNonHeroFocused,
+                            onFocus = { onSportsRowFocused(LoungeHomeRow.SPORTS_FIXTURES) },
                             firstItemFocusRequester = firstItemFocusRequester,
                             track = track,
                             modifier = rowModifier,
@@ -618,7 +636,7 @@ fun HomeScreen(
                             config = sportsVm.sportsConfig.collectAsStateWithLifecycle().value,
                             start = contentStart,
                             onOpenMatch = onOpenMatch,
-                            onFocus = onNonHeroFocused,
+                            onFocus = { onSportsRowFocused(HomeRow.LIVE_SPORTS) },
                             firstItemFocusRequester = firstItemFocusRequester,
                             track = track,
                             modifier = rowModifier,
