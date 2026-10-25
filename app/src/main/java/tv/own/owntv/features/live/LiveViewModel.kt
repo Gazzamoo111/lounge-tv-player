@@ -2238,7 +2238,7 @@ private fun isSkySportLabel(label: String): Boolean =
     label.lowercase().filter { it.isLetterOrDigit() }.contains("skysport")
 
 private fun isRawOrHdLabel(label: String): Boolean =
-    label.lowercase().split(Regex("[^a-z0-9]+")).any { it == "raw" || it == "hd" }
+    label.lowercase().split(Regex("[^a-z0-9]+")).any { it == "raw" || it == "hd" || it == "fhd" }
 
 /** Only the three TVNZ feeds confirmed broken on BEST, never Sky Sport or unrelated channels. */
 internal fun isBrokenBestTvnzLabel(name: String): Boolean {
