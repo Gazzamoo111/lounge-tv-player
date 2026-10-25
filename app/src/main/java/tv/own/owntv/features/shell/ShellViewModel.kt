@@ -84,7 +84,7 @@ class ShellViewModel(
             }
             settings.activeProfileId
                 .flatMapLatest { pid ->
-                    if (pid < 0) flowOf(emptyList())
+                    if (pid < 0) flowOf(emptyList<tv.own.owntv.core.database.entity.SourceEntity>())
                     else sourceRepository.observeSources(pid)
                 }
                 .map { sources -> sources.filter { it.type == SourceType.XTREAM } }
