@@ -47,7 +47,7 @@ suspend fun runSemiAutoEpgSync(
         // Two feeds of one playlist share its name and are told apart by the URL shown beneath it.
         val existing = store.getAll().firstOrNull { it.url == url }
         val epgSource = existing ?: store.add(
-            if (url == LOUNGE_EPG_URL) "Lounge TV EPG" else source.name,
+            source.name,
             url,
             if (url == LOUNGE_EPG_URL) null else source.userAgent,
         )
