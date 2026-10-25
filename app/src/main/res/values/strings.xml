@@ -9,4 +9,8 @@
     <string name="lounge_home_featured_movies">Featured Movies</string>
     <string name="lounge_home_popular_series">Popular Series</string>
     <string name="lounge_home_live_highlights">Live TV Highlights</string>
+    <string name="lounge_epg_guide_name">Lounge TV Guide</string>
+    <string name="lounge_epg_primary_name">Primary TV Guide</string>
+    <string name="lounge_epg_guide_description">Additional programme listings from Lounge TV</string>
+    <string name="lounge_epg_primary_description">Programme listings from your TV account</string>
 </resources>
