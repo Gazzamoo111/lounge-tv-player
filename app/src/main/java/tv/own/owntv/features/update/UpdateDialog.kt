@@ -46,6 +46,22 @@ import androidx.compose.ui.draw.clip
  */
 @Composable
 fun UpdateDialog(onDismiss: () -> Unit, checkOnOpen: Boolean = false) {
+    // QA uses a different package and certificate; a production download cannot update it.
+    // Never offer an install button that is guaranteed to fail on this test build.
+    if (tv.own.owntv.BuildConfig.DEBUG) {
+        tv.own.owntv.ui.stage.StagePopup(
+            onDismiss = onDismiss,
+            title = stringResource(R.string.update_title),
+            width = 900.mpx,
+            scroll = false,
+            buttons = ({
+                StageButton(stringResource(R.string.settings_close), onClick = onDismiss, height = 56.mpx, tinted = true)
+            }),
+        ) {
+            Text(stringResource(R.string.loungetv_qa_update_manual), style = stageText(18, 400), color = StageColors.Muted)
+        }
+        return
+    }
     val manager: UpdateManager = koinInject()
     val state by manager.state.collectAsStateWithLifecycle()
     val focus = remember { FocusRequester() }
