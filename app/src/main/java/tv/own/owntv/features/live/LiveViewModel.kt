@@ -864,7 +864,8 @@ class LiveViewModel(
         .combine(custResolved) { list, cs ->
             list.filter {
                 CustomizeKeys.channel(it) !in cs.cust.hiddenItems &&
-                    (it.categoryId == null || it.categoryId !in cs.hiddenCats)
+                    (it.categoryId == null || it.categoryId !in cs.hiddenCats) &&
+                    showInNzSelection(it)
             }
                 .map { ch -> cs.cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
         }
@@ -1021,7 +1022,7 @@ class LiveViewModel(
 
     /** In-pane preview playback (no history) — triggered by the UI after the focus settles. */
     fun playPreview(channel: ChannelEntity) {
-        if (channel.categoryId != null && channel.categoryId in hiddenCategoryIds.value) return
+        if (!showInNzSelection(channel) || channel.categoryId != null && channel.categoryId in hiddenCategoryIds.value) return
         // Core keeps the preview off a promoted full-screen stream, re-mutes on a re-focus instead of
         // reloading, mints a Stalker link, and holds back on a one-session panel while mpv plays.
         live.preview(channel, muted = !livePreviewAudio.value)
