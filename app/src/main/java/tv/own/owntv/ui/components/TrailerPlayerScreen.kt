@@ -98,6 +98,7 @@ private fun TrailerPlayerContent(videoKey: String, title: String?, onExit: () ->
     // None of the keys can play here (or there is no WebView): offer YouTube instead of jumping to it.
     var failed by remember { mutableStateOf(false) }
     var playing by remember { mutableStateOf(true) }
+    var playbackStarted by remember(videoKey) { mutableStateOf(false) }
     var player by remember { mutableStateOf<YouTubePlayer?>(null) }
     var reportedPlaybackQuality by remember { mutableStateOf<PlayerConstants.PlaybackQuality?>(null) }
     // Bumped on every key: the HUD shows, and hides again HUD_HIDE_MS later while playing.
@@ -111,6 +112,27 @@ private fun TrailerPlayerContent(videoKey: String, title: String?, onExit: () ->
     }
 
     val playFocus = remember { FocusRequester() }
+
+    // A Fire TV WebView can leave YouTube's IFrame permanently loading without an
+    // onError callback. Move to the next candidate or external YouTube fallback
+    // instead of showing an infinite black trailer screen.
+    LaunchedEffect(videoKey, keyIndex, playbackStarted, failed) {
+        if (!playbackStarted && !failed) {
+            delay(16_000L)
+            if (!playbackStarted && !failed) {
+                android.util.Log.w("TrailerPlayer", "trailer did not start, key index=$keyIndex")
+                val nextPlayer = player
+                if (keyIndex < keys.lastIndex && nextPlayer != null) {
+                    keyIndex++
+                    currentSec = 0f
+                    durationSec = 0f
+                    nextPlayer.loadVideo(keys[keyIndex], 0f)
+                } else {
+                    failed = true
+                }
+            }
+        }
+    }
 
     // Some no-name boxes ship without a usable System WebView — constructing the player view itself
     // can throw there, so treat construction failure like a playback error (external fallback).
@@ -183,7 +205,7 @@ private fun TrailerPlayerContent(videoKey: String, title: String?, onExit: () ->
             override fun onStateChange(youTubePlayer: YouTubePlayer, state: PlayerConstants.PlayerState) {
                 when (state) {
                     PlayerConstants.PlayerState.ENDED -> onExit()
-                    PlayerConstants.PlayerState.PLAYING -> playing = true
+                    PlayerConstants.PlayerState.PLAYING -> { playing = true; playbackStarted = true }
                     PlayerConstants.PlayerState.PAUSED -> playing = false
                     else -> Unit
                 }
