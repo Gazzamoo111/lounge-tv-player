@@ -30,6 +30,7 @@ import tv.own.owntv.player.AudioOutputPolicy
 import tv.own.owntv.core.player.SurroundMode
 import tv.own.owntv.core.database.dao.SourceDao
 import tv.own.owntv.core.database.entity.SourceEntity
+import tv.own.owntv.core.model.SourceType
 import tv.own.owntv.core.repository.SourceRepository
 import tv.own.owntv.core.repository.SourceTestResult
 import tv.own.owntv.core.setup.SourceImporter
@@ -1340,7 +1341,7 @@ class SettingsViewModel(
             val done = importer.state.value as? SourceImporter.ImportState.Success ?: return@launch
             Log.d(TAG, "runImport sync success sourceId=${done.source?.id} profile=$pid")
             done.source?.let { synced ->
-                if (epgRepository.guideUrl(synced) != null) {
+                if (synced.type != SourceType.XTREAM && epgRepository.guideUrl(synced) != null) {
                     pendingEpgSource = synced
                     _epgSync.value = EpgSyncUi.Ask(synced.name)
                 }
