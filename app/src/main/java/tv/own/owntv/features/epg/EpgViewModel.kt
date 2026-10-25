@@ -925,15 +925,13 @@ class EpgViewModel(
             } else {
                 // Supplement only the two approved NZ Sky Sport groups when their provider
                 // fails to supply EPG data. Do NOT load thousands of empty-guide channels.
-                val sports = categories.asSequence()
-                    .filter { cat -> isAllowedBestNzSportsCategory(providerTypes[cat.sourceId], cat.name) }
-                    .flatMap { cat ->
-                        channelDao.snapshotByCategoryManual(
-                            cat.id, pid, CustomizeKeys.category(cat), MAX_NZ_SPORT_CHANNELS,
-                        ).asSequence()
-                    }
-                    .filter { ch -> q.isBlank() || ch.name.contains(q, ignoreCase = true) }
-                    .toList()
+                val sports = mutableListOf<ChannelEntity>()
+                for (cat in categories) {
+                    if (!isAllowedBestNzSportsCategory(providerTypes[cat.sourceId], cat.name)) continue
+                    sports += channelDao.snapshotByCategoryManual(
+                        cat.id, pid, CustomizeKeys.category(cat), MAX_NZ_SPORT_CHANNELS,
+                    ).filter { ch -> q.isBlank() || ch.name.contains(q, ignoreCase = true) }
+                }
                 (withGuide + sports).distinctBy { it.id }
             }
         }
