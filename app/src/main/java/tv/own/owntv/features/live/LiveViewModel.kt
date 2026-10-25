@@ -350,6 +350,23 @@ class LiveViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
 
+    /** Original provider category labels, independent of customer-side renames. */
+    private val categoryNamesById: StateFlow<Map<Long, String>> = ctx
+        .flatMapLatest { c ->
+            if (c.profileId < 0) flowOf(emptyMap())
+            else categoryDao.observe(c.sourceIds, MediaType.LIVE)
+                .map { categories -> categories.associate { it.id to it.name } }
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
+
+    /** One NZ visibility rule used by lists, saved history and channel zapping. */
+    private fun showInNzSelection(channel: ChannelEntity): Boolean =
+        !shouldHideBestNzChannel(
+            sourceById[channel.sourceId]?.type,
+            channel.categoryId?.let(categoryNamesById.value::get),
+            channel.name,
+        )
+
     /** Contexts that actually have manual-order rows: only those folders pay the
      *  unindexable content_order join-sort; everything else stays on the plain indexed query. */
     private val orderedContexts: StateFlow<Set<String>> = ctx
@@ -575,7 +592,7 @@ class LiveViewModel(
 
     /** Customizations + resolved hidden-category ids, bundled so the list pipeline takes one flow. */
     private data class CustState(val cust: SectionCustomizations, val hiddenCats: Set<Long>)
-    private val custResolved: StateFlow<CustState> = combine(custom, hiddenCategoryIds) { c, h -> CustState(c, h) }
+    private val custResolved: StateFlow<CustState> = combine(custom, hiddenCategoryIds, categoryNamesById) { c, h, _ -> CustState(c, h) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CustState(SectionCustomizations(), emptySet()))
 
     val railItems: StateFlow<List<LiveRailItem>> = ctx
@@ -609,8 +626,13 @@ class LiveViewModel(
                     } == true
                 }.map { it.id }.toSet()
                 val preferredNz = folders.filter { it.categoryId in nzIds }
-                val displayFolders = if (preferredNz.isEmpty()) folders else
+                val orderedFolders = if (preferredNz.isEmpty()) folders else
                     preferredNz + folders.filterNot { it.categoryId in nzIds }
+                val displayFolders = orderedFolders.filterNot { e ->
+                    e.categoryId?.let(categoriesById::get)?.let { cat ->
+                        shouldHideBestNzCategory(sourceById[cat.sourceId]?.type, cat.name)
+                    } == true
+                }
                 railWithCatchup(catchupCount > 0) + displayFolders.map { e ->
                     LiveRailItem(
                         key = e.categoryId?.let { LiveKey.Folder(it) } ?: LiveKey.Custom(e.customId!!),
@@ -656,13 +678,9 @@ class LiveViewModel(
                     }
                     .map { ch -> cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
 
-                // BEST's confirmed broken TVNZ streams should not be the first thing
-                // customers see on Live TV. Filter the Xtream duplicates regardless
-                // of whether an alternative Freeview playlist has been added.
-                // The database, favourites and working M3U alternatives stay intact.
-                customized.filter { ch ->
-                    !shouldHideBrokenBestTvnz(sourceById[ch.sourceId]?.type, ch.name)
-                }
+                // Keep only BEST NZ Sky Sport RAW and HD in the browsable lists.
+                // Do not delete provider data, favourites or independent M3U feeds.
+                customized.filter(::showInNzSelection)
             }
         }
         .cachedIn(viewModelScope)
@@ -846,7 +864,8 @@ class LiveViewModel(
         .combine(custResolved) { list, cs ->
             list.filter {
                 CustomizeKeys.channel(it) !in cs.cust.hiddenItems &&
-                    (it.categoryId == null || it.categoryId !in cs.hiddenCats)
+                    (it.categoryId == null || it.categoryId !in cs.hiddenCats) &&
+                    showInNzSelection(it)
             }
                 .map { ch -> cs.cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
         }
@@ -1003,7 +1022,7 @@ class LiveViewModel(
 
     /** In-pane preview playback (no history) — triggered by the UI after the focus settles. */
     fun playPreview(channel: ChannelEntity) {
-        if (channel.categoryId != null && channel.categoryId in hiddenCategoryIds.value) return
+        if (!showInNzSelection(channel) || channel.categoryId != null && channel.categoryId in hiddenCategoryIds.value) return
         // Core keeps the preview off a promoted full-screen stream, re-mutes on a re-focus instead of
         // reloading, mints a Stalker link, and holds back on a one-session panel while mpv plays.
         live.preview(channel, muted = !livePreviewAudio.value)
@@ -1119,7 +1138,7 @@ class LiveViewModel(
         val cust = custom.value
         val hiddenCats = hiddenCategoryIds.value
         return raw
-            .filter { CustomizeKeys.channel(it) !in cust.hiddenItems && (it.categoryId == null || it.categoryId !in hiddenCats) }
+            .filter { CustomizeKeys.channel(it) !in cust.hiddenItems && (it.categoryId == null || it.categoryId !in hiddenCats) && showInNzSelection(it) }
             .map { ch -> cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
     }
 
@@ -1131,7 +1150,7 @@ class LiveViewModel(
         return withContext(Dispatchers.IO) {
             customCategoryDao.snapshotChannels(c.profileId, key.id, c.sourceIds.ifEmpty { listOf(-1L) }, ZAP_LIST_LIMIT)
         }
-            .filter { isChannelVisible(it, cs.cust, cs.hiddenCats, key) }
+            .filter { isChannelVisible(it, cs.cust, cs.hiddenCats, key) && showInNzSelection(it) }
             .map { ch -> cs.cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
     }
 
@@ -1139,7 +1158,7 @@ class LiveViewModel(
     private suspend fun channelsInCategory(categoryId: Long): List<ChannelEntity> {
         val pid = currentProfileId() ?: return emptyList()
         val ctxKey = folderContextKeys.value[categoryId] ?: ""
-        return channelDao.snapshotByCategoryManual(categoryId, pid, ctxKey, ZAP_LIST_LIMIT)
+        return channelDao.snapshotByCategoryManual(categoryId, pid, ctxKey, ZAP_LIST_LIMIT).filter(::showInNzSelection)
     }
 
     /** [channel]'s own provider category, with the same hide/rename treatment the browsing lists get,
@@ -1158,7 +1177,7 @@ class LiveViewModel(
         val cust = custom.value
         val hiddenCats = hiddenCategoryIds.value
         return raw
-            .filter { CustomizeKeys.channel(it) !in cust.hiddenItems && (it.categoryId == null || it.categoryId !in hiddenCats) }
+            .filter { CustomizeKeys.channel(it) !in cust.hiddenItems && (it.categoryId == null || it.categoryId !in hiddenCats) && showInNzSelection(it) }
             .map { ch -> cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
     }
 
@@ -1169,7 +1188,7 @@ class LiveViewModel(
         val cust = custom.value
         val hiddenCats = hiddenCategoryIds.value
         return channelDao.recentlyWatchedWithTimestamp(pid, limit).first()
-            .filter { (ch) -> CustomizeKeys.channel(ch) !in cust.hiddenItems && (ch.categoryId == null || ch.categoryId !in hiddenCats) }
+            .filter { (ch) -> CustomizeKeys.channel(ch) !in cust.hiddenItems && (ch.categoryId == null || ch.categoryId !in hiddenCats) && showInNzSelection(ch) }
             .map { e -> cust.itemNames[CustomizeKeys.channel(e.channel)]?.let { e.copy(channel = e.channel.copy(name = it)) } ?: e }
     }
 
@@ -1234,7 +1253,7 @@ class LiveViewModel(
     /** Final startup/deep-entry visibility check, including profile source and Customize policy. */
     suspend fun isVisibleToActiveProfile(channel: ChannelEntity): Boolean {
         val current = ctx.first { it.profileId >= 0L }
-        if (channel.sourceId !in current.sourceIds) return false
+        if (channel.sourceId !in current.sourceIds || !showInNzSelection(channel)) return false
         if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(current.profileId, channel.categoryId, profileDao, categoryDao)) return false
         val customizations = customize.observe(current.profileId, MediaType.LIVE).first()
         if (CustomizeKeys.channel(channel) in customizations.hiddenItems) return false
@@ -1380,7 +1399,7 @@ class LiveViewModel(
                 // Stage 1: query the currently playing source.
                 val currentSourceCandidates = channelDao.findByNumber(
                     listOf(currentChannel.sourceId), number,
-                ).filter { isChannelVisible(it, currentCustom, activeHiddenCats) }
+                ).filter { isChannelVisible(it, currentCustom, activeHiddenCats) && showInNzSelection(it) }
 
                 if (currentSourceCandidates.isNotEmpty()) {
                     val resolvedId = tv.own.owntv.player.resolveDirectTuneCandidate(
@@ -1398,7 +1417,7 @@ class LiveViewModel(
                 if (fallbackSourceIds.isEmpty()) return@withContext ChannelNumberLookupResult.NotFound
 
                 val fallbackCandidates = channelDao.findByNumber(fallbackSourceIds, number)
-                    .filter { isChannelVisible(it, currentCustom, activeHiddenCats) }
+                    .filter { isChannelVisible(it, currentCustom, activeHiddenCats) && showInNzSelection(it) }
                 if (fallbackCandidates.isEmpty()) return@withContext ChannelNumberLookupResult.NotFound
 
                 val r = tv.own.owntv.player.resolveDirectTuneCandidate(
@@ -1479,7 +1498,7 @@ class LiveViewModel(
         // beforeRaw is in reverse order; combine: before(reversed) + tuned + after
         val raw = beforeRaw.asReversed() + channel + afterRaw
         raw
-            .filter { isChannelVisible(it, cust, hiddenCats) }
+            .filter { isChannelVisible(it, cust, hiddenCats) && showInNzSelection(it) }
             .map { ch -> cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
     }
 
@@ -2196,9 +2215,30 @@ class LiveViewModel(
 
 private const val NZ_FREEVIEW_PATH = "i.mjh.nz/nz/kodi-tv.m3u8"
 
-/** Keep this limited to confirmed failing TVNZ streams, not Sky Sport or other NZ channels. */
-internal fun shouldHideBrokenBestTvnz(sourceType: SourceType?, name: String): Boolean =
-    sourceType == SourceType.XTREAM && isBrokenBestTvnzLabel(name)
+/** Hide BEST NZ folders except Sky Sport groups that carry RAW or HD feeds. */
+internal fun shouldHideBestNzCategory(sourceType: SourceType?, name: String): Boolean =
+    sourceType == SourceType.XTREAM && isBestNzLabel(name) && !isSkySportLabel(name)
+
+/** Other BEST NZ stations are removed from browsing even without a backup playlist. */
+internal fun shouldHideBestNzChannel(sourceType: SourceType?, category: String?, name: String): Boolean {
+    if (sourceType != SourceType.XTREAM) return false
+    if (isBrokenBestTvnzLabel(name)) return true
+    if (!isBestNzLabel(category.orEmpty()) && !isBestNzLabel(name)) return false
+    return !isSkySportLabel(name) || (!isRawOrHdLabel(name) && !isRawOrHdLabel(category.orEmpty()))
+}
+
+private fun isBestNzLabel(label: String): Boolean {
+    val value = label.trim()
+    return (value.length >= 2 && value.startsWith("NZ", ignoreCase = true) &&
+        (value.length == 2 || !value[2].isLetterOrDigit())) ||
+        value.startsWith("New Zealand", ignoreCase = true)
+}
+
+private fun isSkySportLabel(label: String): Boolean =
+    label.lowercase().filter { it.isLetterOrDigit() }.contains("skysport")
+
+private fun isRawOrHdLabel(label: String): Boolean =
+    label.lowercase().split(Regex("[^a-z0-9]+")).any { it == "raw" || it == "hd" || it == "fhd" }
 
 /** Only the three TVNZ feeds confirmed broken on BEST, never Sky Sport or unrelated channels. */
 internal fun isBrokenBestTvnzLabel(name: String): Boolean {
