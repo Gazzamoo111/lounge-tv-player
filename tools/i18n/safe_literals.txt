@@ -1382,3 +1382,5 @@
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	tvnzduke
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	nzduke
 1	url	app/src/main/java/tv/own/owntv/features/settings/EpgSemiAutoSync.kt	https://raw.githubusercontent.com/Gazzamoo111/lounge-tv-feed/main/docs/epg6-live.xml
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	EPG migration failed; attempting to register guides
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Unable to register automatic EPG sources
