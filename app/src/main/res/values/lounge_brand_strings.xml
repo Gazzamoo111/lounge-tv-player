@@ -80,4 +80,8 @@
     <string name="lounge_sports_cricket_sub">Find cricket channels</string>
     <string name="lounge_sports_channels">Sports Channels</string>
     <string name="lounge_sports_channels_sub">Browse live TV</string>
+    <!-- More > About: Lounge TV customer help, never upstream developer support. -->
+    <string name="more_lounge_help_title">Lounge TV Help &amp; Setup</string>
+    <string name="more_lounge_help_url" translatable="false">loungetv.nz/setup-guide</string>
+    <string name="more_lounge_help_instruction">Open this address on your phone for setup and help. For account or channel problems, contact Lounge TV using the support details supplied with your subscription.</string>
 </resources>
