@@ -2217,14 +2217,22 @@ private const val NZ_FREEVIEW_PATH = "i.mjh.nz/nz/kodi-tv.m3u8"
 
 /** Hide BEST NZ folders except Sky Sport groups that carry RAW or HD feeds. */
 internal fun shouldHideBestNzCategory(sourceType: SourceType?, name: String): Boolean =
-    sourceType == SourceType.XTREAM && isBestNzLabel(name) && !isSkySportLabel(name)
+    sourceType == SourceType.XTREAM && isBestNzLabel(name) &&
+        !(isSkySportLabel(name) && isRawOrHdLabel(name))
 
-/** Other BEST NZ stations are removed from browsing even without a backup playlist. */
+/**
+ * A provider RAW/HD folder may name its streams simply "Sky Sport 1" or even "SS1".
+ * Trust the original provider category before falling back to the individual stream label.
+ * List and Guide must use this same rule; never change independent M3U playlists.
+ */
 internal fun shouldHideBestNzChannel(sourceType: SourceType?, category: String?, name: String): Boolean {
     if (sourceType != SourceType.XTREAM) return false
     if (isBrokenBestTvnzLabel(name)) return true
-    if (!isBestNzLabel(category.orEmpty()) && !isBestNzLabel(name)) return false
-    return !isSkySportLabel(name) || (!isRawOrHdLabel(name) && !isRawOrHdLabel(category.orEmpty()))
+    val folder = category.orEmpty()
+    if (!isBestNzLabel(folder) && !isBestNzLabel(name)) return false
+    val allowedFolder = isBestNzLabel(folder) && isSkySportLabel(folder) && isRawOrHdLabel(folder)
+    val allowedChannel = isSkySportLabel(name) && isRawOrHdLabel(name)
+    return !allowedFolder && !allowedChannel
 }
 
 private fun isBestNzLabel(label: String): Boolean {
