@@ -205,7 +205,9 @@ fun EpgScreen(
     // Live TV's Guide view shows Live TV's own category; the TV Guide keeps its own choice.
     val categoryKey: LiveKey? = if (liveMode) liveSelected.takeUnless { it == LiveKey.All } else categoryFilter
     LaunchedEffect(liveMode, liveSelected) { if (liveMode) vm.setCategoryFilter(liveSelected) }
-    LaunchedEffect(Unit) { vm.load() } // reload from DB each time the guide is opened
+    // Live TV's Guide includes working streams with no programme match (e.g. NZ Sky Sport RAW).
+    // The separate full EPG retains its own "channels without guide" preference.
+    LaunchedEffect(liveMode) { vm.setLiveTvGuideMode(liveMode) }
 
     // The preview stays on its channel while the guide is browsed; OK on a row brings that row's channel
     // into it, and OK again on the channel already there watches it full screen. Following the focus made
