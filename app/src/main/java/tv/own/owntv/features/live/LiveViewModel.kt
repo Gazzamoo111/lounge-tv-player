@@ -600,7 +600,18 @@ class LiveViewModel(
                 )
                 val multiSourceNames = c.sourceNames.takeIf { it.size > 1 }.orEmpty()
                 val categoriesById = cats.associateBy { it.id }
-                railWithCatchup(catchupCount > 0) + folders.map { e ->
+                // A working independent NZ source should be the first NZ category
+                // customers reach, ahead of BEST's currently unreliable NZ feeds.
+                val nzIds = cats.asSequence().filter { category ->
+                    sourceById[category.sourceId]?.let { source ->
+                        source.type == SourceType.M3U &&
+                            source.url.contains(NZ_FREEVIEW_PATH, ignoreCase = true)
+                    } == true
+                }.map { it.id }.toSet()
+                val preferredNz = folders.filter { it.categoryId in nzIds }
+                val displayFolders = if (preferredNz.isEmpty()) folders else
+                    preferredNz + folders.filterNot { it.categoryId in nzIds }
+                railWithCatchup(catchupCount > 0) + displayFolders.map { e ->
                     LiveRailItem(
                         key = e.categoryId?.let { LiveKey.Folder(it) } ?: LiveKey.Custom(e.customId!!),
                         title = e.displayName,
@@ -634,7 +645,7 @@ class LiveViewModel(
                 val cust = cs.cust
                 val hiddenCats = cs.hiddenCats
                 val movedFrom = cust.movedFromOrigin
-                if (cust.hiddenItems.isEmpty() && cust.itemNames.isEmpty() && hiddenCats.isEmpty() && movedFrom.isEmpty()) paging
+                val customized = if (cust.hiddenItems.isEmpty() && cust.itemNames.isEmpty() && hiddenCats.isEmpty() && movedFrom.isEmpty()) paging
                 else paging
                     .filter { ch ->
                         isChannelVisible(ch, cust, hiddenCats, key) &&
@@ -644,6 +655,20 @@ class LiveViewModel(
                             } ?: true)
                     }
                     .map { ch -> cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
+
+                // When the tested NZ Freeview source is installed, don't present BEST's
+                // broken TVNZ duplicate feeds. Keep the complete provider DB untouched,
+                // and restore BEST entries automatically if the alternative is removed.
+                val nzFreeviewInstalled = c.sourceIds.any { sourceId ->
+                    sourceById[sourceId]?.let { source ->
+                        source.type == SourceType.M3U &&
+                            source.url.contains(NZ_FREEVIEW_PATH, ignoreCase = true)
+                    } == true
+                }
+                if (nzFreeviewInstalled) customized.filter { ch ->
+                    sourceById[ch.sourceId]?.type != SourceType.XTREAM ||
+                        !isBrokenBestTvnzLabel(ch.name)
+                } else customized
             }
         }
         .cachedIn(viewModelScope)
@@ -2173,4 +2198,13 @@ class LiveViewModel(
         const val MAX_NOW_PLAYING = 2_000
 
     }
+}
+
+private const val NZ_FREEVIEW_PATH = "i.mjh.nz/nz/kodi-tv.m3u8"
+
+/** Only the three TVNZ feeds confirmed broken on BEST, never Sky Sport or unrelated channels. */
+internal fun isBrokenBestTvnzLabel(name: String): Boolean {
+    val compact = name.lowercase().replace(Regex("[^a-z0-9]+"), "")
+    return compact.contains("tvnz1") || compact.contains("tvnz2") ||
+        compact.contains("tvnzduke") || compact == "nzduke"
 }

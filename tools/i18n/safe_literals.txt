@@ -151,7 +151,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	#$it
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	LiveEngine
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	OwnTVHome
-6	empty	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	\0
+7	empty	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	\0
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	catch-up '${ch.name}' prog='${programme.title}' -> ${tv.own.owntv.core.network.HttpClient.redactUrl(url)}
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	catch-up external '${ch.name}' prog='${programme.title}'
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	ensurePlaying history profile=$pid channelId=${channel.id}
@@ -1369,3 +1369,15 @@
 
 1	regex	app/src/main/java/tv/own/owntv/ui/components/LoungeVodTitles.kt	^(?i)(?:(?:D\\+|NF|AMZN|APTV|HBO|DSNY|ATV|NETFLIX|DISNEY\\+|PRIME|APPLE\\s?TV|HULU|PEACOCK|PARAMOUNT\\+|STAN)\\s+)+
 1	empty	app/src/main/java/tv/own/owntv/ui/components/LoungeVodTitles.kt	\0
+1	regex	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	^\s*(?:DE|GER|DEUTSCH|ES|ESP|FR|FRA|IT|ITA|PT|POR)\s*[-:|]\s*
+1	regex	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	\b(?:german|deutsch|spanish|español|french|français|italian|italiano|portuguese|português)\b
+1	regex	app/src/main/java/tv/own/owntv/features/home/LoungeHomeHighlights.kt	[\[(](?:DE|GER|ES|FR|IT|PT)[\])]
+1	technical	app/src/main/java/tv/own/owntv/features/shell/OwnTVShell.kt	rugby
+1	technical	app/src/main/java/tv/own/owntv/features/shell/OwnTVShell.kt	UFC
+1	technical	app/src/main/java/tv/own/owntv/features/shell/OwnTVShell.kt	cricket
+1	url	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	i.mjh.nz/nz/kodi-tv.m3u8
+1	regex	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	[^a-z0-9]+
+1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	tvnz1
+1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	tvnz2
+1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	tvnzduke
+1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	nzduke
