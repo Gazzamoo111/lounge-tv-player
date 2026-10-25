@@ -1337,7 +1337,8 @@
 1	technical	app/src/main/java/tv/own/owntv/ui/components/TimeWheel.kt	▲
 1	technical	app/src/main/java/tv/own/owntv/ui/components/TimeWheel.kt	▼
 1	locale	app/src/main/java/tv/own/owntv/ui/components/TrackOptionText.kt	und
-1	log	app/src/main/java/tv/own/owntv/ui/components/TrailerPlayerScreen.kt	TrailerPlayer
+2	log	app/src/main/java/tv/own/owntv/ui/components/TrailerPlayerScreen.kt	TrailerPlayer
+1	log	app/src/main/java/tv/own/owntv/ui/components/TrailerPlayerScreen.kt	trailer did not start, key index=$keyIndex
 1	uri	app/src/main/java/tv/own/owntv/ui/components/TrailerPlayerScreen.kt	https://www.youtube.com/watch?v=$videoKey
 1	technical	app/src/main/java/tv/own/owntv/ui/components/TrailerPlayerScreen.kt	tnum
 1	log	app/src/main/java/tv/own/owntv/ui/components/TrailerPlayerScreen.kt	trailer error key=${keys[keyIndex]} error=$error
