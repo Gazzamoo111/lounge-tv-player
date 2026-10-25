@@ -4,6 +4,7 @@ package tv.own.owntv.features.epg
 
 import tv.own.owntv.core.epg.displayLogoUrl
 import tv.own.owntv.features.live.shouldHideBestNzChannel
+import tv.own.owntv.features.live.isAllowedBestNzSportsCategory
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.FlowPreview
@@ -911,14 +912,31 @@ class EpgViewModel(
         // Respect customizations: hidden channels stay out of the guide, renames show.
         val cust = customize.observe(pid, MediaType.LIVE).first()
         val q = _query.value.trim()
-        val rawChannels = if (liveTvGuideMode || settings.guideShowEmpty.first()) {
+        val providerTypes = playlistIds.associateWith { sourceId -> sourceDao.getById(sourceId)?.type }
+        val categories = categoryDao.observe(playlistIds, MediaType.LIVE).first()
+        val originalCategoryNames = categories.associate { it.id to it.name }
+        val showEveryUnmatchedChannel = settings.guideShowEmpty.first()
+        val rawChannels = if (showEveryUnmatchedChannel) {
             channelDao.channelsForGuide(playlistIds, q, MAX_CHANNELS)
         } else {
-            channelDao.channelsWithGuide(ids, q, MAX_CHANNELS)
+            val withGuide = channelDao.channelsWithGuide(ids, q, MAX_CHANNELS)
+            if (!liveTvGuideMode) {
+                withGuide
+            } else {
+                // Supplement only the two approved NZ Sky Sport groups when their provider
+                // fails to supply EPG data. Do NOT load thousands of empty-guide channels.
+                val sports = categories.asSequence()
+                    .filter { cat -> isAllowedBestNzSportsCategory(providerTypes[cat.sourceId], cat.name) }
+                    .flatMap { cat ->
+                        channelDao.snapshotByCategoryManual(
+                            cat.id, pid, CustomizeKeys.category(cat), MAX_NZ_SPORT_CHANNELS,
+                        ).asSequence()
+                    }
+                    .filter { ch -> q.isBlank() || ch.name.contains(q, ignoreCase = true) }
+                    .toList()
+                (withGuide + sports).distinctBy { it.id }
+            }
         }
-        val providerTypes = playlistIds.associateWith { sourceId -> sourceDao.getById(sourceId)?.type }
-        val originalCategoryNames = categoryDao.observe(playlistIds, MediaType.LIVE).first()
-            .associate { it.id to it.name }
         val favoriteIds = favoriteDao.observeFavoriteIds(pid, MediaType.LIVE).first().toSet()
         val sortGuideMode = settings.sortGuide.first()
         // Hidden categories keep their channels out of the guide too (parity with Live TV), and a
@@ -1118,6 +1136,7 @@ class EpgViewModel(
         private const val CATCHUP_LOOKBACK_CAP_MS = 7L * 24 * 60 * 60 * 1000
         // Generous safety bound only (rows load lazily, so this is about the channel list itself).
         private const val MAX_CHANNELS = 20_000
+        private const val MAX_NZ_SPORT_CHANNELS = 300
         // Cap the candidate set the bulk matcher scans against (keeps the O(channels×candidates) scan bounded).
         // Bound values sent to a single `IN (...)`. SQLite's parameter ceiling is 999 on older
         // Android; core chunks its own bulk lookups at the same size.
