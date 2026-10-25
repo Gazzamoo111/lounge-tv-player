@@ -3,6 +3,7 @@
 package tv.own.owntv.features.epg
 
 import tv.own.owntv.core.epg.displayLogoUrl
+import tv.own.owntv.features.live.shouldHideBestNzChannel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.FlowPreview
@@ -260,6 +261,14 @@ class EpgViewModel(
 
     fun setCategoryFilter(key: tv.own.owntv.core.live.LiveKey?) {
         _categoryFilter.value = key.takeUnless { it == tv.own.owntv.core.live.LiveKey.All }
+    }
+
+    /** Live TV's Guide must show playable channels even if their EPG is absent. */
+    private var liveTvGuideMode = false
+
+    fun setLiveTvGuideMode(enabled: Boolean) {
+        liveTvGuideMode = enabled
+        load()
     }
 
     private val _state = MutableStateFlow(EpgUiState())
@@ -902,8 +911,14 @@ class EpgViewModel(
         // Respect customizations: hidden channels stay out of the guide, renames show.
         val cust = customize.observe(pid, MediaType.LIVE).first()
         val q = _query.value.trim()
-        val rawChannels = if (settings.guideShowEmpty.first()) channelDao.channelsForGuide(playlistIds, q, MAX_CHANNELS)
-            else channelDao.channelsWithGuide(ids, q, MAX_CHANNELS)
+        val rawChannels = if (liveTvGuideMode || settings.guideShowEmpty.first()) {
+            channelDao.channelsForGuide(playlistIds, q, MAX_CHANNELS)
+        } else {
+            channelDao.channelsWithGuide(ids, q, MAX_CHANNELS)
+        }
+        val providerTypes = playlistIds.associateWith { sourceId -> sourceDao.getById(sourceId)?.type }
+        val originalCategoryNames = categoryDao.observe(playlistIds, MediaType.LIVE).first()
+            .associate { it.id to it.name }
         val favoriteIds = favoriteDao.observeFavoriteIds(pid, MediaType.LIVE).first().toSet()
         val sortGuideMode = settings.sortGuide.first()
         // Hidden categories keep their channels out of the guide too (parity with Live TV), and a
@@ -933,6 +948,13 @@ class EpgViewModel(
         // the main thread (#3/#5) so a 50k-channel playlist never freezes the UI building the guide list.
         val channels = withContext(Dispatchers.Default) {
             val auto = rawChannels
+                .filter { ch ->
+                    !shouldHideBestNzChannel(
+                        providerTypes[ch.sourceId],
+                        ch.categoryId?.let(originalCategoryNames::get),
+                        ch.name,
+                    )
+                }
                 .filter { CustomizeKeys.channel(it) !in cust.hiddenItems }
                 .filter {
                     memberIds != null || it.categoryId == null || it.categoryId !in hiddenCatIds
