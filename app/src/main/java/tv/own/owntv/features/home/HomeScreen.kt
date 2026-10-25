@@ -122,7 +122,7 @@ import java.util.Locale
 private val RowGap = 40.mpx
 
 /** Lounge TV's first-login rails use the existing card widgets, without altering OwnTV Core. */
-private enum class LoungeHomeRow { FEATURED_MOVIES, POPULAR_SERIES, LIVE_HIGHLIGHTS, SPORTS_LINKS, SPORTS_FIXTURES }
+private enum class LoungeHomeRow { FEATURED_MOVIES, POPULAR_SERIES, SPORTS_LINKS, SPORTS_FIXTURES }
 
 /** Quick links only: every destination already exists in the v5.2.2.11 app. */
 enum class LoungeSportsShortcut(val title: Int, val subtitle: Int) {
@@ -215,15 +215,14 @@ fun HomeScreen(
     // A Keep watching card plays its preview only after 3 s of continuous focus (the dwell below).
     var previewIndex by remember { mutableStateOf(-1) }
     var focusedHeroIndex by remember { mutableStateOf(-1) }
-    // Keep Watching comes immediately after the featured hero. Follow with live,
-    // favourites, then editorial VOD; retain other configured rows below.
+    // Keep Watching follows the featured hero, then favourites and curated VOD.
+    // Do not build a Live TV Highlights row from incomplete programme listings.
     // Do not resurrect any user-hidden existing Home rows.
     val orderedRows: List<Any> = buildList {
         val originalRows = state.config.visibleOrder
         val preferred = listOf<Any>(
             HomeRow.TRENDING,
             HomeRow.HERO,
-            LoungeHomeRow.LIVE_HIGHLIGHTS,
             HomeRow.FAVORITE_CHANNELS,
             HomeRow.FAVORITE_MOVIES,
             HomeRow.FAVORITE_SERIES,
@@ -488,19 +487,6 @@ fun HomeScreen(
                             onItemClick = onOpenSeries,
                             onFocus = onNonHeroFocused,
                             firstItemFocusRequester = firstItemFocusRequester,
-                            track = track,
-                            modifier = rowModifier,
-                        )
-
-                        LoungeHomeRow.LIVE_HIGHLIGHTS -> HomeLiveRow(
-                            title = stringResource(R.string.lounge_home_live_highlights),
-                            mode = HomeLiveRowMode.CARDS,
-                            channels = state.liveHighlights,
-                            guide = GuideSliceState(),
-                            onChannelClick = onPlayChannel,
-                            onFocus = onNonHeroFocused,
-                            firstItemFocusRequester = firstItemFocusRequester,
-                            start = contentStart,
                             track = track,
                             modifier = rowModifier,
                         )
@@ -822,7 +808,6 @@ private fun rowHasData(row: Any, state: HomeUiState, sportsCards: Int): Boolean 
     LoungeHomeRow.SPORTS_FIXTURES -> sportsCards > 0
     LoungeHomeRow.FEATURED_MOVIES -> state.featuredMovies.isNotEmpty()
     LoungeHomeRow.POPULAR_SERIES -> state.popularSeries.isNotEmpty()
-    LoungeHomeRow.LIVE_HIGHLIGHTS -> state.liveHighlights.isNotEmpty()
     HomeRow.TRENDING -> state.trendingItems.size >= TrendingDao.MIN_ELIGIBLE_ITEMS
     HomeRow.LIVE_SPORTS -> sportsCards > 0
     HomeRow.HERO -> state.heroItems.isNotEmpty()

@@ -103,7 +103,6 @@ data class HomeUiState(
     val favoriteSeries: List<SeriesEntity> = emptyList(),
     val featuredMovies: List<MovieEntity> = emptyList(),
     val popularSeries: List<SeriesEntity> = emptyList(),
-    val liveHighlights: List<ChannelEntity> = emptyList(),
     val featuredMovieNames: Map<Long, String> = emptyMap(),
     val popularSeriesNames: Map<Long, String> = emptyMap(),
     val config: HomeConfig = HomeConfig(),
@@ -445,7 +444,6 @@ class HomeViewModel(
                     _uiState.value = _uiState.value.copy(
                         featuredMovies = selection.movies,
                         popularSeries = selection.series,
-                        liveHighlights = selection.channels,
                         featuredMovieNames = selection.movieNames,
                         popularSeriesNames = selection.seriesNames,
                     )

@@ -24,7 +24,6 @@ import tv.own.owntv.core.settings.SettingsRepository
 internal data class LoungeHomeHighlights(
     val movies: List<MovieEntity> = emptyList(),
     val series: List<SeriesEntity> = emptyList(),
-    val channels: List<ChannelEntity> = emptyList(),
     val movieNames: Map<Long, String> = emptyMap(),
     val seriesNames: Map<Long, String> = emptyMap(),
 )
@@ -43,12 +42,10 @@ internal class LoungeHomeHighlightsReader(
     suspend fun load(profileId: Long): LoungeHomeHighlights {
         val movieIds = activeSourceIds(settings, sources, profileId, MediaType.MOVIE).toList()
         val seriesIds = activeSourceIds(settings, sources, profileId, MediaType.SERIES).toList()
-        val channelIds = activeSourceIds(settings, sources, profileId, MediaType.LIVE).toList()
         val kids = profiles.getById(profileId)?.isKids == true
 
         val movieVisibility = visibleFor(profileId, movieIds, MediaType.MOVIE, kids)
         val seriesVisibility = visibleFor(profileId, seriesIds, MediaType.SERIES, kids)
-        val channelVisibility = visibleFor(profileId, channelIds, MediaType.LIVE, kids)
 
         // A provider's numeric ratings aren't a measure of popularity: their highest-rated
         // films were obscure titles on BEST. Only pick recognisable editorially curated titles,
@@ -74,37 +71,9 @@ internal class LoungeHomeHighlightsReader(
             quality = { item: SeriesEntity -> item.qualityRank },
         )
 
-        // Every result comes from the installed provider, never a decorative remote feed.
-        // Use short targeted searches rather than materialising a 16k-channel catalogue.
-        val highlights = mutableListOf<ChannelEntity>()
-        if (channelIds.isNotEmpty()) {
-            // Search individual broadcast channels, not broad category headings.
-            // Only channels with actual artwork and a visible playlist entry are shown.
-            val searches = context.resources.getStringArray(R.array.lounge_live_highlight_channels)
-            val excluded = context.resources.getStringArray(R.array.lounge_live_highlight_exclusions)
-            for (term in searches) {
-                val found = channels.searchList(term, channelIds, 12)
-                    .filter { channelVisibility.allows(it.categoryId, CustomizeKeys.channel(it)) }
-                    .filter { it.name.contains(term, ignoreCase = true) }
-                    .filter { isEnglishHomeHighlight(it.name) }
-                    .filter { it.logoUrl?.isNotBlank() == true }
-                    .filter { channel -> excluded.none { channel.name.contains(it, ignoreCase = true) } }
-                    .sortedWith(compareByDescending<ChannelEntity> {
-                        it.name.contains("RAW", ignoreCase = true)
-                    }.thenByDescending {
-                        it.name.contains("HD", ignoreCase = true)
-                    })
-                // One best stream per named channel. No generic TVNZ or provider
-                // category labels, and no duplicates of the same playlist item.
-                found.firstOrNull()?.let { highlights += it }
-                if (highlights.size >= 20) break
-            }
-        }
-
         return LoungeHomeHighlights(
             movies = moviePicks.map { it.first },
             series = seriesPicks.map { it.first },
-            channels = highlights.distinctBy { it.id }.take(20),
             movieNames = moviePicks.associate { it.first.id to it.second },
             seriesNames = seriesPicks.associate { it.first.id to it.second },
         )
