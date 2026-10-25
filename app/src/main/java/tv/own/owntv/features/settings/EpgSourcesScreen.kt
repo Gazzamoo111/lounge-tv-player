@@ -195,6 +195,20 @@ private fun epgAutoRefreshLabel(mode: EpgAutoRefresh): String = stringResource(
     },
 )
 
+/**
+ * Managed guides must be identified by their actual source addresses, not the playlist
+ * nickname: an Xtream import normally labels both guides "My IPTV".
+ * No full addresses or credential-bearing XMLTV queries are shown in the TV settings UI.
+ */
+internal enum class GuideDisplayKind { LOUNGE, PROVIDER, CUSTOM }
+
+internal fun guideDisplayKind(url: String): GuideDisplayKind = when {
+    url.trim() == LOUNGE_EPG_URL -> GuideDisplayKind.LOUNGE
+    url.substringBefore('?').trimEnd('/').endsWith("/xmltv.php", ignoreCase = true) ->
+        GuideDisplayKind.PROVIDER
+    else -> GuideDisplayKind.CUSTOM
+}
+
 @Composable
 private fun EpgRow(
     source: EpgSource,
@@ -222,11 +236,21 @@ private fun EpgRow(
             null
         }
     }
-    val subtitle = if (tv.own.owntv.core.repository.EpgRepository.stalkerSourceIdOf(source.url) != null) {
-        stringResource(R.string.settings_epg_sources_portal_guide)
-    } else {
-        // Never the account's user name and password: an XMLTV address often carries both.
-        tv.own.owntv.core.network.HttpClient.redactUrl(source.url)
+    val managedKind = guideDisplayKind(source.url)
+    val displayTitle = when (managedKind) {
+        GuideDisplayKind.LOUNGE -> stringResource(R.string.lounge_epg_guide_name)
+        GuideDisplayKind.PROVIDER -> stringResource(R.string.lounge_epg_primary_name)
+        GuideDisplayKind.CUSTOM -> source.name
+    }
+    val subtitle = when (managedKind) {
+        GuideDisplayKind.LOUNGE -> stringResource(R.string.lounge_epg_guide_description)
+        GuideDisplayKind.PROVIDER -> stringResource(R.string.lounge_epg_primary_description)
+        GuideDisplayKind.CUSTOM ->
+            if (tv.own.owntv.core.repository.EpgRepository.stalkerSourceIdOf(source.url) != null) {
+                stringResource(R.string.settings_epg_sources_portal_guide)
+            } else {
+                tv.own.owntv.core.network.HttpClient.redactUrl(source.url)
+            }
     }
     val catchupNote = count?.third?.takeIf { it > 0 }?.let {
         pluralStringResource(R.plurals.settings_epg_sources_catchup, it, it)
@@ -284,8 +308,8 @@ private fun EpgRow(
     )
     StageSettingRow(
         icon = OwnTVIcon.EPG,
-        title = source.name,
-        // A failed guide shows its error in red on the right, so the line under the name is its address.
+        title = displayTitle,
+        // Show a branded description for managed guides, never internal URLs or credentials.
         desc = if (failed) subtitle else status,
         value = when {
             failed -> SettingValue.Custom {
@@ -297,8 +321,8 @@ private fun EpgRow(
         onClick = { if (actions.isNotEmpty()) runCatching { actionsFocus.requestFocus() } },
         keepPanel = keepPanel,
         help = SettingHelp(
-            title = source.name,
-            // The address on one line, the counts under it.
+            title = displayTitle,
+            // Keep connection details out of the customer-facing guide help.
             text = subtitle,
             hints = listOf(
                 "▶" to stringResource(R.string.settings_key_actions),
@@ -326,6 +350,7 @@ internal fun EpgSourceForm(
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val managedSource = initial != null && guideDisplayKind(initial.url) != GuideDisplayKind.CUSTOM
     var name by remember { mutableStateOf(initial?.name ?: "") }
     var url by remember { mutableStateOf(initial?.url ?: "") }
     var ua by remember { mutableStateOf(initial?.userAgent ?: "") }
@@ -368,36 +393,43 @@ internal fun EpgSourceForm(
         rowsFocus = firstFocus,
         settingsRoot = false,
     ) {
-        val nameLabel = stringResource(R.string.settings_epg_sources_name)
-        StageFieldRow(
-            OwnTVIcon.PENCIL, nameLabel, name, { name = it },
-            SettingHelp(nameLabel, stringResource(R.string.settings_help_epg_name) + " " + fieldHelp, extra = submitButton),
-            placeholder = stringResource(R.string.settings_epg_sources_name_hint), backLabel = parent, submitHint = submitHint, modifier = toSubmit,
-        )
-        val urlLabel = stringResource(R.string.settings_epg_sources_url)
-        StageFieldRow(
-            OwnTVIcon.PENCIL, urlLabel, url, { url = it },
-            SettingHelp(urlLabel, fieldHelp, extra = submitButton),
-            placeholder = stringResource(R.string.settings_epg_sources_url_hint), keyboardType = androidx.compose.ui.text.input.KeyboardType.Uri,
-            backLabel = parent, submitHint = submitHint, modifier = toSubmit,
-        )
-        val fillTitle = stringResource(R.string.settings_epg_sources_fill_playlist)
-        val fillLine = stringResource(R.string.settings_line_fill_from_playlist)
-        StageSettingRow(
-            icon = OwnTVIcon.LIST,
-            title = fillTitle,
-            desc = fillLine,
-            value = SettingValue.Opens(null),
-            onClick = { dialogFocus.value = fillFocus; showPlaylistPicker = true },
-            modifier = Modifier.focusRequester(fillFocus).then(toSubmit),
-            help = SettingHelp(fillTitle, fillLine, hints = keys(ok to stringResource(R.string.settings_key_open), back to parent), extra = submitButton),
-        )
-        val uaLabel = stringResource(R.string.settings_epg_sources_user_agent)
-        StageFieldRow(
-            OwnTVIcon.PENCIL, uaLabel, ua, { ua = it },
-            SettingHelp(uaLabel, fieldHelp, extra = submitButton),
-            placeholder = stringResource(R.string.settings_epg_sources_user_agent_hint), backLabel = parent, submitHint = submitHint, modifier = toSubmit,
-        )
+        // Auto-configured guides are branded and locked to their actual addresses.
+        // Edit still provides refresh and logo settings without exposing GitHub or
+        // credential-bearing Xtream URLs in the customer interface.
+        if (!managedSource) {
+            val nameLabel = stringResource(R.string.settings_epg_sources_name)
+            StageFieldRow(
+                OwnTVIcon.PENCIL, nameLabel, name, { name = it },
+                SettingHelp(nameLabel, stringResource(R.string.settings_help_epg_name) + " " + fieldHelp, extra = submitButton),
+                placeholder = stringResource(R.string.settings_epg_sources_name_hint), backLabel = parent, submitHint = submitHint, modifier = toSubmit,
+            )
+            val urlLabel = stringResource(R.string.settings_epg_sources_url)
+            StageFieldRow(
+                OwnTVIcon.PENCIL, urlLabel, url, { url = it },
+                SettingHelp(urlLabel, fieldHelp, extra = submitButton),
+                placeholder = stringResource(R.string.settings_epg_sources_url_hint), keyboardType = androidx.compose.ui.text.input.KeyboardType.Uri,
+                backLabel = parent, submitHint = submitHint, modifier = toSubmit,
+            )
+        }
+        if (!managedSource) {
+            val fillTitle = stringResource(R.string.settings_epg_sources_fill_playlist)
+            val fillLine = stringResource(R.string.settings_line_fill_from_playlist)
+            StageSettingRow(
+                icon = OwnTVIcon.LIST,
+                title = fillTitle,
+                desc = fillLine,
+                value = SettingValue.Opens(null),
+                onClick = { dialogFocus.value = fillFocus; showPlaylistPicker = true },
+                modifier = Modifier.focusRequester(fillFocus).then(toSubmit),
+                help = SettingHelp(fillTitle, fillLine, hints = keys(ok to stringResource(R.string.settings_key_open), back to parent), extra = submitButton),
+            )
+            val uaLabel = stringResource(R.string.settings_epg_sources_user_agent)
+            StageFieldRow(
+                OwnTVIcon.PENCIL, uaLabel, ua, { ua = it },
+                SettingHelp(uaLabel, fieldHelp, extra = submitButton),
+                placeholder = stringResource(R.string.settings_epg_sources_user_agent_hint), backLabel = parent, submitHint = submitHint, modifier = toSubmit,
+            )
+        }
         val refreshTitle = stringResource(R.string.settings_epg_sources_auto_refresh_title)
         StageSettingRow(
             icon = OwnTVIcon.REFRESH,

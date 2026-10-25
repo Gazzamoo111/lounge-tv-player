@@ -2,6 +2,7 @@ package tv.own.owntv.features.shell
 
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
+import kotlinx.coroutines.CancellationException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
@@ -27,6 +28,11 @@ import tv.own.owntv.core.weather.WeatherInfo
 import tv.own.owntv.core.weather.WeatherRepository
 import tv.own.owntv.core.database.dao.resolveExistingProfileId
 import tv.own.owntv.core.repository.SourceRepository
+import tv.own.owntv.core.repository.EpgRepository
+import tv.own.owntv.core.epg.EpgSourceStore
+import tv.own.owntv.core.model.SourceType
+import tv.own.owntv.core.sync.work.EpgSyncScheduler
+import tv.own.owntv.features.settings.ensureAutomaticXtreamGuides
 import tv.own.owntv.core.launcher.LauncherIntegrationRepository
 import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.core.theme.AccentColor
@@ -43,6 +49,9 @@ class ShellViewModel(
     connectivity: ConnectivityObserver,
     private val launcherIntegrationRepository: LauncherIntegrationRepository,
     private val epgMigration: tv.own.owntv.core.epg.EpgMigration,
+    private val epgRepository: EpgRepository,
+    private val epgSourceStore: EpgSourceStore,
+    private val epgSyncScheduler: EpgSyncScheduler,
     private val autoRefresh: tv.own.owntv.core.sync.AutoRefresh,
     private val weatherRepository: WeatherRepository,
     private val navVisibility: NavVisibility,
@@ -63,8 +72,42 @@ class ShellViewModel(
     var startupUpdateCheckDone = false
 
     init {
-        // One-time: move any existing playlist EPG into the new standalone EPG sources (v2.2.0).
-        viewModelScope.launch { runCatching { epgMigration.run() } }
+        // Migrate first, then automatically add BOTH guides for each saved/new Xtream source.
+        // This observes sign-in and upgraded installations without asking the customer to add EPGs.
+        viewModelScope.launch {
+            try {
+                epgMigration.run()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.w(TAG, "EPG migration failed; attempting to register guides", e)
+            }
+            settings.activeProfileId
+                .flatMapLatest { pid ->
+                    if (pid < 0) flowOf(emptyList<tv.own.owntv.core.database.entity.SourceEntity>())
+                    else sourceRepository.observeSources(pid)
+                }
+                .map { sources -> sources.filter { it.type == SourceType.XTREAM } }
+                .distinctUntilChanged { old, new ->
+                    old.map { it.id to epgRepository.guideUrls(it) } ==
+                        new.map { it.id to epgRepository.guideUrls(it) }
+                }
+                .collect { playlists ->
+                    try {
+                        ensureAutomaticXtreamGuides(
+                            playlists = playlists,
+                            repository = epgRepository,
+                            store = epgSourceStore,
+                            settings = settings,
+                            scheduler = epgSyncScheduler,
+                        )
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Unable to register automatic EPG sources", e)
+                    }
+                }
+        }
         // The one-shot settings migrations run from core at process start (PlaybackStartup).
         viewModelScope.launch {
             settings.activeProfileId

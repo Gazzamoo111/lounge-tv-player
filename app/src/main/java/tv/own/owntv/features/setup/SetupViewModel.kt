@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import tv.own.owntv.core.database.entity.SourceEntity
+import tv.own.owntv.core.model.SourceType
 import tv.own.owntv.core.backup.BackupManager
 import tv.own.owntv.core.setup.SourceImporter
 import tv.own.owntv.core.settings.PlaylistRefresh
@@ -154,7 +155,7 @@ class SetupViewModel(
             block()
             val done = importer.state.value as? SourceImporter.ImportState.Success ?: return@launch
             val source = done.source ?: return@launch
-            if (!importer.backgroundHandoff && epgRepository.guideUrl(source) != null) {
+            if (!importer.backgroundHandoff && source.type != SourceType.XTREAM && epgRepository.guideUrl(source) != null) {
                 pendingEpgSource = source
                 _epgSync.value = tv.own.owntv.features.settings.EpgSyncUi.Ask(source.name)
             }
