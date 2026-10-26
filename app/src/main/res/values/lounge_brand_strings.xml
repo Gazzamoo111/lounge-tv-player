@@ -69,6 +69,8 @@
 <string name="setup_line_app_icon_mobile">How Lounge TV appears on your home screen</string>
     <!-- Use English text when TMDB supplies non-English Spider-Man title art. -->
     <string name="lounge_brand_new_day_english_title" translatable="false">Spider-Man: Brand New Day</string>
+    <string name="lounge_nz_sky_raw_group">NZ RAW</string>
+    <string name="lounge_nz_sky_hd_group">Sky Sport HD</string>
     <string name="lounge_sports_quick_links">Live Sports</string>
     <string name="lounge_sports_all">Sport Lounge</string>
     <string name="lounge_sports_all_sub">Live matches and fixtures</string>

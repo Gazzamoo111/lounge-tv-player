@@ -159,8 +159,11 @@
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveStage.kt	tnum
 2	technical	app/src/main/java/tv/own/owntv/features/live/LiveStage.kt	·
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveStage.kt	· $left
-1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	SKY SP
-1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	Sky Sport
+1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	nz raw
+1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	sky sport hd
+1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	sky sports hd
+1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	nznewzealand
+1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	newzealand
 7	empty	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	#$it
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	LiveEngine

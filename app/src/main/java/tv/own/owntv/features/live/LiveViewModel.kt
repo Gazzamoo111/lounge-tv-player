@@ -599,10 +599,7 @@ class LiveViewModel(
         .flatMapLatest { c ->
             if (c.profileId < 0) flowOf(defaultRail)
             else combine(
-                combine(
-                    categoryDao.observe(c.sourceIds, MediaType.LIVE),
-                    channelDao.observeCountsByCategory(c.sourceIds.ifEmpty { listOf(-1L) }),
-                ) { cats, _ -> cats },
+                categoryDao.observe(c.sourceIds, MediaType.LIVE),
                 custom,
                 sortMode,
                 // Catch-up sits between History and All, but ONLY when the provider actually advertises
@@ -613,70 +610,61 @@ class LiveViewModel(
                 // A–Z also sorts the category folders (custom categories included); manually moved
                 // categories stay pinned first. Custom categories ride the SAME customization keys,
                 // so renames/hides/reorders apply to them with no extra code.
-                // RAW/HD Sky Sport streams can live inside a vaguely named BEST "NZ"
-                // folder. Resolve their parent categories from the actual stored channels
-                // instead of guessing from folder display names. This is a small bounded
-                // read on IO; the channel-count flow also refreshes it after playlist sync.
-                val nzSportChannelIds = withContext(Dispatchers.IO) {
-                    val candidates = listOf("Sky Sport", "SKY SP").flatMap { term ->
-                        channelDao.searchList(term, c.sourceIds, 500)
-                    }
-                    candidates.mapNotNullTo(hashSetOf()) { channel ->
-                        val categoryId = channel.categoryId ?: return@mapNotNullTo null
-                        val category = cats.firstOrNull { it.id == categoryId }
-                            ?: return@mapNotNullTo null
-                        if (isBestNzSkySportRawHdChannel(
-                                sourceById[channel.sourceId]?.type, category.name, channel.name,
-                            )
-                        ) categoryId else null
-                    }
-                }
-                val essentialNzSports = cats.filter { category ->
-                    sourceById[category.sourceId]?.type == SourceType.XTREAM &&
-                        (isAllowedBestNzSportsCategory(SourceType.XTREAM, category.name) ||
-                            category.id in nzSportChannelIds)
-                }
-                // Preserve the existing saved profile order. Reintroduce only essential
-                // Sky Sport categories inadvertently hidden by earlier filtering/settings.
-                val standardFolders = cats.railCategories(
+                // Do not infer categories from a channel name: that previously exposed
+                // generic "New Zealand" and "NZ Sky Sport" folders.
+                val visible = cats.railCategories(
                     cust,
                     kids = profile?.isKids == true,
                     alphaRest = sort == SettingsRepository.SortMode.ALPHA,
                 )
-                val standardIds = standardFolders.mapNotNullTo(hashSetOf()) { it.categoryId }
-                val restoredFolders = if (profile?.isKids == true) emptyList() else essentialNzSports
-                    .filter { it.id !in standardIds }
-                    .map { category ->
-                        val key = CustomizeKeys.category(category)
-                        tv.own.owntv.core.customize.CustomizedCategory(
-                            key = key,
-                            displayName = cust.categoryNames[key] ?: category.name,
-                            categoryId = category.id,
-                        )
-                    }
-                val folders = standardFolders + restoredFolders
-                val essentialIds = essentialNzSports.mapTo(hashSetOf()) { it.id }
-                val multiSourceNames = c.sourceNames.takeIf { it.size > 1 }.orEmpty()
                 val categoriesById = cats.associateBy { it.id }
-                // A working independent NZ source should be the first NZ category
-                // customers reach, ahead of BEST's currently unreliable NZ feeds.
-                val nzIds = cats.asSequence().filter { category ->
+                val multiSourceNames = c.sourceNames.takeIf { it.size > 1 }.orEmpty()
+
+                // Restore only the two approved BEST categories, even if a past profile
+                // customisation hid them. Retain their real provider category IDs.
+                // Nothing is changed in the database, playlist or saved favourites.
+                val preferredSportGroups = if (profile?.isKids == true) emptyList() else
+                    listOf(BestNzSkyGroup.RAW, BestNzSkyGroup.HD).mapNotNull { group ->
+                        val matches = cats.filter { cat ->
+                            bestNzSkyGroup(sourceById[cat.sourceId]?.type, cat.name) == group
+                        }
+                        val chosen = matches.firstOrNull { cat ->
+                            visible.any { it.categoryId == cat.id }
+                        } ?: matches.firstOrNull()
+                        chosen?.let { category ->
+                            val key = CustomizeKeys.category(category)
+                            tv.own.owntv.core.customize.CustomizedCategory(
+                                key = key,
+                                displayName = appContext.getString(
+                                    if (group == BestNzSkyGroup.RAW)
+                                        tv.own.owntv.R.string.lounge_nz_sky_raw_group
+                                    else tv.own.owntv.R.string.lounge_nz_sky_hd_group,
+                                ),
+                                categoryId = category.id,
+                            )
+                        }
+                    }
+
+                // Preserve the independent working NZ playlist, except the explicitly
+                // unwanted "NZ New Zealand" sidebar folder. Keep all unrelated regions
+                // and user-created folders as before.
+                val nzIds = cats.filter { category ->
                     sourceById[category.sourceId]?.let { source ->
                         source.type == SourceType.M3U &&
                             source.url.contains(NZ_FREEVIEW_PATH, ignoreCase = true)
                     } == true
-                }.map { it.id }.toSet()
-                val preferredNz = folders.filter { it.categoryId in nzIds }
-                val preferredSports = folders.filter { it.categoryId in essentialIds }
-                val priorityIds = nzIds + essentialIds
-                val orderedFolders = preferredNz + preferredSports.filterNot { it in preferredNz } +
-                    folders.filterNot { it.categoryId in priorityIds }
-                val displayFolders = orderedFolders.filterNot { e ->
-                    e.categoryId?.let(categoriesById::get)?.let { cat ->
-                        shouldHideBestNzCategory(sourceById[cat.sourceId]?.type, cat.name) &&
-                            cat.id !in essentialIds
+                }.mapTo(hashSetOf()) { it.id }
+                val remaining = visible.filterNot { entry ->
+                    entry.categoryId?.let(categoriesById::get)?.let { category ->
+                        val providerType = sourceById[category.sourceId]?.type
+                        bestNzSkyGroup(providerType, category.name) != null ||
+                            shouldHideBestNzCategory(providerType, category.name) ||
+                            isUnwantedNzRailCategory(category.name)
                     } == true
                 }
+                val independentNz = remaining.filter { it.categoryId in nzIds }
+                val displayFolders = independentNz + preferredSportGroups +
+                    remaining.filterNot { it.categoryId in nzIds }
                 railWithCatchup(catchupCount > 0) + displayFolders.map { e ->
                     LiveRailItem(
                         key = e.categoryId?.let { LiveKey.Folder(it) } ?: LiveKey.Custom(e.customId!!),
@@ -2259,22 +2247,36 @@ class LiveViewModel(
 
 private const val NZ_FREEVIEW_PATH = "i.mjh.nz/nz/kodi-tv.m3u8"
 
-/**
- * A BEST folder may be named only "NZ" or "NZ Sports" while its individual
- * channels are correctly named "NZ Sky Sport 1 RAW/HD". The channel list shows
- * those streams already; the rail must not hide their parent folder.
- */
-internal fun isBestNzSkySportRawHdChannel(
-    sourceType: SourceType?, categoryName: String, channelName: String,
-): Boolean =
-    sourceType == SourceType.XTREAM &&
-        (isBestNzLabel(categoryName) || isBestNzLabel(channelName)) &&
-        isSkySportLabel(channelName) && isRawOrHdLabel(channelName)
+/** Only two actual BEST Sky Sport category groups may appear in the NZ rail. */
+internal enum class BestNzSkyGroup { RAW, HD }
 
-/** Hide BEST NZ folders except Sky Sport groups that carry RAW or HD feeds. */
+internal fun bestNzSkyGroup(sourceType: SourceType?, categoryName: String): BestNzSkyGroup? {
+    if (sourceType != SourceType.XTREAM) return null
+    val normalized = java.text.Normalizer.normalize(categoryName, java.text.Normalizer.Form.NFKC)
+        .lowercase().replace(Regex("[^a-z0-9]+"), " ").trim()
+    val isRawOnly = normalized == "nz raw"
+    val isNz = isBestNzLabel(categoryName)
+    val isSkySport = isSkySportLabel(categoryName)
+    // BEST's two group names vary. Never admit a generic "NZ" or "NZ Sky
+    // Sport" group simply because one of its streams happens to say RAW/HD.
+    if (!isNz && normalized != "sky sport hd" && normalized != "sky sports hd") return null
+    val tokens = normalized.split(' ')
+    return when {
+        "raw" in tokens && (isSkySport || isRawOnly) -> BestNzSkyGroup.RAW
+        ("hd" in tokens || "fhd" in tokens) && isSkySport -> BestNzSkyGroup.HD
+        else -> null
+    }
+}
+
+/** Hide the generic NZ/New Zealand category even if it is an M3U source.
+ *  Channels remain available through All Channels; only this sidebar item goes. */
+internal fun isUnwantedNzRailCategory(name: String): Boolean {
+    val compact = name.lowercase().filter { it.isLetterOrDigit() }
+    return compact == "nznewzealand" || compact == "newzealand"
+}
+
 internal fun isAllowedBestNzSportsCategory(sourceType: SourceType?, name: String): Boolean =
-    sourceType == SourceType.XTREAM && isBestNzLabel(name) &&
-        isSkySportLabel(name) && isRawOrHdLabel(name)
+    bestNzSkyGroup(sourceType, name) != null
 
 internal fun shouldHideBestNzCategory(sourceType: SourceType?, name: String): Boolean =
     sourceType == SourceType.XTREAM && isBestNzLabel(name) &&
@@ -2290,7 +2292,7 @@ internal fun shouldHideBestNzChannel(sourceType: SourceType?, category: String?,
     if (isBrokenBestTvnzLabel(name)) return true
     val folder = category.orEmpty()
     if (!isBestNzLabel(folder) && !isBestNzLabel(name)) return false
-    val allowedFolder = isBestNzLabel(folder) && isSkySportLabel(folder) && isRawOrHdLabel(folder)
+    val allowedFolder = isAllowedBestNzSportsCategory(sourceType, folder)
     val allowedChannel = isSkySportLabel(name) && isRawOrHdLabel(name)
     return !allowedFolder && !allowedChannel
 }
