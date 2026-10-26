@@ -2032,3 +2032,4 @@
 3	empty	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	\0
 1	regex	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	[^\\p{L}\\p{N}]+
 1	regex	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	\\s+
+1	locale	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	EN
