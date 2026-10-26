@@ -907,6 +907,7 @@ class SeriesViewModel(
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     fun openSeries(s: SeriesEntity) {
+        if (!LoungeVodPolicy.allowsSeries(s)) return
         _openedSeries.value = s
         _selectedSeason.value = 1 // reset season when opening a different show
         _lastPlayedEpisodeId.value = null
@@ -939,7 +940,7 @@ class SeriesViewModel(
         val episode = seriesDao.getEpisodeById(episodeId) ?: return false
         val showId = if (seriesId > 0) seriesId else episode.seriesId
         val show = seriesDao.getSeriesById(showId) ?: return false
-        if (episode.seriesId != show.id) return false
+        if (episode.seriesId != show.id || !LoungeVodPolicy.allowsSeries(show)) return false
         val pid = currentProfileId() ?: return false
         if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, show.categoryId, profileDao, categoryDao)) return false
         seriesRepository.loadEpisodes(show)
@@ -1144,8 +1145,8 @@ class SeriesViewModel(
         val ext = episode.containerExt ?: StorageAccess.extOf(episode.streamUrl)
         viewModelScope.launch {
             val pid = currentProfileId() ?: return@launch
-            val actualShow = show ?: seriesDao.getSeriesById(episode.seriesId)
-            if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, actualShow?.categoryId, profileDao, categoryDao)) return@launch
+            val actualShow = show ?: seriesDao.getSeriesById(episode.seriesId) ?: return@launch
+            if (!LoungeVodPolicy.allowsSeries(actualShow) || !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, actualShow.categoryId, profileDao, categoryDao)) return@launch
             downloadManager.enqueue(
                 profileId = pid,
                 mediaType = MediaType.EPISODE,
