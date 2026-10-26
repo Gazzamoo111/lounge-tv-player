@@ -561,7 +561,7 @@ private fun OnChannelsRow(item: GuideSportItem, now: Long, modifier: Modifier, o
 
 /** Hold OK on a card: follow either side (or stop following), and "Remind me" for a match still to come. */
 @Composable
-private fun FollowRemindMenu(
+internal fun FollowRemindMenu(
     match: Match,
     config: SportsConfig,
     channels: List<WatchOption>,

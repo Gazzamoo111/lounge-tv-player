@@ -1,5 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="sport_lounge_title">SPORT LOUNGE</string>
+    <string name="sport_lounge_subtitle">Live fixtures, today’s schedule and what comes next</string>
+    <string name="sport_lounge_upcoming">Upcoming</string>
+    <string name="sport_lounge_all_sports">All Sports</string>
+    <string name="sport_lounge_league">League</string>
+    <string name="sport_lounge_find_channels">Find channels in Match Centre</string>
+    <string name="sport_lounge_no_playlist">Add a playlist to find channels</string>
+    <string name="sport_lounge_loading">Loading connected sports sources…</string>
+    <string name="sport_lounge_empty_live">No live fixtures from connected sports sources</string>
+    <string name="sport_lounge_empty_today">No more fixtures for today from connected sports sources</string>
+    <string name="sport_lounge_empty_upcoming">No upcoming fixtures in the connected 36-hour schedule</string>
+    <string name="sport_lounge_source_problem">One or more fixture sources could not refresh. Previously loaded fixtures remain available where possible.</string>
+    <string name="sport_lounge_coverage_note">Coverage depends on the connected fixture sources and is not a full weekly calendar.</string>
+    <string name="sport_lounge_last_updated">Schedule last updated %1$s</string>
+    <string name="sport_lounge_filter_count">%1$s  %2$d</string>
+    <string name="sport_lounge_event_meta">%1$s · %2$s</string>
+    <string name="sport_lounge_score_hidden">–</string>
+    <string name="sport_lounge_nfl">NFL</string>
     <string name="content_search_channels">Search channels\u2026</string>
     <string name="content_search_movies">Search movies…</string>
     <string name="content_search_series">Search series…</string>

@@ -39,6 +39,7 @@ import tv.own.owntv.core.sports.SportsHomeRow
 import tv.own.owntv.core.sports.SportsConfig
 import tv.own.owntv.core.sports.SportsMemory
 import tv.own.owntv.core.sports.SportsRepository
+import tv.own.owntv.core.sports.SportsSource
 import tv.own.owntv.core.sports.WatchFilter
 import tv.own.owntv.core.sports.WatchList
 import tv.own.owntv.core.sports.WatchOption
@@ -96,6 +97,9 @@ data class SportsHubState(
     val rebuilding: Boolean = false,
     /** Start times of the profile's programme reminders, keyed `start|title`, so a card can show "Reminder". */
     val reminders: Set<String> = emptySet(),
+    /** Profile-independent, bounded fixtures used when a new profile follows no competitions. */
+    val discovery: SportLoungeDiscoverySnapshot = SportLoungeDiscoverySnapshot(),
+    val discoveryLoading: Boolean = false,
 )
 
 /**
@@ -111,6 +115,7 @@ class SportsViewModel(
     private val alerts: SportsAlertsSetup,
     private val reminders: ReminderManager,
     private val playback: SportsPlayback,
+    sportsSource: SportsSource,
     sourceDao: SourceDao,
 ) : ViewModel() {
 
@@ -143,9 +148,23 @@ class SportsViewModel(
         if (pid < 0) flowOf(emptySet()) else reminders.observe(pid).map { list -> list.map { reminderKey(it.startMs, it.title) }.toSet() }
     }
 
+    private val discovery = SportLoungeDiscovery(sportsSource)
+    private val discoveryState = config.flatMapLatest { current ->
+        if (current.followedLeagues().isNotEmpty()) flowOf(SportLoungeDiscoverySnapshot() to false)
+        else flow {
+            emit(SportLoungeDiscoverySnapshot() to true)
+            while (true) {
+                emit(discovery.load() to false)
+                delay(DISCOVERY_REFRESH_MS)
+            }
+        }
+    }.flowOn(Dispatchers.IO)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SportLoungeDiscoverySnapshot() to false)
+
     val hub: StateFlow<SportsHubState> = combine(board, config, onNow, hasPlaylist, repository.rebuild) { b, c, n, has, r ->
         SportsHubState(b, c, n, has, rebuilding = r is RebuildState.Running)
     }.combine(reminderKeys) { s, r -> s.copy(reminders = r) }
+        .combine(discoveryState) { s, (snapshot, loading) -> s.copy(discovery = snapshot, discoveryLoading = loading) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SportsHubState())
 
     /** The profile's sports settings alone — no scores are asked for by reading it. */
@@ -368,6 +387,7 @@ class SportsViewModel(
 
     companion object {
         private const val HOME_ROW_DELAY_MS = 3_000L
+        private const val DISCOVERY_REFRESH_MS = 15 * 60_000L
 
         fun reminderKey(startMs: Long, title: String) = "$startMs|$title"
     }

@@ -65,7 +65,7 @@ fun SportsScreen(
             modifier = modifier,
         )
     } else if (current == null) {
-        SportsHubScreen(
+        SportLoungeScreen(
             vm = vm,
             onOpenMatch = open,
             onPlayChannel = onPlayChannel,

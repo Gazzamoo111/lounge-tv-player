@@ -1389,3 +1389,23 @@
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	EPG migration failed; attempting to register guides
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Unable to register automatic EPG sources
 1	protocol	app/src/main/java/tv/own/owntv/features/settings/EpgSourcesScreen.kt	/xmltv.php
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeRules.kt	${it.sport.path}/${side.team.id}
+1	technical	app/src/main/java/tv/own/owntv/features/sports/SportLoungeRules.kt	new zealand
+1	technical	app/src/main/java/tv/own/owntv/features/sports/SportLoungeRules.kt	nz
+1	technical	app/src/main/java/tv/own/owntv/features/sports/SportLoungeRules.kt	nrl
+1	technical	app/src/main/java/tv/own/owntv/features/sports/SportLoungeRules.kt	super rugby
+1	technical	app/src/main/java/tv/own/owntv/features/sports/SportLoungeRules.kt	australia
+1	technical	app/src/main/java/tv/own/owntv/features/sports/SportLoungeRules.kt	australian
+1	technical	app/src/main/java/tv/own/owntv/features/sports/SportLoungeRules.kt	breakers
+1	technical	app/src/main/java/tv/own/owntv/features/sports/SportLoungeRules.kt	black caps
+1	technical	app/src/main/java/tv/own/owntv/features/sports/SportLoungeRules.kt	silver ferns
+2	empty	app/src/main/java/tv/own/owntv/features/sports/SportLoungeScreen.kt	\0
+1	log	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	LoungeTV-SportLounge
+1	log	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	discovery feed failed ${league.key}: ${error.javaClass.simpleName}
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	football/nfl
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby-league/3
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/289234
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	cricket/all
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	basketball/nba
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	racing/f1
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	mma/ufc
