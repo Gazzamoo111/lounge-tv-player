@@ -512,7 +512,7 @@ internal fun LiveCategories(
     val startingSection = entries.getOrNull(entryFocusIndex)?.item?.section
     // Closed by default when browsing fixed entries (All/Favourites). The section
     // holding the selected category opens automatically when returning to it.
-    var expandedSection by remember(entries, entryFocusIndex) {
+    var expandedSection by remember(entryFocusIndex) {
         mutableStateOf(startingSection)
     }
     val searching = query.isNotBlank()
