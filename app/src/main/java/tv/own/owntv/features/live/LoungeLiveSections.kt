@@ -7,7 +7,7 @@ import java.util.Locale
  * Presentation-only sections. Provider category IDs, streams, favourites and guide
  * matching are never rewritten. A customer can still rename/move/merge folders.
  */
-internal enum class LoungeLiveSection(val titleRes: Int) {
+enum class LoungeLiveSection(val titleRes: Int) {
     MY_CATEGORIES(R.string.lounge_section_custom),
     SPORTS(R.string.lounge_section_sports),
     ENTERTAINMENT(R.string.lounge_section_entertainment),
