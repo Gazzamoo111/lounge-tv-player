@@ -29,11 +29,15 @@ class MoviesHighlightsGuardrailsTest(unittest.TestCase):
         self.assertIn("scrollToItem(i + gridHeaderOffset)", screen)
         self.assertIn("it - gridHeaderOffset else it - listHeaderOffset", screen)
 
-    def test_large_highlight_artwork_is_contained(self):
+    def test_five_across_portrait_covers_have_no_letterboxing(self):
         shelf = (MOVIES / "LoungeMoviesFeaturedRail.kt").read_text()
-        self.assertIn("ContentScale.Fit", shelf)
-        self.assertIn("Modifier.fillMaxSize()", shelf)
-        self.assertNotIn("VodPosterArt(", shelf)
+        self.assertIn("val cardWidth = (maxWidth - 100.mpx) / 5.15f", shelf)
+        self.assertIn("height = cardWidth * 1.5f", shelf)
+        self.assertIn("VodPosterArt(posterUrl(movie), OwnTVIcon.MOVIES)", shelf)
+        self.assertNotIn("movie.backdropUrl", shelf)
+        self.assertNotIn("ContentScale.Fit", shelf)
+        self.assertIn("onLeftFromFirstCard()", shelf)
+        self.assertIn("firstCardFocusRequester", shelf)
 
     def test_sidebar_category_entry_returns_to_highlight_rows(self):
         screen = (MOVIES / "MoviesScreen.kt").read_text()
