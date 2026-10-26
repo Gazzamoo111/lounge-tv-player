@@ -584,16 +584,21 @@ internal fun LiveCategories(
             }
             visible.forEachIndexed { pos, index ->
                 val entry = entries[index]
-                if (index == firstGroup && query.isBlank()) {
-                    item(key = "__groups__") {
-                        if (sheet) StageGroupLabel(groupsHeading, sheet = true)
-                        else Text(
-                            groupsHeading, style = stageText(12.5f, 800, 0.13.em), color = StageColors.Dim, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(start = 14.mpx, top = 8.mpx, bottom = 8.mpx),
-                        )
-                    }
-                }
                 item(key = entry.item.key.toString()) {
+                    Column {
+                        val section = entry.item.section
+                        val isFirstOfSection = query.isBlank() && section != null &&
+                            (index == 0 || entries[index - 1].item.section != section)
+                        if (isFirstOfSection) {
+                            val headingText = stringResource(section!!.titleRes)
+                            if (sheet) StageGroupLabel(headingText, sheet = true)
+                            else Text(
+                                headingText, style = stageText(12.5f, 800, 0.13.em),
+                                color = StageColors.Dim, maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(start = 14.mpx, top = 8.mpx, bottom = 8.mpx),
+                            )
+                        }
                     val rowModifier = Modifier.focusRequester(rowFocusers[pos]).then(rightKey)
                         .onFocusChanged { if (it.hasFocus) onRowFocus(index) }
                     val selected = index == selectedIndex
@@ -614,6 +619,7 @@ internal fun LiveCategories(
                         )
                     } else {
                         LiveColumnItem(entry, selected, onClick = { onSelect(index) }, onLongClick = { onLongSelect(index) }, modifier = rowModifier)
+                    }
                     }
                 }
             }

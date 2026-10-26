@@ -106,6 +106,7 @@ data class LiveRailItem(
     val providerName: String? = null,
     /** The playlist a folder belongs to: its mark in the Movies / Series category list. */
     val sourceId: Long? = null,
+    val section: LoungeLiveSection? = null,
 )
 
 class LiveViewModel(
@@ -651,10 +652,24 @@ class LiveViewModel(
                 val displayFolders = firstNz + allowedFolders.filterNot { it.categoryId in nzIds }
                 val categoriesById = byId
                 val multiSourceNames = c.sourceNames.takeIf { it.size > 1 }.orEmpty()
-                railWithCatchup(catchupCount > 0) + displayFolders.map { e ->
+                // Group categories by purpose rather than country. Explicit manual
+                // ordering stays pinned and custom folders remain at the front.
+                val orderIndex = cust.categoryOrder.withIndex().associate { (i, key) -> key to i }
+                val orderedFolders = displayFolders.withIndex().sortedWith(
+                    compareBy<IndexedValue<tv.own.owntv.core.customize.CustomizedCategory>>(
+                        { if (it.value.customId != null) -1 else if (it.value.key in orderIndex) 0 else 1 },
+                        { if (it.value.key in orderIndex) orderIndex.getValue(it.value.key) else
+                            it.value.categoryId?.let(categoriesById::get)?.name
+                                ?.let(::loungeLiveSectionOf)?.ordinal ?: Int.MAX_VALUE },
+                        { it.index },
+                    ),
+                ).map { it.value }
+                railWithCatchup(catchupCount > 0) + orderedFolders.map { e ->
                     LiveRailItem(
                         key = e.categoryId?.let { LiveKey.Folder(it) } ?: LiveKey.Custom(e.customId!!),
                         title = e.displayName,
+                        section = if (e.customId != null) LoungeLiveSection.MY_CATEGORIES
+                            else e.categoryId?.let(categoriesById::get)?.name?.let(::loungeLiveSectionOf),
                         providerName = e.categoryId
                             ?.let(categoriesById::get)
                             ?.sourceId

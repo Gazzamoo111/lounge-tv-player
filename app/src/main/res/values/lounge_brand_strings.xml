@@ -69,6 +69,16 @@
 <string name="setup_line_app_icon_mobile">How Lounge TV appears on your home screen</string>
     <!-- Use English text when TMDB supplies non-English Spider-Man title art. -->
     <string name="lounge_brand_new_day_english_title" translatable="false">Spider-Man: Brand New Day</string>
+    <string name="lounge_section_custom">My Categories</string>
+    <string name="lounge_section_sports">SPORTS</string>
+    <string name="lounge_section_entertainment">ENTERTAINMENT</string>
+    <string name="lounge_section_movies">MOVIES &amp; PREMIUM</string>
+    <string name="lounge_section_documentaries">DOCUMENTARIES &amp; LIFESTYLE</string>
+    <string name="lounge_section_kids">KIDS &amp; FAMILY</string>
+    <string name="lounge_section_news">NEWS &amp; BUSINESS</string>
+    <string name="lounge_section_music">MUSIC</string>
+    <string name="lounge_section_seasonal">24/7 &amp; SEASONAL</string>
+    <string name="lounge_section_other">OTHER CHANNELS</string>
     <string name="lounge_nz_sky_raw_group">NZ RAW</string>
     <string name="lounge_nz_sky_hd_group">Sky Sport HD</string>
     <string name="lounge_sports_quick_links">Live Sports</string>
