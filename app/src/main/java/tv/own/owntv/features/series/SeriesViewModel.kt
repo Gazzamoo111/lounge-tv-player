@@ -939,6 +939,7 @@ class SeriesViewModel(
     fun openSeriesById(seriesId: Long) {
         viewModelScope.launch {
             val show = seriesDao.getSeriesById(seriesId) ?: return@launch
+            if (!allowsCuratedSeries(show)) return@launch
             openSeries(show)
         }
     }
