@@ -15,6 +15,7 @@ import androidx.paging.map
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,6 +43,7 @@ import tv.own.owntv.core.customize.CategoryMove
 import tv.own.owntv.core.customize.CategoryRailEditor
 import tv.own.owntv.core.customize.railCategories
 import tv.own.owntv.core.customize.CustomizeKeys
+import tv.own.owntv.core.database.OwnTVDatabase
 import tv.own.owntv.core.database.dao.CategoryDao
 import tv.own.owntv.core.database.dao.ContentOrderDao
 import tv.own.owntv.core.database.dao.CustomCategoryDao
@@ -85,6 +87,7 @@ import tv.own.owntv.core.live.serialize
 
 class SeriesViewModel(
     private val seriesDao: SeriesDao,
+    private val highlightDatabase: OwnTVDatabase,
     /** Lets the browse screen tell core's drain which category to fill first. */
     private val catalogPriority: tv.own.owntv.core.sync.CatalogPriority,
     private val categoryDao: CategoryDao,
@@ -266,6 +269,48 @@ class SeriesViewModel(
 
     private val _selected = MutableStateFlow<LiveKey>(LiveKey.All)
     val selectedKey: StateFlow<LiveKey> = _selected.asStateFlow()
+
+    private data class HighlightScope(
+        val key: LiveKey,
+        val ctx: Ctx,
+        val customization: SectionCustomizations,
+        val hiddenCategoryIds: Set<Long>,
+        val day: Long,
+    )
+
+    private val highlightDay = flow {
+        while (currentCoroutineContext().isActive) {
+            emit(System.currentTimeMillis() / 86_400_000L)
+            delay(3_600_000L)
+        }
+    }.distinctUntilChanged()
+
+    internal val categoryHighlights: StateFlow<SeriesCategoryHighlights> = combine(
+        _selected, ctx, custom, hiddenCategoryIds, highlightDay,
+    ) { key, c, cust, hidden, day -> HighlightScope(key, c, cust, hidden, day) }
+        .debounce(300)
+        .mapLatest { scope ->
+            if (scope.ctx.profileId < 0 || scope.ctx.sourceIds.isEmpty()) {
+                SeriesCategoryHighlights(categoryKey = scope.key, day = scope.day)
+            } else {
+                runCatching {
+                    SeriesCategoryHighlightsReader(highlightDatabase, seriesDao).load(
+                        key = scope.key,
+                        profileId = scope.ctx.profileId,
+                        sourceIds = scope.ctx.sourceIds,
+                        hiddenCategories = scope.hiddenCategoryIds,
+                        customization = scope.customization,
+                        folderContextKey = (scope.key as? LiveKey.Folder)?.let { folderContextKeys.value[it.id] },
+                        day = scope.day,
+                    )
+                }.getOrElse { problem ->
+                    if (problem is kotlinx.coroutines.CancellationException) throw problem
+                    Log.w("LoungeSeriesHighlights", "Category highlights unavailable", problem)
+                    SeriesCategoryHighlights(categoryKey = scope.key, day = scope.day)
+                }
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SeriesCategoryHighlights())
 
     // Bumped after a favourite/history mutation so the pager rebuilds its (manual, non-reactive)
     // PagingSource. Without this, unfavouriting on the Favorites category leaves the removed series in
