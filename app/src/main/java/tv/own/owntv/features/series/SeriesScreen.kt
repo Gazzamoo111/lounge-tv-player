@@ -28,6 +28,7 @@ import tv.own.owntv.features.shell.components.VodGroupWatch
 import tv.own.owntv.features.shell.components.VodHeader
 import tv.own.owntv.features.shell.components.VodHero
 import tv.own.owntv.features.shell.components.LoungeBrowseSpotlight
+import tv.own.owntv.features.shell.components.LoungeBrowseSpotlight
 import tv.own.owntv.features.shell.components.VodListRow
 import tv.own.owntv.features.shell.components.VodOptionsMenu
 import tv.own.owntv.features.shell.components.VodPosterArt
@@ -579,6 +580,10 @@ private fun SeriesGrid(
         if (rememberSeries) perCategorySeriesIds[selectedKey] = show.id
     }
     val posterOf: (tv.own.owntv.core.database.entity.SeriesEntity) -> String? = { it.posterUrl?.takeIf { u -> u.isNotBlank() } ?: cachedPosters[it.id] }
+    val openHighlightedShow: (tv.own.owntv.core.database.entity.SeriesEntity) -> Unit = { show ->
+        onOpenAt(series.itemSnapshotList.indexOfFirst { it?.id == show.id })
+        vm.openSeries(show)
+    }
     val playHint = stringResource(R.string.common_ok) to stringResource(R.string.content_episodes)
     val optionsHint = stringResource(R.string.content_key_hold_ok) to stringResource(R.string.content_key_options)
 
@@ -661,7 +666,10 @@ private fun SeriesGrid(
         val screenW = maxWidth
         fun fx(px: Int) = screenW * (px / 1920f)
         if (cinematic) {
-            val heroH = if (panelShares != null) maxHeight * (cinematicDetailsPct / 100f) else 464.mpx
+            val showcaseActive = displayFeatured || displayNewReleases
+            val heroH = if (showcaseActive) 226.mpx
+                else if (panelShares != null) maxHeight * (cinematicDetailsPct / 100f)
+                else 464.mpx
             val toolTop = 122.mpx + heroH
             Box(Modifier.fillMaxSize().then(if (categoriesOpen) Modifier.graphicsLayer { alpha = 0.36f } else Modifier)) {
                 VodCinematicBackdrop(titleInfo?.backdropUrl, series = true, Modifier.align(Alignment.TopEnd))
@@ -669,7 +677,10 @@ private fun SeriesGrid(
                     section = stringResource(R.string.common_nav_series), category = headerLabel, count = vodCount(true, count),
                     showChevron = true, modifier = Modifier.padding(start = fx(84), top = 52.mpx).width(fx(900)),
                 )
-                titleInfo?.let { VodHero(it, Modifier.padding(start = fx(84), top = 122.mpx).width(fx(1000)).height(heroH)) }
+                titleInfo?.let {
+                    val location = Modifier.padding(start = fx(84), top = 122.mpx).width(fx(1050)).height(heroH)
+                    if (showcaseActive) LoungeBrowseSpotlight(it, location) else VodHero(it, location)
+                }
                 Column(Modifier.padding(top = toolTop).fillMaxSize().then(paneModifier)) {
                     Row(
                         Modifier.padding(start = fx(68), end = fx(64)).fillMaxWidth()
