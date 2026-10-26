@@ -686,7 +686,7 @@ internal object LoungeVodPolicy {
 
     private fun searchQueries(titles: List<String>): List<String> = titles.chunked(12).map { chunk ->
         chunk.joinToString(" OR ") { title ->
-            "\\"" + title.replace("\\"", "\\"\\"") + "\\""
+            "${34.toChar()}$title${34.toChar()}"
         }
     }
 
