@@ -1,6 +1,7 @@
 package tv.own.owntv.features.home
 
 import tv.own.owntv.ui.components.loungeVodTitle
+import tv.own.owntv.features.vod.LoungeVodPolicy
 
 import androidx.compose.runtime.Immutable
 
@@ -408,22 +409,37 @@ class HomeViewModel(
     private suspend fun loadHomeData(profileId: Long) {
         val previous = _uiState.value
         val data = feed.load(profileId)
+        // Core can return provider-supplied trending and Continue rows regardless of editorial quality.
+        // Screen all VOD here; never allow an excluded item back onto the Home hero.
+        val curatedTrending = data.trendingItems.filter {
+            when (it) {
+                is TrendingHomeItem.Movie -> LoungeVodPolicy.allowsMovie(it.movie)
+                is TrendingHomeItem.Series -> LoungeVodPolicy.allowsSeries(it.series)
+            }
+        }
+        val curatedHero = data.heroItems.filter {
+            when (it) {
+                is HeroItem.MovieHero -> LoungeVodPolicy.allowsMovie(it.movie)
+                is HeroItem.SeriesHero -> LoungeVodPolicy.allowsSeries(it.series)
+                is HeroItem.LiveHero -> true
+            }
+        }
         _uiState.value = HomeUiState(
-            trendingItems = data.trendingItems,
+            trendingItems = curatedTrending,
             activeTrendingIndex = previous.activeTrendingIndex
-                .coerceIn(0, (data.trendingItems.size - 1).coerceAtLeast(0)),
+                .coerceIn(0, (curatedTrending.size - 1).coerceAtLeast(0)),
             trendingPreferredLanguage = data.trendingPreferredLanguage,
             trendingSeasonCounts = data.trendingSeasonCounts,
-            trendingExtras = previous.trendingExtras.filterKeys { key -> data.trendingItems.any { it.stableKey == key } },
-            heroItems = data.heroItems,
+            trendingExtras = previous.trendingExtras.filterKeys { key -> curatedTrending.any { it.stableKey == key } },
+            heroItems = curatedHero,
             activeHeroIndex = 0,
             continueMovies = data.continueMovies,
             continueSeries = data.continueSeries,
-            heroMetadata = previous.heroMetadata.filterKeys { key -> data.heroItems.any { it.homeKey == key } },
+            heroMetadata = previous.heroMetadata.filterKeys { key -> curatedHero.any { it.homeKey == key } },
             recentLive = data.recentLive,
             favoriteLive = data.favoriteLive,
-            favoriteMovies = data.favoriteMovies,
-            favoriteSeries = data.favoriteSeries,
+            favoriteMovies = data.favoriteMovies.filter(LoungeVodPolicy::allowsMovie),
+            favoriteSeries = data.favoriteSeries.filter(LoungeVodPolicy::allowsSeries),
             config = data.config,
             recentGuide = data.recentGuide,
             favoriteGuide = data.favoriteGuide,
