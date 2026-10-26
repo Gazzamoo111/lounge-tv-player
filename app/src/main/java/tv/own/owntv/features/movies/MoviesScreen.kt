@@ -150,8 +150,8 @@ fun MoviesScreen(
     val homeEditorial by homeVm.uiState.collectAsStateWithLifecycle()
     // Movies may open before Home: initialise its editorial picks without a full-list rewrite.
     // Only request the shared Home data when it has never been loaded this session.
-    LaunchedEffect(homeVm) {
-        if (homeVm.uiState.value.isLoading) homeVm.refresh()
+    LaunchedEffect(homeVm, lockedKey) {
+        if (lockedKey == null && homeVm.uiState.value.isLoading) homeVm.refresh()
     }
     // Locking and unlocking are one pair: the pin belongs to this screen's lifetime, not to the view
     // model's. On the television that view model is a single instance shared with the browse section,
