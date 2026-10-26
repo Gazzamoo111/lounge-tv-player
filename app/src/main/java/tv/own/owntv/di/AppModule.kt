@@ -111,7 +111,35 @@ val appModule = module {
     viewModelOf(::MovieViewModel)
     viewModelOf(::SportsViewModel)
     viewModelOf(::SportsSettingsViewModel)
-    viewModelOf(::SeriesViewModel)
+    // Series highlights add a 23rd dependency; Koin viewModelOf stops at 22.
+    // Explicit named injection stays compile-safe if the constructor changes.
+    viewModel {
+        SeriesViewModel(
+            seriesDao = get(),
+            highlightDatabase = get(),
+            catalogPriority = get(),
+            categoryDao = get(),
+            favoriteDao = get(),
+            historyDao = get(),
+            userDataWriter = get(),
+            progressDao = get(),
+            profileDao = get(),
+            sourceDao = get(),
+            seriesRepository = get(),
+            settings = get(),
+            customize = get(),
+            player = get(),
+            downloadManager = get(),
+            launcherIntegrationRepository = get(),
+            contentOrderDao = get(),
+            customCategoryDao = get(),
+            seriesSortOrderDao = get(),
+            metadata = get(),
+            externalPlayerLauncher = get(),
+            streamUrlResolver = get(),
+            subtitleController = get(),
+        )
+    }
     viewModelOf(::SearchViewModel)
     viewModelOf(::ProfilesViewModel)
     // Activity-scoped session state for the profile gate (configuration-only retention, no saved
