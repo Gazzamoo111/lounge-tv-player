@@ -25,6 +25,7 @@ import tv.own.owntv.features.shell.components.VodGroupOrganise
 import tv.own.owntv.features.shell.components.VodGroupWatch
 import tv.own.owntv.features.shell.components.VodHeader
 import tv.own.owntv.features.shell.components.VodHero
+import tv.own.owntv.features.shell.components.LoungeBrowseSpotlight
 import tv.own.owntv.features.shell.components.VodListRow
 import tv.own.owntv.features.shell.components.VodOptionsMenu
 import tv.own.owntv.features.shell.components.VodPosterArt
@@ -614,14 +615,10 @@ fun MoviesScreen(
         val screenW = maxWidth
         fun fx(px: Int) = screenW * (px / 1920f)
         if (cinematic) {
-            // Featured and New Releases are the primary entry experience in Movies.
-            // The old 464px title hero squeezed the catalogue viewport so hard that
-            // focusing large showcase cards scrolled their own headings off-screen.
-            // Keep the cinematic background/category header, but collapse the detail
-            // hero while the showcase is available. Full hero remains for searches
-            // and other screens without highlight rows.
+            // A pinned, readable hero stays above the scrolling highlight rails.
+            // 226px leaves room for a complete focused portrait card AND its heading.
             val showcaseActive = displayFeatured || displayNewReleases
-            val heroH = if (showcaseActive) 62.mpx
+            val heroH = if (showcaseActive) 226.mpx
                 else if (panelShares != null) maxHeight * (cinematicDetailsPct / 100f)
                 else 464.mpx
             val toolTop = 122.mpx + heroH
@@ -631,8 +628,9 @@ fun MoviesScreen(
                     section = stringResource(R.string.common_nav_movies), category = headerLabel, count = vodCount(false, count),
                     showChevron = true, modifier = Modifier.padding(start = fx(84), top = 52.mpx).width(fx(900)),
                 )
-                if (!showcaseActive) titleInfo?.let {
-                    VodHero(it, Modifier.padding(start = fx(84), top = 122.mpx).width(fx(1000)).height(heroH))
+                titleInfo?.let {
+                    val location = Modifier.padding(start = fx(84), top = 122.mpx).width(fx(1050)).height(heroH)
+                    if (showcaseActive) LoungeBrowseSpotlight(it, location) else VodHero(it, location)
                 }
                 Column(Modifier.padding(top = toolTop).fillMaxSize().then(paneModifier)) {
                     Row(
