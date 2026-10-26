@@ -763,21 +763,6 @@ fun MoviesScreen(
                         onSelect = { i -> if ((i == 1) != (viewMode == SettingsRepository.VodViewMode.LIST)) vm.toggleViewMode() },
                     )
                 }
-                // One independently scrollable, curated shelf before the complete paginated library.
-                // Only show it in the main All Movies browser, not in searches or pinned History/Favourites.
-                // The existing grid/list, categories, paging and playback remain unchanged.
-                if (showEditorialRail) {
-                    Spacer(Modifier.height(16.mpx))
-                    LoungeMoviesFeaturedRail(
-                        heading = stringResource(R.string.lounge_home_featured_movies),
-                        movies = homeEditorial.featuredMovies,
-                        displayNames = homeEditorial.featuredMovieNames,
-                        posterUrl = posterOf,
-                        onFocused = onMovieFocus,
-                        onPlay = startMovie,
-                    )
-                    Spacer(Modifier.height(10.mpx))
-                }
                 // The lists clip what is drawn outside them, which cut the focused card's glow: they are
                 // laid out [glowRoom] wider at each side and padded back by the same amount.
                 val glowRoom = 24.mpx
