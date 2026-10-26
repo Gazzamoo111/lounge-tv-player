@@ -86,6 +86,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 // Aliased: the grid and list versions share a name, and both are used in this file.
 import androidx.compose.foundation.lazy.grid.itemsIndexed as gridItemsIndexed
