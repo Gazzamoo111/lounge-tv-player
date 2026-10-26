@@ -53,25 +53,10 @@ STATUS=$?
 set -e
 echo "$RESULT"
 if [ "$STATUS" -ne 0 ]; then
-  case "$RESULT" in
-    *INSTALL_FAILED_UPDATE_INCOMPATIBLE*)
-      echo
-      echo "Existing eventqa was signed differently. Replacing it WILL ERASE"
-      echo "ONLY its saved trial/playlist/EPG data, not production Lounge TV."
-      printf 'To reset ONLY com.loungetv.player.recoveryqa type RESET-QA: '
-      read -r CONFIRM
-      if [ "$CONFIRM" != "RESET-QA" ]; then
-        echo "Cancelled safely. Nothing was removed."
-        exit 1
-      fi
-      adb -s "$TV" uninstall "$QA"
-      adb -s "$TV" install "$SIGNED"
-      ;;
-    *)
-      echo "Update failed. Your QA data was NOT deleted."
-      exit 1
-      ;;
-  esac
+  echo "STOP: Installation rejected. Nothing was uninstalled or deleted."
+  echo "Existing QA and production apps remain unchanged."
+  exit 1
 fi
+
 adb -s "$TV" shell monkey -p "$QA" 1
 echo "RECOVERY QA INSTALLED; PRODUCTION AND QA DATA PRESERVED"
