@@ -49,7 +49,7 @@ internal fun LoungeBrowseSpotlight(info: VodTitleInfo, modifier: Modifier = Modi
             )
         }
         VodMeta(
-            parts = listOfNotNull(info.year?.toString(), info.genres.take(2).takeIf { it.isNotEmpty() }?.joinToString(", "), info.runtimeSecs?.let { vodRuntime(it) }),
+            parts = listOfNotNull(info.year?.toString(), info.genres.firstOrNull(), info.runtimeSecs?.let { vodRuntime(it) }),
             rating = info.rating,
             tags = info.tags.take(2),
             size = 21,
