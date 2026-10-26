@@ -165,6 +165,20 @@ class OwnTVApp : Application(), SingletonImageLoader.Factory, androidx.work.Conf
                 prefs.applyStageDefaults()
             }
         }
+        // Refresh enabled provider catalogues while the TV app remains open for
+        // long sessions. Core checks the per-source 6/12-hour staleness setting,
+        // skips Off sources, and holds automatic WorkManager refreshes while playing.
+        // A check is cheap; it does not fetch a catalogue until one is stale.
+        appScope.launch {
+            while (true) {
+                kotlinx.coroutines.delay(60 * 60_000L)
+                runCatching {
+                    GlobalContext.get()
+                        .get<tv.own.owntv.core.sync.AutoRefresh>()
+                        .check(includeStartup = false)
+                }
+            }
+        }
         // Sports: core decides from Auto rebuild whether the stored board is due ("on every app start",
         // or older than the chosen hours). It reads one small file and touches no database.
         appScope.launch {
