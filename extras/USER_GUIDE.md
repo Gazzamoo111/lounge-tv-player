@@ -185,7 +185,11 @@ Hiding content changes what you see in your profile; it does **not** cancel your
 **Browsing tip:** When choosing a new Movies category, the list opens at the **top**, starting with Featured or New Releases. From the first card of either highlight row, press **Left** to return to the category menu.
 
 ### Series
-Open **Series**, choose a show, then choose the season and episode. When available, **Continue Watching** resumes from your saved position. Whether the next episode starts automatically depends on your playback setting.
+Open **Series**, choose a category and browse **Featured Series** and **New Series** at the top. Like Movies, these are horizontal highlights with a large cinematic hero above them; scrolling down reveals the complete series catalogue. The hero updates to describe the focused show. Featured selections change periodically, while New Series uses the show's original release year, not the date the provider added it.
+
+Press **Left** from the first featured show to return to Categories. Selecting a different category returns to its top highlights. Press **OK** on a show to open its seasons and episodes. When available, **Continue Watching** resumes from your saved position. Whether the next episode starts automatically depends on your playback setting.
+
+If a series or category is unwanted, use **More → Settings → Customise** to hide it. Hidden shows should not appear in the Featured or New Series rows; you can restore them through the same Settings area.
 
 ### Trailers
 A **Trailer** button appears only when a title has a trailer reference. Lounge TV tries the embedded YouTube player. If YouTube blocks the embed or your device's WebView cannot play it, the app can offer to open YouTube externally. Trailers are a separate feature from playing your subscription's movies and episodes.
