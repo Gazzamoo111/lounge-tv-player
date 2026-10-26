@@ -17,50 +17,51 @@ import androidx.tv.material3.Text
 import tv.own.owntv.ui.stage.StageTitleArt
 import tv.own.owntv.ui.theme.StageColors
 import tv.own.owntv.ui.theme.mpx
+import tv.own.owntv.ui.theme.mpxSp
 import tv.own.owntv.ui.theme.stageText
 
 /**
  * Shared Movies / Series TV spotlight: left-side title or TMDB logo, concise metadata
  * and synopsis. The existing VodCinematicBackdrop displays wide artwork to the right.
- * Fits within the shorter spotlight so shelves keep their labels while focused.
+ * Designed for a 350px hero, keeping title, facts and synopsis legible at TV distance.
  */
 @Composable
 internal fun LoungeBrowseSpotlight(info: VodTitleInfo, modifier: Modifier = Modifier) {
     var logoFailed by remember(info.logoUrl) { mutableStateOf(false) }
     Column(
-        modifier = modifier.padding(top = 8.mpx),
-        verticalArrangement = Arrangement.spacedBy(9.mpx),
+        modifier = modifier.padding(top = 12.mpx),
+        verticalArrangement = Arrangement.spacedBy(15.mpx),
     ) {
         if (!info.logoUrl.isNullOrBlank() && !logoFailed) {
             StageTitleArt(
                 url = info.logoUrl,
                 contentDescription = null,
-                modifier = Modifier.width(570.mpx).height(90.mpx),
+                modifier = Modifier.width(720.mpx).height(126.mpx),
                 onFailed = { logoFailed = true },
             )
         } else {
             Text(
                 text = info.title,
-                style = stageText(46, 800),
+                style = stageText(68, 800).copy(lineHeight = 70.mpxSp),
                 color = StageColors.Text,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
         }
         VodMeta(
-            parts = listOfNotNull(info.year?.toString(), info.genres.firstOrNull()),
+            parts = listOfNotNull(info.year?.toString(), info.genres.take(2).takeIf { it.isNotEmpty() }?.joinToString(", "), info.runtimeSecs?.let { vodRuntime(it) }),
             rating = info.rating,
             tags = info.tags.take(2),
-            size = 17,
+            size = 21,
         )
         info.plot?.takeIf(String::isNotBlank)?.let { plot ->
             Text(
                 text = plot,
-                style = stageText(18, 400),
+                style = stageText(23, 400).copy(lineHeight = 33.mpxSp),
                 color = StageColors.Body,
-                maxLines = 2,
+                maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.width(780.mpx),
+                modifier = Modifier.width(850.mpx),
             )
         }
     }
