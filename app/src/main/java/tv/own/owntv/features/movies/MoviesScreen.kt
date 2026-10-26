@@ -144,6 +144,9 @@ fun MoviesScreen(
     onEntryHook: (((() -> Boolean)?) -> Unit)? = null,
 ) {
     val vm: MovieViewModel = koinViewModel()
+    // Reuse the established Home editorial picks. No extra provider fetch or catalogue filter.
+    val homeVm: tv.own.owntv.features.home.HomeViewModel = koinViewModel()
+    val homeEditorial by homeVm.uiState.collectAsStateWithLifecycle()
     // Locking and unlocking are one pair: the pin belongs to this screen's lifetime, not to the view
     // model's. On the television that view model is a single instance shared with the browse section,
     // so a pin left behind froze its category rail. `DisposableEffect` (not `LaunchedEffect`) also
@@ -709,6 +712,21 @@ fun MoviesScreen(
                         icons = listOf(OwnTVIcon.GRID, OwnTVIcon.LIST),
                         onSelect = { i -> if ((i == 1) != (viewMode == SettingsRepository.VodViewMode.LIST)) vm.toggleViewMode() },
                     )
+                }
+                // One independently scrollable, curated shelf before the complete paginated library.
+                // Only show it in the main All Movies browser, not in searches or pinned History/Favourites.
+                // The existing grid/list, categories, paging and playback remain unchanged.
+                if (!locked && selectedKey == LiveKey.All && searchQuery.isBlank() && homeEditorial.featuredMovies.isNotEmpty()) {
+                    Spacer(Modifier.height(16.mpx))
+                    LoungeMoviesFeaturedRail(
+                        heading = stringResource(R.string.lounge_home_featured_movies),
+                        movies = homeEditorial.featuredMovies,
+                        displayNames = homeEditorial.featuredMovieNames,
+                        posterUrl = posterOf,
+                        onFocused = onMovieFocus,
+                        onPlay = startMovie,
+                    )
+                    Spacer(Modifier.height(10.mpx))
                 }
                 // The lists clip what is drawn outside them, which cut the focused card's glow: they are
                 // laid out [glowRoom] wider at each side and padded back by the same amount.
