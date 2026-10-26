@@ -314,7 +314,9 @@ private fun SeriesGrid(
     val newShows = highlights?.newReleases.orEmpty()
     val displayFeatured = lockedKey == null && searchQuery.isBlank() && featuredShows.isNotEmpty()
     val displayNewReleases = lockedKey == null && searchQuery.isBlank() && newShows.isNotEmpty()
-    val headerRowCount = (if (displayFeatured) 1 else 0) + (if (displayNewReleases) 1 else 0)
+    val editorialRowCount = (if (displayFeatured) 1 else 0) + (if (displayNewReleases) 1 else 0)
+    val showCatalogueHeading = editorialRowCount > 0 && series.itemCount > 0
+    val headerRowCount = editorialRowCount + (if (showCatalogueHeading) 1 else 0)
     val gridHeaderOffset = if (viewMode == SettingsRepository.VodViewMode.GRID) headerRowCount else 0
     val listHeaderOffset = if (viewMode == SettingsRepository.VodViewMode.LIST) headerRowCount else 0
     val chNavEnabled by settingsVm.chNavEnabled.collectAsStateWithLifecycle()
@@ -668,7 +670,7 @@ private fun SeriesGrid(
         fun fx(px: Int) = screenW * (px / 1920f)
         if (cinematic) {
             val showcaseActive = displayFeatured || displayNewReleases
-            val heroH = if (showcaseActive) 226.mpx
+            val heroH = if (showcaseActive) minOf(maxHeight * 0.325f, 350.mpx)
                 else if (panelShares != null) maxHeight * (cinematicDetailsPct / 100f)
                 else 464.mpx
             val toolTop = 122.mpx + heroH
@@ -752,6 +754,16 @@ private fun SeriesGrid(
                                                 firstCardFocusRequester = firstNewReleaseFocus,
                                             )
                                         }
+                                    }
+                                }
+                                if (showCatalogueHeading) {
+                                    item(key = Long.MIN_VALUE + 2L, span = { GridItemSpan(maxLineSpan) }, contentType = 3) {
+                                        Text(
+                                            text = stringResource(R.string.content_category_all_series),
+                                            style = stageText(27, 800),
+                                            color = StageColors.Text,
+                                            modifier = Modifier.fillMaxWidth().padding(top = 32.mpx, bottom = 16.mpx),
+                                        )
                                     }
                                 }
                                 items(count = series.itemCount, key = series.itemKey { it.id }, contentType = series.itemContentType { "series" }) { index ->
@@ -900,6 +912,16 @@ private fun SeriesGrid(
                                     }
                                 }
                             }
+                            if (showCatalogueHeading) {
+                                item(key = Long.MIN_VALUE + 2L, contentType = 3) {
+                                    Text(
+                                        text = stringResource(R.string.content_category_all_series),
+                                        style = stageText(27, 800),
+                                        color = StageColors.Text,
+                                        modifier = Modifier.fillMaxWidth().padding(top = 32.mpx, bottom = 16.mpx),
+                                    )
+                                }
+                            }
                             items(count = series.itemCount, key = series.itemKey { it.id }, contentType = series.itemContentType { "series" }) { index ->
                                 val show = series[index] ?: return@items
                                 VodListRow(
@@ -980,6 +1002,16 @@ private fun SeriesGrid(
                                             firstCardFocusRequester = firstNewReleaseFocus,
                                         )
                                     }
+                                }
+                            }
+                            if (showCatalogueHeading) {
+                                item(key = Long.MIN_VALUE + 2L, span = { GridItemSpan(maxLineSpan) }, contentType = 3) {
+                                    Text(
+                                        text = stringResource(R.string.content_category_all_series),
+                                        style = stageText(27, 800),
+                                        color = StageColors.Text,
+                                        modifier = Modifier.fillMaxWidth().padding(top = 32.mpx, bottom = 16.mpx),
+                                    )
                                 }
                             }
                             items(count = series.itemCount, key = series.itemKey { it.id }, contentType = series.itemContentType { "series" }) { index ->
