@@ -29,6 +29,27 @@ class MoviesHighlightsGuardrailsTest(unittest.TestCase):
         self.assertIn("scrollToItem(i + gridHeaderOffset)", screen)
         self.assertIn("it - gridHeaderOffset else it - listHeaderOffset", screen)
 
+    def test_large_highlight_artwork_is_contained(self):
+        shelf = (MOVIES / "LoungeMoviesFeaturedRail.kt").read_text()
+        self.assertIn("ContentScale.Fit", shelf)
+        self.assertIn("Modifier.fillMaxSize()", shelf)
+        self.assertNotIn("VodPosterArt(", shelf)
+
+    def test_sidebar_category_entry_returns_to_highlight_rows(self):
+        screen = (MOVIES / "MoviesScreen.kt").read_text()
+        self.assertIn("pendingCategoryFocus = item.key", screen)
+        self.assertIn("categoryHighlights.categoryKey != selectedKey", screen)
+        self.assertIn("effectiveGridState.scrollToItem(0)", screen)
+        self.assertIn("effectiveListState.scrollToItem(0)", screen)
+        self.assertIn("firstFeaturedFocus", screen)
+        self.assertIn("firstNewReleaseFocus", screen)
+        self.assertEqual(screen.count("onLeftFromFirstCard ="), 6)
+
+    def test_guide_explains_hide_and_restore(self):
+        guide = (ROOT / "extras/USER_GUIDE.md").read_text()
+        self.assertIn("Settings → Customise", guide)
+        self.assertIn("restore or unhide", guide)
+
     def test_editorial_rotation_and_recent_years_are_read_only(self):
         reader = (MOVIES / "MovieCategoryHighlights.kt").read_text()
         model = (MOVIES / "MovieViewModel.kt").read_text()
