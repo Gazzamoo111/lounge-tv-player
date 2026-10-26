@@ -94,6 +94,7 @@ import androidx.paging.compose.itemKey
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 import tv.own.owntv.features.live.LiveRailItem
 import tv.own.owntv.features.live.displayLabel
 import org.koin.androidx.compose.koinViewModel
@@ -216,6 +217,7 @@ fun MoviesScreen(
     val movieProgress by vm.movieProgress.collectAsStateWithLifecycle()
     val downloadStates by vm.downloadStates.collectAsStateWithLifecycle()
     val movies = vm.movies.collectAsLazyPagingItems()
+    val categoryHighlights by vm.categoryHighlights.collectAsStateWithLifecycle()
     val resumeMode by vm.resumeMode.collectAsStateWithLifecycle()
     // Global external-player toggle: never mount the fullscreen in-app player (it spins up mpv)
     // when playback is handed to an external app.
@@ -257,10 +259,19 @@ fun MoviesScreen(
     // Cinematic is grid-only: the List rows have nowhere to put a full-bleed backdrop. The stored
     // choice is deliberately not rewritten, so switching back to Separate restores the user's List.
     val viewMode = if (cinematic) SettingsRepository.VodViewMode.GRID else storedViewMode
-    val showEditorialRail = lockedKey == null && selectedKey == LiveKey.All && searchQuery.isBlank() && homeEditorial.featuredMovies.isNotEmpty()
-    // A full-width featured grid item adds one index only in the Cinematic layout.
-    // Convert movie positions at the boundary so paging, focus restore and CH navigation still work.
-    val cinematicHeaderOffset = if (cinematic && showEditorialRail) 1 else 0
+    val highlights = categoryHighlights.takeIf { it.categoryKey == selectedKey }
+    val categoryFeatured = highlights?.featured.orEmpty()
+    val allMoviesEditorial = if (selectedKey == LiveKey.All) {
+        val day = highlights?.day ?: System.currentTimeMillis() / 86_400_000L
+        val famous = homeEditorial.featuredMovies.shuffled(Random(day.toInt())).take(8)
+        (famous + categoryFeatured).distinctBy { it.id }.take(20)
+    } else categoryFeatured
+    val newMovies = highlights?.newReleases.orEmpty()
+    val displayFeatured = lockedKey == null && searchQuery.isBlank() && allMoviesEditorial.isNotEmpty()
+    val displayNewReleases = lockedKey == null && searchQuery.isBlank() && newMovies.isNotEmpty()
+    val headerRowCount = (if (displayFeatured) 1 else 0) + (if (displayNewReleases) 1 else 0)
+    val gridHeaderOffset = if (viewMode == SettingsRepository.VodViewMode.GRID) headerRowCount else 0
+    val listHeaderOffset = if (viewMode == SettingsRepository.VodViewMode.LIST) headerRowCount else 0
     val chNavEnabled by settingsVm.chNavEnabled.collectAsStateWithLifecycle()
     val chNavUpSkip by settingsVm.chNavUpSkip.collectAsStateWithLifecycle()
     val chNavDownSkip by settingsVm.chNavDownSkip.collectAsStateWithLifecycle()
