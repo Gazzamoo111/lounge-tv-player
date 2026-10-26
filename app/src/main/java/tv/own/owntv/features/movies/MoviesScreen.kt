@@ -630,7 +630,7 @@ fun MoviesScreen(
                                 // Featured shelf travels with the catalogue grid rather than consuming
                                 // permanent screen height beneath the hero. D-pad Down browses the full library.
                                 if (showEditorialRail) {
-                                    item(key = "lounge-featured-movies", span = { GridItemSpan(maxLineSpan) }, contentType = "featured-rail") {
+                                    item(key = Long.MIN_VALUE, span = { GridItemSpan(maxLineSpan) }, contentType = 1) {
                                         Box(Modifier.fillMaxWidth().padding(vertical = 14.mpx)) {
                                             LoungeMoviesFeaturedRail(
                                                 heading = stringResource(R.string.lounge_home_featured_movies),
