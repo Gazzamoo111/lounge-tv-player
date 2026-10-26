@@ -614,7 +614,16 @@ fun MoviesScreen(
         val screenW = maxWidth
         fun fx(px: Int) = screenW * (px / 1920f)
         if (cinematic) {
-            val heroH = if (panelShares != null) maxHeight * (cinematicDetailsPct / 100f) else 464.mpx
+            // Featured and New Releases are the primary entry experience in Movies.
+            // The old 464px title hero squeezed the catalogue viewport so hard that
+            // focusing large showcase cards scrolled their own headings off-screen.
+            // Keep the cinematic background/category header, but collapse the detail
+            // hero while the showcase is available. Full hero remains for searches
+            // and other screens without highlight rows.
+            val showcaseActive = displayFeatured || displayNewReleases
+            val heroH = if (showcaseActive) 62.mpx
+                else if (panelShares != null) maxHeight * (cinematicDetailsPct / 100f)
+                else 464.mpx
             val toolTop = 122.mpx + heroH
             Box(Modifier.fillMaxSize().then(if (categoriesOpen) Modifier.graphicsLayer { alpha = 0.36f } else Modifier)) {
                 VodCinematicBackdrop(titleInfo?.backdropUrl, series = false, Modifier.align(Alignment.TopEnd))
@@ -622,7 +631,9 @@ fun MoviesScreen(
                     section = stringResource(R.string.common_nav_movies), category = headerLabel, count = vodCount(false, count),
                     showChevron = true, modifier = Modifier.padding(start = fx(84), top = 52.mpx).width(fx(900)),
                 )
-                titleInfo?.let { VodHero(it, Modifier.padding(start = fx(84), top = 122.mpx).width(fx(1000)).height(heroH)) }
+                if (!showcaseActive) titleInfo?.let {
+                    VodHero(it, Modifier.padding(start = fx(84), top = 122.mpx).width(fx(1000)).height(heroH))
+                }
                 Column(Modifier.padding(top = toolTop).fillMaxSize().then(paneModifier)) {
                     Row(
                         Modifier.padding(start = fx(68), end = fx(64)).fillMaxWidth()
