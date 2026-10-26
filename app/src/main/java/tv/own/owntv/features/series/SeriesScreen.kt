@@ -547,7 +547,7 @@ private fun SeriesGrid(
     // Prefer verified TMDB artwork to provider posters when enrichment is enabled.
     val posterOf: (tv.own.owntv.core.database.entity.SeriesEntity) -> String? = { show ->
         val focusedArt = selectedSeriesMeta?.takeIf { it.seriesId == show.id }?.cache?.posterPath
-            ?.let(tv.own.owntv.core.metadata.MetadataImages::poster)
+            ?.let { tv.own.owntv.core.metadata.MetadataImages.poster(it) }
         (if (metadataMode.enrich) focusedArt ?: cachedPosters[show.id] else null)
             ?: show.posterUrl?.takeIf { it.isNotBlank() }
     }
