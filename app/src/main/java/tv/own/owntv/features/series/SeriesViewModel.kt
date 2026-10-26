@@ -114,8 +114,9 @@ class SeriesViewModel(
     /** Ensure approved titles from restricted or foreign provider folders cannot be played. */
     private suspend fun allowsCuratedSeries(show: SeriesEntity): Boolean =
         LoungeVodPolicy.allowsSeries(show) &&
-            (show.categoryId == null ||
-                categoryDao.getById(show.categoryId)?.let { !LoungeVodPolicy.excludesCategory(it.name) } == true)
+            (show.categoryId?.let { categoryId ->
+                categoryDao.getById(categoryId)?.let { !LoungeVodPolicy.excludesCategory(it.name) } == true
+            } ?: true)
 
     /** The categories' search text, held here so it survives the player (see LiveViewModel). */
     private val _categoryQuery = kotlinx.coroutines.flow.MutableStateFlow("")
