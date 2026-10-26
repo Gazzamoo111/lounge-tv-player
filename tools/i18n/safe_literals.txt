@@ -155,6 +155,7 @@
 3	empty	app/src/main/java/tv/own/owntv/features/live/LiveStage.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveStage.kt	Mbps
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveStage.kt	__search__
+1	technical	app/src/main/java/tv/own/owntv/features/live/LiveStage.kt	__section_${section.name}
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveStage.kt	tnum
 2	technical	app/src/main/java/tv/own/owntv/features/live/LiveStage.kt	·
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveStage.kt	· $left
