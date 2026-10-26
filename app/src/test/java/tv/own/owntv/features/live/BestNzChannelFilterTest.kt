@@ -66,6 +66,10 @@ class BestNzChannelFilterTest {
         assertTrue(isUnwantedNzRailCategory("New Zealand"))
         assertFalse(isUnwantedNzRailCategory("NZ RAW"))
         assertFalse(isUnwantedNzRailCategory("Sky Sport HD"))
+        assertFalse(isUnwantedNzRailCategory("NZ | Sky Sport HD"))
+        assertFalse(isUnwantedNzRailCategory("NZ | Sky Sport RAW"))
+        assertFalse(isUnwantedNzRailCategory("NZ Sky Sport"))
+        assertFalse(isUnwantedNzRailCategory("New Zealand"))
         assertTrue(shouldHideBestNzCategory(SourceType.XTREAM, "NZ Sky Sport"))
     }
 

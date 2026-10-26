@@ -610,61 +610,47 @@ class LiveViewModel(
                 // A–Z also sorts the category folders (custom categories included); manually moved
                 // categories stay pinned first. Custom categories ride the SAME customization keys,
                 // so renames/hides/reorders apply to them with no extra code.
-                // Do not infer categories from a channel name: that previously exposed
-                // generic "New Zealand" and "NZ Sky Sport" folders.
-                val visible = cats.railCategories(
+                // Only one NZ category is unwanted. Keep the provider's Sky Sport
+                // RAW and HD folders with their ORIGINAL names and IDs. Never
+                // guess their identity or relabel one as the other.
+                val normalFolders = cats.railCategories(
                     cust,
                     kids = profile?.isKids == true,
                     alphaRest = sort == SettingsRepository.SortMode.ALPHA,
                 )
-                val categoriesById = cats.associateBy { it.id }
-                val multiSourceNames = c.sourceNames.takeIf { it.size > 1 }.orEmpty()
-
-                // Restore only the two approved BEST categories, even if a past profile
-                // customisation hid them. Retain their real provider category IDs.
-                // Nothing is changed in the database, playlist or saved favourites.
-                val preferredSportGroups = if (profile?.isKids == true) emptyList() else
-                    listOf(BestNzSkyGroup.RAW, BestNzSkyGroup.HD).mapNotNull { group ->
-                        val matches = cats.filter { cat ->
-                            bestNzSkyGroup(sourceById[cat.sourceId]?.type, cat.name) == group
-                        }
-                        val chosen = matches.firstOrNull { cat ->
-                            visible.any { it.categoryId == cat.id }
-                        } ?: matches.firstOrNull()
-                        chosen?.let { category ->
-                            val key = CustomizeKeys.category(category)
-                            tv.own.owntv.core.customize.CustomizedCategory(
-                                key = key,
-                                displayName = appContext.getString(
-                                    if (group == BestNzSkyGroup.RAW)
-                                        tv.own.owntv.R.string.lounge_nz_sky_raw_group
-                                    else tv.own.owntv.R.string.lounge_nz_sky_hd_group,
-                                ),
-                                categoryId = category.id,
-                            )
-                        }
+                val byId = cats.associateBy { it.id }
+                val existingIds = normalFolders.mapNotNullTo(hashSetOf()) { it.categoryId }
+                // Restore previously hidden NZ Sky Sport folders without renaming:
+                // settings may have hidden them during an earlier broken release.
+                val missingSky = if (profile?.isKids == true) emptyList() else cats
+                    .filter { cat ->
+                        cat.id !in existingIds &&
+                            isAllowedBestNzSportsCategory(sourceById[cat.sourceId]?.type, cat.name) &&
+                            !isUnwantedNzRailCategory(cat.name)
                     }
-
-                // Preserve the independent working NZ playlist, except the explicitly
-                // unwanted "NZ New Zealand" sidebar folder. Keep all unrelated regions
-                // and user-created folders as before.
+                    .map { cat ->
+                        val key = CustomizeKeys.category(cat)
+                        tv.own.owntv.core.customize.CustomizedCategory(
+                            key = key,
+                            displayName = cust.categoryNames[key] ?: cat.name,
+                            categoryId = cat.id,
+                        )
+                    }
                 val nzIds = cats.filter { category ->
                     sourceById[category.sourceId]?.let { source ->
                         source.type == SourceType.M3U &&
                             source.url.contains(NZ_FREEVIEW_PATH, ignoreCase = true)
                     } == true
                 }.mapTo(hashSetOf()) { it.id }
-                val remaining = visible.filterNot { entry ->
-                    entry.categoryId?.let(categoriesById::get)?.let { category ->
-                        val providerType = sourceById[category.sourceId]?.type
-                        bestNzSkyGroup(providerType, category.name) != null ||
-                            shouldHideBestNzCategory(providerType, category.name) ||
-                            isUnwantedNzRailCategory(category.name)
+                val allowedFolders = (normalFolders + missingSky).filterNot { entry ->
+                    entry.categoryId?.let(byId::get)?.let { category ->
+                        isUnwantedNzRailCategory(category.name)
                     } == true
                 }
-                val independentNz = remaining.filter { it.categoryId in nzIds }
-                val displayFolders = independentNz + preferredSportGroups +
-                    remaining.filterNot { it.categoryId in nzIds }
+                val firstNz = allowedFolders.filter { it.categoryId in nzIds }
+                val displayFolders = firstNz + allowedFolders.filterNot { it.categoryId in nzIds }
+                val categoriesById = byId
+                val multiSourceNames = c.sourceNames.takeIf { it.size > 1 }.orEmpty()
                 railWithCatchup(catchupCount > 0) + displayFolders.map { e ->
                     LiveRailItem(
                         key = e.categoryId?.let { LiveKey.Folder(it) } ?: LiveKey.Custom(e.customId!!),
@@ -2268,11 +2254,10 @@ internal fun bestNzSkyGroup(sourceType: SourceType?, categoryName: String): Best
     }
 }
 
-/** Hide the generic NZ/New Zealand category even if it is an M3U source.
- *  Channels remain available through All Channels; only this sidebar item goes. */
+/** Hide only the explicit "NZ | New Zealand" folder from the sidebar. */
 internal fun isUnwantedNzRailCategory(name: String): Boolean {
     val compact = name.lowercase().filter { it.isLetterOrDigit() }
-    return compact == "nznewzealand" || compact == "newzealand"
+    return compact == "nznewzealand"
 }
 
 internal fun isAllowedBestNzSportsCategory(sourceType: SourceType?, name: String): Boolean =
