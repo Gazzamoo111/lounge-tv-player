@@ -108,8 +108,9 @@ class MovieViewModel(
     /** Check the provider folder as well as the title before direct playback/download. */
     private suspend fun allowsCuratedMovie(movie: MovieEntity): Boolean =
         LoungeVodPolicy.allowsMovie(movie) &&
-            (movie.categoryId == null ||
-                categoryDao.getById(movie.categoryId)?.let { !LoungeVodPolicy.excludesCategory(it.name) } == true)
+            (movie.categoryId?.let { categoryId ->
+                categoryDao.getById(categoryId)?.let { !LoungeVodPolicy.excludesCategory(it.name) } == true
+            } ?: true)
 
     /** The categories' search text, held here so it survives the player (see LiveViewModel). */
     private val _categoryQuery = kotlinx.coroutines.flow.MutableStateFlow("")
