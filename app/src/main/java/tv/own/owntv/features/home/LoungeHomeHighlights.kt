@@ -1,5 +1,6 @@
 package tv.own.owntv.features.home
 
+import tv.own.owntv.features.vod.LoungeVodPolicy
 import android.content.Context
 import kotlinx.coroutines.flow.first
 import tv.own.owntv.R
@@ -56,6 +57,7 @@ internal class LoungeHomeHighlightsReader(
             key = { item: MovieEntity -> titleKey(item.canonicalTitle.ifBlank { item.name }) },
             valid = { item: MovieEntity ->
                 item.posterUrl?.isNotBlank() == true &&
+                    LoungeVodPolicy.allowsMovie(item) &&
                     movieVisibility.allows(item.categoryId, CustomizeKeys.movie(item))
             },
             quality = { item: MovieEntity -> item.qualityRank },
@@ -66,6 +68,7 @@ internal class LoungeHomeHighlightsReader(
             key = { item: SeriesEntity -> titleKey(item.canonicalTitle.ifBlank { item.name }) },
             valid = { item: SeriesEntity ->
                 item.posterUrl?.isNotBlank() == true &&
+                    LoungeVodPolicy.allowsSeries(item) &&
                     seriesVisibility.allows(item.categoryId, CustomizeKeys.series(item))
             },
             quality = { item: SeriesEntity -> item.qualityRank },
@@ -91,7 +94,8 @@ internal class LoungeHomeHighlightsReader(
             categories.observe(sourceIds, type).first(),
             customization.hiddenCategories,
             kids,
-        )
+        ) + categories.observe(sourceIds, type).first()
+            .filter { LoungeVodPolicy.excludesCategory(it.name) }.mapTo(hashSetOf()) { it.id }
         return Visibility(hiddenCategories, customization.hiddenItems.keys)
     }
 
