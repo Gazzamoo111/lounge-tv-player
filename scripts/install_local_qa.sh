@@ -8,11 +8,11 @@ set -euo pipefail
 RUN="${1:?Pass the successful GitHub Actions run ID}"
 TV="${2:-192.168.68.50:5555}"
 REPO="Gazzamoo111/lounge-tv-player"
-QA="com.loungetv.player.eventqa"
+QA="com.loungetv.player.recoveryqa"
 SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}"
-KEY="$HOME/.android/lounge-tv-eventqa-debug.keystore"
-ALIAS="loungetv-eventqa"
-DEST="$(mktemp -d "$HOME/Downloads/LoungeTV-RecoveryQA-XXXXXX")"
+KEY="$HOME/.android/lounge-tv-recoveryqa-debug.keystore"
+ALIAS="loungetv-recoveryqa"
+DEST="$(mktemp -d "$HOME/Downloads/LoungeTV-SideBySide-XXXXXX")"
 
 command -v gh >/dev/null || { echo "GitHub CLI (gh) not found"; exit 1; }
 command -v adb >/dev/null || { echo "Android adb not found"; exit 1; }
@@ -23,7 +23,7 @@ APKSIGNER="$(find "$SDK/build-tools" -maxdepth 2 -type f -name apksigner -print 
 echo "=== VERIFY GITHUB RUN ==="
 test "$(gh run view "$RUN" -R "$REPO" --json conclusion -q '.conclusion')" = success ||
   { echo "Refusing an unverified/failed QA run"; exit 1; }
-gh run download "$RUN" -R "$REPO" -n lounge-tv-eventqa-preflight -D "$DEST"
+gh run download "$RUN" -R "$REPO" -n lounge-tv-recoveryqa-preflight -D "$DEST"
 APK="$(find "$DEST" -type f -name '*.apk' -print -quit)"
 [ -s "$APK" ] || { echo "No QA APK in artifact"; exit 1; }
 
@@ -32,7 +32,7 @@ if [ ! -s "$KEY" ]; then
   mkdir -p "$(dirname "$KEY")"
   keytool -genkeypair -noprompt -keystore "$KEY" -storepass android -keypass android \
     -alias "$ALIAS" -keyalg RSA -keysize 3072 -validity 10000 \
-    -dname "CN=Lounge TV Event QA, O=Local Testing, C=NZ"
+    -dname "CN=Lounge TV Recovery QA, O=Local Testing, C=NZ"
   chmod 600 "$KEY"
 fi
 
@@ -58,7 +58,7 @@ if [ "$STATUS" -ne 0 ]; then
       echo
       echo "Existing eventqa was signed differently. Replacing it WILL ERASE"
       echo "ONLY its saved trial/playlist/EPG data, not production Lounge TV."
-      printf 'To reset ONLY com.loungetv.player.eventqa type RESET-QA: '
+      printf 'To reset ONLY com.loungetv.player.recoveryqa type RESET-QA: '
       read -r CONFIRM
       if [ "$CONFIRM" != "RESET-QA" ]; then
         echo "Cancelled safely. Nothing was removed."

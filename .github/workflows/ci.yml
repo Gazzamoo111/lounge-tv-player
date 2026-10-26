@@ -87,8 +87,8 @@ jobs:
             APK_ID=$(printf '%s' "$APK_BADGING" | sed -n '1p')
             echo "Built APK identity: $APK_ID"
             case "$APK_ID" in
-              "package: name='com.loungetv.player.eventqa' versionCode='$VERSION_CODE' "*) ;;
-              *) echo "Expected isolated eventqa package, got: $APK_ID"; exit 1 ;;
+              "package: name='com.loungetv.player.recoveryqa' versionCode='$VERSION_CODE' "*) ;;
+              *) echo "Expected isolated recoveryqa package, got: $APK_ID"; exit 1 ;;
             esac
             "$APKSIGNER" verify "$QA_APK"
           else
@@ -100,6 +100,6 @@ jobs:
       - name: Upload test APK
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event_name == 'pull_request' && 'lounge-tv-eventqa-preflight' || 'lounge-tv-qa' }}
+          name: ${{ github.event_name == 'pull_request' && 'lounge-tv-recoveryqa-preflight' || 'lounge-tv-qa' }}
           path: app/build/outputs/apk/standard/debug/*.apk
           if-no-files-found: error
