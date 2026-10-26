@@ -734,7 +734,7 @@ private fun SeriesGrid(
                                 modifier = Modifier.fillMaxWidth().weight(1f),
                             ) {
                                 if (displayFeatured) {
-                                    item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = "section-heading") {
+                                    item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
                                         Text(
                                             text = stringResource(R.string.lounge_series_featured),
                                             style = stageText(28, 800),
@@ -745,7 +745,7 @@ private fun SeriesGrid(
                                     items(
                                         count = featuredPreview.size,
                                         key = { index -> Long.MIN_VALUE + 100L + index.toLong() },
-                                        contentType = { "featured-poster" },
+                                        contentType = { 11 },
                                     ) { index ->
                                         val show = featuredPreview[index]
                                         LoungeSeriesEditorialPoster(
@@ -763,7 +763,7 @@ private fun SeriesGrid(
                                     }
                                 }
                                 if (displayNewReleases) {
-                                    item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = "section-heading") {
+                                    item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
                                         Text(
                                             text = stringResource(R.string.lounge_series_new_releases),
                                             style = stageText(28, 800),
@@ -774,7 +774,7 @@ private fun SeriesGrid(
                                     items(
                                         count = newPreview.size,
                                         key = { index -> Long.MIN_VALUE + 200L + index.toLong() },
-                                        contentType = { "new-poster" },
+                                        contentType = { 12 },
                                     ) { index ->
                                         val show = newPreview[index]
                                         LoungeSeriesEditorialPoster(
@@ -977,7 +977,7 @@ private fun SeriesGrid(
                             modifier = Modifier.fillMaxWidth().weight(1f).then(glowWide),
                         ) {
                             if (displayFeatured) {
-                                item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = "section-heading") {
+                                item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
                                     Text(
                                         text = stringResource(R.string.lounge_series_featured),
                                         style = stageText(28, 800),
@@ -988,7 +988,7 @@ private fun SeriesGrid(
                                 items(
                                     count = featuredPreview.size,
                                     key = { index -> Long.MIN_VALUE + 100L + index.toLong() },
-                                    contentType = { "featured-poster" },
+                                    contentType = { 11 },
                                 ) { index ->
                                     val show = featuredPreview[index]
                                     LoungeSeriesEditorialPoster(
@@ -1006,7 +1006,7 @@ private fun SeriesGrid(
                                 }
                             }
                             if (displayNewReleases) {
-                                item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = "section-heading") {
+                                item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
                                     Text(
                                         text = stringResource(R.string.lounge_series_new_releases),
                                         style = stageText(28, 800),
@@ -1017,7 +1017,7 @@ private fun SeriesGrid(
                                 items(
                                     count = newPreview.size,
                                     key = { index -> Long.MIN_VALUE + 200L + index.toLong() },
-                                    contentType = { "new-poster" },
+                                    contentType = { 12 },
                                 ) { index ->
                                     val show = newPreview[index]
                                     LoungeSeriesEditorialPoster(
