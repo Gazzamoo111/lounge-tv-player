@@ -7,6 +7,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.tv.material3.Text
@@ -22,15 +26,17 @@ import tv.own.owntv.ui.theme.stageText
  */
 @Composable
 internal fun LoungeBrowseSpotlight(info: VodTitleInfo, modifier: Modifier = Modifier) {
+    var logoFailed by remember(info.logoUrl) { mutableStateOf(false) }
     Column(
         modifier = modifier.padding(top = 8.mpx),
         verticalArrangement = Arrangement.spacedBy(9.mpx),
     ) {
-        if (!info.logoUrl.isNullOrBlank()) {
+        if (!info.logoUrl.isNullOrBlank() && !logoFailed) {
             StageTitleArt(
                 url = info.logoUrl,
                 contentDescription = null,
                 modifier = Modifier.width(570.mpx).height(90.mpx),
+                onFailed = { logoFailed = true },
             )
         } else {
             Text(
