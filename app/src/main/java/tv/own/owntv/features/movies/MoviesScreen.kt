@@ -864,6 +864,34 @@ fun MoviesScreen(
                             contentPadding = PaddingValues(start = glowRoom, end = glowRoom, top = 12.mpx, bottom = 24.mpx),
                             modifier = Modifier.fillMaxWidth().weight(1f).then(glowWide),
                         ) {
+                            if (displayFeatured) {
+                                item(key = Long.MIN_VALUE, span = { GridItemSpan(maxLineSpan) }, contentType = 1) {
+                                    Box(Modifier.fillMaxWidth().padding(vertical = 10.mpx)) {
+                                        LoungeMoviesFeaturedRail(
+                                            heading = stringResource(R.string.lounge_home_featured_movies),
+                                            movies = allMoviesEditorial,
+                                            displayNames = homeEditorial.featuredMovieNames,
+                                            posterUrl = posterOf,
+                                            onFocused = onMovieFocus,
+                                            onPlay = startMovie,
+                                        )
+                                    }
+                                }
+                            }
+                            if (displayNewReleases) {
+                                item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = 2) {
+                                    Box(Modifier.fillMaxWidth().padding(vertical = 10.mpx)) {
+                                        LoungeMoviesFeaturedRail(
+                                            heading = stringResource(R.string.lounge_movies_new_releases),
+                                            movies = newMovies,
+                                            displayNames = emptyMap(),
+                                            posterUrl = posterOf,
+                                            onFocused = onMovieFocus,
+                                            onPlay = startMovie,
+                                        )
+                                    }
+                                }
+                            }
                             items(count = movies.itemCount, key = movies.itemKey { it.id }, contentType = movies.itemContentType { "movie" }) { index ->
                                 val movie = movies[index] ?: return@items
                                 val prog = movieProgress[movie.id]
