@@ -776,6 +776,7 @@ class MovieViewModel(
 
     suspend fun playByIdAsync(movieId: Long, startPositionMs: Long = 0): Boolean {
         val movie = movieDao.getById(movieId) ?: return false
+        if (!LoungeVodPolicy.allowsMovie(movie)) return false
         play(movie, startPositionMs)
         return true
     }
@@ -789,7 +790,7 @@ class MovieViewModel(
     fun download(movie: MovieEntity) {
         viewModelScope.launch {
             val pid = currentProfileId() ?: return@launch
-            if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, movie.categoryId, profileDao, categoryDao)) return@launch
+            if (!LoungeVodPolicy.allowsMovie(movie) || !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, movie.categoryId, profileDao, categoryDao)) return@launch
             downloadManager.enqueue(
                 profileId = pid,
                 mediaType = MediaType.MOVIE,
