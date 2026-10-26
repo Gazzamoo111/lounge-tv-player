@@ -349,7 +349,8 @@ private fun SeriesGrid(
             else effectiveListState.layoutInfo.visibleItemsInfo.map { it.index }
             indices.filter { it < series.itemCount }
                 .mapNotNull { series.peek(it) }
-                .filter { it.posterUrl.isNullOrBlank() }
+                // Cache-only lookup for visible titles, even when BEST supplies a poster;
+                // provider artwork can be foreign-language or very low quality.
         }.distinctUntilChanged().collect { vm.onPosterlessVisible(it) }
     }
 
@@ -543,7 +544,13 @@ private fun SeriesGrid(
         vm.onSeriesFocused(show)
         if (rememberSeries) perCategorySeriesIds[selectedKey] = show.id
     }
-    val posterOf: (tv.own.owntv.core.database.entity.SeriesEntity) -> String? = { it.posterUrl?.takeIf { u -> u.isNotBlank() } ?: cachedPosters[it.id] }
+    // Prefer verified TMDB artwork to provider posters when enrichment is enabled.
+    val posterOf: (tv.own.owntv.core.database.entity.SeriesEntity) -> String? = { show ->
+        val focusedArt = selectedSeriesMeta?.takeIf { it.seriesId == show.id }?.cache?.posterPath
+            ?.let { tv.own.owntv.core.metadata.MetadataImages.poster(it) }
+        (if (metadataMode.enrich) focusedArt ?: cachedPosters[show.id] else null)
+            ?: show.posterUrl?.takeIf { it.isNotBlank() }
+    }
     val playHint = stringResource(R.string.common_ok) to stringResource(R.string.content_episodes)
     val optionsHint = stringResource(R.string.content_key_hold_ok) to stringResource(R.string.content_key_options)
 
@@ -631,7 +638,7 @@ private fun SeriesGrid(
             Box(Modifier.fillMaxSize().then(if (categoriesOpen) Modifier.graphicsLayer { alpha = 0.36f } else Modifier)) {
                 VodCinematicBackdrop(titleInfo?.backdropUrl, series = true, Modifier.align(Alignment.TopEnd))
                 VodHeader(
-                    section = stringResource(R.string.common_nav_series), category = headerLabel, count = vodCount(true, count),
+                    section = stringResource(R.string.common_nav_series), category = headerLabel, count = vodCount(true, series.itemCount),
                     showChevron = true, modifier = Modifier.padding(start = fx(84), top = 52.mpx).width(fx(900)),
                 )
                 titleInfo?.let { VodHero(it, Modifier.padding(start = fx(84), top = 122.mpx).width(fx(1000)).height(heroH)) }
@@ -724,7 +731,7 @@ private fun SeriesGrid(
             val top = if (locked) 0.mpx else 128.mpx
             if (!locked) {
                 VodHeader(
-                    section = stringResource(R.string.common_nav_series), category = headerLabel, count = vodCount(true, count),
+                    section = stringResource(R.string.common_nav_series), category = headerLabel, count = vodCount(true, series.itemCount),
                     showChevron = false, modifier = Modifier.padding(start = fx(84), top = 52.mpx).width(fx(860)),
                 )
                 LiveCategories(
@@ -1906,7 +1913,7 @@ internal fun seriesTitleInfo(
         logoUrl = tv.own.owntv.core.metadata.MetadataImages.logo(meta?.logoPath),
         backdropUrl = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath, size = "w1280")
             ?: series.backdropUrl?.takeIf { it.isNotBlank() },
-        posterUrl = if (tmdbWins) tmdbPoster ?: providerPoster else providerPoster ?: tmdbPoster,
+        posterUrl = tmdbPoster ?: providerPoster,
         year = if (tmdbWins) meta?.year ?: series.year else series.year ?: meta?.year,
         genres = jsonStringList(meta?.genresJson),
         runtimeSecs = null,

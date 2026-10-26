@@ -295,7 +295,8 @@ fun MoviesScreen(
             else effectiveListState.layoutInfo.visibleItemsInfo.map { it.index }
             info.filter { it < movies.itemCount }
                 .mapNotNull { movies.peek(it) }
-                .filter { it.posterUrl.isNullOrBlank() }
+                // Cache-only lookup for visible titles, even when BEST supplies a poster;
+                // provider artwork can be foreign-language or very low quality.
         }.distinctUntilChanged().collect { vm.onPosterlessVisible(it) }
     }
     // Returning from the player: scroll to and focus the movie you just played (waits for the grid to load).
@@ -482,7 +483,14 @@ fun MoviesScreen(
         vm.onMovieFocused(movie)
         if (rememberMovies) perCategoryMovieIds[selectedKey] = movie.id
     }
-    val posterOf: (MovieEntity) -> String? = { it.posterUrl?.takeIf { u -> u.isNotBlank() } ?: cachedPosters[it.id] }
+    // Prefer verified TMDB artwork to provider posters, which can contain foreign-language
+    // typography even for English titles. Never fetch artwork on a fast scroll.
+    val posterOf: (MovieEntity) -> String? = { movie ->
+        val focusedArt = selectedMovieMeta?.takeIf { it.movieId == movie.id }?.cache?.posterPath
+            ?.let { tv.own.owntv.core.metadata.MetadataImages.poster(it) }
+        (if (metadataMode.enrich) focusedArt ?: cachedPosters[movie.id] else null)
+            ?: movie.posterUrl?.takeIf { it.isNotBlank() }
+    }
     val playHint = stringResource(R.string.common_ok) to stringResource(R.string.content_play)
     val optionsHint = stringResource(R.string.content_key_hold_ok) to stringResource(R.string.content_key_options)
 
@@ -570,7 +578,7 @@ fun MoviesScreen(
             Box(Modifier.fillMaxSize().then(if (categoriesOpen) Modifier.graphicsLayer { alpha = 0.36f } else Modifier)) {
                 VodCinematicBackdrop(titleInfo?.backdropUrl, series = false, Modifier.align(Alignment.TopEnd))
                 VodHeader(
-                    section = stringResource(R.string.common_nav_movies), category = headerLabel, count = vodCount(false, count),
+                    section = stringResource(R.string.common_nav_movies), category = headerLabel, count = vodCount(false, movies.itemCount),
                     showChevron = true, modifier = Modifier.padding(start = fx(84), top = 52.mpx).width(fx(900)),
                 )
                 titleInfo?.let { VodHero(it, Modifier.padding(start = fx(84), top = 122.mpx).width(fx(1000)).height(heroH)) }
@@ -666,7 +674,7 @@ fun MoviesScreen(
             val top = if (locked) 0.mpx else 128.mpx
             if (!locked) {
                 VodHeader(
-                    section = stringResource(R.string.common_nav_movies), category = headerLabel, count = vodCount(false, count),
+                    section = stringResource(R.string.common_nav_movies), category = headerLabel, count = vodCount(false, movies.itemCount),
                     showChevron = false, modifier = Modifier.padding(start = fx(84), top = 52.mpx).width(fx(860)),
                 )
                 LiveCategories(
@@ -1216,7 +1224,7 @@ internal fun movieTitleInfo(
         logoUrl = tv.own.owntv.core.metadata.MetadataImages.logo(meta?.logoPath),
         backdropUrl = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath, size = "w1280")
             ?: movie.backdropUrl?.takeIf { it.isNotBlank() },
-        posterUrl = if (tmdbWins) tmdbPoster ?: providerPoster else providerPoster ?: tmdbPoster,
+        posterUrl = tmdbPoster ?: providerPoster,
         year = if (tmdbWins) meta?.year ?: movie.year else movie.year ?: meta?.year,
         genres = jsonList(meta?.genresJson),
         runtimeSecs = movie.durationSecs?.takeIf { it > 0 },

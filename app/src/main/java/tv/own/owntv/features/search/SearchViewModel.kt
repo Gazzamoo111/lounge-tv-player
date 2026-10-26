@@ -2,6 +2,8 @@
 
 package tv.own.owntv.features.search
 
+import tv.own.owntv.features.vod.LoungeVodPolicy
+import tv.own.owntv.core.model.MediaType
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -108,13 +110,32 @@ class SearchViewModel(
     val curatedResults: StateFlow<SearchResults> = combine(_intent, ctx) { i, c -> i to c }
         .flatMapLatest { (i, c) ->
             if (i == null) flowOf(SearchResults())
-            else flowOf(searchReader.curated(c.profileId, c, i))
+            else flowOf(filterVodResults(searchReader.curated(c.profileId, c, i), c))
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SearchResults())
 
     private suspend fun search(q: String): SearchResults {
         val pid = currentProfileId() ?: return SearchResults()
-        return searchReader.search(pid, ctx.value, q)
+        return filterVodResults(searchReader.search(pid, ctx.value, q), ctx.value)
+    }
+
+    /** Provider search still runs in core, but its results must obey Lounge TV's VOD policy.
+     * Live programmes and channels remain untouched. */
+    private suspend fun filterVodResults(raw: SearchResults, active: ActiveProfileSources): SearchResults {
+        val blockedMovieCats = if (active.movieSourceIds.isEmpty()) emptySet() else
+            categoryDao.observe(active.movieSourceIds, MediaType.MOVIE).first()
+                .filter { LoungeVodPolicy.excludesCategory(it.name) }.mapTo(hashSetOf()) { it.id }
+        val blockedSeriesCats = if (active.seriesSourceIds.isEmpty()) emptySet() else
+            categoryDao.observe(active.seriesSourceIds, MediaType.SERIES).first()
+                .filter { LoungeVodPolicy.excludesCategory(it.name) }.mapTo(hashSetOf()) { it.id }
+        return raw.copy(
+            movies = raw.movies.filter {
+                LoungeVodPolicy.allowsMovie(it) && (it.categoryId == null || it.categoryId !in blockedMovieCats)
+            },
+            series = raw.series.filter {
+                LoungeVodPolicy.allowsSeries(it) && (it.categoryId == null || it.categoryId !in blockedSeriesCats)
+            },
+        )
     }
 
     // --- Stage page ---

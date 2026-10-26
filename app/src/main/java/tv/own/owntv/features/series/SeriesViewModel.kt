@@ -2,6 +2,8 @@
 
 package tv.own.owntv.features.series
 
+import tv.own.owntv.features.vod.LoungeVodPolicy
+import tv.own.owntv.features.vod.LoungeVodCatalogueReader
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -108,6 +110,13 @@ class SeriesViewModel(
     private val streamUrlResolver: tv.own.owntv.core.stalker.StreamUrlResolver,
     private val subtitleController: tv.own.owntv.core.subtitles.SubtitleController,
 ) : ViewModel() {
+
+    /** Ensure approved titles from restricted or foreign provider folders cannot be played. */
+    private suspend fun allowsCuratedSeries(show: SeriesEntity): Boolean =
+        LoungeVodPolicy.allowsSeries(show) &&
+            (show.categoryId?.let { categoryId ->
+                categoryDao.getById(categoryId)?.let { !LoungeVodPolicy.excludesCategory(it.name) } == true
+            } ?: true)
 
     /** The categories' search text, held here so it survives the player (see LiveViewModel). */
     private val _categoryQuery = kotlinx.coroutines.flow.MutableStateFlow("")
@@ -233,7 +242,7 @@ class SeriesViewModel(
                         cats,
                         cust.hiddenCategories,
                         profile?.isKids == true,
-                    )
+                    ) + cats.asSequence().filter { LoungeVodPolicy.excludesCategory(it.name) }.map { it.id }.toSet()
                 }
             }
         }
@@ -478,6 +487,24 @@ class SeriesViewModel(
         }
     }
 
+    /**
+     * Single profile-scoped, currently imported editorial VOD snapshot.
+     *
+     * Browse, folder visibility, and folder counts MUST share this exact snapshot:
+     * the provider's unfiltered counts (e.g. 700) are not the number of curated titles.
+     * An import count change rebuilds it; category visibility updates rebuild it too.
+     */
+    private val curatedCatalogue: StateFlow<List<SeriesEntity>> = ctx
+        .flatMapLatest { c ->
+            if (c.profileId < 0 || c.sourceIds.isEmpty()) flowOf(emptyList())
+            else combine(seriesDao.countAll(c.sourceIds), hiddenCategoryIds) { _, hidden -> hidden }
+                .debounce(650)
+                .mapLatest { hidden ->
+                    LoungeVodCatalogueReader.series(seriesDao, c.sourceIds, hidden)
+                }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     val railItems: StateFlow<List<LiveRailItem>> = ctx
         .flatMapLatest { c ->
             if (c.profileId < 0) flowOf(defaultRail)
@@ -486,7 +513,8 @@ class SeriesViewModel(
                 customize.observe(c.profileId, MediaType.SERIES),
                 sortMode,
                 profileDao.observeById(c.profileId),
-            ) { cats, cust, sort, profile ->
+                curatedCatalogue,
+            ) { cats, cust, sort, profile, curated ->
                 // A–Z also sorts the category folders (custom categories included); manually moved
                 // categories stay pinned first. Custom categories ride the SAME customization keys,
                 // so renames/hides/reorders apply to them with no extra code.
@@ -494,7 +522,10 @@ class SeriesViewModel(
                     cust,
                     kids = profile?.isKids == true,
                     alphaRest = sort == SettingsRepository.SortMode.ALPHA,
-                )
+                ).filterNot { entry ->
+                    LoungeVodPolicy.excludesCategory(entry.displayName) ||
+                        (entry.categoryId != null && curated.none { it.categoryId == entry.categoryId })
+                }
                 val multiSourceNames = c.sourceNames.takeIf { it.size > 1 }.orEmpty()
                 val categoriesById = cats.associateBy { it.id }
                 defaultRail + folders.map { e ->
@@ -522,13 +553,33 @@ class SeriesViewModel(
         .flatMapLatest { (args, cs) ->
             // Hidden items/categories are filtered on each fresh PagingData inside the pager chain —
             // a customization change re-creates the pager (same pattern as Live TV).
-            Pager(PagingConfig(pageSize = 60, prefetchDistance = 30, initialLoadSize = 90, maxSize = 300)) {
-                pagingSource(args.key, args.ctx, args.query, args.sort)
-            }.flow.map { paging ->
+            // For All and provider folders, query the indexed, approved catalogue directly.
+            // Filtering arbitrary BEST paging results afterwards could yield an empty first
+            // page and never request the approved titles buried further into the provider list.
+            val input: Flow<PagingData<SeriesEntity>> =
+                if (args.key == LiveKey.All || args.key is LiveKey.Folder) {
+                    curatedCatalogue.map { approved ->
+                        val scoped = approved.filter { s ->
+                            (args.key !is LiveKey.Folder || s.categoryId == args.key.id) &&
+                                (args.query.isBlank() ||
+                                    s.canonicalTitle.contains(args.query, ignoreCase = true) ||
+                                    s.name.contains(args.query, ignoreCase = true))
+                        }
+                        val ordered = if (args.sort == SettingsRepository.SortMode.ALPHA) {
+                            scoped.sortedBy { it.canonicalTitle.ifBlank { it.name }.lowercase() }
+                        } else scoped
+                        PagingData.from(ordered)
+                    }
+                } else {
+                    Pager(PagingConfig(pageSize = 60, prefetchDistance = 30, initialLoadSize = 90, maxSize = 300)) {
+                        pagingSource(args.key, args.ctx, args.query, args.sort)
+                    }.flow
+                }
+            input.map { paging ->
                 val cust = cs.cust
                 val movedFrom = cust.movedFromOrigin
-                if (cust.hiddenItems.isEmpty() && cust.itemNames.isEmpty() && cs.hiddenCats.isEmpty() && movedFrom.isEmpty()) paging
-                else paging.filter { s ->
+                paging.filter { s ->
+                    LoungeVodPolicy.allowsSeries(s) &&
                     CustomizeKeys.series(s) !in cust.hiddenItems &&
                         (s.categoryId == null || s.categoryId !in cs.hiddenCats) &&
                         // Moved-out items leave ONLY their origin folder (they stay in All/search).
@@ -550,12 +601,27 @@ class SeriesViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
     /** The count beside every category (Stage sheet / column): one grouped query for the folders. */
-    val railCounts: StateFlow<Map<LiveKey, Int>> = combine(ctx, hiddenCategoryIds, railItems) { c, hidden, items -> Triple(c, hidden, items) }
-        .flatMapLatest { (c, hidden, items) ->
-            val single = items.filter { it.key !is LiveKey.Folder }.map { item -> countFlow(item.key, c, hidden).map { mapOf(item.key to it) } }
-            val folders = seriesDao.observeCountsByCategory(c.sourceIds.ifEmpty { listOf(-1L) })
-                .map { rows -> rows.associate { LiveKey.Folder(it.categoryId) as LiveKey to it.itemCount } }
-            combine(single + folders) { parts -> parts.fold(emptyMap<LiveKey, Int>()) { acc, m -> acc + m } }.throttleLatest()
+    /** Counts reflect only curated, visible items, not all imported provider rows. */
+    val railCounts: StateFlow<Map<LiveKey, Int>> = combine(ctx, railItems, custResolved, curatedCatalogue) { c, items, cs, approved ->
+        val visible = approved.filter { CustomizeKeys.series(it) !in cs.cust.hiddenItems }
+        val movedFrom = cs.cust.movedFromOrigin
+        val curatedFolderCounts = items.mapNotNull { item ->
+            val folder = item.key as? LiveKey.Folder ?: return@mapNotNull null
+            val contextKey = folderContextKeys.value[folder.id]
+            item.key to visible.count { s ->
+                s.categoryId == folder.id &&
+                    (contextKey == null || movedFrom[CustomizeKeys.series(s)] != contextKey)
+            }
+        }.toMap()
+        val baseCounts = curatedFolderCounts + (LiveKey.All to visible.size)
+        Triple(c, items, baseCounts)
+    }
+        .flatMapLatest { (c, items, curated) ->
+            val other = items.filter { it.key !is LiveKey.Folder && it.key != LiveKey.All }
+                .map { item -> countFlow(item.key, c, hiddenCategoryIds.value).map { mapOf(item.key to it) } }
+            combine(listOf(flowOf(curated)) + other) { parts ->
+                parts.fold(emptyMap<LiveKey, Int>()) { acc, m -> acc + m }
+            }.throttleLatest()
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
@@ -878,6 +944,7 @@ class SeriesViewModel(
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     fun openSeries(s: SeriesEntity) {
+        if (!LoungeVodPolicy.allowsSeries(s)) return
         _openedSeries.value = s
         _selectedSeason.value = 1 // reset season when opening a different show
         _lastPlayedEpisodeId.value = null
@@ -902,6 +969,7 @@ class SeriesViewModel(
     fun openSeriesById(seriesId: Long) {
         viewModelScope.launch {
             val show = seriesDao.getSeriesById(seriesId) ?: return@launch
+            if (!allowsCuratedSeries(show)) return@launch
             openSeries(show)
         }
     }
@@ -910,7 +978,7 @@ class SeriesViewModel(
         val episode = seriesDao.getEpisodeById(episodeId) ?: return false
         val showId = if (seriesId > 0) seriesId else episode.seriesId
         val show = seriesDao.getSeriesById(showId) ?: return false
-        if (episode.seriesId != show.id) return false
+        if (episode.seriesId != show.id || !allowsCuratedSeries(show)) return false
         val pid = currentProfileId() ?: return false
         if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, show.categoryId, profileDao, categoryDao)) return false
         seriesRepository.loadEpisodes(show)
@@ -957,7 +1025,7 @@ class SeriesViewModel(
         viewModelScope.launch {
             val pid = currentProfileId()
             val show = seriesDao.getSeriesById(episode.seriesId) ?: return@launch
-            if (pid != null && !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, show.categoryId, profileDao, categoryDao)) return@launch
+            if (!allowsCuratedSeries(show) || (pid != null && !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, show.categoryId, profileDao, categoryDao))) return@launch
             Log.d(TAG, "playEpisodeExternal episodeId=${episode.id}")
             val url = resolvedEpisodeUrlOrNull(episode) ?: return@launch
             val source = sourceDao.getById(show.sourceId)
@@ -994,7 +1062,7 @@ class SeriesViewModel(
         _lastPlayedEpisodeId.value = episode.id
         viewModelScope.launch {
             val pid = currentProfileId()
-            if (pid != null && !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, show.categoryId, profileDao, categoryDao)) return@launch
+            if (!allowsCuratedSeries(show) || (pid != null && !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, show.categoryId, profileDao, categoryDao))) return@launch
             // External player (global toggle): launch only the selected episode (external players are
             // single-item — no prev/next queue). History is still recorded; resume position and the
             // in-app HUD/progress tick are not, since OwnTV can't observe the external app.
@@ -1115,8 +1183,8 @@ class SeriesViewModel(
         val ext = episode.containerExt ?: StorageAccess.extOf(episode.streamUrl)
         viewModelScope.launch {
             val pid = currentProfileId() ?: return@launch
-            val actualShow = show ?: seriesDao.getSeriesById(episode.seriesId)
-            if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, actualShow?.categoryId, profileDao, categoryDao)) return@launch
+            val actualShow = show ?: seriesDao.getSeriesById(episode.seriesId) ?: return@launch
+            if (!allowsCuratedSeries(actualShow) || !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, actualShow.categoryId, profileDao, categoryDao)) return@launch
             downloadManager.enqueue(
                 profileId = pid,
                 mediaType = MediaType.EPISODE,
@@ -1139,7 +1207,7 @@ class SeriesViewModel(
         val showDir = StorageAccess.sanitize(series.name)
         viewModelScope.launch {
             val pid = currentProfileId() ?: return@launch
-            if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, series.categoryId, profileDao, categoryDao)) return@launch
+            if (!allowsCuratedSeries(series) || !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, series.categoryId, profileDao, categoryDao)) return@launch
             seriesDao.episodesBySeries(series.id).first().filter { season == null || it.seasonNumber == season }.forEach { ep ->
                 val ext = ep.containerExt ?: StorageAccess.extOf(ep.streamUrl)
                 downloadManager.enqueue(

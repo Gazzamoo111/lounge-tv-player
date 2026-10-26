@@ -1563,3 +1563,656 @@
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	vh1
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	wwe
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	xmas
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	^(?i)(?:(?:D\\+|NF|AMZN|APTV|HBO|DSNY|ATV|NETFLIX|DISNEY\\+|PRIME|APPLE TV)\\s+)+
+1	regex	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	(?i)^\\s*(?:\\[[^]]+\\]\\s*)?(?:DE|GER|DEUTSCH|ES|ESP|FR|FRA|IT|ITA|PT|POR|RU|RUS|TR|TUR|HI|HIN|JP|JPN|KR|KOR|CN|CHI|AR|ARA)\\s*[-:|]\\s*
+1	regex	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	(?i)(?:\\[(?:DE|GER|ES|ESP|FR|FRA|IT|ITA|PT|POR|RU|RUS|HI|HIN|JP|JPN|KR|KOR|CN|CHI|AR|ARA)\\]|\\((?:German|Spanish|French|Italian|Portuguese|Russian|Hindi|Japanese|Korean|Chinese|Arabic|Dubbed)\\))
+1	regex	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	(?i)(?:\\b(?:XXX|PORN|PORNOGRAPHY|EROTIC|EROTICA|ADULT|NC-17|TV-MA|RATED\\s*R|R13|R16|R18|R21)\\b|(?:^|\\s)18\\+(?:\\s|$))
+1	regex	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	(?i)(?:\\b(?:XXX|PORN|PORNOGRAPHY|EROTIC|EROTICA|ADULT|NC-17|RATED\\s*R|R13|R16|R18|R21|TV-MA|GERMAN|SPANISH|FRENCH|ITALIAN|PORTUGUESE|RUSSIAN|HINDI|JAPANESE|KOREAN|CHINESE|ARABIC|FOREIGN|INTERNATIONAL|LATINO|BOLLYWOOD)\\b|(?:^|\\s)18\\+(?:\\s|$)|\\b(?:DE|GER|ES|ESP|FR|FRA|IT|ITA|PT|POR|RU|RUS|TR|TUR|HI|HIN|JP|JPN|KR|KOR|CN|CHI|AR|ARA)\\s*[-:|])
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Avatar
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Avatar: The Way of Water
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Dune
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Dune: Part Two
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Interstellar
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Inception
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Dark Knight
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Batman Begins
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Dark Knight Rises
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Batman
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Martian
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Gravity
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Prestige
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Tenet
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Arrival
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Edge of Tomorrow
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Ready Player One
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Minority Report
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	I, Robot
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	War of the Worlds
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Jurassic Park
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Jurassic World
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Jurassic World: Fallen Kingdom
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Jurassic World Dominion
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Lost World: Jurassic Park
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	E.T. the Extra-Terrestrial
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Back to the Future
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Back to the Future Part II
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Back to the Future Part III
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Truman Show
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Fifth Element
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Independence Day
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Men in Black
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Men in Black II
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Men in Black 3
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Jumanji
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Jumanji: Welcome to the Jungle
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Jumanji: The Next Level
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Free Guy
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Real Steel
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Top Gun
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Top Gun: Maverick
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Mission: Impossible
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Mission: Impossible II
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Mission: Impossible III
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Mission: Impossible - Ghost Protocol
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Mission: Impossible - Rogue Nation
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Mission: Impossible - Fallout
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Mission: Impossible - Dead Reckoning Part One
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Mission: Impossible - The Final Reckoning
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Bourne Identity
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Bourne Supremacy
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Bourne Ultimatum
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Jason Bourne
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Casino Royale
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Quantum of Solace
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Skyfall
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Spectre
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	No Time to Die
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	GoldenEye
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Tomorrow Never Dies
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The World Is Not Enough
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Die Another Day
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Mask of Zorro
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Legend of Zorro
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Pirates of the Caribbean: The Curse of the Black Pearl
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Pirates of the Caribbean: Dead Man's Chest
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Pirates of the Caribbean: At World's End
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Pirates of the Caribbean: On Stranger Tides
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Pirates of the Caribbean: Dead Men Tell No Tales
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	National Treasure
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	National Treasure: Book of Secrets
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Uncharted
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Mummy
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Mummy Returns
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Indiana Jones and the Raiders of the Lost Ark
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Raiders of the Lost Ark
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Indiana Jones and the Temple of Doom
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Indiana Jones and the Last Crusade
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Indiana Jones and the Kingdom of the Crystal Skull
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Indiana Jones and the Dial of Destiny
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Avengers: Endgame
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Avengers: Infinity War
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Avengers
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Avengers: Age of Ultron
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Iron Man
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Iron Man 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Iron Man 3
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Captain America: The First Avenger
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Captain America: The Winter Soldier
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Captain America: Civil War
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Captain America: Brave New World
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Thor
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Thor: The Dark World
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Thor: Ragnarok
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Thor: Love and Thunder
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Black Panther
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Black Panther: Wakanda Forever
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Doctor Strange
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Doctor Strange in the Multiverse of Madness
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Spider-Man: Homecoming
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Spider-Man: Far From Home
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Spider-Man: No Way Home
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Spider-Man
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Spider-Man 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Spider-Man 3
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Amazing Spider-Man
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Amazing Spider-Man 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Guardians of the Galaxy
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Guardians of the Galaxy Vol. 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Guardians of the Galaxy Vol. 3
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Ant-Man
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Ant-Man and the Wasp
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Captain Marvel
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Shang-Chi and the Legend of the Ten Rings
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Fantastic Four: First Steps
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Superman
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Man of Steel
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Wonder Woman
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Aquaman
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Aquaman and the Lost Kingdom
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Shazam!
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The LEGO Batman Movie
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Big Hero 6
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Incredibles
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Incredibles 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Lord of the Rings: The Fellowship of the Ring
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Lord of the Rings: The Two Towers
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Lord of the Rings: The Return of the King
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Hobbit: An Unexpected Journey
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Hobbit: The Desolation of Smaug
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Hobbit: The Battle of the Five Armies
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Harry Potter and the Philosopher's Stone
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Harry Potter and the Sorcerer's Stone
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Harry Potter and the Chamber of Secrets
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Harry Potter and the Prisoner of Azkaban
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Harry Potter and the Goblet of Fire
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Harry Potter and the Order of the Phoenix
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Harry Potter and the Half-Blood Prince
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Harry Potter and the Deathly Hallows: Part 1
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Harry Potter and the Deathly Hallows: Part 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Fantastic Beasts and Where to Find Them
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Fantastic Beasts: The Crimes of Grindelwald
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Fantastic Beasts: The Secrets of Dumbledore
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Chronicles of Narnia: The Lion, the Witch and the Wardrobe
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Chronicles of Narnia: Prince Caspian
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Chronicles of Narnia: The Voyage of the Dawn Treader
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Stardust
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Princess Bride
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Hunger Games
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Hunger Games: Catching Fire
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Hunger Games: Mockingjay - Part 1
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Hunger Games: Mockingjay - Part 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Hunger Games: The Ballad of Songbirds & Snakes
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Maze Runner
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Maze Runner: The Scorch Trials
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Maze Runner: The Death Cure
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Divergent
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Insurgent
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Allegiant
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Wicked
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Wicked: For Good
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Toy Story
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Toy Story 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Toy Story 3
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Toy Story 4
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Finding Nemo
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Finding Dory
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Monsters, Inc.
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Monsters University
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Up
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Inside Out
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Inside Out 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Soul
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Coco
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Ratatouille
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	WALL-E
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Good Dinosaur
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Luca
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Turning Red
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Elemental
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Brave
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Cars
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Cars 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Cars 3
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Onward
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Lightyear
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	A Bug's Life
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Frozen
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Frozen II
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Moana
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Moana 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Encanto
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Zootopia
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Zootopia 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Tangled
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Lion King
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Lion King 2: Simba's Pride
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Mufasa: The Lion King
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Aladdin
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Beauty and the Beast
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Little Mermaid
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Mulan
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Pocahontas
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Hercules
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Tarzan
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Lilo & Stitch
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Lilo & Stitch 2: Stitch Has a Glitch
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Princess and the Frog
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Emperor's New Groove
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Hunchback of Notre Dame
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Bolt
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Wish
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Raya and the Last Dragon
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Jungle Book
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Bambi
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Dumbo
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Peter Pan
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Cinderella
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Sleeping Beauty
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Snow White and the Seven Dwarfs
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	101 Dalmatians
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Pinocchio
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Mary Poppins
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Mary Poppins Returns
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Parent Trap
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Shrek
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Shrek 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Shrek the Third
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Shrek Forever After
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Puss in Boots
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Puss in Boots: The Last Wish
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Kung Fu Panda
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Kung Fu Panda 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Kung Fu Panda 3
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Kung Fu Panda 4
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	How to Train Your Dragon
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	How to Train Your Dragon 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	How to Train Your Dragon: The Hidden World
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Madagascar
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Madagascar: Escape 2 Africa
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Madagascar 3: Europe's Most Wanted
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Croods
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Croods: A New Age
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Trolls
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Trolls World Tour
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Trolls Band Together
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Bad Guys
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Bad Guys 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Wild Robot
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Super Mario Bros. Movie
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Super Mario Galaxy Movie
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Despicable Me
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Despicable Me 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Despicable Me 3
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Despicable Me 4
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Minions
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Minions: The Rise of Gru
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Sing
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Sing 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Secret Life of Pets
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Secret Life of Pets 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Migration
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Grinch
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Lorax
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The LEGO Movie
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The LEGO Movie 2: The Second Part
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Mitchells vs. the Machines
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Spider-Man: Into the Spider-Verse
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Spider-Man: Across the Spider-Verse
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Forrest Gump
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Cast Away
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Saving Mr. Banks
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Pursuit of Happyness
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Blind Side
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Hidden Figures
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	A Beautiful Mind
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Theory of Everything
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Imitation Game
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Social Network
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Founder
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Moneyball
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Ford v Ferrari
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Rush
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Remember the Titans
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Miracle
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Coach Carter
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Greatest Showman
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Bohemian Rhapsody
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Elvis
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	La La Land
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Sound of Music
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Grease
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Mamma Mia!
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Mamma Mia! Here We Go Again
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Devil Wears Prada
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Devil Wears Prada 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Mean Girls
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Legally Blonde
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Clueless
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	10 Things I Hate About You
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Crazy Rich Asians
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Notting Hill
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Holiday
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Proposal
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Sleepless in Seattle
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	You've Got Mail
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	About Time
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Notebook
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Titanic
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Fault in Our Stars
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Intern
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Little Women
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Pride & Prejudice
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Help
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Wonder
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Secret Life of Walter Mitty
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Terminal
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Catch Me If You Can
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Bucket List
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Life of Pi
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Home Alone
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Home Alone 2: Lost in New York
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Elf
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Polar Express
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Santa Clause
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Santa Clause 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Santa Clause 3: The Escape Clause
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	A Christmas Carol
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Muppet Christmas Carol
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Miracle on 34th Street
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	It's a Wonderful Life
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Christmas Chronicles
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Christmas Chronicles: Part Two
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Jingle All the Way
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Night at the Museum
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Night at the Museum: Battle of the Smithsonian
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Night at the Museum: Secret of the Tomb
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Paddington
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Paddington 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Paddington in Peru
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Peter Rabbit
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Peter Rabbit 2: The Runaway
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Wonka
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Charlie and the Chocolate Factory
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Matilda
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Roald Dahl's Matilda the Musical
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The BFG
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Hugo
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Goonies
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Sandlot
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Karate Kid
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Karate Kid Part II
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Karate Kid Part III
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Karate Kid
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Karate Kid: Legends
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	A Minecraft Movie
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Sonic the Hedgehog
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Sonic the Hedgehog 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Sonic the Hedgehog 3
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Detective Pikachu
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Garfield Movie
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Peanuts Movie
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Smurfs
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Stuart Little
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Babe
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Babe: Pig in the City
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Ocean's Eleven
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Ocean's Twelve
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Ocean's Thirteen
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Ocean's 8
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Italian Job
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Now You See Me
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Now You See Me 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Now You See Me: Now You Don't
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Knives Out
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Glass Onion: A Knives Out Mystery
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Wake Up Dead Man: A Knives Out Mystery
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Murder on the Orient Express
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Death on the Nile
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	A Haunting in Venice
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Enola Holmes
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Enola Holmes 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Sherlock Holmes
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Sherlock Holmes: A Game of Shadows
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Da Vinci Code
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Angels & Demons
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Inferno
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	School of Rock
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Mrs. Doubtfire
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Mask
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Bruce Almighty
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Evan Almighty
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Yes Man
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Liar Liar
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Dumb and Dumber
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Ace Ventura: Pet Detective
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Ace Ventura: When Nature Calls
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Groundhog Day
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Big
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	13 Going on 30
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Freaky Friday
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Princess Diaries
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Princess Diaries 2: Royal Engagement
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Lizzie McGuire Movie
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	High School Musical
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	High School Musical 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	High School Musical 3: Senior Year
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Pitch Perfect
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Pitch Perfect 2
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Pitch Perfect 3
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Hairspray
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Sister Act
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Sister Act 2: Back in the Habit
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Friends
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Office
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Office (US)
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Big Bang Theory
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Young Sheldon
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	How I Met Your Mother
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Modern Family
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Brooklyn Nine-Nine
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Parks and Recreation
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Community
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	New Girl
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Superstore
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Good Place
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Schitt's Creek
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Seinfeld
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Frasier
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Everybody Loves Raymond
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Middle
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Malcolm in the Middle
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Fresh Prince of Bel-Air
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Full House
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Fuller House
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Home Improvement
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Last Man Standing
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Goldbergs
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Abbott Elementary
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Ghosts
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Ghosts (US)
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Gilmore Girls
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Jane the Virgin
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	This Is Us
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Parenthood
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Heartland
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Virgin River
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Sweet Magnolias
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Chesapeake Shores
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	When Calls the Heart
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Summer I Turned Pretty
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Dawson's Creek
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	One Tree Hill
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The O.C.
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Pretty Little Liars
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Never Have I Ever
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Heartstopper
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Emily in Paris
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Stranger Things
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Wednesday
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Lost
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Manifest
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The X-Files
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Fringe
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Supernatural
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Smallville
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Flash
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Arrow
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Supergirl
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Legends of Tomorrow
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Superman & Lois
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Gotham
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Mandalorian
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Andor
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Ahsoka
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Obi-Wan Kenobi
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Book of Boba Fett
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Star Wars: The Clone Wars
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Star Wars Rebels
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Bad Batch
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Loki
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	WandaVision
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Falcon and the Winter Soldier
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Hawkeye
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Ms. Marvel
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Moon Knight
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	What If...?
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Agatha All Along
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Daredevil
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Agents of S.H.I.E.L.D.
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Agent Carter
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Doctor Who
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Sarah Jane Adventures
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Merlin
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Once Upon a Time
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The 100
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	His Dark Materials
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	A Series of Unfortunate Events
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Percy Jackson and the Olympians
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Avatar: The Last Airbender
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Legend of Korra
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Rookie
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	9-1-1
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	9-1-1: Lone Star
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	NCIS
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	NCIS: Los Angeles
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	NCIS: Hawai'i
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	CSI: Crime Scene Investigation
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	CSI: Miami
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	CSI: NY
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Criminal Minds
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Bones
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Castle
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Mentalist
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	White Collar
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Suits
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Good Wife
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Blue Bloods
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	FBI
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	FBI: Most Wanted
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	FBI: International
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Law & Order
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Law & Order: Special Victims Unit
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Law & Order: Organized Crime
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Chicago Fire
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Chicago P.D.
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Chicago Med
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Resident
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Grey's Anatomy
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Station 19
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Good Doctor
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	House
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	ER
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Scrubs
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	New Amsterdam
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Jack Ryan
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Blacklist
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Person of Interest
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Elementary
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Sherlock
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Vera
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Death in Paradise
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Midsomer Murders
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Brokenwood Mysteries
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Downton Abbey
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Belgravia
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	All Creatures Great and Small
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Call the Midwife
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Durrells
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Poldark
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Great British Bake Off
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Great British Baking Show
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Traitors
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Amazing Race
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Survivor
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Voice
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Voice Australia
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Australian Idol
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	American Idol
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Britain's Got Talent
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	America's Got Talent
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	MasterChef
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	MasterChef Australia
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Block
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Grand Designs
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Repair Shop
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Antiques Roadshow
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Planet Earth
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Planet Earth II
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Planet Earth III
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Blue Planet
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Blue Planet II
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Our Planet
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Our Planet II
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Frozen Planet
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Frozen Planet II
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Life on Our Planet
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Prehistoric Planet
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Drive to Survive
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Welcome to Wrexham
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Simpsons
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Futurama
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Bob's Burgers
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	King of the Hill
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Flintstones
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Jetsons
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Scooby-Doo, Where Are You!
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	What's New, Scooby-Doo?
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Tom and Jerry
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Looney Tunes
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Looney Tunes Show
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	SpongeBob SquarePants
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	PAW Patrol
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Bluey
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Peppa Pig
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Hey Duggee
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Octonauts
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Wiggles
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Sesame Street
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Arthur
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Daniel Tiger's Neighborhood
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Wild Kratts
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Teen Titans Go!
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Teen Titans
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Gravity Falls
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Phineas and Ferb
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	DuckTales
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	TaleSpin
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Kim Possible
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Proud Family
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Loud House
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Fairly OddParents
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Amazing World of Gumball
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Adventure Time
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Regular Show
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Steven Universe
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Ninjago
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	LEGO Ninjago
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Power Rangers
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Hannah Montana
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Wizards of Waverly Place
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Good Luck Charlie
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Jessie
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Liv and Maddie
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	iCarly
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Victorious
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Drake & Josh
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Zoey 101
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Suite Life of Zack & Cody
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Suite Life on Deck
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	High School Musical: The Musical: The Series
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Muppets
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	OR
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	${34.toChar()}$title${34.toChar()}
+3	empty	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	\0
+1	regex	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	[^\\p{L}\\p{N}]+
+1	regex	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	\\s+
+1	locale	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	EN
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Spider-Man: Brand New Day
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Toy Story 5
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Project Hail Mary
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Avatar: Fire and Ash
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Hoppers
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Minions & Monsters
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Star Wars: The Mandalorian and Grogu
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Mandalorian and Grogu
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Disclosure Day
