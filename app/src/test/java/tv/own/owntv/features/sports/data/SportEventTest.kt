@@ -4,6 +4,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Test
+import org.json.JSONArray
+import org.json.JSONObject
 import tv.own.owntv.core.sports.model.Match
 import tv.own.owntv.core.sports.model.MatchState
 import tv.own.owntv.core.sports.model.Sport
@@ -33,6 +35,12 @@ class SportEventTest {
         assertEquals(SportEventState.FINISHED, SportEventMerge.dedupe(listOf(finished, scheduled)).single().state)
     }
 
+    @Test fun `older cancellation cannot replace newer finished correction`() {
+        val finished = SportEvent.fromMatch(match("42", MatchState.POST, 2_000_000L), "espn", 4_000L)
+        val oldCancellation = SportEvent.fromMatch(match("42", MatchState.CANCELLED, 2_000_000L), "espn", 3_000L)
+        assertEquals(SportEventState.FINISHED, SportEventMerge.dedupe(listOf(finished, oldCancellation)).single().state)
+    }
+
     @Test fun `stale cache is used only for a failed exact feed and bounded window`() {
         val now = 10_000_000L
         val rugby = SportEvent.fromMatch(match("rugby", MatchState.PRE, now + 60_000L), "espn", now - 5_000L)
@@ -46,6 +54,22 @@ class SportEventTest {
         assertNotNull(event.toMatch())
         assertFalse(event.toJson().has("watchable"))
         assertFalse(event.toJson().has("channelId"))
+    }
+
+    @Test fun `gateway parser preserves partial feed diagnostics without adding channel claims`() {
+        val event = SportEvent.fromMatch(match("42", MatchState.PRE, 2_000_000L), "espn", 1_000_000L)
+        val body = JSONObject()
+            .put("status", "partial")
+            .put("lastUpdated", "2026-10-26T00:00:00Z")
+            .put("events", JSONArray().put(event.toJson()))
+            .put("diagnostics", JSONObject().put("failedFeeds", JSONArray().put(JSONObject().put("feed", "rugby/test"))))
+            .toString()
+        val batch = GatewaySportEventParser.parse(body)
+        assertNotNull(batch)
+        assertEquals(SportEventCoverage.PARTIAL, batch?.coverage)
+        assertEquals(setOf("rugby/test"), batch?.failedFeedIds)
+        assertEquals(event.stableId, batch?.events?.single()?.stableId)
+        assertFalse(batch?.events?.single()?.toJson()?.has("channelId") ?: true)
     }
 
     private fun match(id: String, state: MatchState, startMs: Long) = Match(

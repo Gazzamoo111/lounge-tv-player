@@ -54,14 +54,30 @@ object SportEventMerge {
     fun dedupe(events: List<SportEvent>): List<SportEvent> = events
         .groupBy { it.stableId }
         .values
-        .map { copies -> copies.maxWithOrNull(compareBy<SportEvent>({ stateRank(it.state) }, { it.sourceUpdatedAtMs }))!! }
+        .map { copies -> copies.reduce(::newerChronology) }
         .sortedWith(compareBy({ it.startUtcMs }, { it.stableId }))
+
+    private fun newerChronology(old: SportEvent, next: SportEvent): SportEvent {
+        val oldTerminal = old.state.isTerminal()
+        val nextTerminal = next.state.isTerminal()
+        return when {
+            oldTerminal && !nextTerminal -> old
+            !oldTerminal && nextTerminal -> next
+            !oldTerminal && !nextTerminal && stateRank(next.state) > stateRank(old.state) -> next
+            !oldTerminal && !nextTerminal && stateRank(next.state) < stateRank(old.state) -> old
+            next.sourceUpdatedAtMs > old.sourceUpdatedAtMs -> next
+            else -> old
+        }
+    }
 
     private fun stateRank(state: SportEventState): Int = when (state) {
         SportEventState.SCHEDULED -> 0
         SportEventState.LIVE -> 1
         SportEventState.FINISHED -> 2
-        SportEventState.POSTPONED -> 3
-        SportEventState.CANCELLED -> 4
+        SportEventState.POSTPONED -> 2
+        SportEventState.CANCELLED -> 2
     }
+
+    private fun SportEventState.isTerminal(): Boolean =
+        this == SportEventState.FINISHED || this == SportEventState.POSTPONED || this == SportEventState.CANCELLED
 }

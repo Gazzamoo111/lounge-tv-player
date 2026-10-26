@@ -300,7 +300,7 @@ fun SportsHubScreen(
                             items(soon, key = { it.key }) { m ->
                                 MatchCard(
                                     m, featured = false, config = config, now = now,
-                                    reminded = SportsViewModel.reminderKey(m.startMs, MatchNotifications.pair(context, m)) in state.reminders,
+                                    reminded = m.key in state.reminders,
                                     onClick = { onOpenMatch(m) }, onPlay = { onOpenMatch(m) }, onHold = { menuFor = m },
                                     modifier = Modifier.focusRequester(focusOf(m.key)),
                                 )
@@ -327,6 +327,8 @@ fun SportsHubScreen(
             onFollow = { vm.toggleTeam(it) },
             onRemind = { vm.remind(m, menuChannels) },
             onDismiss = { menuFor = null },
+            reminded = m.key in state.reminders,
+            channelIndependentReminder = true,
         )
     }
 }
@@ -569,6 +571,8 @@ internal fun FollowRemindMenu(
     onFollow: (FollowedTeam) -> Unit,
     onRemind: () -> Unit,
     onDismiss: () -> Unit,
+    reminded: Boolean = false,
+    channelIndependentReminder: Boolean = false,
 ) {
     val first = remember { FocusRequester() }
     androidx.compose.runtime.LaunchedEffect(Unit) { kotlinx.coroutines.delay(60); runCatching { first.requestFocus() } }
@@ -588,9 +592,9 @@ internal fun FollowRemindMenu(
                         modifier = if (i == 0) Modifier.focusRequester(first) else Modifier,
                     )
                 }
-                if (match.state == MatchState.PRE && match.startMs > now && channels.isNotEmpty()) {
+                if (match.state == MatchState.PRE && match.startMs > now && (channelIndependentReminder || channels.isNotEmpty())) {
                     StageMenuItem(
-                        text = stringResource(R.string.content_remind_me),
+                        text = stringResource(if (reminded) R.string.sport_lounge_remove_reminder else R.string.content_remind_me),
                         icon = OwnTVIcon.BELL,
                         onClick = { onRemind(); onDismiss() },
                         modifier = if (match.competitors.isEmpty()) Modifier.focusRequester(first) else Modifier,

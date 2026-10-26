@@ -68,6 +68,7 @@ import tv.own.owntv.ui.theme.mpx
 import tv.own.owntv.ui.theme.stageAccent
 import tv.own.owntv.ui.theme.stageText
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 /** Event-led replacement for the old followed-league rail hub. */
 @Composable
@@ -103,16 +104,16 @@ fun SportLoungeScreen(
             timeFilter = timeFilter,
             category = category,
             nowMs = nowMs,
-            zoneId = ZoneId.systemDefault(),
+            zoneId = SPORT_LOUNGE_ZONE,
             followedTeamKeys = followedKeys,
             myTeamsOnly = myTeamsOnly,
         )
     }
     val cardFocus = remember { HashMap<String, FocusRequester>() }
     fun focusOf(key: String) = cardFocus.getOrPut(key) { FocusRequester() }
-    val tabFocus = remember { FocusRequester() }
+    val tabFocus = remember { SportLoungeTimeFilter.entries.associateWith { FocusRequester() } }
     val firstCard = selection.matches.firstOrNull()
-    val entry by rememberUpdatedState(firstCard?.let { focusOf(it.key) } ?: tabFocus)
+    val entry by rememberUpdatedState(firstCard?.let { focusOf(it.key) } ?: tabFocus.getValue(timeFilter))
     DisposableEffect(onEntryHook) {
         onEntryHook?.invoke { runCatching { entry.requestFocus() }.getOrDefault(false) }
         onDispose { onEntryHook?.invoke(null) }
@@ -159,7 +160,7 @@ fun SportLoungeScreen(
                     SportsChip(
                         text = stringResource(R.string.sport_lounge_filter_count, timeFilterLabel(filter), count),
                         on = timeFilter == filter,
-                        modifier = if (filter == SportLoungeTimeFilter.LIVE_NOW) Modifier.focusRequester(tabFocus) else Modifier,
+                        modifier = Modifier.focusRequester(tabFocus.getValue(filter)),
                     ) { timeFilter = filter }
                 }
             }
@@ -191,7 +192,7 @@ fun SportLoungeScreen(
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(columns),
                     modifier = Modifier.weight(1f).padding(top = 24.mpx).focusGroup(),
-                    contentPadding = PaddingValues(start = contentStart, end = 60.mpx, bottom = 108.mpx),
+                    contentPadding = PaddingValues(start = contentStart, end = 60.mpx, bottom = 132.mpx),
                     horizontalArrangement = Arrangement.spacedBy(18.mpx),
                     verticalArrangement = Arrangement.spacedBy(18.mpx),
                 ) {
@@ -202,7 +203,7 @@ fun SportLoungeScreen(
                             config = state.config,
                             nowMs = nowMs,
                             hasPlaylist = state.hasPlaylist,
-                            reminded = SportsViewModel.reminderKey(match.startMs, MatchNotifications.pair(context, match)) in state.reminders,
+                            reminded = match.key in state.reminders,
                             onClick = { onOpenMatch(match) },
                             onHold = { menuFor = match },
                             modifier = Modifier.focusRequester(focusOf(match.key)),
@@ -230,6 +231,8 @@ fun SportLoungeScreen(
             onFollow = vm::toggleTeam,
             onRemind = { vm.remind(match, menuChannels) },
             onDismiss = { menuFor = null },
+            reminded = match.key in state.reminders,
+            channelIndependentReminder = true,
         )
     }
 }
@@ -274,7 +277,7 @@ private fun SportLoungeEventCard(
                     match.isLive -> LiveMark(clockText(match), 16.5f)
                     match.off || match.state == MatchState.POST -> Text(match.statusText, style = stageText(16.5f, 700), color = StageColors.Muted, maxLines = 1)
                     else -> Text(
-                        listOfNotNull(dayOf(match.startMs, locale), timeText(match.startMs)).joinToString(" "),
+                        listOfNotNull(sportLoungeDay(match.startMs, locale), sportLoungeTime(match.startMs)).joinToString(" "),
                         style = stageText(17, 800), color = StageColors.Text, maxLines = 1,
                     )
                 }
@@ -308,6 +311,25 @@ private fun SportLoungeEventCard(
             }
         }
     }
+}
+
+private val SPORT_LOUNGE_ZONE: ZoneId = ZoneId.of("Pacific/Auckland")
+
+@Composable
+private fun sportLoungeTime(epochMs: Long): String {
+    val context = LocalContext.current
+    val locale = LocalConfiguration.current.locales[0]
+    val pattern = if (android.text.format.DateFormat.is24HourFormat(context)) "HH:mm" else "h:mm a"
+    return DateTimeFormatter.ofPattern(pattern, locale)
+        .format(java.time.Instant.ofEpochMilli(epochMs).atZone(SPORT_LOUNGE_ZONE))
+}
+
+private fun sportLoungeDay(epochMs: Long, locale: java.util.Locale): String? {
+    val today = java.time.LocalDate.now(SPORT_LOUNGE_ZONE)
+    val date = java.time.Instant.ofEpochMilli(epochMs).atZone(SPORT_LOUNGE_ZONE).toLocalDate()
+    if (date == today) return null
+    val pattern = if (date.isBefore(today.plusDays(7))) "EEE" else android.text.format.DateFormat.getBestDateTimePattern(locale, "EEEd")
+    return DateTimeFormatter.ofPattern(pattern, locale).format(date)
 }
 
 @Composable

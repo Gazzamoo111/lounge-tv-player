@@ -31,4 +31,5 @@
     <string name="lounge_epg_primary_name">Primary TV Guide</string>
     <string name="lounge_epg_guide_description">Additional programme listings from Lounge TV</string>
     <string name="lounge_epg_primary_description">Programme listings from your TV account</string>
+    <string name="sport_lounge_remove_reminder">Remove reminder</string>
 </resources>

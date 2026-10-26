@@ -55,7 +55,8 @@ class SportLoungeDiscovery(private val source: SportsSource, private val cache: 
         val matches = events.mapNotNull { event -> freshByStableId[event.stableId] ?: event.toMatch() }
         SportLoungeDiscoverySnapshot(
             matches = SportLoungeRules.dedupe(matches),
-            updatedAt = nowMs.takeIf { matches.isNotEmpty() || failures < leagues.size * days.size },
+            updatedAt = events.maxOfOrNull { it.lastSuccessfulUpdateMs }
+                ?: nowMs.takeIf { failures < leagues.size * days.size },
             failedFeeds = failures,
         )
     }
@@ -71,12 +72,16 @@ class SportLoungeDiscovery(private val source: SportsSource, private val cache: 
             "cricket/all",
             "basketball/nbl",
             "basketball/nba",
+            "soccer/aus.1",
+            "soccer/eng.1",
+            "soccer/uefa.champions",
             "racing/f1",
             "mma/ufc",
         )
 
         fun discoveryLeague(key: String): League? = SportsCatalog.league(key) ?: when (key) {
             "basketball/nbl" -> League(Sport.BASKETBALL, "nbl", "National Basketball League", "NBL", "AU")
+            "soccer/aus.1" -> League(Sport.SOCCER, "aus.1", "Australian A-League Men", "A-League", "AU")
             else -> null
         }
     }
