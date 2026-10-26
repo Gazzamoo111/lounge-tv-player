@@ -3,6 +3,7 @@ package tv.own.owntv.features.movies
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -38,26 +39,31 @@ internal fun LoungeMoviesFeaturedRail(
     onPlay: (MovieEntity) -> Unit,
 ) {
     if (movies.isEmpty()) return
-    Column(Modifier.fillMaxWidth()) {
-        Text(heading, style = stageText(22, 700), color = StageColors.Text)
-        Spacer(Modifier.height(12.mpx))
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        // Four large 16:9 highlights fit the available TV pane, with the next card peeking
+        // through at the edge. The original seven-across poster grid is unchanged below.
+        val cardWidth = (maxWidth - 54.mpx) / 4.13f
+        Column(Modifier.fillMaxWidth()) {
+        Text(heading, style = stageText(27, 700), color = StageColors.Text)
+        Spacer(Modifier.height(13.mpx))
         LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(16.mpx),
+            horizontalArrangement = Arrangement.spacedBy(18.mpx),
             contentPadding = PaddingValues(end = 24.mpx),
             modifier = Modifier.fillMaxWidth().focusGroup(),
         ) {
             items(movies, key = { it.id }) { movie ->
                 StagePoster(
                     title = loungeVodTitle(displayNames[movie.id] ?: movie.canonicalTitle.ifBlank { movie.name }),
-                    width = 116.mpx,
-                    height = 174.mpx,
+                    width = cardWidth,
+                    height = cardWidth * (9f / 16f),
                     compact = true,
                     onClick = { onPlay(movie) },
                     modifier = Modifier.onFocusChanged { if (it.isFocused) onFocused(movie) },
                 ) {
-                    VodPosterArt(posterUrl(movie), OwnTVIcon.MOVIES)
+                    VodPosterArt(movie.backdropUrl?.takeIf { it.isNotBlank() } ?: posterUrl(movie), OwnTVIcon.MOVIES)
                 }
             }
+        }
         }
     }
 }
