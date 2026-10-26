@@ -2,6 +2,7 @@ package tv.own.owntv.features.sports
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.content.Context
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -51,6 +52,8 @@ import tv.own.owntv.core.sports.model.MatchSummary
 import tv.own.owntv.core.sports.model.StandingsTable
 import tv.own.owntv.core.sports.model.Sport
 import java.util.Locale
+import java.io.File
+import tv.own.owntv.features.sports.data.FileSportEventCache
 
 /** Where a match page's Find channels stands (channels are searched only when asked). */
 sealed interface ChannelSearch {
@@ -116,6 +119,7 @@ class SportsViewModel(
     private val reminders: ReminderManager,
     private val playback: SportsPlayback,
     sportsSource: SportsSource,
+    context: Context,
     sourceDao: SourceDao,
 ) : ViewModel() {
 
@@ -148,7 +152,10 @@ class SportsViewModel(
         if (pid < 0) flowOf(emptySet()) else reminders.observe(pid).map { list -> list.map { reminderKey(it.startMs, it.title) }.toSet() }
     }
 
-    private val discovery = SportLoungeDiscovery(sportsSource)
+    private val discovery = SportLoungeDiscovery(
+        sportsSource,
+        FileSportEventCache(File(context.filesDir, "sport-lounge/events-v1.json")),
+    )
     private val discoveryState = config.flatMapLatest { current ->
         if (current.followedLeagues().isNotEmpty()) flowOf(SportLoungeDiscoverySnapshot() to false)
         else flow {
