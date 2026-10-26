@@ -2,6 +2,7 @@
 
 package tv.own.owntv.features.movies
 
+import tv.own.owntv.features.vod.LoungeVodPolicy
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -227,7 +228,7 @@ class MovieViewModel(
                         cats,
                         cust.hiddenCategories,
                         profile?.isKids == true,
-                    )
+                    ) + cats.asSequence().filter { LoungeVodPolicy.excludesCategory(it.name) }.map { it.id }.toSet()
                 }
             }
         }
@@ -397,7 +398,7 @@ class MovieViewModel(
                     cust,
                     kids = profile?.isKids == true,
                     alphaRest = sort == SettingsRepository.SortMode.ALPHA,
-                )
+                ).filterNot { LoungeVodPolicy.excludesCategory(it.displayName) }
                 val multiSourceNames = c.sourceNames.takeIf { it.size > 1 }.orEmpty()
                 val categoriesById = cats.associateBy { it.id }
                 defaultRail + folders.map { e ->
@@ -430,8 +431,8 @@ class MovieViewModel(
             }.flow.map { paging ->
                 val cust = cs.cust
                 val movedFrom = cust.movedFromOrigin
-                if (cust.hiddenItems.isEmpty() && cust.itemNames.isEmpty() && cs.hiddenCats.isEmpty() && movedFrom.isEmpty()) paging
-                else paging.filter { m ->
+                paging.filter { m ->
+                    LoungeVodPolicy.allowsMovie(m) &&
                     CustomizeKeys.movie(m) !in cust.hiddenItems &&
                         (m.categoryId == null || m.categoryId !in cs.hiddenCats) &&
                         // Moved-out items leave ONLY their origin folder (they stay in All/search).
@@ -639,7 +640,7 @@ class MovieViewModel(
     fun playExternal(movie: MovieEntity) {
         viewModelScope.launch {
             val pid = currentProfileId()
-            if (pid != null && !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, movie.categoryId, profileDao, categoryDao)) return@launch
+            if (!LoungeVodPolicy.allowsMovie(movie) || (pid != null && !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, movie.categoryId, profileDao, categoryDao))) return@launch
             Log.d(TAG, "playExternal movieId=${movie.id}")
             val url = resolvedUrlOrNull(movie) ?: return@launch
             val source = sourceDao.getById(movie.sourceId)
@@ -661,7 +662,7 @@ class MovieViewModel(
     fun play(movie: MovieEntity, startPositionMs: Long = 0) {
         viewModelScope.launch {
             val pid = currentProfileId()
-            if (pid != null && !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, movie.categoryId, profileDao, categoryDao)) return@launch
+            if (!LoungeVodPolicy.allowsMovie(movie) || (pid != null && !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, movie.categoryId, profileDao, categoryDao))) return@launch
             // External player (global toggle): hand the stream URL to an external app and skip the
             // in-app engine entirely. History is still recorded (recently-watched); resume position
             // and the playing-movie HUD/progress tick are intentionally not — the external app owns
