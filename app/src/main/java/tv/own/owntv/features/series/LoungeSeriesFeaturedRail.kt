@@ -51,12 +51,12 @@ internal fun LoungeSeriesFeaturedRail(
         // Distinct from the 196px full-grid posters, but short enough for the
         // header and focused image to remain visible below the shared spotlight.
         // Four cards fit narrow panes; approximately five fit widescreen Cinematic.
-        val cardWidth = minOf(maxOf((maxWidth - 78.mpx) / 4.8f, 196.mpx), 284.mpx)
+        val cardWidth = minOf(maxOf((maxWidth - 78.mpx) / 4.8f, 196.mpx), 270.mpx)
         Column(Modifier.fillMaxWidth()) {
-            Text(heading, style = stageText(26, 800), color = StageColors.Text)
-            Spacer(Modifier.height(11.mpx))
+            Text(heading, style = stageText(28, 800), color = StageColors.Text)
+            Spacer(Modifier.height(13.mpx))
             LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(20.mpx),
+                horizontalArrangement = Arrangement.spacedBy(22.mpx),
                 contentPadding = PaddingValues(end = 24.mpx),
                 modifier = Modifier.fillMaxWidth().focusGroup(),
             ) {
