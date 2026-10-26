@@ -1,15 +1,5 @@
 package tv.own.owntv.features.series
 
-import androidx.compose.foundation.focusGroup
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -20,68 +10,46 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
-import androidx.tv.material3.Text
+import androidx.compose.ui.unit.Dp
 import tv.own.owntv.core.database.entity.SeriesEntity
 import tv.own.owntv.features.shell.components.VodPosterArt
 import tv.own.owntv.ui.components.OwnTVIcon
 import tv.own.owntv.ui.components.loungeVodTitle
 import tv.own.owntv.ui.stage.StagePoster
-import tv.own.owntv.ui.theme.StageColors
-import tv.own.owntv.ui.theme.mpx
-import tv.own.owntv.ui.theme.stageText
 
 /**
- * Read-only category highlight row. Five full-height portrait covers fit the pane, rather
- * than squeezing a 2:3 poster into a 16:9 backdrop tile. Side-scrolls up to 20 titles.
- * This is independent of the paginated full-library grid that follows it.
+ * A standard 2:3 portrait tile within the SINGLE vertical browse grid.
+ * Featured, new and full-library cards use identical measured dimensions.
+ * No nested LazyRow, no independent sideways scroll or mismatched focus geometry.
  */
 @Composable
-internal fun LoungeSeriesFeaturedRail(
-    heading: String,
-    movies: List<SeriesEntity>,
-    displayNames: Map<Long, String>,
-    posterUrl: (SeriesEntity) -> String?,
-    onFocused: (SeriesEntity) -> Unit,
-    onPlay: (SeriesEntity) -> Unit,
-    onLeftFromFirstCard: () -> Unit,
-    firstCardFocusRequester: FocusRequester? = null,
+internal fun LoungeSeriesEditorialPoster(
+    item: SeriesEntity,
+    width: Dp,
+    title: String,
+    posterUrl: String?,
+    firstInSection: Boolean,
+    atLeftEdge: Boolean,
+    focusRequester: FocusRequester,
+    onLeftToCategories: () -> Unit,
+    onFocus: (SeriesEntity) -> Unit,
+    onOpen: (SeriesEntity) -> Unit,
 ) {
-    if (movies.isEmpty()) return
-    BoxWithConstraints(Modifier.fillMaxWidth()) {
-        // Distinct from the 196px full-grid posters, but short enough for the
-        // header and focused image to remain visible below the shared spotlight.
-        // Four cards fit narrow panes; approximately five fit widescreen Cinematic.
-        val cardWidth = minOf(maxOf((maxWidth - 78.mpx) / 4.8f, 196.mpx), 270.mpx)
-        Column(Modifier.fillMaxWidth()) {
-            Text(heading, style = stageText(28, 800), color = StageColors.Text)
-            Spacer(Modifier.height(13.mpx))
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(22.mpx),
-                contentPadding = PaddingValues(end = 24.mpx),
-                modifier = Modifier.fillMaxWidth().focusGroup(),
-            ) {
-                itemsIndexed(movies, key = { _, movie -> movie.id }) { index, movie ->
-                    StagePoster(
-                        title = loungeVodTitle(displayNames[movie.id] ?: movie.canonicalTitle.ifBlank { movie.name }),
-                        width = cardWidth,
-                        height = cardWidth * 1.5f,
-                        compact = true,
-                        onClick = { onPlay(movie) },
-                        modifier = Modifier
-                            .then(if (index == 0 && firstCardFocusRequester != null) Modifier.focusRequester(firstCardFocusRequester) else Modifier)
-                            .onPreviewKeyEvent { event ->
-                                if (index == 0 && event.type == KeyEventType.KeyDown && event.key == Key.DirectionLeft) {
-                                    onLeftFromFirstCard()
-                                    true
-                                } else false
-                            }
-                            .onFocusChanged { if (it.isFocused) onFocused(movie) },
-                    ) {
-                        // Use the film's poster as a normal 2:3 cover, not its 16:9 backdrop.
-                        VodPosterArt(posterUrl(movie), OwnTVIcon.SERIES)
-                    }
-                }
+    StagePoster(
+        title = loungeVodTitle(title),
+        width = width,
+        height = width * 1.5f,
+        onClick = { onOpen(item) },
+        modifier = Modifier
+            .then(if (firstInSection) Modifier.focusRequester(focusRequester) else Modifier)
+            .onPreviewKeyEvent { event ->
+                if (atLeftEdge && event.type == KeyEventType.KeyDown && event.key == Key.DirectionLeft) {
+                    onLeftToCategories()
+                    true
+                } else false
             }
-        }
+            .onFocusChanged { if (it.isFocused) onFocus(item) },
+    ) {
+        VodPosterArt(posterUrl, OwnTVIcon.SERIES)
     }
 }
