@@ -118,7 +118,7 @@ class MoviesHighlightsGuardrailsTest(unittest.TestCase):
         self.assertIn("effectiveListState.scrollToItem(0)", screen)
         self.assertIn("firstFeaturedFocus", screen)
         self.assertIn("firstNewReleaseFocus", screen)
-        self.assertEqual(screen.count("onLeftFromFirstCard ="), 6)
+        self.assertEqual(screen.count("onLeftToCategories ="), 4)
 
     def test_guide_explains_hide_and_restore(self):
         guide = (ROOT / "extras/USER_GUIDE.md").read_text()
