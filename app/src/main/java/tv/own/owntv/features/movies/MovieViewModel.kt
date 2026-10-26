@@ -105,6 +105,12 @@ class MovieViewModel(
     private val subtitleController: tv.own.owntv.core.subtitles.SubtitleController,
 ) : ViewModel() {
 
+    /** Check the provider folder as well as the title before direct playback/download. */
+    private suspend fun allowsCuratedMovie(movie: MovieEntity): Boolean =
+        LoungeVodPolicy.allowsMovie(movie) &&
+            (movie.categoryId == null ||
+                categoryDao.getById(movie.categoryId)?.let { !LoungeVodPolicy.excludesCategory(it.name) } == true)
+
     /** The categories' search text, held here so it survives the player (see LiveViewModel). */
     private val _categoryQuery = kotlinx.coroutines.flow.MutableStateFlow("")
     val categoryQuery: kotlinx.coroutines.flow.StateFlow<String> = _categoryQuery
@@ -668,7 +674,7 @@ class MovieViewModel(
     fun playExternal(movie: MovieEntity) {
         viewModelScope.launch {
             val pid = currentProfileId()
-            if (!LoungeVodPolicy.allowsMovie(movie) || (pid != null && !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, movie.categoryId, profileDao, categoryDao))) return@launch
+            if (!allowsCuratedMovie(movie) || (pid != null && !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, movie.categoryId, profileDao, categoryDao))) return@launch
             Log.d(TAG, "playExternal movieId=${movie.id}")
             val url = resolvedUrlOrNull(movie) ?: return@launch
             val source = sourceDao.getById(movie.sourceId)
@@ -690,7 +696,7 @@ class MovieViewModel(
     fun play(movie: MovieEntity, startPositionMs: Long = 0) {
         viewModelScope.launch {
             val pid = currentProfileId()
-            if (!LoungeVodPolicy.allowsMovie(movie) || (pid != null && !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, movie.categoryId, profileDao, categoryDao))) return@launch
+            if (!allowsCuratedMovie(movie) || (pid != null && !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, movie.categoryId, profileDao, categoryDao))) return@launch
             // External player (global toggle): hand the stream URL to an external app and skip the
             // in-app engine entirely. History is still recorded (recently-watched); resume position
             // and the playing-movie HUD/progress tick are intentionally not — the external app owns
@@ -776,7 +782,7 @@ class MovieViewModel(
 
     suspend fun playByIdAsync(movieId: Long, startPositionMs: Long = 0): Boolean {
         val movie = movieDao.getById(movieId) ?: return false
-        if (!LoungeVodPolicy.allowsMovie(movie)) return false
+        if (!allowsCuratedMovie(movie)) return false
         play(movie, startPositionMs)
         return true
     }
@@ -790,7 +796,7 @@ class MovieViewModel(
     fun download(movie: MovieEntity) {
         viewModelScope.launch {
             val pid = currentProfileId() ?: return@launch
-            if (!LoungeVodPolicy.allowsMovie(movie) || !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, movie.categoryId, profileDao, categoryDao)) return@launch
+            if (!allowsCuratedMovie(movie) || !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, movie.categoryId, profileDao, categoryDao)) return@launch
             downloadManager.enqueue(
                 profileId = pid,
                 mediaType = MediaType.MOVIE,
