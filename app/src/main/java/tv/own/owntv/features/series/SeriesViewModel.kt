@@ -111,6 +111,12 @@ class SeriesViewModel(
     private val subtitleController: tv.own.owntv.core.subtitles.SubtitleController,
 ) : ViewModel() {
 
+    /** Ensure approved titles from restricted or foreign provider folders cannot be played. */
+    private suspend fun allowsCuratedSeries(show: SeriesEntity): Boolean =
+        LoungeVodPolicy.allowsSeries(show) &&
+            (show.categoryId == null ||
+                categoryDao.getById(show.categoryId)?.let { !LoungeVodPolicy.excludesCategory(it.name) } == true)
+
     /** The categories' search text, held here so it survives the player (see LiveViewModel). */
     private val _categoryQuery = kotlinx.coroutines.flow.MutableStateFlow("")
     val categoryQuery: kotlinx.coroutines.flow.StateFlow<String> = _categoryQuery
@@ -940,7 +946,7 @@ class SeriesViewModel(
         val episode = seriesDao.getEpisodeById(episodeId) ?: return false
         val showId = if (seriesId > 0) seriesId else episode.seriesId
         val show = seriesDao.getSeriesById(showId) ?: return false
-        if (episode.seriesId != show.id || !LoungeVodPolicy.allowsSeries(show)) return false
+        if (episode.seriesId != show.id || !allowsCuratedSeries(show)) return false
         val pid = currentProfileId() ?: return false
         if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, show.categoryId, profileDao, categoryDao)) return false
         seriesRepository.loadEpisodes(show)
@@ -987,7 +993,7 @@ class SeriesViewModel(
         viewModelScope.launch {
             val pid = currentProfileId()
             val show = seriesDao.getSeriesById(episode.seriesId) ?: return@launch
-            if (!LoungeVodPolicy.allowsSeries(show) || (pid != null && !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, show.categoryId, profileDao, categoryDao))) return@launch
+            if (!allowsCuratedSeries(show) || (pid != null && !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, show.categoryId, profileDao, categoryDao))) return@launch
             Log.d(TAG, "playEpisodeExternal episodeId=${episode.id}")
             val url = resolvedEpisodeUrlOrNull(episode) ?: return@launch
             val source = sourceDao.getById(show.sourceId)
@@ -1024,7 +1030,7 @@ class SeriesViewModel(
         _lastPlayedEpisodeId.value = episode.id
         viewModelScope.launch {
             val pid = currentProfileId()
-            if (!LoungeVodPolicy.allowsSeries(show) || (pid != null && !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, show.categoryId, profileDao, categoryDao))) return@launch
+            if (!allowsCuratedSeries(show) || (pid != null && !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, show.categoryId, profileDao, categoryDao))) return@launch
             // External player (global toggle): launch only the selected episode (external players are
             // single-item — no prev/next queue). History is still recorded; resume position and the
             // in-app HUD/progress tick are not, since OwnTV can't observe the external app.
@@ -1146,7 +1152,7 @@ class SeriesViewModel(
         viewModelScope.launch {
             val pid = currentProfileId() ?: return@launch
             val actualShow = show ?: seriesDao.getSeriesById(episode.seriesId) ?: return@launch
-            if (!LoungeVodPolicy.allowsSeries(actualShow) || !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, actualShow.categoryId, profileDao, categoryDao)) return@launch
+            if (!allowsCuratedSeries(actualShow) || !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, actualShow.categoryId, profileDao, categoryDao)) return@launch
             downloadManager.enqueue(
                 profileId = pid,
                 mediaType = MediaType.EPISODE,
@@ -1169,7 +1175,7 @@ class SeriesViewModel(
         val showDir = StorageAccess.sanitize(series.name)
         viewModelScope.launch {
             val pid = currentProfileId() ?: return@launch
-            if (!LoungeVodPolicy.allowsSeries(series) || !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, series.categoryId, profileDao, categoryDao)) return@launch
+            if (!allowsCuratedSeries(series) || !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, series.categoryId, profileDao, categoryDao)) return@launch
             seriesDao.episodesBySeries(series.id).first().filter { season == null || it.seasonNumber == season }.forEach { ep ->
                 val ext = ep.containerExt ?: StorageAccess.extOf(ep.streamUrl)
                 downloadManager.enqueue(
