@@ -358,12 +358,13 @@ private fun SeriesGrid(
     // Tiles the provider gave no artwork for: ask for the TMDB poster already cached from an earlier
     // focus, so the placeholder is only shown when nothing at all is known (mirrors Movies).
     val cachedPosters by vm.cachedPosters.collectAsStateWithLifecycle()
-    LaunchedEffect(effectiveGridState, effectiveListState, viewMode, series) {
+    LaunchedEffect(effectiveGridState, effectiveListState, viewMode, series, gridHeaderOffset, listHeaderOffset) {
         val grid = !usesList
         snapshotFlow {
             val indices = if (grid) effectiveGridState.layoutInfo.visibleItemsInfo.map { it.index }
             else effectiveListState.layoutInfo.visibleItemsInfo.map { it.index }
-            indices.filter { it < series.itemCount }
+            indices.map { if (grid) it - gridHeaderOffset else it - listHeaderOffset }
+                .filter { it >= 0 && it < series.itemCount }
                 .mapNotNull { series.peek(it) }
                 .filter { it.posterUrl.isNullOrBlank() }
         }.distinctUntilChanged().collect { vm.onPosterlessVisible(it) }
@@ -579,8 +580,8 @@ private fun SeriesGrid(
                 val sel = selectedSeries
                 val idx = if (sel != null) series.itemSnapshotList.items.indexOfFirst { it.id == sel.id } else -1
                 if (idx >= 0) idx
-                else if (usesList) effectiveListState.firstVisibleItemIndex
-                else effectiveGridState.firstVisibleItemIndex
+                else if (usesList) (effectiveListState.firstVisibleItemIndex - listHeaderOffset).coerceAtLeast(0)
+                else (effectiveGridState.firstVisibleItemIndex - gridHeaderOffset).coerceAtLeast(0)
             },
             onJumpToIndex = { idx ->
                 // Scroll the target into view, then set it as the selected show so selFocus binds to it
@@ -671,7 +672,7 @@ private fun SeriesGrid(
                         Spacer(Modifier.weight(1f))
                         StageKeyHints(listOf(playHint, optionsHint, "◀" to stringResource(R.string.content_category_browser_title)))
                     }
-                    if (series.itemCount == 0) {
+                    if (series.itemCount == 0 && headerRowCount == 0) {
                         Text(emptyText, style = stageText(20, 500), color = StageColors.Muted, modifier = Modifier.padding(start = fx(84), top = 60.mpx))
                     } else {
                         // The 196 × 294 posters, 26 apart, as many across as fit; the grid grows downwards
@@ -792,7 +793,7 @@ private fun SeriesGrid(
                     val placeable = measurable.measure(constraints.copy(minWidth = constraints.minWidth + extra * 2, maxWidth = constraints.maxWidth + extra * 2))
                     layout(constraints.maxWidth, constraints.maxHeight) { placeable.place(-extra, 0) }
                 }
-                if (series.itemCount == 0) {
+                if (series.itemCount == 0 && headerRowCount == 0) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(emptyText, style = stageText(20, 500), color = StageColors.Muted)
                     }
