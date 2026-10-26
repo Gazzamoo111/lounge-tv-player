@@ -409,18 +409,36 @@ class HomeViewModel(
     private suspend fun loadHomeData(profileId: Long) {
         val previous = _uiState.value
         val data = feed.load(profileId)
+        // Provider categories are also screened so translated/dubbed copies with an English
+        // canonical title never leak into Trending, Keep Watching or favourite shelves.
+        val movieSources = tv.own.owntv.core.repository.activeSourceIds(
+            settings, sourceDao, profileId, MediaType.MOVIE,
+        ).toList()
+        val seriesSources = tv.own.owntv.core.repository.activeSourceIds(
+            settings, sourceDao, profileId, MediaType.SERIES,
+        ).toList()
+        val blockedMovieCategories = if (movieSources.isEmpty()) emptySet() else
+            categoryDao.observe(movieSources, MediaType.MOVIE).first()
+                .filter { LoungeVodPolicy.excludesCategory(it.name) }.mapTo(hashSetOf()) { it.id }
+        val blockedSeriesCategories = if (seriesSources.isEmpty()) emptySet() else
+            categoryDao.observe(seriesSources, MediaType.SERIES).first()
+                .filter { LoungeVodPolicy.excludesCategory(it.name) }.mapTo(hashSetOf()) { it.id }
+        fun allowedMovie(m: MovieEntity): Boolean = LoungeVodPolicy.allowsMovie(m) &&
+            (m.categoryId == null || m.categoryId !in blockedMovieCategories)
+        fun allowedSeries(s: SeriesEntity): Boolean = LoungeVodPolicy.allowsSeries(s) &&
+            (s.categoryId == null || s.categoryId !in blockedSeriesCategories)
         // Core can return provider-supplied trending and Continue rows regardless of editorial quality.
         // Screen all VOD here; never allow an excluded item back onto the Home hero.
         val curatedTrending = data.trendingItems.filter {
             when (it) {
-                is TrendingHomeItem.Movie -> LoungeVodPolicy.allowsMovie(it.movie)
-                is TrendingHomeItem.Series -> LoungeVodPolicy.allowsSeries(it.series)
+                is TrendingHomeItem.Movie -> allowedMovie(it.movie)
+                is TrendingHomeItem.Series -> allowedSeries(it.series)
             }
         }
         val curatedHero = data.heroItems.filter {
             when (it) {
-                is HeroItem.MovieHero -> LoungeVodPolicy.allowsMovie(it.movie)
-                is HeroItem.SeriesHero -> LoungeVodPolicy.allowsSeries(it.series)
+                is HeroItem.MovieHero -> allowedMovie(it.movie)
+                is HeroItem.SeriesHero -> allowedSeries(it.series)
                 is HeroItem.LiveHero -> true
             }
         }
@@ -438,8 +456,8 @@ class HomeViewModel(
             heroMetadata = previous.heroMetadata.filterKeys { key -> curatedHero.any { it.homeKey == key } },
             recentLive = data.recentLive,
             favoriteLive = data.favoriteLive,
-            favoriteMovies = data.favoriteMovies.filter(LoungeVodPolicy::allowsMovie),
-            favoriteSeries = data.favoriteSeries.filter(LoungeVodPolicy::allowsSeries),
+            favoriteMovies = data.favoriteMovies.filter(::allowedMovie),
+            favoriteSeries = data.favoriteSeries.filter(::allowedSeries),
             config = data.config,
             recentGuide = data.recentGuide,
             favoriteGuide = data.favoriteGuide,
