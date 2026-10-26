@@ -2033,3 +2033,12 @@
 1	regex	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	[^\\p{L}\\p{N}]+
 1	regex	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	\\s+
 1	locale	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	EN
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Spider-Man: Brand New Day
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Toy Story 5
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Project Hail Mary
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Avatar: Fire and Ash
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Hoppers
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Minions & Monsters
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Star Wars: The Mandalorian and Grogu
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	The Mandalorian and Grogu
+1	technical	app/src/main/java/tv/own/owntv/features/vod/LoungeVodPolicy.kt	Disclosure Day
