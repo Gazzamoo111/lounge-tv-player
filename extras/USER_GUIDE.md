@@ -168,7 +168,21 @@ If the entire schedule is off by a fixed number of hours, check the guide time-o
 ## 6. Movies and Series
 
 ### Movies
-Open **Movies**, choose a title and press **OK**. Use the details screen to play it, resume it or review its information where available.
+Open **Movies**, choose a category and press **OK**. At the top of each category, **Featured Movies** and **New Releases** highlight available films in larger cards. Press **Left / Right** to browse up to 20 films in each row; **Down** continues into the full movie catalogue. The Featured selection changes periodically, and New Releases highlights films by their release year. If a category has no suitable new titles, that row may be absent.
+
+Use a title's details screen to play it, resume it or review its information where available.
+
+**Keep your catalogue tidy — without deleting films or channels**
+
+1. Open **More → Settings → Customise** (sometimes labelled **Customize** or **Content**, depending on the settings view).
+2. Open the relevant content section: **Movies**, **Series** or **Live TV**.
+3. Hide unwanted categories or individual titles (for example, duplicate channels, foreign-language films or categories you never use).
+4. Return to Movies or Live TV: hidden entries should disappear from the browse lists and category highlight rows.
+5. To bring content back, return to **Settings → Customise** and restore or unhide the affected category or item.
+
+Hiding content changes what you see in your profile; it does **not** cancel your service or erase movies from your provider's catalogue. If a title disappears unexpectedly, check hidden categories and hidden items before resetting your source. Avoid deleting the playlist or app data to clean up the catalogue.
+
+**Browsing tip:** When choosing a new Movies category, the list opens at the **top**, starting with Featured or New Releases. From the first card of either highlight row, press **Left** to return to the category menu.
 
 ### Series
 Open **Series**, choose a show, then choose the season and episode. When available, **Continue Watching** resumes from your saved position. Whether the next episode starts automatically depends on your playback setting.
