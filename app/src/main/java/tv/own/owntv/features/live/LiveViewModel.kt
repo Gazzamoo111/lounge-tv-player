@@ -2220,9 +2220,11 @@ internal fun isAllowedBestNzSportsCategory(sourceType: SourceType?, name: String
     sourceType == SourceType.XTREAM && isBestNzLabel(name) &&
         isSkySportLabel(name) && isRawOrHdLabel(name)
 
+// Keep the category browser permissive for NZ Sky Sport: BEST can alter or decorate
+// RAW/HD group labels. The previous release showed these folders correctly. Do not
+// let a quality-suffix parsing change remove entire provider folders from the rail.
 internal fun shouldHideBestNzCategory(sourceType: SourceType?, name: String): Boolean =
-    sourceType == SourceType.XTREAM && isBestNzLabel(name) &&
-        !isAllowedBestNzSportsCategory(sourceType, name)
+    sourceType == SourceType.XTREAM && isBestNzLabel(name) && !isSkySportLabel(name)
 
 /**
  * A provider RAW/HD folder may name its streams simply "Sky Sport 1" or even "SS1".
