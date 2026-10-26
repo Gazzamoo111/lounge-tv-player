@@ -1,7 +1,6 @@
 package tv.own.owntv.features.home
 
 import tv.own.owntv.ui.components.loungeVodTitle
-import tv.own.owntv.features.vod.LoungeVodPolicy
 
 import androidx.compose.runtime.Immutable
 
@@ -218,13 +217,13 @@ class HomeViewModel(
         h: tv.own.owntv.core.database.entity.WatchHistoryEntity,
     ): ContinueTarget? = when (h.mediaType) {
         MediaType.MOVIE -> movieDao.getById(h.itemId)?.let { m ->
-            if (!LoungeVodPolicy.allowsMovie(m) || !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, m.categoryId, profileDao, categoryDao)) return@let null
+            if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, m.categoryId, profileDao, categoryDao)) return@let null
             val pos = progressDao.get(pid, MediaType.MOVIE, m.id)?.positionMs ?: 0L
             ContinueTarget(ContinueKind.MOVIE, loungeVodTitle(m.name), if (pos > 0) ContinueAction.RESUME else ContinueAction.PLAY, movieId = m.id, positionMs = pos)
         }
         MediaType.EPISODE -> seriesDao.getEpisodeById(h.itemId)?.let { ep ->
             seriesDao.getSeriesById(ep.seriesId)?.let { s ->
-                if (!LoungeVodPolicy.allowsSeries(s) || !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, s.categoryId, profileDao, categoryDao)) return@let null
+                if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, s.categoryId, profileDao, categoryDao)) return@let null
                 val pos = progressDao.get(pid, MediaType.EPISODE, ep.id)?.positionMs ?: 0L
                 ContinueTarget(ContinueKind.EPISODE, loungeVodTitle(s.name), if (pos > 0) ContinueAction.RESUME else ContinueAction.NEXT_UP, seriesId = ep.seriesId, episodeId = ep.id, positionMs = pos)
             }
@@ -409,61 +408,22 @@ class HomeViewModel(
     private suspend fun loadHomeData(profileId: Long) {
         val previous = _uiState.value
         val data = feed.load(profileId)
-        // Provider categories are also screened so translated/dubbed copies with an English
-        // canonical title never leak into Trending, Keep Watching or favourite shelves.
-        val movieSources = tv.own.owntv.core.repository.activeSourceIds(
-            settings, sourceDao, profileId, MediaType.MOVIE,
-        ).toList()
-        val seriesSources = tv.own.owntv.core.repository.activeSourceIds(
-            settings, sourceDao, profileId, MediaType.SERIES,
-        ).toList()
-        val blockedMovieCategories = if (movieSources.isEmpty()) emptySet() else
-            categoryDao.observe(movieSources, MediaType.MOVIE).first()
-                .filter { LoungeVodPolicy.excludesCategory(it.name) }.mapTo(hashSetOf()) { it.id }
-        val blockedSeriesCategories = if (seriesSources.isEmpty()) emptySet() else
-            categoryDao.observe(seriesSources, MediaType.SERIES).first()
-                .filter { LoungeVodPolicy.excludesCategory(it.name) }.mapTo(hashSetOf()) { it.id }
-        fun allowedMovie(m: MovieEntity): Boolean = LoungeVodPolicy.allowsMovie(m) &&
-            (m.categoryId == null || m.categoryId !in blockedMovieCategories)
-        fun allowedSeries(s: SeriesEntity): Boolean = LoungeVodPolicy.allowsSeries(s) &&
-            (s.categoryId == null || s.categoryId !in blockedSeriesCategories)
-        // Core can return provider-supplied trending and Continue rows regardless of editorial quality.
-        // Screen all VOD here; never allow an excluded item back onto the Home hero.
-        val curatedTrending = data.trendingItems.filter {
-            when (it) {
-                is TrendingHomeItem.Movie -> allowedMovie(it.movie)
-                is TrendingHomeItem.Series -> allowedSeries(it.series)
-            }
-        }
-        val curatedHero = data.heroItems.filter {
-            when (it) {
-                is HeroItem.MovieHero -> allowedMovie(it.movie)
-                is HeroItem.SeriesHero -> allowedSeries(it.series)
-                is HeroItem.LiveHero -> true
-            }
-        }
         _uiState.value = HomeUiState(
-            trendingItems = curatedTrending,
+            trendingItems = data.trendingItems,
             activeTrendingIndex = previous.activeTrendingIndex
-                .coerceIn(0, (curatedTrending.size - 1).coerceAtLeast(0)),
+                .coerceIn(0, (data.trendingItems.size - 1).coerceAtLeast(0)),
             trendingPreferredLanguage = data.trendingPreferredLanguage,
             trendingSeasonCounts = data.trendingSeasonCounts,
-            trendingExtras = previous.trendingExtras.filterKeys { key -> curatedTrending.any { it.stableKey == key } },
-            heroItems = curatedHero,
+            trendingExtras = previous.trendingExtras.filterKeys { key -> data.trendingItems.any { it.stableKey == key } },
+            heroItems = data.heroItems,
             activeHeroIndex = 0,
-            continueMovies = data.continueMovies.filter { item ->
-                movieDao.getById(item.sourceItemId)?.let(::allowedMovie) == true
-            },
-            continueSeries = data.continueSeries.filter { item ->
-                seriesDao.getEpisodeById(item.targetItemId)
-                    ?.let { ep -> seriesDao.getSeriesById(ep.seriesId) }
-                    ?.let(::allowedSeries) == true
-            },
-            heroMetadata = previous.heroMetadata.filterKeys { key -> curatedHero.any { it.homeKey == key } },
+            continueMovies = data.continueMovies,
+            continueSeries = data.continueSeries,
+            heroMetadata = previous.heroMetadata.filterKeys { key -> data.heroItems.any { it.homeKey == key } },
             recentLive = data.recentLive,
             favoriteLive = data.favoriteLive,
-            favoriteMovies = data.favoriteMovies.filter(::allowedMovie),
-            favoriteSeries = data.favoriteSeries.filter(::allowedSeries),
+            favoriteMovies = data.favoriteMovies,
+            favoriteSeries = data.favoriteSeries,
             config = data.config,
             recentGuide = data.recentGuide,
             favoriteGuide = data.favoriteGuide,
