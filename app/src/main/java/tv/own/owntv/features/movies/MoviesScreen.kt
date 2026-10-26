@@ -272,7 +272,9 @@ fun MoviesScreen(
     val newMovies = highlights?.newReleases.orEmpty()
     val displayFeatured = lockedKey == null && searchQuery.isBlank() && allMoviesEditorial.isNotEmpty()
     val displayNewReleases = lockedKey == null && searchQuery.isBlank() && newMovies.isNotEmpty()
-    val headerRowCount = (if (displayFeatured) 1 else 0) + (if (displayNewReleases) 1 else 0)
+    val editorialRowCount = (if (displayFeatured) 1 else 0) + (if (displayNewReleases) 1 else 0)
+    val showCatalogueHeading = editorialRowCount > 0 && movies.itemCount > 0
+    val headerRowCount = editorialRowCount + (if (showCatalogueHeading) 1 else 0)
     val gridHeaderOffset = if (viewMode == SettingsRepository.VodViewMode.GRID) headerRowCount else 0
     val listHeaderOffset = if (viewMode == SettingsRepository.VodViewMode.LIST) headerRowCount else 0
     val chNavEnabled by settingsVm.chNavEnabled.collectAsStateWithLifecycle()
@@ -618,7 +620,7 @@ fun MoviesScreen(
             // A pinned, readable hero stays above the scrolling highlight rails.
             // 226px leaves room for a complete focused portrait card AND its heading.
             val showcaseActive = displayFeatured || displayNewReleases
-            val heroH = if (showcaseActive) 226.mpx
+            val heroH = if (showcaseActive) minOf(maxHeight * 0.325f, 350.mpx)
                 else if (panelShares != null) maxHeight * (cinematicDetailsPct / 100f)
                 else 464.mpx
             val toolTop = 122.mpx + heroH
@@ -703,6 +705,16 @@ fun MoviesScreen(
                                                 firstCardFocusRequester = firstNewReleaseFocus,
                                             )
                                         }
+                                    }
+                                }
+                                if (showCatalogueHeading) {
+                                    item(key = Long.MIN_VALUE + 2L, span = { GridItemSpan(maxLineSpan) }, contentType = 3) {
+                                        Text(
+                                            text = stringResource(R.string.content_category_all_movies),
+                                            style = stageText(27, 800),
+                                            color = StageColors.Text,
+                                            modifier = Modifier.fillMaxWidth().padding(top = 32.mpx, bottom = 16.mpx),
+                                        )
                                     }
                                 }
                                 items(count = movies.itemCount, key = movies.itemKey { it.id }, contentType = movies.itemContentType { "movie" }) { index ->
@@ -854,6 +866,16 @@ fun MoviesScreen(
                                     }
                                 }
                             }
+                            if (showCatalogueHeading) {
+                                item(key = Long.MIN_VALUE + 2L, contentType = 3) {
+                                    Text(
+                                        text = stringResource(R.string.content_category_all_movies),
+                                        style = stageText(27, 800),
+                                        color = StageColors.Text,
+                                        modifier = Modifier.fillMaxWidth().padding(top = 32.mpx, bottom = 16.mpx),
+                                    )
+                                }
+                            }
                             items(count = movies.itemCount, key = movies.itemKey { it.id }, contentType = movies.itemContentType { "movie" }) { index ->
                                 val movie = movies[index] ?: return@items
                                 val prog = movieProgress[movie.id]
@@ -936,6 +958,16 @@ fun MoviesScreen(
                                             firstCardFocusRequester = firstNewReleaseFocus,
                                         )
                                     }
+                                }
+                            }
+                            if (showCatalogueHeading) {
+                                item(key = Long.MIN_VALUE + 2L, span = { GridItemSpan(maxLineSpan) }, contentType = 3) {
+                                    Text(
+                                        text = stringResource(R.string.content_category_all_movies),
+                                        style = stageText(27, 800),
+                                        color = StageColors.Text,
+                                        modifier = Modifier.fillMaxWidth().padding(top = 32.mpx, bottom = 16.mpx),
+                                    )
                                 }
                             }
                             items(count = movies.itemCount, key = movies.itemKey { it.id }, contentType = movies.itemContentType { "movie" }) { index ->
