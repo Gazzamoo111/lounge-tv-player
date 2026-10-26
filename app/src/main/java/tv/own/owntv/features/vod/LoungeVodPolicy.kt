@@ -31,7 +31,7 @@ internal object LoungeVodPolicy {
     )
 
     /** Exact title keys, not loose substring matches that accidentally approve lookalikes. */
-    private val approvedMovieTitles: Set<String> = listOf(
+    private val movieNames: List<String> = listOf(
         "Avatar",
         "Avatar: The Way of Water",
         "Dune",
@@ -446,9 +446,9 @@ internal object LoungeVodPolicy {
         "Hairspray",
         "Sister Act",
         "Sister Act 2: Back in the Habit",
-    ).mapTo(hashSetOf(), ::key)
+    )
 
-    private val approvedSeriesTitles: Set<String> = listOf(
+    private val seriesNames: List<String> = listOf(
         "Friends",
         "The Office",
         "The Office (US)",
@@ -668,7 +668,27 @@ internal object LoungeVodPolicy {
         "The Suite Life on Deck",
         "High School Musical: The Musical: The Series",
         "The Muppets",
-    ).mapTo(hashSetOf(), ::key)
+    )
+
+    private val approvedMovieTitles = movieNames.mapTo(hashSetOf(), ::key)
+    private val approvedSeriesTitles = seriesNames.mapTo(hashSetOf(), ::key)
+    private val moviePriority = movieNames.mapIndexed { index, title -> key(title) to index }.toMap()
+    private val seriesPriority = seriesNames.mapIndexed { index, title -> key(title) to index }.toMap()
+
+    /** Phrase batches keep FTS query complexity bounded and never pull the whole provider catalogue. */
+    fun movieSearchQueries(): List<String> = searchQueries(movieNames)
+    fun seriesSearchQueries(): List<String> = searchQueries(seriesNames)
+
+    fun movieRank(movie: MovieEntity): Int = moviePriority[key(movie.canonicalTitle.ifBlank { movie.name })] ?: Int.MAX_VALUE
+    fun seriesRank(series: SeriesEntity): Int = seriesPriority[key(series.canonicalTitle.ifBlank { series.name })] ?: Int.MAX_VALUE
+    fun movieKey(movie: MovieEntity): String = key(movie.canonicalTitle.ifBlank { movie.name })
+    fun seriesKey(series: SeriesEntity): String = key(series.canonicalTitle.ifBlank { series.name })
+
+    private fun searchQueries(titles: List<String>): List<String> = titles.chunked(12).map { chunk ->
+        chunk.joinToString(" OR ") { title ->
+            "\\"" + title.replace("\\"", "\\"\\"") + "\\""
+        }
+    }
 
     fun allowsMovie(movie: MovieEntity): Boolean =
         allowsMovieName(movie.canonicalTitle.ifBlank { movie.name }, movie.name)
