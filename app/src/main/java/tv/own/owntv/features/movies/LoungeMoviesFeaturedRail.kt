@@ -48,13 +48,13 @@ internal fun LoungeMoviesFeaturedRail(
 ) {
     if (movies.isEmpty()) return
     BoxWithConstraints(Modifier.fillMaxWidth()) {
-        // Showcase covers are intentionally larger than the 196px full-library tiles.
-        // A four-across shelf in Separate mode and around five in Cinematic, with
-        // a cap so focus never makes a poster taller than the Movies browse pane.
-        val cardWidth = minOf((maxWidth - 72.mpx) / 3.9f, 340.mpx)
+        // Distinct from the 196px full-grid posters, but short enough for the
+        // header and focused image to remain visible below the shared spotlight.
+        // Four cards fit narrow panes; approximately five fit widescreen Cinematic.
+        val cardWidth = minOf(maxOf((maxWidth - 78.mpx) / 4.8f, 196.mpx), 284.mpx)
         Column(Modifier.fillMaxWidth()) {
-            Text(heading, style = stageText(29, 800), color = StageColors.Text)
-            Spacer(Modifier.height(14.mpx))
+            Text(heading, style = stageText(26, 800), color = StageColors.Text)
+            Spacer(Modifier.height(11.mpx))
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(20.mpx),
                 contentPadding = PaddingValues(end = 24.mpx),
