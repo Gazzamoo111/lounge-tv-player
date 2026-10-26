@@ -690,11 +690,18 @@ internal object LoungeVodPolicy {
         }
     }
 
+    /** Core extracts a reliable two-letter language code when the provider supplies one.
+     * Unknown stays eligible only if the title itself has been editorially approved. */
+    fun allowsProviderLanguage(language: String?): Boolean =
+        language.isNullOrBlank() || language.uppercase(Locale.ROOT) == "EN"
+
     fun allowsMovie(movie: MovieEntity): Boolean =
-        allowsMovieName(movie.canonicalTitle.ifBlank { movie.name }, movie.name)
+        allowsProviderLanguage(movie.providerLanguage) &&
+            allowsMovieName(movie.canonicalTitle.ifBlank { movie.name }, movie.name)
 
     fun allowsSeries(series: SeriesEntity): Boolean =
-        allowsSeriesName(series.canonicalTitle.ifBlank { series.name }, series.name)
+        allowsProviderLanguage(series.providerLanguage) &&
+            allowsSeriesName(series.canonicalTitle.ifBlank { series.name }, series.name)
 
     fun allowsMovieName(canonicalTitle: String, rawName: String = canonicalTitle): Boolean =
         !hasRestrictedMarkers(rawName) && !hasRestrictedMarkers(canonicalTitle) &&
