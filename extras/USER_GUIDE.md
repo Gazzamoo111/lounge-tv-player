@@ -168,7 +168,7 @@ If the entire schedule is off by a fixed number of hours, check the guide time-o
 ## 6. Movies and Series
 
 ### Movies
-Open **Movies**, choose a category and press **OK**. At the top of each category, **Featured Movies** and **New Releases** highlight available films in larger cards. Press **Left / Right** to browse up to 20 films in each row; **Down** continues into the full movie catalogue. The Featured selection changes periodically, and New Releases highlights films by their release year. If a category has no suitable new titles, that row may be absent.
+Open **Movies**, choose a category and press **OK**. A larger cinematic hero shows the currently highlighted film's title, details and synopsis. At the top of each category, **Featured Movies** and **New Releases** highlight available films in larger cards; an **All Movies** heading separates these rows from the complete catalogue below. Press **Left / Right** to browse up to 20 films in each row; **Down** continues into the full movie catalogue. The Featured selection changes periodically, and New Releases highlights films by their release year. If a category has no suitable new titles, that row may be absent.
 
 Use a title's details screen to play it, resume it or review its information where available.
 
@@ -185,7 +185,7 @@ Hiding content changes what you see in your profile; it does **not** cancel your
 **Browsing tip:** When choosing a new Movies category, the list opens at the **top**, starting with Featured or New Releases. From the first card of either highlight row, press **Left** to return to the category menu.
 
 ### Series
-Open **Series**, choose a category and browse **Featured Series** and **New Series** at the top. Like Movies, these are horizontal highlights with a large cinematic hero above them; scrolling down reveals the complete series catalogue. The hero updates to describe the focused show. Featured selections change periodically, while New Series uses the show's original release year, not the date the provider added it.
+Open **Series**, choose a category and browse **Featured Series** and **New Series** at the top. Like Movies, these are horizontal highlights below the cinematic hero; an **All Series** heading marks the complete catalogue farther down. The hero updates to describe the focused show. Featured selections change periodically, while New Series uses the show's original release year, not the date the provider added it.
 
 Press **Left** from the first featured show to return to Categories. Selecting a different category returns to its top highlights. Press **OK** on a show to open its seasons and episodes. When available, **Continue Watching** resumes from your saved position. Whether the next episode starts automatically depends on your playback setting.
 
