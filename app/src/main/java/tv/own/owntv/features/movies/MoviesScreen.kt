@@ -64,6 +64,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -147,6 +148,11 @@ fun MoviesScreen(
     // Reuse the established Home editorial picks. No extra provider fetch or catalogue filter.
     val homeVm: tv.own.owntv.features.home.HomeViewModel = koinViewModel()
     val homeEditorial by homeVm.uiState.collectAsStateWithLifecycle()
+    // Movies may open before Home: initialise its editorial picks without a full-list rewrite.
+    // Only request the shared Home data when it has never been loaded this session.
+    LaunchedEffect(homeVm) {
+        if (homeVm.uiState.value.isLoading) homeVm.refresh()
+    }
     // Locking and unlocking are one pair: the pin belongs to this screen's lifetime, not to the view
     // model's. On the television that view model is a single instance shared with the browse section,
     // so a pin left behind froze its category rail. `DisposableEffect` (not `LaunchedEffect`) also
@@ -251,6 +257,10 @@ fun MoviesScreen(
     // Cinematic is grid-only: the List rows have nowhere to put a full-bleed backdrop. The stored
     // choice is deliberately not rewritten, so switching back to Separate restores the user's List.
     val viewMode = if (cinematic) SettingsRepository.VodViewMode.GRID else storedViewMode
+    val showEditorialRail = lockedKey == null && selectedKey == LiveKey.All && searchQuery.isBlank() && homeEditorial.featuredMovies.isNotEmpty()
+    // A full-width featured grid item adds one index only in the Cinematic layout.
+    // Convert movie positions at the boundary so paging, focus restore and CH navigation still work.
+    val cinematicHeaderOffset = if (cinematic && showEditorialRail) 1 else 0
     val chNavEnabled by settingsVm.chNavEnabled.collectAsStateWithLifecycle()
     val chNavUpSkip by settingsVm.chNavUpSkip.collectAsStateWithLifecycle()
     val chNavDownSkip by settingsVm.chNavDownSkip.collectAsStateWithLifecycle()
@@ -272,7 +282,7 @@ fun MoviesScreen(
     // The List view scrolls a LazyListState, the grids (Cinematic and Separate) a LazyGridState.
     val usesList = viewMode == SettingsRepository.VodViewMode.LIST
     suspend fun scrollToIndex(i: Int) {
-        runCatching { if (usesList) effectiveListState.scrollToItem(i) else effectiveGridState.scrollToItem(i) }
+        runCatching { if (usesList) effectiveListState.scrollToItem(i) else effectiveGridState.scrollToItem(i + cinematicHeaderOffset) }
     }
     val stepper = remember { VodStepper(scope) { effectiveListState } }
     val playlistMarks by vm.playlistMarks.collectAsStateWithLifecycle()
@@ -291,12 +301,12 @@ fun MoviesScreen(
     // focus, so the placeholder is only shown when nothing at all is known. peek() reads the loaded
     // page without triggering a fetch.
     val cachedPosters by vm.cachedPosters.collectAsStateWithLifecycle()
-    LaunchedEffect(effectiveGridState, effectiveListState, viewMode, movies) {
+    LaunchedEffect(effectiveGridState, effectiveListState, viewMode, movies, cinematicHeaderOffset) {
         val grid = !usesList
         snapshotFlow {
             val info = if (grid) effectiveGridState.layoutInfo.visibleItemsInfo.map { it.index }
             else effectiveListState.layoutInfo.visibleItemsInfo.map { it.index }
-            info.filter { it < movies.itemCount }
+            info.map { if (grid) it - cinematicHeaderOffset else it }.filter { it >= 0 && it < movies.itemCount }
                 .mapNotNull { movies.peek(it) }
                 .filter { it.posterUrl.isNullOrBlank() }
         }.distinctUntilChanged().collect { vm.onPosterlessVisible(it) }
@@ -506,7 +516,7 @@ fun MoviesScreen(
                 val idx = if (sel != null) movies.itemSnapshotList.items.indexOfFirst { it.id == sel.id } else -1
                 if (idx >= 0) idx
                 else if (usesList) effectiveListState.firstVisibleItemIndex
-                else effectiveGridState.firstVisibleItemIndex
+                else (effectiveGridState.firstVisibleItemIndex - cinematicHeaderOffset).coerceAtLeast(0)
             },
             onJumpToIndex = { idx ->
                 // Scroll the target into view, then set it as the selected movie so selFocus binds to it
@@ -597,7 +607,7 @@ fun MoviesScreen(
                         Spacer(Modifier.weight(1f))
                         StageKeyHints(listOf(playHint, optionsHint, "◀" to stringResource(R.string.content_category_browser_title)))
                     }
-                    if (movies.itemCount == 0) {
+                    if (movies.itemCount == 0 && !showEditorialRail) {
                         Text(emptyText, style = stageText(20, 500), color = StageColors.Muted, modifier = Modifier.padding(start = fx(84), top = 60.mpx))
                     } else {
                         // The 196 × 294 posters, 26 apart, as many across as fit; the grid grows downwards
@@ -617,6 +627,22 @@ fun MoviesScreen(
                                 contentPadding = PaddingValues(start = fx(84), end = fx(64), top = 14.mpx, bottom = glowRoom),
                                 modifier = Modifier.fillMaxWidth().weight(1f),
                             ) {
+                                // Featured shelf travels with the catalogue grid rather than consuming
+                                // permanent screen height beneath the hero. D-pad Down browses the full library.
+                                if (showEditorialRail) {
+                                    item(key = "lounge-featured-movies", span = { GridItemSpan(maxLineSpan) }, contentType = "featured-rail") {
+                                        Box(Modifier.fillMaxWidth().padding(vertical = 14.mpx)) {
+                                            LoungeMoviesFeaturedRail(
+                                                heading = stringResource(R.string.lounge_home_featured_movies),
+                                                movies = homeEditorial.featuredMovies,
+                                                displayNames = homeEditorial.featuredMovieNames,
+                                                posterUrl = posterOf,
+                                                onFocused = onMovieFocus,
+                                                onPlay = startMovie,
+                                            )
+                                        }
+                                    }
+                                }
                                 items(count = movies.itemCount, key = movies.itemKey { it.id }, contentType = movies.itemContentType { "movie" }) { index ->
                                     val movie = movies[index] ?: return@items
                                     val prog = movieProgress[movie.id]
@@ -716,7 +742,7 @@ fun MoviesScreen(
                 // One independently scrollable, curated shelf before the complete paginated library.
                 // Only show it in the main All Movies browser, not in searches or pinned History/Favourites.
                 // The existing grid/list, categories, paging and playback remain unchanged.
-                if (!locked && selectedKey == LiveKey.All && searchQuery.isBlank() && homeEditorial.featuredMovies.isNotEmpty()) {
+                if (showEditorialRail) {
                     Spacer(Modifier.height(16.mpx))
                     LoungeMoviesFeaturedRail(
                         heading = stringResource(R.string.lounge_home_featured_movies),
