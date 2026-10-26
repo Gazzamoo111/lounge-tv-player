@@ -687,7 +687,7 @@ fun MoviesScreen(
                             ) {
                                 // Two large rows scroll up with the existing paged grid.
                                 if (displayFeatured) {
-                                    item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = "section-heading") {
+                                    item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
                                         Text(
                                             text = stringResource(R.string.lounge_home_featured_movies),
                                             style = stageText(28, 800),
@@ -698,7 +698,7 @@ fun MoviesScreen(
                                     items(
                                         count = featuredPreview.size,
                                         key = { index -> Long.MIN_VALUE + 100L + index.toLong() },
-                                        contentType = { "featured-poster" },
+                                        contentType = { 11 },
                                     ) { index ->
                                         val movie = featuredPreview[index]
                                         LoungeMoviesEditorialPoster(
@@ -716,7 +716,7 @@ fun MoviesScreen(
                                     }
                                 }
                                 if (displayNewReleases) {
-                                    item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = "section-heading") {
+                                    item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
                                         Text(
                                             text = stringResource(R.string.lounge_movies_new_releases),
                                             style = stageText(28, 800),
@@ -727,7 +727,7 @@ fun MoviesScreen(
                                     items(
                                         count = newPreview.size,
                                         key = { index -> Long.MIN_VALUE + 200L + index.toLong() },
-                                        contentType = { "new-poster" },
+                                        contentType = { 12 },
                                     ) { index ->
                                         val movie = newPreview[index]
                                         LoungeMoviesEditorialPoster(
@@ -935,7 +935,7 @@ fun MoviesScreen(
                             modifier = Modifier.fillMaxWidth().weight(1f).then(glowWide),
                         ) {
                             if (displayFeatured) {
-                                item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = "section-heading") {
+                                item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
                                     Text(
                                         text = stringResource(R.string.lounge_home_featured_movies),
                                         style = stageText(28, 800),
@@ -946,7 +946,7 @@ fun MoviesScreen(
                                 items(
                                     count = featuredPreview.size,
                                     key = { index -> Long.MIN_VALUE + 100L + index.toLong() },
-                                    contentType = { "featured-poster" },
+                                    contentType = { 11 },
                                 ) { index ->
                                     val movie = featuredPreview[index]
                                     LoungeMoviesEditorialPoster(
@@ -964,7 +964,7 @@ fun MoviesScreen(
                                 }
                             }
                             if (displayNewReleases) {
-                                item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = "section-heading") {
+                                item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
                                     Text(
                                         text = stringResource(R.string.lounge_movies_new_releases),
                                         style = stageText(28, 800),
@@ -975,7 +975,7 @@ fun MoviesScreen(
                                 items(
                                     count = newPreview.size,
                                     key = { index -> Long.MIN_VALUE + 200L + index.toLong() },
-                                    contentType = { "new-poster" },
+                                    contentType = { 12 },
                                 ) { index ->
                                     val movie = newPreview[index]
                                     LoungeMoviesEditorialPoster(
