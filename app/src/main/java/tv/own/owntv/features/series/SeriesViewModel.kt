@@ -2,6 +2,7 @@
 
 package tv.own.owntv.features.series
 
+import tv.own.owntv.features.vod.LoungeVodPolicy
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -233,7 +234,7 @@ class SeriesViewModel(
                         cats,
                         cust.hiddenCategories,
                         profile?.isKids == true,
-                    )
+                    ) + cats.asSequence().filter { LoungeVodPolicy.excludesCategory(it.name) }.map { it.id }.toSet()
                 }
             }
         }
@@ -494,7 +495,7 @@ class SeriesViewModel(
                     cust,
                     kids = profile?.isKids == true,
                     alphaRest = sort == SettingsRepository.SortMode.ALPHA,
-                )
+                ).filterNot { LoungeVodPolicy.excludesCategory(it.displayName) }
                 val multiSourceNames = c.sourceNames.takeIf { it.size > 1 }.orEmpty()
                 val categoriesById = cats.associateBy { it.id }
                 defaultRail + folders.map { e ->
@@ -527,8 +528,8 @@ class SeriesViewModel(
             }.flow.map { paging ->
                 val cust = cs.cust
                 val movedFrom = cust.movedFromOrigin
-                if (cust.hiddenItems.isEmpty() && cust.itemNames.isEmpty() && cs.hiddenCats.isEmpty() && movedFrom.isEmpty()) paging
-                else paging.filter { s ->
+                paging.filter { s ->
+                    LoungeVodPolicy.allowsSeries(s) &&
                     CustomizeKeys.series(s) !in cust.hiddenItems &&
                         (s.categoryId == null || s.categoryId !in cs.hiddenCats) &&
                         // Moved-out items leave ONLY their origin folder (they stay in All/search).
@@ -957,7 +958,7 @@ class SeriesViewModel(
         viewModelScope.launch {
             val pid = currentProfileId()
             val show = seriesDao.getSeriesById(episode.seriesId) ?: return@launch
-            if (pid != null && !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, show.categoryId, profileDao, categoryDao)) return@launch
+            if (!LoungeVodPolicy.allowsSeries(show) || (pid != null && !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, show.categoryId, profileDao, categoryDao))) return@launch
             Log.d(TAG, "playEpisodeExternal episodeId=${episode.id}")
             val url = resolvedEpisodeUrlOrNull(episode) ?: return@launch
             val source = sourceDao.getById(show.sourceId)
@@ -994,7 +995,7 @@ class SeriesViewModel(
         _lastPlayedEpisodeId.value = episode.id
         viewModelScope.launch {
             val pid = currentProfileId()
-            if (pid != null && !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, show.categoryId, profileDao, categoryDao)) return@launch
+            if (!LoungeVodPolicy.allowsSeries(show) || (pid != null && !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, show.categoryId, profileDao, categoryDao))) return@launch
             // External player (global toggle): launch only the selected episode (external players are
             // single-item — no prev/next queue). History is still recorded; resume position and the
             // in-app HUD/progress tick are not, since OwnTV can't observe the external app.
@@ -1139,7 +1140,7 @@ class SeriesViewModel(
         val showDir = StorageAccess.sanitize(series.name)
         viewModelScope.launch {
             val pid = currentProfileId() ?: return@launch
-            if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, series.categoryId, profileDao, categoryDao)) return@launch
+            if (!LoungeVodPolicy.allowsSeries(series) || !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, series.categoryId, profileDao, categoryDao)) return@launch
             seriesDao.episodesBySeries(series.id).first().filter { season == null || it.seasonNumber == season }.forEach { ep ->
                 val ext = ep.containerExt ?: StorageAccess.extOf(ep.streamUrl)
                 downloadManager.enqueue(
