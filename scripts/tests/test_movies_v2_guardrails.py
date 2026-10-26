@@ -29,10 +29,12 @@ class MoviesHighlightsGuardrailsTest(unittest.TestCase):
         self.assertIn("scrollToItem(i + gridHeaderOffset)", screen)
         self.assertIn("it - gridHeaderOffset else it - listHeaderOffset", screen)
 
-    def test_five_across_portrait_covers_have_no_letterboxing(self):
+    def test_compact_portrait_highlights_keep_row_headings_visible(self):
         shelf = (MOVIES / "LoungeMoviesFeaturedRail.kt").read_text()
-        self.assertIn("val cardWidth = (maxWidth - 100.mpx) / 5.15f", shelf)
+        self.assertIn("val cardWidth = minOf((maxWidth - 92.mpx) / 5.4f, 170.mpx)", shelf)
         self.assertIn("height = cardWidth * 1.5f", shelf)
+        self.assertIn("Text(heading, style = stageText(24, 800)", shelf)
+        self.assertLess(shelf.index("Text(heading"), shelf.index("LazyRow("))
         self.assertIn("VodPosterArt(posterUrl(movie), OwnTVIcon.MOVIES)", shelf)
         self.assertNotIn("movie.backdropUrl", shelf)
         self.assertNotIn("ContentScale.Fit", shelf)
