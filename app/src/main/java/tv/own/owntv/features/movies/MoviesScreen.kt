@@ -246,6 +246,8 @@ fun MoviesScreen(
     val listState = rememberLazyListState()
     val selFocus = remember { FocusRequester() }
     val firstItemFocus = remember { FocusRequester() }
+    val firstFeaturedFocus = remember { FocusRequester() }
+    val firstNewReleaseFocus = remember { FocusRequester() }
     // Right from the rail on an empty list: the list's search box, so a search with no results can be cleared.
     val listSearchFocus = remember { FocusRequester() }
 
@@ -287,8 +289,11 @@ fun MoviesScreen(
     // @Composable/rememberSaveable call here would register slots conditionally and corrupt the slot table.
     val effectiveGridState = if (rememberMovies) perCategoryGrid.getOrPut(selectedKey) { LazyGridState() } else gridState
     val effectiveListState = if (rememberMovies) perCategoryList.getOrPut(selectedKey) { LazyListState() } else listState
+    // New sidebar selections start at the top, independently of remember-last-item.
+    // Returning from playback leaves selectedKey unchanged and retains existing restoration.
     LaunchedEffect(selectedKey, rememberMovies) {
-        if (!rememberMovies) { runCatching { gridState.scrollToItem(0) }; runCatching { listState.scrollToItem(0) } }
+        runCatching { effectiveGridState.scrollToItem(0) }
+        runCatching { effectiveListState.scrollToItem(0) }
     }
     // The List view scrolls a LazyListState, the grids (Cinematic and Separate) a LazyGridState.
     val usesList = viewMode == SettingsRepository.VodViewMode.LIST
@@ -299,6 +304,7 @@ fun MoviesScreen(
     val playlistMarks by vm.playlistMarks.collectAsStateWithLifecycle()
     // Separate keeps the categories on screen; Cinematic opens them as a sheet (◀, or the Categories tool).
     var categoriesOpen by remember { mutableStateOf(false) }
+    var pendingCategoryFocus by remember { mutableStateOf<LiveKey?>(null) }
     var sheetHadFocus by remember { mutableStateOf(false) }
     var sortOpen by remember { mutableStateOf(false) }
     val sortFocus = remember { FocusRequester() }
@@ -416,29 +422,23 @@ fun MoviesScreen(
         runCatching { selFocus.requestFocus() }.getOrDefault(false) ||
             runCatching { contextFocus.requestFocus() }.getOrDefault(false) ||
             runCatching { firstItemFocus.requestFocus() }.getOrDefault(false)
-    // From the categories to the titles: the remembered movie, else the first; the search field when empty.
+    // Entering Movies from the category sidebar begins at the featured highlights.
     fun focusTitles() {
-        val targetId = if (rememberMovies) perCategoryMovieIds[selectedKey] ?: selectedMovie?.id else selectedMovie?.id
         scope.launch {
-            if (movies.itemCount > 0) {
-                val targetIdx = targetId?.let { id -> movies.itemSnapshotList.items.indexOfFirst { it.id == id }.takeIf { it >= 0 } } ?: 0
-                scrollToIndex(targetIdx)
+            runCatching { effectiveGridState.scrollToItem(0) }
+            runCatching { effectiveListState.scrollToItem(0) }
+            repeat(12) {
                 withFrameNanos { }
-                // A category just picked is still loading: the first attempt can land on a title of the
-                // old list, which then vanishes and drops focus to the rail. So keep watching for about
-                // 0.7 s and take focus back whenever the titles lost it.
-                repeat(40) {
-                    if (!gridPaneFocused) {
-                        if (!(targetId != null && focusCurrentTitle())) runCatching { firstItemFocus.requestFocus() }
-                    }
-                    withFrameNanos { }
+                val requester = when {
+                    displayFeatured -> firstFeaturedFocus
+                    displayNewReleases -> firstNewReleaseFocus
+                    movies.itemCount > 0 -> firstItemFocus
+                    else -> listSearchFocus
                 }
-            } else {
-                runCatching { listSearchFocus.requestFocus() }
+                if (runCatching { requester.requestFocus() }.getOrDefault(false)) return@launch
             }
         }
     }
-
     // The way in from the rail: Separate lands on the open category in the column (as Live TV's
     // Separate panels), Cinematic on the title the hero shows. The shell's focus restorer would
     // otherwise return to whatever had focus last, such as the search field.
@@ -489,8 +489,33 @@ fun MoviesScreen(
             onJumpToIndex = { idx -> catFocusIndex = idx; railFocusRow = idx },
         )
     val onCategorySelect: (Int) -> Unit = { idx ->
-        railItems.getOrNull(idx)?.let { vm.select(it.key) }
-        if (categoriesOpen) { categoriesOpen = false; focusTitles() }
+        railItems.getOrNull(idx)?.let { item ->
+            // Hold the intended category until its highlights finish loading. Avoid focusing
+            // an old category's remembered position while the new pager is still switching.
+            pendingCategoryFocus = item.key
+            perCategoryMovieIds.remove(item.key)
+            vm.select(item.key)
+        }
+        if (categoriesOpen) categoriesOpen = false
+    }
+    LaunchedEffect(selectedKey, pendingCategoryFocus, categoryHighlights.categoryKey, displayFeatured, displayNewReleases, categoriesOpen) {
+        if (pendingCategoryFocus != selectedKey || categoryHighlights.categoryKey != selectedKey || categoriesOpen) return@LaunchedEffect
+        runCatching { effectiveGridState.scrollToItem(0) }
+        runCatching { effectiveListState.scrollToItem(0) }
+        repeat(16) {
+            withFrameNanos { }
+            val requester = when {
+                displayFeatured -> firstFeaturedFocus
+                displayNewReleases -> firstNewReleaseFocus
+                movies.itemCount > 0 -> firstItemFocus
+                else -> listSearchFocus
+            }
+            if (runCatching { requester.requestFocus() }.getOrDefault(false)) {
+                pendingCategoryFocus = null
+                return@LaunchedEffect
+            }
+        }
+        pendingCategoryFocus = null
     }
     val onCategoryLongSelect: (Int) -> Unit = { idx ->
         railItems.getOrNull(idx)?.let { item ->
@@ -649,6 +674,8 @@ fun MoviesScreen(
                                                 posterUrl = posterOf,
                                                 onFocused = onMovieFocus,
                                                 onPlay = startMovie,
+                                                onLeftFromFirstCard = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                                firstCardFocusRequester = firstFeaturedFocus,
                                             )
                                         }
                                     }
@@ -663,6 +690,8 @@ fun MoviesScreen(
                                                 posterUrl = posterOf,
                                                 onFocused = onMovieFocus,
                                                 onPlay = startMovie,
+                                                onLeftFromFirstCard = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                                firstCardFocusRequester = firstNewReleaseFocus,
                                             )
                                         }
                                     }
@@ -794,6 +823,8 @@ fun MoviesScreen(
                                             posterUrl = posterOf,
                                             onFocused = onMovieFocus,
                                             onPlay = startMovie,
+                                            onLeftFromFirstCard = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                            firstCardFocusRequester = firstFeaturedFocus,
                                         )
                                     }
                                 }
@@ -808,6 +839,8 @@ fun MoviesScreen(
                                             posterUrl = posterOf,
                                             onFocused = onMovieFocus,
                                             onPlay = startMovie,
+                                            onLeftFromFirstCard = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                            firstCardFocusRequester = firstNewReleaseFocus,
                                         )
                                     }
                                 }
@@ -874,6 +907,8 @@ fun MoviesScreen(
                                             posterUrl = posterOf,
                                             onFocused = onMovieFocus,
                                             onPlay = startMovie,
+                                            onLeftFromFirstCard = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                            firstCardFocusRequester = firstFeaturedFocus,
                                         )
                                     }
                                 }
@@ -888,6 +923,8 @@ fun MoviesScreen(
                                             posterUrl = posterOf,
                                             onFocused = onMovieFocus,
                                             onPlay = startMovie,
+                                            onLeftFromFirstCard = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                            firstCardFocusRequester = firstNewReleaseFocus,
                                         )
                                     }
                                 }
