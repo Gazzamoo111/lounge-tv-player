@@ -570,7 +570,7 @@ fun MoviesScreen(
             Box(Modifier.fillMaxSize().then(if (categoriesOpen) Modifier.graphicsLayer { alpha = 0.36f } else Modifier)) {
                 VodCinematicBackdrop(titleInfo?.backdropUrl, series = false, Modifier.align(Alignment.TopEnd))
                 VodHeader(
-                    section = stringResource(R.string.common_nav_movies), category = headerLabel, count = vodCount(false, count),
+                    section = stringResource(R.string.common_nav_movies), category = headerLabel, count = vodCount(false, movies.itemCount),
                     showChevron = true, modifier = Modifier.padding(start = fx(84), top = 52.mpx).width(fx(900)),
                 )
                 titleInfo?.let { VodHero(it, Modifier.padding(start = fx(84), top = 122.mpx).width(fx(1000)).height(heroH)) }
@@ -666,7 +666,7 @@ fun MoviesScreen(
             val top = if (locked) 0.mpx else 128.mpx
             if (!locked) {
                 VodHeader(
-                    section = stringResource(R.string.common_nav_movies), category = headerLabel, count = vodCount(false, count),
+                    section = stringResource(R.string.common_nav_movies), category = headerLabel, count = vodCount(false, movies.itemCount),
                     showChevron = false, modifier = Modifier.padding(start = fx(84), top = 52.mpx).width(fx(860)),
                 )
                 LiveCategories(
