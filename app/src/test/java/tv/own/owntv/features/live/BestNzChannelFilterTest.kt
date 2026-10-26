@@ -43,6 +43,16 @@ class BestNzChannelFilterTest {
         assertFalse(shouldHideBestNzCategory(SourceType.XTREAM, "UK | Movies"))
     }
 
+    @Test fun restoresRawHdFolderBasedOnStreamEvenWhenFolderLabelIsGeneric() {
+        assertTrue(isBestNzSkySportRawHdChannel(SourceType.XTREAM, "NZ", "NZ Sky Sport 1 RAW"))
+        assertTrue(isBestNzSkySportRawHdChannel(SourceType.XTREAM, "NZ | Sports", "NZ Sky Sport 1 HD"))
+        assertTrue(isBestNzSkySportRawHdChannel(SourceType.XTREAM, "NZ Sky Sport HD", "Sky Sport 5 HD"))
+        assertFalse(isBestNzSkySportRawHdChannel(SourceType.XTREAM, "NZ", "NZ Sky Sport 1 SD"))
+        assertFalse(isBestNzSkySportRawHdChannel(SourceType.XTREAM, "NZ", "NZ TVNZ 1 HD"))
+        assertFalse(isBestNzSkySportRawHdChannel(SourceType.XTREAM, "AU Sports", "AU Sky Sport 1 HD"))
+        assertFalse(isBestNzSkySportRawHdChannel(SourceType.M3U, "NZ", "NZ Sky Sport 1 HD"))
+    }
+
     @Test fun neverChangesOtherRegionsOrIndependentM3u() {
         assertFalse(shouldHideBestNzChannel(SourceType.M3U, "NZ | General", "TVNZ 1"))
         assertFalse(shouldHideBestNzCategory(SourceType.M3U, "NZ | General"))
