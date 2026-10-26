@@ -48,14 +48,15 @@ internal fun LoungeMoviesFeaturedRail(
 ) {
     if (movies.isEmpty()) return
     BoxWithConstraints(Modifier.fillMaxWidth()) {
-        // Five portrait posters across in the available pane, with the next cover
-        // peeking through. Keep focus lift room without reducing poster aspect ratio.
-        val cardWidth = (maxWidth - 100.mpx) / 5.15f
+        // A five-ish-across shelf in narrow Separate mode, capped on Cinematic's
+        // full-width pane. Full-width 2:3 posters otherwise become taller than the
+        // visible grid and focusing one scrolls the Featured/New Releases heading away.
+        val cardWidth = minOf((maxWidth - 92.mpx) / 5.4f, 170.mpx)
         Column(Modifier.fillMaxWidth()) {
-            Text(heading, style = stageText(27, 700), color = StageColors.Text)
-            Spacer(Modifier.height(13.mpx))
+            Text(heading, style = stageText(24, 800), color = StageColors.Text)
+            Spacer(Modifier.height(9.mpx))
             LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(22.mpx),
+                horizontalArrangement = Arrangement.spacedBy(20.mpx),
                 contentPadding = PaddingValues(end = 24.mpx),
                 modifier = Modifier.fillMaxWidth().focusGroup(),
             ) {
