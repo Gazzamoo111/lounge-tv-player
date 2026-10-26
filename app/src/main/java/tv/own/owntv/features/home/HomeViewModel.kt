@@ -218,13 +218,13 @@ class HomeViewModel(
         h: tv.own.owntv.core.database.entity.WatchHistoryEntity,
     ): ContinueTarget? = when (h.mediaType) {
         MediaType.MOVIE -> movieDao.getById(h.itemId)?.let { m ->
-            if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, m.categoryId, profileDao, categoryDao)) return@let null
+            if (!LoungeVodPolicy.allowsMovie(m) || !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, m.categoryId, profileDao, categoryDao)) return@let null
             val pos = progressDao.get(pid, MediaType.MOVIE, m.id)?.positionMs ?: 0L
             ContinueTarget(ContinueKind.MOVIE, loungeVodTitle(m.name), if (pos > 0) ContinueAction.RESUME else ContinueAction.PLAY, movieId = m.id, positionMs = pos)
         }
         MediaType.EPISODE -> seriesDao.getEpisodeById(h.itemId)?.let { ep ->
             seriesDao.getSeriesById(ep.seriesId)?.let { s ->
-                if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, s.categoryId, profileDao, categoryDao)) return@let null
+                if (!LoungeVodPolicy.allowsSeries(s) || !tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, s.categoryId, profileDao, categoryDao)) return@let null
                 val pos = progressDao.get(pid, MediaType.EPISODE, ep.id)?.positionMs ?: 0L
                 ContinueTarget(ContinueKind.EPISODE, loungeVodTitle(s.name), if (pos > 0) ContinueAction.RESUME else ContinueAction.NEXT_UP, seriesId = ep.seriesId, episodeId = ep.id, positionMs = pos)
             }
@@ -451,8 +451,14 @@ class HomeViewModel(
             trendingExtras = previous.trendingExtras.filterKeys { key -> curatedTrending.any { it.stableKey == key } },
             heroItems = curatedHero,
             activeHeroIndex = 0,
-            continueMovies = data.continueMovies,
-            continueSeries = data.continueSeries,
+            continueMovies = data.continueMovies.filter { item ->
+                movieDao.getById(item.sourceItemId)?.let(::allowedMovie) == true
+            },
+            continueSeries = data.continueSeries.filter { item ->
+                seriesDao.getEpisodeById(item.targetItemId)
+                    ?.let { ep -> seriesDao.getSeriesById(ep.seriesId) }
+                    ?.let(::allowedSeries) == true
+            },
             heroMetadata = previous.heroMetadata.filterKeys { key -> curatedHero.any { it.homeKey == key } },
             recentLive = data.recentLive,
             favoriteLive = data.favoriteLive,
