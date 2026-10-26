@@ -32,6 +32,15 @@ internal object LoungeVodPolicy {
 
     /** Exact title keys, not loose substring matches that accidentally approve lookalikes. */
     private val movieNames: List<String> = listOf(
+        "Spider-Man: Brand New Day",
+        "Toy Story 5",
+        "Project Hail Mary",
+        "Avatar: Fire and Ash",
+        "Hoppers",
+        "Minions & Monsters",
+        "Star Wars: The Mandalorian and Grogu",
+        "The Mandalorian and Grogu",
+        "Disclosure Day",
         "Avatar",
         "Avatar: The Way of Water",
         "Dune",
