@@ -334,6 +334,25 @@
 2	empty	app/src/main/java/tv/own/owntv/features/search/SearchViewModel.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/search/SearchViewModel.kt	m${item.id}
 1	technical	app/src/main/java/tv/own/owntv/features/search/SearchViewModel.kt	s${item.id}
+2	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	,
+2	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	?
+1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	) AND m.posterUrl IS NOT NULL AND TRIM(m.posterUrl) <> ''
+1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	))
+3	empty	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	\0
+1	regex	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	^(?:d\\+|nf|amzn|hbo|netflix|disney\\+|prime)\\s+
+1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	AND (m.categoryId IS NULL OR m.categoryId NOT IN (
+1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	AND COALESCE(m.year, m.parsedYear, 0) BETWEEN ? AND ?
+1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	AND m.categoryId = ?
+1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	COALESCE(m.rating, 0) DESC, m.qualityRank DESC, COALESCE(m.year, m.parsedYear, 0) DESC, m.id
+1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	COALESCE(m.year, m.parsedYear, 0) DESC, COALESCE(m.rating, 0) DESC, m.qualityRank DESC, m.id
+1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	INNER JOIN custom_category_members cm ON cm.itemId = m.id AND cm.profileId = ? AND cm.mediaType = 'SERIES' AND cm.contextKey = ?
+1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	INNER JOIN favorites fav ON fav.itemId = m.id AND fav.mediaType = 'SERIES' AND fav.profileId = ?
+1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	INNER JOIN watch_history wh ON wh.itemId = m.id AND wh.mediaType = 'SERIES' AND wh.profileId = ?
+1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	LIMIT
+1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	ORDER BY
+1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	SELECT DISTINCT m.id FROM series m
+1	assertion	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	Unsupported category query parameter
+1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	WHERE m.sourceId IN (
 1	technical	app/src/main/java/tv/own/owntv/features/series/SeriesScreen.kt	,
 6	technical	app/src/main/java/tv/own/owntv/features/series/SeriesScreen.kt	·
 1	empty	app/src/main/java/tv/own/owntv/features/series/SeriesScreen.kt	\0
@@ -359,11 +378,13 @@
 3	empty	app/src/main/java/tv/own/owntv/features/series/SeriesViewModel.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/series/SeriesViewModel.kt	${StorageAccess.sanitize(ep.name.ifBlank { "episode-${ep.episodeNumber}" })}.$ext
 1	technical	app/src/main/java/tv/own/owntv/features/series/SeriesViewModel.kt	${StorageAccess.sanitize(episode.name.ifBlank { "episode-${episode.episodeNumber}" })}.$ext
+1	log	app/src/main/java/tv/own/owntv/features/series/SeriesViewModel.kt	Category highlights unavailable
 3	technical	app/src/main/java/tv/own/owntv/features/series/SeriesViewModel.kt	EPISODE
 1	technical	app/src/main/java/tv/own/owntv/features/series/SeriesViewModel.kt	episode-${ep.episodeNumber}
 1	technical	app/src/main/java/tv/own/owntv/features/series/SeriesViewModel.kt	episode-${episode.episodeNumber}
 2	log	app/src/main/java/tv/own/owntv/features/series/SeriesViewModel.kt	external play episode history record failed episodeId=${episode.id} profile=$pid
 2	log	app/src/main/java/tv/own/owntv/features/series/SeriesViewModel.kt	external play series history record failed seriesId=${episode.seriesId} profile=$pid
+1	log	app/src/main/java/tv/own/owntv/features/series/SeriesViewModel.kt	LoungeSeriesHighlights
 1	log	app/src/main/java/tv/own/owntv/features/series/SeriesViewModel.kt	openSeries seriesId=${s.id} profile=${ctx.value.profileId}
 1	log	app/src/main/java/tv/own/owntv/features/series/SeriesViewModel.kt	OwnTVHome
 1	log	app/src/main/java/tv/own/owntv/features/series/SeriesViewModel.kt	playEpisodeExternal episodeId=${episode.id}
