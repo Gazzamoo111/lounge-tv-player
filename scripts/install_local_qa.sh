@@ -45,15 +45,33 @@ SIGNED="$DEST/LoungeTV-LocalSigned-QA.apk"
 
 echo "=== INSTALL LOCAL-SIGNED QA ON $TV ==="
 adb connect "$TV"
-# Crucially, never auto-uninstall on signature/version errors.
-if ! adb -s "$TV" install -r "$SIGNED"; then
-  echo
-  echo "STOP: QA update was rejected. Your existing QA data was NOT deleted."
-  echo "The first switch to this persistent local key may require ONE intentional"
-  echo "QA-only reset after you have saved anything important."
-  echo "DO NOT uninstall com.loungetv.player (production)."
-  echo "Local QA key: $KEY"
-  exit 1
+# Never automatically delete existing data. The first switch to this
+# machine's stable QA certificate needs deliberate consent, exactly once.
+set +e
+RESULT="$(adb -s "$TV" install -r "$SIGNED" 2>&1)"
+STATUS=$?
+set -e
+echo "$RESULT"
+if [ "$STATUS" -ne 0 ]; then
+  case "$RESULT" in
+    *INSTALL_FAILED_UPDATE_INCOMPATIBLE*)
+      echo
+      echo "Existing eventqa was signed differently. Replacing it WILL ERASE"
+      echo "ONLY its saved trial/playlist/EPG data, not production Lounge TV."
+      printf 'To reset ONLY com.loungetv.player.eventqa type RESET-QA: '
+      read -r CONFIRM
+      if [ "$CONFIRM" != "RESET-QA" ]; then
+        echo "Cancelled safely. Nothing was removed."
+        exit 1
+      fi
+      adb -s "$TV" uninstall "$QA"
+      adb -s "$TV" install "$SIGNED"
+      ;;
+    *)
+      echo "Update failed. Your QA data was NOT deleted."
+      exit 1
+      ;;
+  esac
 fi
 adb -s "$TV" shell monkey -p "$QA" 1
 echo "RECOVERY QA INSTALLED; PRODUCTION AND QA DATA PRESERVED"
