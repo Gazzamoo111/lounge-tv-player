@@ -293,7 +293,7 @@ fun MoviesScreen(
     // The List view scrolls a LazyListState, the grids (Cinematic and Separate) a LazyGridState.
     val usesList = viewMode == SettingsRepository.VodViewMode.LIST
     suspend fun scrollToIndex(i: Int) {
-        runCatching { if (usesList) effectiveListState.scrollToItem(i) else effectiveGridState.scrollToItem(i + cinematicHeaderOffset) }
+        runCatching { if (usesList) effectiveListState.scrollToItem(i + listHeaderOffset) else effectiveGridState.scrollToItem(i + gridHeaderOffset) }
     }
     val stepper = remember { VodStepper(scope) { effectiveListState } }
     val playlistMarks by vm.playlistMarks.collectAsStateWithLifecycle()
@@ -312,12 +312,12 @@ fun MoviesScreen(
     // focus, so the placeholder is only shown when nothing at all is known. peek() reads the loaded
     // page without triggering a fetch.
     val cachedPosters by vm.cachedPosters.collectAsStateWithLifecycle()
-    LaunchedEffect(effectiveGridState, effectiveListState, viewMode, movies, cinematicHeaderOffset) {
+    LaunchedEffect(effectiveGridState, effectiveListState, viewMode, movies, gridHeaderOffset, listHeaderOffset) {
         val grid = !usesList
         snapshotFlow {
             val info = if (grid) effectiveGridState.layoutInfo.visibleItemsInfo.map { it.index }
             else effectiveListState.layoutInfo.visibleItemsInfo.map { it.index }
-            info.map { if (grid) it - cinematicHeaderOffset else it }.filter { it >= 0 && it < movies.itemCount }
+            info.map { if (grid) it - gridHeaderOffset else it - listHeaderOffset }.filter { it >= 0 && it < movies.itemCount }
                 .mapNotNull { movies.peek(it) }
                 .filter { it.posterUrl.isNullOrBlank() }
         }.distinctUntilChanged().collect { vm.onPosterlessVisible(it) }
@@ -526,8 +526,8 @@ fun MoviesScreen(
                 val sel = selectedMovie
                 val idx = if (sel != null) movies.itemSnapshotList.items.indexOfFirst { it.id == sel.id } else -1
                 if (idx >= 0) idx
-                else if (usesList) effectiveListState.firstVisibleItemIndex
-                else (effectiveGridState.firstVisibleItemIndex - cinematicHeaderOffset).coerceAtLeast(0)
+                else if (usesList) (effectiveListState.firstVisibleItemIndex - listHeaderOffset).coerceAtLeast(0)
+                else (effectiveGridState.firstVisibleItemIndex - gridHeaderOffset).coerceAtLeast(0)
             },
             onJumpToIndex = { idx ->
                 // Scroll the target into view, then set it as the selected movie so selFocus binds to it
@@ -618,7 +618,7 @@ fun MoviesScreen(
                         Spacer(Modifier.weight(1f))
                         StageKeyHints(listOf(playHint, optionsHint, "◀" to stringResource(R.string.content_category_browser_title)))
                     }
-                    if (movies.itemCount == 0 && !showEditorialRail) {
+                    if (movies.itemCount == 0 && headerRowCount == 0) {
                         Text(emptyText, style = stageText(20, 500), color = StageColors.Muted, modifier = Modifier.padding(start = fx(84), top = 60.mpx))
                     } else {
                         // The 196 × 294 posters, 26 apart, as many across as fit; the grid grows downwards
@@ -773,7 +773,7 @@ fun MoviesScreen(
                     val placeable = measurable.measure(constraints.copy(minWidth = constraints.minWidth + extra * 2, maxWidth = constraints.maxWidth + extra * 2))
                     layout(constraints.maxWidth, constraints.maxHeight) { placeable.place(-extra, 0) }
                 }
-                if (movies.itemCount == 0) {
+                if (movies.itemCount == 0 && headerRowCount == 0) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(emptyText, style = stageText(20, 500), color = StageColors.Muted)
                     }
