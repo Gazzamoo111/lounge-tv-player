@@ -638,15 +638,28 @@ fun MoviesScreen(
                                 contentPadding = PaddingValues(start = fx(84), end = fx(64), top = 14.mpx, bottom = glowRoom),
                                 modifier = Modifier.fillMaxWidth().weight(1f),
                             ) {
-                                // Featured shelf travels with the catalogue grid rather than consuming
-                                // permanent screen height beneath the hero. D-pad Down browses the full library.
-                                if (showEditorialRail) {
+                                // Two large rows scroll up with the existing paged grid.
+                                if (displayFeatured) {
                                     item(key = Long.MIN_VALUE, span = { GridItemSpan(maxLineSpan) }, contentType = 1) {
-                                        Box(Modifier.fillMaxWidth().padding(vertical = 14.mpx)) {
+                                        Box(Modifier.fillMaxWidth().padding(vertical = 10.mpx)) {
                                             LoungeMoviesFeaturedRail(
                                                 heading = stringResource(R.string.lounge_home_featured_movies),
-                                                movies = homeEditorial.featuredMovies,
+                                                movies = allMoviesEditorial,
                                                 displayNames = homeEditorial.featuredMovieNames,
+                                                posterUrl = posterOf,
+                                                onFocused = onMovieFocus,
+                                                onPlay = startMovie,
+                                            )
+                                        }
+                                    }
+                                }
+                                if (displayNewReleases) {
+                                    item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = 2) {
+                                        Box(Modifier.fillMaxWidth().padding(vertical = 10.mpx)) {
+                                            LoungeMoviesFeaturedRail(
+                                                heading = stringResource(R.string.lounge_movies_new_releases),
+                                                movies = newMovies,
+                                                displayNames = emptyMap(),
                                                 posterUrl = posterOf,
                                                 onFocused = onMovieFocus,
                                                 onPlay = startMovie,
