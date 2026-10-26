@@ -145,8 +145,8 @@ fun AddSourceScreen(
     var referer by remember(initial) { mutableStateOf(initial?.httpReferer ?: "") }
     // New Xtream/BEST playlists should pick up newly-added provider channels.
     // Editing preserves the customer's existing refresh preference.
-    var autoRefresh by remember(initialAutoRefresh, initial) {
-        mutableStateOf(if (initial == null) PlaylistRefresh(PlaylistAutoRefresh.HOURS_6)
+    var autoRefresh by remember(initialAutoRefresh, initial, kind) {
+        mutableStateOf(if (initial == null && kind == SourceKind.XTREAM) PlaylistRefresh(PlaylistAutoRefresh.HOURS_6)
             else initialAutoRefresh)
     }
     var isDefault by remember(initialIsDefault) { mutableStateOf(initialIsDefault) }
