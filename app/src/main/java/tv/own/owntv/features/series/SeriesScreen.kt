@@ -470,29 +470,24 @@ private fun SeriesGrid(
         runCatching { gridSelFocus.requestFocus() }.getOrDefault(false) ||
             runCatching { contextFocus.requestFocus() }.getOrDefault(false) ||
             runCatching { firstItemFocus.requestFocus() }.getOrDefault(false)
-    // From the categories to the shows: the remembered one, else the first; the search field when empty.
+    // Enter a Series category at its editorial highlights, not the prior category's
+    // remembered scroll position. Returning from an episode uses its own restore flow.
     fun focusTitles() {
-        val targetId = if (rememberSeries) perCategorySeriesIds[selectedKey] ?: selectedSeries?.id else selectedSeries?.id
         scope.launch {
-            if (series.itemCount > 0) {
-                val targetIdx = targetId?.let { id -> series.itemSnapshotList.items.indexOfFirst { it.id == id }.takeIf { it >= 0 } } ?: 0
-                scrollToIndex(targetIdx)
+            runCatching { effectiveGridState.scrollToItem(0) }
+            runCatching { effectiveListState.scrollToItem(0) }
+            repeat(12) {
                 withFrameNanos { }
-                // A category just picked is still loading: the first attempt can land on a title of the
-                // old list, which then vanishes and drops focus to the rail. So keep watching for about
-                // 0.7 s and take focus back whenever the titles lost it.
-                repeat(40) {
-                    if (!gridPaneFocused) {
-                        if (!(targetId != null && focusCurrentTitle())) runCatching { firstItemFocus.requestFocus() }
-                    }
-                    withFrameNanos { }
+                val target = when {
+                    displayFeatured -> firstFeaturedFocus
+                    displayNewReleases -> firstNewReleaseFocus
+                    series.itemCount > 0 -> firstItemFocus
+                    else -> listSearchFocus
                 }
-            } else {
-                runCatching { listSearchFocus.requestFocus() }
+                if (runCatching { target.requestFocus() }.getOrDefault(false)) return@launch
             }
         }
     }
-
     // The way in from the rail: Separate lands on the open category in the column (as Live TV's
     // Separate panels), Cinematic on the title the hero shows. The shell's focus restorer would
     // otherwise return to whatever had focus last, such as the search field.
@@ -543,8 +538,31 @@ private fun SeriesGrid(
             onJumpToIndex = { idx -> catFocusIndex = idx; railFocusRow = idx },
         )
     val onCategorySelect: (Int) -> Unit = { idx ->
-        railItems.getOrNull(idx)?.let { vm.select(it.key) }
-        if (categoriesOpen) { categoriesOpen = false; focusTitles() }
+        railItems.getOrNull(idx)?.let { item ->
+            pendingCategoryFocus = item.key
+            perCategorySeriesIds.remove(item.key)
+            vm.select(item.key)
+        }
+        if (categoriesOpen) categoriesOpen = false
+    }
+    LaunchedEffect(selectedKey, pendingCategoryFocus, categoryHighlights.categoryKey, displayFeatured, displayNewReleases, categoriesOpen) {
+        if (pendingCategoryFocus != selectedKey || categoryHighlights.categoryKey != selectedKey || categoriesOpen) return@LaunchedEffect
+        runCatching { effectiveGridState.scrollToItem(0) }
+        runCatching { effectiveListState.scrollToItem(0) }
+        repeat(16) {
+            withFrameNanos { }
+            val target = when {
+                displayFeatured -> firstFeaturedFocus
+                displayNewReleases -> firstNewReleaseFocus
+                series.itemCount > 0 -> firstItemFocus
+                else -> listSearchFocus
+            }
+            if (runCatching { target.requestFocus() }.getOrDefault(false)) {
+                pendingCategoryFocus = null
+                return@LaunchedEffect
+            }
+        }
+        pendingCategoryFocus = null
     }
     val onCategoryLongSelect: (Int) -> Unit = { idx ->
         railItems.getOrNull(idx)?.let { item ->
