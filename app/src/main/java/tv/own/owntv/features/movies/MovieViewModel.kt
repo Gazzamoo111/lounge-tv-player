@@ -390,6 +390,24 @@ class MovieViewModel(
         }
     }
 
+    /**
+     * Single profile-scoped, currently imported editorial VOD snapshot.
+     *
+     * Browse, folder visibility, and folder counts MUST share this exact snapshot:
+     * the provider's unfiltered counts (e.g. 700) are not the number of curated titles.
+     * An import count change rebuilds it; category visibility updates rebuild it too.
+     */
+    private val curatedCatalogue: StateFlow<List<MovieEntity>> = ctx
+        .flatMapLatest { c ->
+            if (c.profileId < 0 || c.sourceIds.isEmpty()) flowOf(emptyList())
+            else combine(movieDao.countAll(c.sourceIds), hiddenCategoryIds) { _, hidden -> hidden }
+                .debounce(650)
+                .mapLatest { hidden ->
+                    LoungeVodCatalogueReader.movies(movieDao, c.sourceIds, hidden)
+                }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     val railItems: StateFlow<List<LiveRailItem>> = ctx
         .flatMapLatest { c ->
             if (c.profileId < 0) flowOf(defaultRail)
@@ -398,7 +416,8 @@ class MovieViewModel(
                 customize.observe(c.profileId, MediaType.MOVIE),
                 sortMode,
                 profileDao.observeById(c.profileId),
-            ) { cats, cust, sort, profile ->
+                curatedCatalogue,
+            ) { cats, cust, sort, profile, curated ->
                 // A–Z also sorts the category folders (custom categories included); manually moved
                 // categories stay pinned first. Custom categories ride the SAME customization keys,
                 // so renames/hides/reorders apply to them with no extra code.
@@ -406,7 +425,10 @@ class MovieViewModel(
                     cust,
                     kids = profile?.isKids == true,
                     alphaRest = sort == SettingsRepository.SortMode.ALPHA,
-                ).filterNot { LoungeVodPolicy.excludesCategory(it.displayName) }
+                ).filterNot { entry ->
+                    LoungeVodPolicy.excludesCategory(entry.displayName) ||
+                        (entry.categoryId != null && curated.none { it.categoryId == entry.categoryId })
+                }
                 val multiSourceNames = c.sourceNames.takeIf { it.size > 1 }.orEmpty()
                 val categoriesById = cats.associateBy { it.id }
                 defaultRail + folders.map { e ->
@@ -439,25 +461,18 @@ class MovieViewModel(
             // page and never request the approved titles buried further into the provider list.
             val input: Flow<PagingData<MovieEntity>> =
                 if (args.key == LiveKey.All || args.key is LiveKey.Folder) {
-                    movieDao.countAll(args.ctx.sourceIds.ifEmpty { listOf(-1L) })
-                        .debounce(650)
-                        .mapLatest {
-                            val approved = LoungeVodCatalogueReader.movies(
-                                movieDao, args.ctx.sourceIds, cs.hiddenCats,
-                            )
-                            val scoped = approved.filter { m ->
-                                (args.key !is LiveKey.Folder || m.categoryId == args.key.id) &&
-                                    (args.query.isBlank() ||
-                                        m.canonicalTitle.contains(args.query, ignoreCase = true) ||
-                                        m.name.contains(args.query, ignoreCase = true))
-                            }
-                            // Respect the default A-Z browse order; other modes use deliberate
-                            // editorial priority rather than unverified BEST numeric ratings.
-                            val ordered = if (args.sort == SettingsRepository.SortMode.ALPHA) {
-                                scoped.sortedBy { it.canonicalTitle.ifBlank { it.name }.lowercase() }
-                            } else scoped
-                            PagingData.from(ordered)
+                    curatedCatalogue.map { approved ->
+                        val scoped = approved.filter { m ->
+                            (args.key !is LiveKey.Folder || m.categoryId == args.key.id) &&
+                                (args.query.isBlank() ||
+                                    m.canonicalTitle.contains(args.query, ignoreCase = true) ||
+                                    m.name.contains(args.query, ignoreCase = true))
                         }
+                        val ordered = if (args.sort == SettingsRepository.SortMode.ALPHA) {
+                            scoped.sortedBy { it.canonicalTitle.ifBlank { it.name }.lowercase() }
+                        } else scoped
+                        PagingData.from(ordered)
+                    }
                 } else {
                     Pager(PagingConfig(pageSize = 60, prefetchDistance = 30, initialLoadSize = 90, maxSize = 300)) {
                         pagingSource(args.key, args.ctx, args.query, args.sort)
@@ -489,12 +504,27 @@ class MovieViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
     /** The count beside every category (Stage sheet / column): one grouped query for the folders. */
-    val railCounts: StateFlow<Map<LiveKey, Int>> = combine(ctx, hiddenCategoryIds, railItems) { c, hidden, items -> Triple(c, hidden, items) }
-        .flatMapLatest { (c, hidden, items) ->
-            val single = items.filter { it.key !is LiveKey.Folder }.map { item -> countFlow(item.key, c, hidden).map { mapOf(item.key to it) } }
-            val folders = movieDao.observeCountsByCategory(c.sourceIds.ifEmpty { listOf(-1L) })
-                .map { rows -> rows.associate { LiveKey.Folder(it.categoryId) as LiveKey to it.itemCount } }
-            combine(single + folders) { parts -> parts.fold(emptyMap<LiveKey, Int>()) { acc, m -> acc + m } }.throttleLatest()
+    /** Counts reflect only curated, visible items, not all imported provider rows. */
+    val railCounts: StateFlow<Map<LiveKey, Int>> = combine(ctx, railItems, custResolved, curatedCatalogue) { c, items, cs, approved ->
+        val visible = approved.filter { CustomizeKeys.movie(it) !in cs.cust.hiddenItems }
+        val movedFrom = cs.cust.movedFromOrigin
+        val curatedFolderCounts = items.mapNotNull { item ->
+            val folder = item.key as? LiveKey.Folder ?: return@mapNotNull null
+            val contextKey = folderContextKeys.value[folder.id]
+            item.key to visible.count { m ->
+                m.categoryId == folder.id &&
+                    (contextKey == null || movedFrom[CustomizeKeys.movie(m)] != contextKey)
+            }
+        }.toMap()
+        val baseCounts = curatedFolderCounts + (LiveKey.All to visible.size)
+        Triple(c, items, baseCounts)
+    }
+        .flatMapLatest { (c, items, curated) ->
+            val other = items.filter { it.key !is LiveKey.Folder && it.key != LiveKey.All }
+                .map { item -> countFlow(item.key, c, hiddenCategoryIds.value).map { mapOf(item.key to it) } }
+            combine(listOf(flowOf(curated)) + other) { parts ->
+                parts.fold(emptyMap<LiveKey, Int>()) { acc, m -> acc + m }
+            }.throttleLatest()
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
