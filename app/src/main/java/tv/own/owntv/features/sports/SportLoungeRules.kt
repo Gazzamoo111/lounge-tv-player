@@ -96,7 +96,8 @@ object SportLoungeRules {
             SportLoungeTimeFilter.LIVE_NOW -> match.state == MatchState.IN
             SportLoungeTimeFilter.TODAY -> match.state != MatchState.IN && localStart == localToday
             SportLoungeTimeFilter.UPCOMING ->
-                match.state == MatchState.PRE && match.startMs > nowMs && localStart.isAfter(localToday)
+                match.state == MatchState.PRE && match.startMs > nowMs &&
+                    !localStart.isBefore(localToday) && localStart.isBefore(localToday.plusDays(7))
         }
     }
 

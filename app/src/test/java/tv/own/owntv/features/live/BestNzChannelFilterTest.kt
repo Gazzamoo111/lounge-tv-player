@@ -17,6 +17,12 @@ class BestNzChannelFilterTest {
     @Test fun keepsOnlyNzSkySportRawOrHd() {
         assertFalse(shouldHideBestNzChannel(SourceType.XTREAM, "NZ | Sky Sport RAW", "Sky Sport 1"))
         assertFalse(shouldHideBestNzChannel(SourceType.XTREAM, "NZ | Sky Sports HD", "NZ Sky Sport 2"))
+        // BEST's HD/RAW groups do not consistently include "Sky Sport" in every feed name.
+        assertFalse(shouldHideBestNzChannel(SourceType.XTREAM, "NZ|Sky Sports NZ HD", "SS1"))
+        assertFalse(shouldHideBestNzChannel(SourceType.XTREAM, "NZ|Sky Sports NZ RAW", "NZ Sports 5"))
+        assertFalse(shouldHideBestNzChannel(SourceType.XTREAM, "NZ|Sky Sports NZ HD", "SKY SP 3"))
+        assertTrue(shouldHideBestNzChannel(SourceType.XTREAM, "NZ | Sky Sports SD", "Sky Sport 1"))
+        assertTrue(shouldHideBestNzChannel(SourceType.XTREAM, "NZ | Entertainment", "SS1"))
         assertFalse(shouldHideBestNzChannel(SourceType.XTREAM, "NZ | Sports", "NZ Sky Sport 3 RAW"))
         assertFalse(shouldHideBestNzChannel(SourceType.XTREAM, "NZ", "NZ Sky Sport 5 HD"))
         assertTrue(shouldHideBestNzChannel(SourceType.XTREAM, "NZ | Sports", "NZ Sky Sport 1"))
@@ -29,6 +35,11 @@ class BestNzChannelFilterTest {
         assertTrue(shouldHideBestNzCategory(SourceType.XTREAM, "New Zealand"))
         assertFalse(shouldHideBestNzCategory(SourceType.XTREAM, "NZ | Sky Sport RAW"))
         assertFalse(shouldHideBestNzCategory(SourceType.XTREAM, "NZ | Sky Sports HD"))
+        assertFalse(shouldHideBestNzCategory(SourceType.XTREAM, "NZ|Sky Sports NZ HD"))
+        assertFalse(shouldHideBestNzCategory(SourceType.XTREAM, "NZ|Sky Sports NZ RAW"))
+        assertTrue(shouldHideBestNzCategory(SourceType.XTREAM, "NZ | Sky Sports SD"))
+        assertTrue(isAllowedBestNzSportsCategory(SourceType.XTREAM, "NZ|Sky Sports NZ HD"))
+        assertFalse(isAllowedBestNzSportsCategory(SourceType.M3U, "NZ|Sky Sports NZ HD"))
         assertFalse(shouldHideBestNzCategory(SourceType.XTREAM, "UK | Movies"))
     }
 

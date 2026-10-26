@@ -70,8 +70,10 @@
     <!-- Use English text when TMDB supplies non-English Spider-Man title art. -->
     <string name="lounge_brand_new_day_english_title" translatable="false">Spider-Man: Brand New Day</string>
     <string name="lounge_sports_quick_links">Live Sports</string>
-    <string name="lounge_sports_all">Sports Hub</string>
+    <string name="lounge_sports_all">Sport Lounge</string>
     <string name="lounge_sports_all_sub">Live matches and fixtures</string>
+    <string name="lounge_guide_loading">Loading channels and TV guide…</string>
+    <string name="lounge_guide_loading_slow">Still loading. A large channel list or first-time EPG refresh can take longer. The guide will appear when channel data is ready.</string>
     <string name="lounge_sports_rugby">Rugby</string>
     <string name="lounge_sports_rugby_sub">Find rugby channels</string>
     <string name="lounge_sports_combat">UFC &amp; Boxing</string>

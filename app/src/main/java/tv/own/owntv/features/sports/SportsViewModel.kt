@@ -160,14 +160,13 @@ class SportsViewModel(
         sportsSource,
         FileSportEventCache(File(context.filesDir, "sport-lounge/events-v1.json")),
     )
-    private val discoveryState = config.flatMapLatest { current ->
-        if (current.followedLeagues().isNotEmpty()) flowOf(SportLoungeDiscoverySnapshot() to false)
-        else flow {
-            emit(SportLoungeDiscoverySnapshot() to true)
-            while (true) {
-                emit(discovery.load() to false)
-                delay(DISCOVERY_REFRESH_MS)
-            }
+    // Discovery belongs to EVERY customer, not just a zero-follow profile.
+    // Show cached fixtures immediately while the seven-day schedule refreshes.
+    private val discoveryState = flow {
+        emit(discovery.cached() to true)
+        while (true) {
+            emit(discovery.load() to false)
+            delay(DISCOVERY_REFRESH_MS)
         }
     }.flowOn(Dispatchers.IO)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SportLoungeDiscoverySnapshot() to false)

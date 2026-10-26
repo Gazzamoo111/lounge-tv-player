@@ -33,7 +33,7 @@ class FileSportEventCache(private val file: File) : SportEventCache {
 
 object SportEventMerge {
     private const val KEEP_PAST_MS = 12 * 60 * 60_000L
-    private const val KEEP_AHEAD_MS = 72 * 60 * 60_000L
+    private const val KEEP_AHEAD_MS = 8L * 24 * 60 * 60_000L
 
     /** Fresh rows replace exact stable IDs; stale rows survive only for provider feeds that failed. */
     fun withSafeStale(

@@ -3,6 +3,8 @@
 package tv.own.owntv.features.epg
 
 import tv.own.owntv.core.epg.displayLogoUrl
+import tv.own.owntv.features.live.shouldHideBestNzChannel
+import tv.own.owntv.features.live.isAllowedBestNzSportsCategory
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.FlowPreview
@@ -260,6 +262,14 @@ class EpgViewModel(
 
     fun setCategoryFilter(key: tv.own.owntv.core.live.LiveKey?) {
         _categoryFilter.value = key.takeUnless { it == tv.own.owntv.core.live.LiveKey.All }
+    }
+
+    /** Live TV's Guide must show playable channels even if their EPG is absent. */
+    private var liveTvGuideMode = false
+
+    fun setLiveTvGuideMode(enabled: Boolean) {
+        liveTvGuideMode = enabled
+        load()
     }
 
     private val _state = MutableStateFlow(EpgUiState())
@@ -902,8 +912,29 @@ class EpgViewModel(
         // Respect customizations: hidden channels stay out of the guide, renames show.
         val cust = customize.observe(pid, MediaType.LIVE).first()
         val q = _query.value.trim()
-        val rawChannels = if (settings.guideShowEmpty.first()) channelDao.channelsForGuide(playlistIds, q, MAX_CHANNELS)
-            else channelDao.channelsWithGuide(ids, q, MAX_CHANNELS)
+        val providerTypes = playlistIds.associateWith { sourceId -> sourceDao.getById(sourceId)?.type }
+        val categories = categoryDao.observe(playlistIds, MediaType.LIVE).first()
+        val originalCategoryNames = categories.associate { it.id to it.name }
+        val showEveryUnmatchedChannel = settings.guideShowEmpty.first()
+        val rawChannels = if (showEveryUnmatchedChannel) {
+            channelDao.channelsForGuide(playlistIds, q, MAX_CHANNELS)
+        } else {
+            val withGuide = channelDao.channelsWithGuide(ids, q, MAX_CHANNELS)
+            if (!liveTvGuideMode) {
+                withGuide
+            } else {
+                // Supplement only the two approved NZ Sky Sport groups when their provider
+                // fails to supply EPG data. Do NOT load thousands of empty-guide channels.
+                val sports = mutableListOf<ChannelEntity>()
+                for (cat in categories) {
+                    if (!isAllowedBestNzSportsCategory(providerTypes[cat.sourceId], cat.name)) continue
+                    sports += channelDao.snapshotByCategoryManual(
+                        cat.id, pid, CustomizeKeys.category(cat), MAX_NZ_SPORT_CHANNELS,
+                    ).filter { ch -> q.isBlank() || ch.name.contains(q, ignoreCase = true) }
+                }
+                (withGuide + sports).distinctBy { it.id }
+            }
+        }
         val favoriteIds = favoriteDao.observeFavoriteIds(pid, MediaType.LIVE).first().toSet()
         val sortGuideMode = settings.sortGuide.first()
         // Hidden categories keep their channels out of the guide too (parity with Live TV), and a
@@ -933,6 +964,13 @@ class EpgViewModel(
         // the main thread (#3/#5) so a 50k-channel playlist never freezes the UI building the guide list.
         val channels = withContext(Dispatchers.Default) {
             val auto = rawChannels
+                .filter { ch ->
+                    !shouldHideBestNzChannel(
+                        providerTypes[ch.sourceId],
+                        ch.categoryId?.let(originalCategoryNames::get),
+                        ch.name,
+                    )
+                }
                 .filter { CustomizeKeys.channel(it) !in cust.hiddenItems }
                 .filter {
                     memberIds != null || it.categoryId == null || it.categoryId !in hiddenCatIds
@@ -1096,6 +1134,7 @@ class EpgViewModel(
         private const val CATCHUP_LOOKBACK_CAP_MS = 7L * 24 * 60 * 60 * 1000
         // Generous safety bound only (rows load lazily, so this is about the channel list itself).
         private const val MAX_CHANNELS = 20_000
+        private const val MAX_NZ_SPORT_CHANNELS = 300
         // Cap the candidate set the bulk matcher scans against (keeps the O(channels×candidates) scan bounded).
         // Bound values sent to a single `IN (...)`. SQLite's parameter ceiling is 999 on older
         // Android; core chunks its own bulk lookups at the same size.

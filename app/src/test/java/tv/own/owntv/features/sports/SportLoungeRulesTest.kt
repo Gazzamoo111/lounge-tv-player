@@ -32,7 +32,23 @@ class SportLoungeRulesTest {
         val today = match("today", Sport.CRICKET, "2026-10-26T05:00:00Z")
         val tomorrow = match("tomorrow", Sport.BASKETBALL, "2026-10-26T22:00:00Z")
         val counts = SportLoungeRules.counts(listOf(live, today, tomorrow), now, nz)
-        assertEquals(SportLoungeCounts(1, 1, 1), counts)
+        assertEquals(SportLoungeCounts(1, 1, 2), counts)
+    }
+
+    @Test fun `discovery horizon is seven NZ dates including daylight saving`() {
+        val days = sportLoungeDays(Instant.parse("2026-10-25T23:00:00Z").toEpochMilli(), nz)
+        assertEquals(7, days.size)
+        assertEquals("2026-10-26", days.first().toString())
+        assertEquals("2026-11-01", days.last().toString())
+    }
+
+    @Test fun `upcoming includes later today but excludes day eight`() {
+        val today = match("today", Sport.RUGBY, "2026-10-26T05:00:00Z")
+        val daySeven = match("day7", Sport.RUGBY_LEAGUE, "2026-11-01T04:00:00Z")
+        val outside = match("outside", Sport.BASKETBALL, "2026-11-02T04:00:00Z")
+        assertTrue(SportLoungeRules.belongsTo(today, SportLoungeTimeFilter.UPCOMING, now, nz))
+        assertTrue(SportLoungeRules.belongsTo(daySeven, SportLoungeTimeFilter.UPCOMING, now, nz))
+        assertFalse(SportLoungeRules.belongsTo(outside, SportLoungeTimeFilter.UPCOMING, now, nz))
     }
 
     @Test fun `dedupe keeps advanced state and does not fuzzy merge names`() {
