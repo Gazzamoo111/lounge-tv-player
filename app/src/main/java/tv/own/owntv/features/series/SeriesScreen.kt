@@ -721,6 +721,38 @@ private fun SeriesGrid(
                                 contentPadding = PaddingValues(start = fx(84), end = fx(64), top = 14.mpx, bottom = glowRoom),
                                 modifier = Modifier.fillMaxWidth().weight(1f),
                             ) {
+                                if (displayFeatured) {
+                                    item(key = Long.MIN_VALUE, span = { GridItemSpan(maxLineSpan) }, contentType = 1) {
+                                        Box(Modifier.fillMaxWidth().padding(vertical = 10.mpx)) {
+                                            LoungeSeriesFeaturedRail(
+                                                heading = stringResource(R.string.lounge_series_featured),
+                                                movies = featuredShows,
+                                                displayNames = emptyMap(),
+                                                posterUrl = posterOf,
+                                                onFocused = onShowFocus,
+                                                onPlay = openHighlightedShow,
+                                                onLeftFromFirstCard = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                                firstCardFocusRequester = firstFeaturedFocus,
+                                            )
+                                        }
+                                    }
+                                }
+                                if (displayNewReleases) {
+                                    item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = 2) {
+                                        Box(Modifier.fillMaxWidth().padding(vertical = 10.mpx)) {
+                                            LoungeSeriesFeaturedRail(
+                                                heading = stringResource(R.string.lounge_series_new_releases),
+                                                movies = newShows,
+                                                displayNames = emptyMap(),
+                                                posterUrl = posterOf,
+                                                onFocused = onShowFocus,
+                                                onPlay = openHighlightedShow,
+                                                onLeftFromFirstCard = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                                firstCardFocusRequester = firstNewReleaseFocus,
+                                            )
+                                        }
+                                    }
+                                }
                                 items(count = series.itemCount, key = series.itemKey { it.id }, contentType = series.itemContentType { "series" }) { index ->
                                     val show = series[index] ?: return@items
                                     StagePoster(
@@ -835,6 +867,38 @@ private fun SeriesGrid(
                             contentPadding = PaddingValues(start = glowRoom, end = glowRoom, bottom = 16.mpx),
                             modifier = Modifier.fillMaxWidth().weight(1f).then(glowWide),
                         ) {
+                            if (displayFeatured) {
+                                item(key = Long.MIN_VALUE, contentType = 1) {
+                                    Box(Modifier.fillMaxWidth().padding(vertical = 10.mpx)) {
+                                        LoungeSeriesFeaturedRail(
+                                            heading = stringResource(R.string.lounge_series_featured),
+                                            movies = featuredShows,
+                                            displayNames = emptyMap(),
+                                            posterUrl = posterOf,
+                                            onFocused = onShowFocus,
+                                            onPlay = openHighlightedShow,
+                                            onLeftFromFirstCard = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                            firstCardFocusRequester = firstFeaturedFocus,
+                                        )
+                                    }
+                                }
+                            }
+                            if (displayNewReleases) {
+                                item(key = Long.MIN_VALUE + 1L, contentType = 2) {
+                                    Box(Modifier.fillMaxWidth().padding(vertical = 10.mpx)) {
+                                        LoungeSeriesFeaturedRail(
+                                            heading = stringResource(R.string.lounge_series_new_releases),
+                                            movies = newShows,
+                                            displayNames = emptyMap(),
+                                            posterUrl = posterOf,
+                                            onFocused = onShowFocus,
+                                            onPlay = openHighlightedShow,
+                                            onLeftFromFirstCard = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                            firstCardFocusRequester = firstNewReleaseFocus,
+                                        )
+                                    }
+                                }
+                            }
                             items(count = series.itemCount, key = series.itemKey { it.id }, contentType = series.itemContentType { "series" }) { index ->
                                 val show = series[index] ?: return@items
                                 VodListRow(
@@ -885,6 +949,38 @@ private fun SeriesGrid(
                             contentPadding = PaddingValues(start = glowRoom, end = glowRoom, top = 12.mpx, bottom = 24.mpx),
                             modifier = Modifier.fillMaxWidth().weight(1f).then(glowWide),
                         ) {
+                            if (displayFeatured) {
+                                item(key = Long.MIN_VALUE, span = { GridItemSpan(maxLineSpan) }, contentType = 1) {
+                                    Box(Modifier.fillMaxWidth().padding(vertical = 10.mpx)) {
+                                        LoungeSeriesFeaturedRail(
+                                            heading = stringResource(R.string.lounge_series_featured),
+                                            movies = featuredShows,
+                                            displayNames = emptyMap(),
+                                            posterUrl = posterOf,
+                                            onFocused = onShowFocus,
+                                            onPlay = openHighlightedShow,
+                                            onLeftFromFirstCard = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                            firstCardFocusRequester = firstFeaturedFocus,
+                                        )
+                                    }
+                                }
+                            }
+                            if (displayNewReleases) {
+                                item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = 2) {
+                                    Box(Modifier.fillMaxWidth().padding(vertical = 10.mpx)) {
+                                        LoungeSeriesFeaturedRail(
+                                            heading = stringResource(R.string.lounge_series_new_releases),
+                                            movies = newShows,
+                                            displayNames = emptyMap(),
+                                            posterUrl = posterOf,
+                                            onFocused = onShowFocus,
+                                            onPlay = openHighlightedShow,
+                                            onLeftFromFirstCard = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                            firstCardFocusRequester = firstNewReleaseFocus,
+                                        )
+                                    }
+                                }
+                            }
                             items(count = series.itemCount, key = series.itemKey { it.id }, contentType = series.itemContentType { "series" }) { index ->
                                 val show = series[index] ?: return@items
                                 StagePoster(
