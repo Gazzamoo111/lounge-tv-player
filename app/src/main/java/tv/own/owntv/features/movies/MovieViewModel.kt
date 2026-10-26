@@ -3,6 +3,7 @@
 package tv.own.owntv.features.movies
 
 import tv.own.owntv.features.vod.LoungeVodPolicy
+import tv.own.owntv.features.vod.LoungeVodCatalogueReader
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -426,9 +427,36 @@ class MovieViewModel(
         .flatMapLatest { (args, cs) ->
             // Hidden items/categories are filtered on each fresh PagingData inside the pager chain —
             // a customization change re-creates the pager (same pattern as Live TV).
-            Pager(PagingConfig(pageSize = 60, prefetchDistance = 30, initialLoadSize = 90, maxSize = 300)) {
-                pagingSource(args.key, args.ctx, args.query, args.sort)
-            }.flow.map { paging ->
+            // For All and provider folders, query the indexed, approved catalogue directly.
+            // Filtering arbitrary BEST paging results afterwards could yield an empty first
+            // page and never request the approved titles buried further into the provider list.
+            val input: Flow<PagingData<MovieEntity>> =
+                if (args.key == LiveKey.All || args.key is LiveKey.Folder) {
+                    movieDao.countAll(args.ctx.sourceIds.ifEmpty { listOf(-1L) })
+                        .debounce(650)
+                        .mapLatest {
+                            val approved = LoungeVodCatalogueReader.movies(
+                                movieDao, args.ctx.sourceIds, cs.hiddenCats,
+                            )
+                            val scoped = approved.filter { m ->
+                                (args.key !is LiveKey.Folder || m.categoryId == args.key.id) &&
+                                    (args.query.isBlank() ||
+                                        m.canonicalTitle.contains(args.query, ignoreCase = true) ||
+                                        m.name.contains(args.query, ignoreCase = true))
+                            }
+                            // Respect the default A-Z browse order; other modes use deliberate
+                            // editorial priority rather than unverified BEST numeric ratings.
+                            val ordered = if (args.sort == SettingsRepository.SortMode.ALPHA) {
+                                scoped.sortedBy { it.canonicalTitle.ifBlank { it.name }.lowercase() }
+                            } else scoped
+                            PagingData.from(ordered)
+                        }
+                } else {
+                    Pager(PagingConfig(pageSize = 60, prefetchDistance = 30, initialLoadSize = 90, maxSize = 300)) {
+                        pagingSource(args.key, args.ctx, args.query, args.sort)
+                    }.flow
+                }
+            input.map { paging ->
                 val cust = cs.cust
                 val movedFrom = cust.movedFromOrigin
                 paging.filter { m ->
