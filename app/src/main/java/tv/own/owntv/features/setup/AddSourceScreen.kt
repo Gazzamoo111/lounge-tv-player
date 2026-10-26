@@ -143,7 +143,12 @@ fun AddSourceScreen(
     var epgUrl by remember(initial) { mutableStateOf(initial?.epgUrl ?: "") }
     var userAgent by remember(initial) { mutableStateOf(initial?.userAgent ?: "") }
     var referer by remember(initial) { mutableStateOf(initial?.httpReferer ?: "") }
-    var autoRefresh by remember(initialAutoRefresh) { mutableStateOf(initialAutoRefresh) }
+    // New Xtream/BEST playlists should pick up newly-added provider channels.
+    // Editing preserves the customer's existing refresh preference.
+    var autoRefresh by remember(initialAutoRefresh, initial) {
+        mutableStateOf(if (initial == null) PlaylistRefresh(PlaylistAutoRefresh.HOURS_6)
+            else initialAutoRefresh)
+    }
     var isDefault by remember(initialIsDefault) { mutableStateOf(initialIsDefault) }
     var preferHls by remember(initial) { mutableStateOf(initial?.preferHls == true) }
     // Edit: On(=Now)/Off from persisted flags. Add: default all Now for Xtream; Stalker defaults
