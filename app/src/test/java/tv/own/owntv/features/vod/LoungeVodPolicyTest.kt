@@ -37,6 +37,15 @@ class LoungeVodPolicyTest {
         assertFalse(LoungeVodPolicy.allowsMovieName("The Matrix"))
     }
 
+    @Test fun providerLanguageCodesAreEnforced() {
+        assertTrue(LoungeVodPolicy.allowsProviderLanguage(null))
+        assertTrue(LoungeVodPolicy.allowsProviderLanguage("EN"))
+        assertTrue(LoungeVodPolicy.allowsProviderLanguage("en"))
+        assertFalse(LoungeVodPolicy.allowsProviderLanguage("ES"))
+        assertFalse(LoungeVodPolicy.allowsProviderLanguage("FR"))
+        assertFalse(LoungeVodPolicy.allowsProviderLanguage("HI"))
+    }
+
     @Test fun restrictedAndForeignFoldersAreHidden() {
         assertTrue(LoungeVodPolicy.excludesCategory("18+ Movies"))
         assertTrue(LoungeVodPolicy.excludesCategory("R18 Movies"))
