@@ -29,18 +29,24 @@ class MoviesHighlightsGuardrailsTest(unittest.TestCase):
         self.assertIn("scrollToItem(i + gridHeaderOffset)", screen)
         self.assertIn("it - gridHeaderOffset else it - listHeaderOffset", screen)
 
-    def test_compact_portrait_highlights_keep_row_headings_visible(self):
+    def test_showcase_uses_prominent_portrait_posters_and_visible_headings(self):
         shelf = (MOVIES / "LoungeMoviesFeaturedRail.kt").read_text()
-        self.assertIn("val cardWidth = minOf((maxWidth - 92.mpx) / 5.4f, 170.mpx)", shelf)
+        self.assertIn("val cardWidth = minOf((maxWidth - 72.mpx) / 3.9f, 340.mpx)", shelf)
         self.assertIn("height = cardWidth * 1.5f", shelf)
-        self.assertIn("Text(heading, style = stageText(24, 800)", shelf)
+        self.assertIn("Text(heading, style = stageText(29, 800)", shelf)
         self.assertLess(shelf.index("Text(heading"), shelf.index("LazyRow("))
-        screen = (MOVIES / "MoviesScreen.kt").read_text()
-        self.assertEqual(screen.count("heading = stringResource(R.string.lounge_home_featured_movies)"), 3)
-        self.assertEqual(screen.count("heading = stringResource(R.string.lounge_movies_new_releases)"), 3)
         self.assertIn("VodPosterArt(posterUrl(movie), OwnTVIcon.MOVIES)", shelf)
         self.assertNotIn("movie.backdropUrl", shelf)
         self.assertNotIn("ContentScale.Fit", shelf)
+        screen = (MOVIES / "MoviesScreen.kt").read_text()
+        self.assertIn("val showcaseActive = displayFeatured || displayNewReleases", screen)
+        self.assertIn("val heroH = if (showcaseActive) 62.mpx", screen)
+        self.assertIn("if (!showcaseActive) titleInfo?.let", screen)
+        self.assertEqual(screen.count("heading = stringResource(R.string.lounge_home_featured_movies)"), 3)
+        self.assertEqual(screen.count("heading = stringResource(R.string.lounge_movies_new_releases)"), 3)
+
+    def test_existing_sidebar_behaviour_is_retained_in_showcase(self):
+        shelf = (MOVIES / "LoungeMoviesFeaturedRail.kt").read_text()
         self.assertIn("onLeftFromFirstCard()", shelf)
         self.assertIn("firstCardFocusRequester", shelf)
 
