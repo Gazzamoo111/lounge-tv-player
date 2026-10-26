@@ -27,6 +27,7 @@ import tv.own.owntv.features.shell.components.VodGroupOrganise
 import tv.own.owntv.features.shell.components.VodGroupWatch
 import tv.own.owntv.features.shell.components.VodHeader
 import tv.own.owntv.features.shell.components.VodHero
+import tv.own.owntv.features.shell.components.LoungeBrowseSpotlight
 import tv.own.owntv.features.shell.components.VodListRow
 import tv.own.owntv.features.shell.components.VodOptionsMenu
 import tv.own.owntv.features.shell.components.VodPosterArt
@@ -253,6 +254,7 @@ private fun SeriesGrid(
     val context = androidx.compose.ui.platform.LocalContext.current
     val toast = rememberInAppToast()
     val series = vm.series.collectAsLazyPagingItems()
+    val categoryHighlights by vm.categoryHighlights.collectAsStateWithLifecycle()
     val moveState by vm.moveState.collectAsStateWithLifecycle()
     val categoryMoveState by vm.categoryMoveState.collectAsStateWithLifecycle()
     var contextCategory by remember { mutableStateOf<LiveRailItem?>(null) }
@@ -288,6 +290,8 @@ private fun SeriesGrid(
     val selectedLabel = selectedItem?.displayLabel(R.string.content_category_all_series) ?: stringResource(R.string.content_category_all_series)
     val gridSelFocus = remember { androidx.compose.ui.focus.FocusRequester() }
     val firstItemFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+    val firstFeaturedFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+    val firstNewReleaseFocus = remember { androidx.compose.ui.focus.FocusRequester() }
     // Right from the rail on an empty list: the list's search box, so a search with no results can be cleared.
     val listSearchFocus = remember { androidx.compose.ui.focus.FocusRequester() }
     val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
@@ -303,6 +307,14 @@ private fun SeriesGrid(
     // Cinematic is grid-only. The stored choice is deliberately not rewritten, so switching back to
     // Separate restores the user's List.
     val viewMode = if (cinematic) SettingsRepository.VodViewMode.GRID else storedViewMode
+    val highlights = categoryHighlights.takeIf { it.categoryKey == selectedKey }
+    val featuredShows = highlights?.featured.orEmpty()
+    val newShows = highlights?.newReleases.orEmpty()
+    val displayFeatured = lockedKey == null && searchQuery.isBlank() && featuredShows.isNotEmpty()
+    val displayNewReleases = lockedKey == null && searchQuery.isBlank() && newShows.isNotEmpty()
+    val headerRowCount = (if (displayFeatured) 1 else 0) + (if (displayNewReleases) 1 else 0)
+    val gridHeaderOffset = if (viewMode == SettingsRepository.VodViewMode.GRID) headerRowCount else 0
+    val listHeaderOffset = if (viewMode == SettingsRepository.VodViewMode.LIST) headerRowCount else 0
     val chNavEnabled by settingsVm.chNavEnabled.collectAsStateWithLifecycle()
     val chNavUpSkip by settingsVm.chNavUpSkip.collectAsStateWithLifecycle()
     val chNavDownSkip by settingsVm.chNavDownSkip.collectAsStateWithLifecycle()
@@ -318,18 +330,22 @@ private fun SeriesGrid(
     // @Composable/rememberSaveable call here would register slots conditionally and corrupt the slot table.
     val effectiveGridState = if (rememberSeries) perCategoryGrid.getOrPut(selectedKey) { androidx.compose.foundation.lazy.grid.LazyGridState() } else gridState
     val effectiveListState = if (rememberSeries) perCategoryList.getOrPut(selectedKey) { androidx.compose.foundation.lazy.LazyListState() } else listState
+    // Sidebar category switches begin with Featured and New Series. Player restore uses
+    // the unchanged category selection and its existing series id based focus recovery.
     LaunchedEffect(selectedKey, rememberSeries) {
-        if (!rememberSeries) { runCatching { gridState.scrollToItem(0) }; runCatching { listState.scrollToItem(0) } }
+        runCatching { effectiveGridState.scrollToItem(0) }
+        runCatching { effectiveListState.scrollToItem(0) }
     }
     // The List view scrolls a LazyListState, the grids (Cinematic and Separate) a LazyGridState.
     val usesList = viewMode == SettingsRepository.VodViewMode.LIST
     suspend fun scrollToIndex(i: Int) {
-        runCatching { if (usesList) effectiveListState.scrollToItem(i) else effectiveGridState.scrollToItem(i) }
+        runCatching { if (usesList) effectiveListState.scrollToItem(i + listHeaderOffset) else effectiveGridState.scrollToItem(i + gridHeaderOffset) }
     }
     val stepper = remember { VodStepper(scope) { effectiveListState } }
     val playlistMarks by vm.playlistMarks.collectAsStateWithLifecycle()
     // Separate keeps the categories on screen; Cinematic opens them as a sheet (◀, or the Categories tool).
     var categoriesOpen by remember { mutableStateOf(false) }
+    var pendingCategoryFocus by remember { mutableStateOf<LiveKey?>(null) }
     var sheetHadFocus by remember { mutableStateOf(false) }
     var sortOpen by remember { mutableStateOf(false) }
     val sortFocus = remember { FocusRequester() }
