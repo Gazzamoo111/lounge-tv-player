@@ -792,7 +792,8 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	basketball/nba
 2	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	basketball/nbl
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	cricket/all
-1	log	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	discovery feed failed ${league.key}: ${error.javaClass.simpleName}
+2	locale	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	Pacific/Auckland
+1	log	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	discovery feed failed $key: ${error.javaClass.simpleName}
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	espn
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	football/nfl
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	mma/ufc
