@@ -37,6 +37,10 @@ class BestNzChannelFilterTest {
         assertFalse(shouldHideBestNzCategory(SourceType.XTREAM, "NZ | Sky Sports HD"))
         assertFalse(shouldHideBestNzCategory(SourceType.XTREAM, "NZ|Sky Sports NZ HD"))
         assertFalse(shouldHideBestNzCategory(SourceType.XTREAM, "NZ|Sky Sports NZ RAW"))
+        // Regression: the sidebar must not vanish when BEST omits/decorates quality labels.
+        assertFalse(shouldHideBestNzCategory(SourceType.XTREAM, "NZ|Sky Sports NZ"))
+        assertFalse(shouldHideBestNzCategory(SourceType.XTREAM, "NZ|Sky Sports NZ ᴴᴰ"))
+        assertFalse(shouldHideBestNzCategory(SourceType.XTREAM, "NZ|Sky Sports NZ ᴿᴬᵂ"))
         assertTrue(shouldHideBestNzCategory(SourceType.XTREAM, "NZ | Sky Sports SD"))
         assertTrue(isAllowedBestNzSportsCategory(SourceType.XTREAM, "NZ|Sky Sports NZ HD"))
         assertFalse(isAllowedBestNzSportsCategory(SourceType.M3U, "NZ|Sky Sports NZ HD"))
