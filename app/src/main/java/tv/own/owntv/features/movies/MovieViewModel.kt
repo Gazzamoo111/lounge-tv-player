@@ -281,7 +281,7 @@ class MovieViewModel(
         }
     }.distinctUntilChanged()
 
-    val categoryHighlights: StateFlow<MovieCategoryHighlights> = combine(
+    internal val categoryHighlights: StateFlow<MovieCategoryHighlights> = combine(
         _selected, ctx, custom, hiddenCategoryIds, highlightDay,
     ) { key, c, cust, hidden, day -> HighlightScope(key, c, cust, hidden, day) }
         .debounce(300)
