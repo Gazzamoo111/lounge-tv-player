@@ -487,7 +487,7 @@ fun MoviesScreen(
     // typography even for English titles. Never fetch artwork on a fast scroll.
     val posterOf: (MovieEntity) -> String? = { movie ->
         val focusedArt = selectedMovieMeta?.takeIf { it.movieId == movie.id }?.cache?.posterPath
-            ?.let(tv.own.owntv.core.metadata.MetadataImages::poster)
+            ?.let { tv.own.owntv.core.metadata.MetadataImages.poster(it) }
         (if (metadataMode.enrich) focusedArt ?: cachedPosters[movie.id] else null)
             ?: movie.posterUrl?.takeIf { it.isNotBlank() }
     }
