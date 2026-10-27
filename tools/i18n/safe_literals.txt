@@ -1970,3 +1970,12 @@
 2	empty	app/src/main/java/tv/own/owntv/ui/theme/Theme.kt	\0
 1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	\\s*\\|\\s*
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	|
+1	regex	app/src/main/java/tv/own/owntv/features/settings/LoungeNzSkyFhdGuide.kt	^(?:NZ\\s*[|:\\-]\\s*)?SKY\\s*SPORTS?\\s*([1-9])\\s*FHD$
+1	regex	app/src/main/java/tv/own/owntv/features/settings/LoungeNzSkyFhdGuide.kt	^\\s*NZ\\s*[|:\\-]\\s*SKY\\s*SPORT
+1	protocol	app/src/main/java/tv/own/owntv/features/settings/LoungeNzSkyFhdGuide.kt	skysport
+1	protocol	app/src/main/java/tv/own/owntv/features/settings/LoungeNzSkyFhdGuide.kt	.nz
+1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	NZ| SKY SPORT
+1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	NZ | SKY SPORT
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Sky Sport FHD cache fill unavailable
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Sky Sport FHD guide matches added=
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Sky Sport FHD guide matching deferred
