@@ -75,7 +75,7 @@ jobs:
           QA_SIGNING_REQUIRED: ${{ github.event_name != 'pull_request' }}
         run: |
           chmod +x ./gradlew
-          ./gradlew :app:testStandardDebugUnitTest -Powntv.corePath="$GITHUB_WORKSPACE/shared-core" --stacktrace
+          ./gradlew :shared-core:player-core:testDebugUnitTest :app:testStandardDebugUnitTest -Powntv.corePath="$GITHUB_WORKSPACE/shared-core" --stacktrace
       - name: Compile QA APK
         env:
           QA_KEYSTORE_PASSWORD: ${{ secrets.QA_KEYSTORE_PASSWORD }}
