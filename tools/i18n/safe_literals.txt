@@ -133,7 +133,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveStage.kt	tnum
 3	regex	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	[^a-z0-9]+
 1	regex	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	\\s+
-16	empty	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	\0
+15	empty	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	#$it
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	catch-up '${ch.name}' prog='${programme.title}' -> ${tv.own.owntv.core.network.HttpClient.redactUrl(url)}
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	catch-up external '${ch.name}' prog='${programme.title}'
@@ -143,6 +143,7 @@
 2	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	hd
 1	url	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	i.mjh.nz/nz/kodi-tv.m3u8
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	LiveEngine
+1	file-path	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	lounge_live_hidden_categories_20261027.txt
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	New Zealand
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	NZ
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	nz raw
@@ -162,21 +163,18 @@
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	zap: tune wait ${delayMs}ms — ${zapWaitReason(lastZapPressMs, now, singleConnection)}
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveZapList.kt	direct tune: zap rebuild failed
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveZapList.kt	LiveZapList
+1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	·
 2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	[ᴿᴬᵂ⁶⁰ᶠᵖˢ]+
 1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	\\bVIP\\b
 3	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	\\s+
-1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	\\s+(?:FHD|HD)(?:\\s*\\(BK\\))?$
-9	empty	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	\0
+8	empty	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	\0
 2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	###
 1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	^(?:NZ|AU|UK|US|IR|CA|NA|TV|PRIME|UK-BBCI)\\s*\\|\\s*
 1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	^([A-Z]{2})\\|\\s*(.+)$
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	4K
 2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	AU
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	au| australia
-1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	au| nrl tv ppv
-1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	au| stan ppv
 2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	Australia
-1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	biblical|religious|telemundo|vix\\+ deportes|adult|xxx
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	ESPN
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	F1
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	FOX
@@ -190,29 +188,22 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	NRL
 2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	NZ
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	NZ ·
-1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	nz| new zealand
 2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	nz| sky sport
-1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	nz| sky sports
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	nz| sky sports nz
-1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	pay per view
-1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	ppv
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	PPV
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	RAW
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	Sky
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	TNT
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UFC
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK
-1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	uk| apple tv f1 ppv
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	uk| movies
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	uk| sports
-1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	uk| ufc/boxing ppv
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	us| biblical/religious
-1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	us| espn plus
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	us| espn+ ppv vip
-2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	us| flo network
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	us| flo network
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	us| paramount+ ppv
-2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	world live sports
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	world live sports
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	WWE
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	24/7
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	24x7
@@ -939,6 +930,7 @@
 1	url	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	https://i.mjh.nz/nz/kodi-tv.m3u8
 1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	i.mjh.nz/nz/
 2	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	lounge_nz_freeview
+2	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	NZ Freeview
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	NZ Freeview added to existing profile=$pid, sync queued
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	NZ Freeview auto-setup failed; existing sources unaffected
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	OwnTVHome
