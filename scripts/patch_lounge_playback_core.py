@@ -76,17 +76,17 @@ def apply(root: Path) -> None:
     manifest = root / "tools/i18n/safe_literals.txt"
     rows = manifest.read_text(encoding="utf-8").splitlines()
     old_entries = [
-        "1\\tlog\\t" + relative + "\\tHTTP 458 while the previous engine's session was still open — waiting and retrying once",
-        "1\\ttechnical\\t" + relative + "\\tprovider refused with HTTP 458 (account session still in use) uri=${HttpClient.redactUrl(uri)}",
+        "1\tlog\t" + relative + "\tHTTP 458 while the previous engine's session was still open — waiting and retrying once",
+        "1\ttechnical\t" + relative + "\tprovider refused with HTTP 458 (account session still in use) uri=${HttpClient.redactUrl(uri)}",
     ]
     for entry in old_entries:
         if rows.count(entry) != 1:
             raise SystemExit(f"Safe literal entry missing or ambiguous: {entry}")
         rows.remove(entry)
-    old_ended = "1\\ttechnical\\t" + relative + "\\tended mid-live"
+    old_ended = "1\ttechnical\t" + relative + "\tended mid-live"
     if rows.count(old_ended) != 1:
         raise SystemExit("Expected one existing ended-mid-live safe literal")
-    rows[rows.index(old_ended)] = "2\\ttechnical\\t" + relative + "\\tended mid-live"
+    rows[rows.index(old_ended)] = "2\ttechnical\t" + relative + "\tended mid-live"
 
     new_literals = [
         ("2", "file-path", "/video/black.ts"),
@@ -100,12 +100,12 @@ def apply(root: Path) -> None:
         raise SystemExit("Unrecognized upstream safe literal manifest")
     header_end = rows.index("") + 1
     for count, category, literal in new_literals:
-        entry = "\\t".join((count, category, relative, literal))
+        entry = "\t".join((count, category, relative, literal))
         if entry in rows:
             raise SystemExit(f"Unexpected existing safe literal: {literal}")
         rows.append(entry)
-    body = sorted(rows[header_end:], key=lambda row: (row.split("\\t", 3)[2], row.split("\\t", 3)[3]))
-    manifest.write_text("\\n".join(rows[:header_end] + body) + "\\n", encoding="utf-8")
+    body = sorted(rows[header_end:], key=lambda row: (row.split("\t", 3)[2], row.split("\t", 3)[3]))
+    manifest.write_text("\n".join(rows[:header_end] + body) + "\n", encoding="utf-8")
     print("Reviewed protocol and log literals in pinned-core i18n inventory")
     print(f"Playback core patch applied to pinned commit {PIN}")
 
