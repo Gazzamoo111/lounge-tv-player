@@ -52,6 +52,7 @@ import tv.own.owntv.core.settings.PanelSection
 import tv.own.owntv.core.settings.PanelShares
 import tv.own.owntv.core.settings.GuideWidthShares
 import tv.own.owntv.core.settings.PlaylistRefresh
+import tv.own.owntv.core.settings.PlaylistAutoRefresh
 import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.core.settings.SubtitleStyle
 import tv.own.owntv.core.theme.AccentColor
