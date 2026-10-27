@@ -1836,7 +1836,7 @@
 1	protocol	app/src/main/java/tv/own/owntv/ui/components/LoungeVodCatalogueCleanup.kt	|EN| NBC/PEACOCK
 1	protocol	app/src/main/java/tv/own/owntv/ui/components/LoungeVodCatalogueCleanup.kt	|EN| NETFLIX
 3	protocol	app/src/main/java/tv/own/owntv/ui/components/LoungeVodCatalogueCleanup.kt	|EN| NEW RELEASED
-1	protocol	app/src/main/java/tv/own/owntv/ui/components/LoungeVodCatalogueCleanup.kt	|EN| PRE-RELEASES/SD CAM
+2	protocol	app/src/main/java/tv/own/owntv/ui/components/LoungeVodCatalogueCleanup.kt	|EN| PRE-RELEASES/SD CAM
 1	protocol	app/src/main/java/tv/own/owntv/ui/components/LoungeVodCatalogueCleanup.kt	|EN| PRIME+
 3	protocol	app/src/main/java/tv/own/owntv/ui/components/LoungeVodCatalogueCleanup.kt	|EN| REALITY SHOWS
 3	protocol	app/src/main/java/tv/own/owntv/ui/components/LoungeVodCatalogueCleanup.kt	|EN| SCIENCE FICTION/FANTASTY
