@@ -33,7 +33,7 @@ internal object LoungeVodCatalogueCleanup {
     // Distinctive folder names present in the uploaded 27-Oct audit. Recognise a
     // source only after several independent matches, rather than guessing its ID.
     private val movieSignatures = setOf(
-        "|EN| NEW RELEASED", "|EN| CLASSIC MOVIES COLLECTION",
+        "|EN| DRAMA", "|EN| NEW RELEASED", "|EN| CLASSIC MOVIES COLLECTION",
         "|EN| SCIENCE FICTION/FANTASTY", "|EN| ACTORS & DIRECTORS",
         "|EN| DRAMA/CRIME", "|EN| HORROR/THRILLER",
         "|EN| CHILDREN/FAMILY", "|EN| ADVENTURE MOVIES",
