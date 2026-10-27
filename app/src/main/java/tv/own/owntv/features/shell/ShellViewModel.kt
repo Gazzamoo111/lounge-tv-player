@@ -3,6 +3,8 @@ package tv.own.owntv.features.shell
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
@@ -28,11 +30,19 @@ import tv.own.owntv.core.weather.WeatherInfo
 import tv.own.owntv.core.weather.WeatherRepository
 import tv.own.owntv.core.database.dao.resolveExistingProfileId
 import tv.own.owntv.core.repository.SourceRepository
+import tv.own.owntv.core.database.dao.CategoryDao
+import tv.own.owntv.core.database.dao.ChannelDao
+import tv.own.owntv.core.customize.CustomizationStore
+import tv.own.owntv.core.customize.CustomizeKeys
+import tv.own.owntv.core.model.MediaType
+import tv.own.owntv.features.settings.LoungeNzSkyFhdGuide
 import tv.own.owntv.core.repository.EpgRepository
 import tv.own.owntv.core.epg.EpgSourceStore
 import tv.own.owntv.core.model.SourceType
 import tv.own.owntv.core.sync.work.EpgSyncScheduler
 import tv.own.owntv.core.sync.work.CatalogSyncScheduler
+import tv.own.owntv.core.settings.PlaylistAutoRefresh
+import tv.own.owntv.core.settings.PlaylistRefresh
 import tv.own.owntv.core.settings.EpgRefresh
 import tv.own.owntv.core.settings.EpgAutoRefresh
 import androidx.work.ExistingWorkPolicy
@@ -49,6 +59,9 @@ import tv.own.owntv.core.theme.UiZoom
 class ShellViewModel(
     private val settings: SettingsRepository,
     private val sourceRepository: SourceRepository,
+    private val categoryDao: CategoryDao,
+    private val channelDao: ChannelDao,
+    private val customize: CustomizationStore,
     private val profileDao: tv.own.owntv.core.database.dao.ProfileDao,
     connectivity: ConnectivityObserver,
     private val launcherIntegrationRepository: LauncherIntegrationRepository,
@@ -145,6 +158,9 @@ class ShellViewModel(
                             url = "https://i.mjh.nz/nz/kodi-tv.m3u8",
                             epgUrl = "https://i.mjh.nz/nz/epg.xml.gz",
                         )
+                        settings.setPlaylistAutoRefresh(
+                            source.id, PlaylistRefresh(PlaylistAutoRefresh.MANUAL, 1),
+                        )
                         catalogSyncScheduler.enqueueSync(
                             sourceId = source.id,
                             reason = "lounge_nz_freeview",
@@ -166,6 +182,70 @@ class ShellViewModel(
                         throw e
                     } catch (e: Exception) {
                         Log.w(TAG, "NZ Freeview auto-setup failed; existing sources unaffected", e)
+                    }
+                }
+        }
+        // Bind the verified linear NZ Sky FHD programme IDs exactly once per
+        // Xtream catalogue generation. Provider name variants do not match the
+        // XMLTV IDs automatically. Keep manually selected guide matches.
+        viewModelScope.launch(Dispatchers.IO) {
+            settings.activeProfileId
+                .flatMapLatest { pid ->
+                    if (pid < 0) flowOf(-1L to emptyList<tv.own.owntv.core.database.entity.SourceEntity>())
+                    else sourceRepository.observeSources(pid)
+                        .map { pid to it.filter { source -> source.type == SourceType.XTREAM } }
+                }
+                .distinctUntilChanged { old, new ->
+                    old.first == new.first &&
+                        old.second.map { it.id to it.lastSyncAt } ==
+                        new.second.map { it.id to it.lastSyncAt }
+                }
+                .collect { (pid, providers) ->
+                    if (pid < 0 || providers.isEmpty()) return@collect
+                    try {
+                        val providerIds = providers.map { it.id }
+                        val cats = categoryDao.observe(providerIds, MediaType.LIVE).first()
+                            .filter { cat ->
+                                cat.name.trim().startsWith("NZ| SKY SPORT", ignoreCase = true) ||
+                                    cat.name.trim().startsWith("NZ | SKY SPORT", ignoreCase = true)
+                            }
+                        if (cats.isEmpty()) return@collect
+                        val existing = customize.observe(pid, MediaType.LIVE).first()
+                        val toMatch = mutableMapOf<String, String>()
+                        for (cat in cats) {
+                            val chans = channelDao.snapshotByCategoryManual(
+                                cat.id, pid, CustomizeKeys.category(cat), 80,
+                            )
+                            for (ch in chans) {
+                                val id = LoungeNzSkyFhdGuide.epgId(
+                                    ch.name, cat.name, isXtream = true,
+                                ) ?: continue
+                                val key = CustomizeKeys.channel(ch)
+                                if (key !in existing.epgMatches &&
+                                    existing.epgMatchResolver.epgIdFor(ch) == null
+                                ) toMatch[key] = id
+                            }
+                        }
+                        if (toMatch.isNotEmpty()) {
+                            customize.update(pid, MediaType.LIVE) { current ->
+                                current.copy(
+                                    epgMatches = toMatch.filterKeys { it !in current.epgMatches } +
+                                        current.epgMatches,
+                                )
+                            }
+                            // Fill newly mapped IDs from an existing XMLTV cache.
+                            // This is off the UI thread, with no new network fetch.
+                            runCatching {
+                                epgRepository.storeProgrammesForIdsFromCache(
+                                    toMatch.values.toSet(),
+                                )
+                            }.onFailure { Log.w(TAG, "Sky Sport FHD cache fill unavailable", it) }
+                            Log.i(TAG, "Sky Sport FHD guide matches added=" + toMatch.size)
+                        }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Sky Sport FHD guide matching deferred", e)
                     }
                 }
         }
