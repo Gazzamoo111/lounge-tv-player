@@ -112,7 +112,7 @@ class SetupViewModel(
         password: String,
         userAgent: String = "",
         epgUrl: String = "",
-        autoRefresh: PlaylistRefresh = PlaylistRefresh.OFF,
+        autoRefresh: PlaylistRefresh = PlaylistRefresh(PlaylistAutoRefresh.MANUAL, 1),
         live: SyncScopeChoice = SyncScopeChoice.Now,
         movies: SyncScopeChoice = SyncScopeChoice.Now,
         series: SyncScopeChoice = SyncScopeChoice.Now,
