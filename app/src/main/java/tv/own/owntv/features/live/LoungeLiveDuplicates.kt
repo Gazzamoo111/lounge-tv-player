@@ -74,7 +74,12 @@ internal object LoungeLiveDuplicates {
             val cat = categories.getValue(ch.categoryId!!)
             val area = region(cat.name)!!
             val identity = key(ch.name, area)
-            if (identity.isBlank()) "unique:" + ch.id else area + ":" + identity
+            // Event slot numbers can refer to entirely different live matches
+            // on different channels: never merge them by their generic slot name.
+            val eventFolder = Regex("PPV|EVENT|PACKAGE|REPLAY|24/7", RegexOption.IGNORE_CASE)
+                .containsMatchIn(cat.name)
+            if (identity.isBlank() || eventFolder) "unique:" + ch.id
+            else area + ":" + identity
         }
         val hidden = HashSet<Long>()
         val backups = HashMap<Long, List<Long>>()
