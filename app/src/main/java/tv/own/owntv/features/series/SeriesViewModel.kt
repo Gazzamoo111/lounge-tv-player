@@ -642,11 +642,11 @@ class SeriesViewModel(
                 val cust = cs.cust
                 val movedFrom = cust.movedFromOrigin
                 if (cust.hiddenItems.isEmpty() && cust.itemNames.isEmpty() && cs.hiddenCats.isEmpty() && movedFrom.isEmpty()) paging.filter { item ->
-                    !LoungeVodCatalogueCleanup.explicitlyNonEnglishTitle(item.name)
+                    LoungeVodCatalogueCleanup.visibleEnglish(item.name, item.providerLanguage)
                 }
                 else paging.filter { s ->
                     CustomizeKeys.series(s) !in cust.hiddenItems &&
-                        !LoungeVodCatalogueCleanup.explicitlyNonEnglishTitle(s.name) &&
+                        LoungeVodCatalogueCleanup.visibleEnglish(s.name, s.providerLanguage) &&
                         (s.categoryId == null || s.categoryId !in cs.hiddenCats) &&
                         // Moved-out items leave ONLY their origin folder (they stay in All/search).
                         (movedFrom[CustomizeKeys.series(s)]?.let { origin ->
