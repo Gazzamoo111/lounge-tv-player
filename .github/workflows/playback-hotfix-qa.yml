@@ -2,7 +2,7 @@ name: Lounge TV playback hotfix QA
 
 on:
   pull_request:
-    branches: [main]
+    branches: [release/lounge-tv-5.2.3.0-rc1]
   workflow_dispatch:
 
 permissions:
