@@ -21,7 +21,7 @@ PATCHES = {
     ],
     [
       "            \"provider refused with HTTP 458 (account session still in use) uri=${HttpClient.redactUrl(uri)}\",",
-      "            \"provider refused with HTTP $status (${if (status == 458) \"account session limit\" else \"gateway/session retry required\"}) uri=${HttpClient.redactUrl(uri)}\","
+      "            \"provider refused with HTTP $status uri=${HttpClient.redactUrl(uri)}\","
     ],
     [
       "            detail = \"HTTP 458 while the previous engine's session was still open — waiting and retrying once\",",
@@ -92,9 +92,7 @@ def apply(root: Path) -> None:
         ("2", "file-path", "/video/black.ts"),
         ("1", "log", "HTTP $status while opening a live stream — waiting for the gateway or previous session to release, then retrying"),
         ("1", "log", "Live provider returned a black placeholder instead of the channel"),
-        ("1", "technical", "account session limit"),
-        ("1", "technical", "gateway/session retry required"),
-        ("1", "log", 'provider refused with HTTP $status (${if (status == 458) "account session limit" else "gateway/session retry required"})'),
+        ("1", "log", "provider refused with HTTP $status uri=${HttpClient.redactUrl(uri)}"),
     ]
     if not rows or "" not in rows:
         raise SystemExit("Unrecognized upstream safe literal manifest")
