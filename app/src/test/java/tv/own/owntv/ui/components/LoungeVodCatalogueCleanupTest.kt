@@ -82,6 +82,16 @@ class LoungeVodCatalogueCleanupTest {
         assertFalse(plan.names.containsKey("43:999"))
     }
 
+    @Test fun `provider language decides ambiguous English-labelled folder content`() {
+        assertFalse(policy.visibleEnglish("Some Show", "tr"))
+        assertFalse(policy.visibleEnglish("Some Show", "Turkish"))
+        assertFalse(policy.visibleEnglish("Some Show", "fr-FR"))
+        assertFalse(policy.visibleEnglish("Some Show", "multi"))
+        assertTrue(policy.visibleEnglish("Some Show", "en-US"))
+        assertTrue(policy.visibleEnglish("Some Show", "English"))
+        assertTrue(policy.visibleEnglish("The Italian Job", null))
+    }
+
     @Test fun `explicit language markers do not misclassify ordinary titles`() {
         assertTrue(policy.explicitlyNonEnglishTitle("[TR] Foreign Movie"))
         assertTrue(policy.explicitlyNonEnglishTitle("KO - Some Series"))
