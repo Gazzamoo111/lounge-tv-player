@@ -965,10 +965,26 @@ class LiveViewModel(
                 .map { rows -> rows.associate { LiveKey.Folder(it.categoryId) as LiveKey to it.itemCount } }
             combine(single + folders) { parts -> parts.fold(emptyMap<LiveKey, Int>()) { acc, m -> acc + m } }.throttleLatest()
         }
+        .combine(duplicateSelection) { raw, d ->
+            raw.mapValues { (key, count) ->
+                when (key) {
+                    is LiveKey.Folder -> (count - (d.hiddenByCategory[key.id] ?: 0)).coerceAtLeast(0)
+                    LiveKey.All -> (count - d.hiddenIds.size).coerceAtLeast(0)
+                    else -> count
+                }
+            }
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     val count: StateFlow<Int> = combine(_selected, ctx, hiddenCategoryIds) { key, c, hidden -> Triple(key, c, hidden) }
-        .flatMapLatest { (key, c, hidden) -> countFlow(key, c, hidden).throttleLatest() } // Cap live COUNT re-runs during bulk sync
+        .flatMapLatest { (key, c, hidden) -> countFlow(key, c, hidden).throttleLatest() }
+        .combine(_selected, duplicateSelection) { raw, selected, d ->
+            when (selected) {
+                is LiveKey.Folder -> (raw - (d.hiddenByCategory[selected.id] ?: 0)).coerceAtLeast(0)
+                LiveKey.All -> (raw - d.hiddenIds.size).coerceAtLeast(0)
+                else -> raw
+            }
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
     val favoriteIds: StateFlow<Set<Long>> = ctx
