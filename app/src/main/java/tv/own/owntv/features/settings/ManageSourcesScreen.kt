@@ -316,6 +316,11 @@ fun ManageSourcesScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                         onTest = { contextId = source.id; contextIndex = index; vm.testSource(source) },
                         onResync = { contextId = source.id; contextIndex = index; resyncChoice = source },
                         onCancelSync = { contextId = source.id; contextIndex = index; vm.cancelResync(source) },
+                        onEnableChannelUpdates = {
+                            contextId = source.id; contextIndex = index
+                            vm.setPlaylistAutoRefresh(source.id, PlaylistRefresh(PlaylistAutoRefresh.HOURS_6))
+                            vm.resync(source)
+                        },
                         onDelete = { contextId = source.id; contextIndex = index; confirmDelete = source },
                     )
                 }
@@ -383,6 +388,7 @@ private fun SourceRow(
     onTest: () -> Unit,
     onResync: () -> Unit,
     onCancelSync: () -> Unit,
+    onEnableChannelUpdates: () -> Unit,
     onDelete: () -> Unit,
 ) {
     val activeSync = syncState as? CatalogSyncState.Syncing
@@ -413,7 +419,13 @@ private fun SourceRow(
         else -> null
     }
     val back = rowFocus ?: remember { FocusRequester() }
-    val actions = if (isDeleting) emptyList() else listOf(
+    val actions = if (isDeleting) emptyList() else listOfNotNull(
+        if (source.type == SourceType.XTREAM && autoRefresh.mode == PlaylistAutoRefresh.OFF)
+            StageAction(
+                OwnTVIcon.REFRESH,
+                stringResource(R.string.lounge_enable_channel_updates),
+                onEnableChannelUpdates,
+            ) else null,
         StageAction(OwnTVIcon.PENCIL, stringResource(R.string.settings_sources_edit), onEdit),
         // "Info", not "Test": the expensive measurement lives behind Re-test inside the popup.
         StageAction(OwnTVIcon.INFO, stringResource(R.string.settings_sources_info), onTest),

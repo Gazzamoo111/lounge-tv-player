@@ -43,6 +43,35 @@ class BestNzChannelFilterTest {
         assertFalse(shouldHideBestNzCategory(SourceType.XTREAM, "UK | Movies"))
     }
 
+    @Test fun allowsOnlyTheTwoNZSkySportGroups() {
+        assertTrue(bestNzSkyGroup(SourceType.XTREAM, "NZ RAW") == BestNzSkyGroup.RAW)
+        assertTrue(bestNzSkyGroup(SourceType.XTREAM, "NZ| Sky Sports NZ RAW") == BestNzSkyGroup.RAW)
+        assertTrue(bestNzSkyGroup(SourceType.XTREAM, "NZ | Sky Sport RAW") == BestNzSkyGroup.RAW)
+        assertTrue(bestNzSkyGroup(SourceType.XTREAM, "NZ| Sky Sports NZ HD") == BestNzSkyGroup.HD)
+        assertTrue(bestNzSkyGroup(SourceType.XTREAM, "Sky Sport HD") == BestNzSkyGroup.HD)
+        assertTrue(bestNzSkyGroup(SourceType.XTREAM, "NZ Sky Sport HD") == BestNzSkyGroup.HD)
+        assertTrue(bestNzSkyGroup(SourceType.XTREAM, "NZ | Sky Sport ᴴᴰ") == BestNzSkyGroup.HD)
+
+        // These were wrongly visible in the previous QA build.
+        assertTrue(bestNzSkyGroup(SourceType.XTREAM, "NZ New Zealand") == null)
+        assertTrue(bestNzSkyGroup(SourceType.XTREAM, "NZ | New Zealand") == null)
+        assertTrue(bestNzSkyGroup(SourceType.XTREAM, "NZ") == null)
+        assertTrue(bestNzSkyGroup(SourceType.XTREAM, "NZ | Sports") == null)
+        assertTrue(bestNzSkyGroup(SourceType.XTREAM, "NZ Sky Sport") == null)
+        assertTrue(bestNzSkyGroup(SourceType.XTREAM, "NZ | Sky Sports SD") == null)
+        assertTrue(bestNzSkyGroup(SourceType.M3U, "NZ Sky Sport HD") == null)
+
+        assertTrue(isUnwantedNzRailCategory("NZ New Zealand"))
+        assertTrue(isUnwantedNzRailCategory("NZ | New Zealand"))
+        assertFalse(isUnwantedNzRailCategory("NZ RAW"))
+        assertFalse(isUnwantedNzRailCategory("Sky Sport HD"))
+        assertFalse(isUnwantedNzRailCategory("NZ | Sky Sport HD"))
+        assertFalse(isUnwantedNzRailCategory("NZ | Sky Sport RAW"))
+        assertFalse(isUnwantedNzRailCategory("NZ Sky Sport"))
+        assertFalse(isUnwantedNzRailCategory("New Zealand"))
+        assertTrue(shouldHideBestNzCategory(SourceType.XTREAM, "NZ Sky Sport"))
+    }
+
     @Test fun neverChangesOtherRegionsOrIndependentM3u() {
         assertFalse(shouldHideBestNzChannel(SourceType.M3U, "NZ | General", "TVNZ 1"))
         assertFalse(shouldHideBestNzCategory(SourceType.M3U, "NZ | General"))

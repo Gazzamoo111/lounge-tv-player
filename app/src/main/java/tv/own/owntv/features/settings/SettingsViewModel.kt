@@ -52,6 +52,7 @@ import tv.own.owntv.core.settings.PanelSection
 import tv.own.owntv.core.settings.PanelShares
 import tv.own.owntv.core.settings.GuideWidthShares
 import tv.own.owntv.core.settings.PlaylistRefresh
+import tv.own.owntv.core.settings.PlaylistAutoRefresh
 import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.core.settings.SubtitleStyle
 import tv.own.owntv.core.theme.AccentColor
@@ -1195,7 +1196,7 @@ class SettingsViewModel(
         pass: String,
         userAgent: String = "",
         epgUrl: String = "",
-        autoRefresh: PlaylistRefresh = PlaylistRefresh.OFF,
+        autoRefresh: PlaylistRefresh = PlaylistRefresh(PlaylistAutoRefresh.MANUAL, 1),
         live: SyncScopeChoice = SyncScopeChoice.Now,
         movies: SyncScopeChoice = SyncScopeChoice.Now,
         series: SyncScopeChoice = SyncScopeChoice.Now,

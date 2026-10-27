@@ -43,7 +43,9 @@ android {
         if (f.isFile) f.inputStream().use { load(it) }
     }
 
-    val publishedProductionVersionCode = 5_020_200
+    // Current customer release is 5.2.3.0. Local QA and any future signed candidate must stay above it;
+    // rollback remains the preserved 5.2.3.0 APK rather than an accidentally reusable version code.
+    val publishedProductionVersionCode = 5_020_300
     val localFallbackVersionCode = publishedProductionVersionCode + 1
     val suppliedVersionCode = System.getenv("VERSION_CODE")
     val suppliedVersionName = System.getenv("VERSION_NAME")
@@ -56,7 +58,7 @@ android {
         // deliberately one code above the currently published production APK. Production release tasks
         // reject the fallback below, so an accidentally implicit candidate can never be produced.
         versionCode = (suppliedVersionCode ?: localFallbackVersionCode.toString()).toInt()
-        versionName = suppliedVersionName ?: "5.2.2.1-local"
+        versionName = suppliedVersionName ?: "5.2.3.1-local"
 
         // Opt-in local diagnostic APKs keep the rolling playback trace enabled even when they are
         // release-signed (so they can update an installed production build without changing its data).
@@ -219,7 +221,12 @@ android {
         debug {
             // Keep debug builds isolated from production (different signing keys and data).
             // Draft PR builds install alongside production and stable QA, never over either.
-            applicationIdSuffix = if (System.getenv("ISOLATED_EVENT_QA") == "true") ".eventqa" else ".qa"
+            applicationIdSuffix = when {
+                System.getenv("RELIABILITY_AUDIT_QA") == "true" -> ".auditqa"
+                System.getenv("PLAYBACK_HOTFIX_QA") == "true" -> ".playbackqa"
+                System.getenv("ISOLATED_EVENT_QA") == "true" -> ".recoveryqa"
+                else -> ".qa"
+            }
             versionNameSuffix = "-qa"
             if (qaSigning.isComplete) {
                 signingConfig = signingConfigs.getByName("qa")

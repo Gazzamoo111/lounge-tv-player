@@ -3,6 +3,9 @@ package tv.own.owntv.di
 import tv.own.owntv.features.sports.SportsPlayback
 import tv.own.owntv.features.sports.SportsSettingsViewModel
 import tv.own.owntv.features.sports.SportsViewModel
+import tv.own.owntv.features.sports.data.FixtureReminderPersistence
+import tv.own.owntv.features.sports.data.FixtureReminderScheduler
+import tv.own.owntv.features.sports.data.SharedPreferencesFixtureReminderPersistence
 import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModelOf
@@ -61,6 +64,9 @@ val appModule = module {
     singleOf(::HomeFeedReader)
     // Sports Hub: which match the playing channel came from. Lazy; nothing runs until it is asked.
     singleOf(::SportsPlayback)
+    singleOf(::SharedPreferencesFixtureReminderPersistence)
+    single<FixtureReminderPersistence> { get<SharedPreferencesFixtureReminderPersistence>() }
+    singleOf(::FixtureReminderScheduler)
     // Process-long scope for work that must outlive the screen that started it (a first-run restore).
     single<kotlinx.coroutines.CoroutineScope> {
         kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Default)
@@ -105,7 +111,36 @@ val appModule = module {
     viewModelOf(::MovieViewModel)
     viewModelOf(::SportsViewModel)
     viewModelOf(::SportsSettingsViewModel)
-    viewModelOf(::SeriesViewModel)
+    // Series highlights add a 23rd dependency; Koin viewModelOf stops at 22.
+    // Explicit named injection stays compile-safe if the constructor changes.
+    viewModel {
+        SeriesViewModel(
+            seriesDao = get(),
+            highlightDatabase = get(),
+            catalogPriority = get(),
+            categoryDao = get(),
+            favoriteDao = get(),
+            historyDao = get(),
+            userDataWriter = get(),
+            progressDao = get(),
+            profileDao = get(),
+            sourceDao = get(),
+            seriesRepository = get(),
+            settings = get(),
+            customize = get(),
+            player = get(),
+            downloadManager = get(),
+            launcherIntegrationRepository = get(),
+            contentOrderDao = get(),
+            customCategoryDao = get(),
+            seriesSortOrderDao = get(),
+            metadata = get(),
+            externalPlayerLauncher = get(),
+            streamUrlResolver = get(),
+            subtitleController = get(),
+            appContext = get(),
+        )
+    }
     viewModelOf(::SearchViewModel)
     viewModelOf(::ProfilesViewModel)
     // Activity-scoped session state for the profile gate (configuration-only retention, no saved

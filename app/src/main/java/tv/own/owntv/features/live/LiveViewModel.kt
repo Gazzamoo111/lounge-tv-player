@@ -106,6 +106,7 @@ data class LiveRailItem(
     val providerName: String? = null,
     /** The playlist a folder belongs to: its mark in the Movies / Series category list. */
     val sourceId: Long? = null,
+    val section: LoungeLiveSection? = null,
 )
 
 class LiveViewModel(
@@ -306,22 +307,41 @@ class LiveViewModel(
         val sourceNames: Map<Long, String>,
     )
 
+    private data class VisibleCountInputs(
+        val customizations: SectionCustomizations,
+        val duplicates: LoungeLiveDuplicates.Result,
+        val curation: LoungeLiveCatalogueCleanup.Plan,
+        val folderKeys: Map<Long, String>,
+    )
+
     // Observe the active profile's sources REACTIVELY so adding/removing a playlist refreshes Live TV
     // immediately (it used to be read once at startup, so a new playlist showed nothing until restart).
     // Full sources by id — lets the synchronous play() paths tell a Stalker source (needs play-time
     // create_link resolution) from M3U/Xtream (final URL already stored) without a DB round-trip.
     private var sourceById: Map<Long, tv.own.owntv.core.database.entity.SourceEntity> = emptyMap()
 
-    private val ctx: StateFlow<Ctx> = activeProfileSources(settings, sourceDao)
-        .map { aps ->
-            sourceById = aps.sources.associateBy { it.id }
-            val liveIds = aps.liveSourceIds
-            Ctx(
-                aps.profileId,
-                liveIds,
-                aps.sources.filter { it.id in liveIds }.associate { it.id to it.name },
-            )
+    private val ctx: StateFlow<Ctx> = combine(
+        activeProfileSources(settings, sourceDao),
+        settings.activeProfileId.flatMapLatest { pid ->
+            if (pid < 0) flowOf(emptyList<SourceEntity>())
+            else sourceDao.observeForProfile(pid)
+        },
+    ) { aps, linked ->
+        // An NZ free-to-air fallback should show beside BEST Live even if the
+        // customer's default IPTV provider remains selected. Do not change
+        // that selection (which also governs Movies and Series).
+        val nzFreeview = linked.filter {
+            it.type == SourceType.M3U && it.url.contains(NZ_FREEVIEW_PATH, ignoreCase = true)
         }
+        val visible = (aps.sources + nzFreeview).distinctBy { it.id }
+        sourceById = visible.associateBy { it.id }
+        val liveIds = visible.filter { it.syncLive }.map { it.id }
+        Ctx(
+            aps.profileId,
+            liveIds,
+            visible.filter { it.id in liveIds }.associate { it.id to it.name },
+        )
+    }
         .distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.Eagerly, Ctx(-1L, emptyList(), emptyMap()))
 
@@ -359,6 +379,21 @@ class LiveViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
 
+    /** Independent NZ playlist folder IDs; no changes to customer-added sources. */
+    private val nzFreeviewFolderIds: StateFlow<Set<Long>> = ctx
+        .flatMapLatest { c ->
+            if (c.profileId < 0) flowOf(emptySet<Long>())
+            else categoryDao.observe(c.sourceIds, MediaType.LIVE).map { categories ->
+                categories.filter { category ->
+                    sourceById[category.sourceId]?.let { source ->
+                        source.type == SourceType.M3U &&
+                            source.url.contains(NZ_FREEVIEW_PATH, ignoreCase = true)
+                    } == true
+                }.mapTo(HashSet()) { it.id }
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
+
     /** One NZ visibility rule used by lists, saved history and channel zapping. */
     private fun showInNzSelection(channel: ChannelEntity): Boolean =
         !shouldHideBestNzChannel(
@@ -366,6 +401,53 @@ class LiveViewModel(
             channel.categoryId?.let(categoryNamesById.value::get),
             channel.name,
         )
+
+    /** Recompute audit-derived policy after provider catalogue refresh. Manual customizations stay separate. */
+    private val loungeCuration: StateFlow<LoungeLiveCatalogueCleanup.Plan> = ctx
+        .flatMapLatest { c ->
+            if (c.profileId < 0) flowOf(LoungeLiveCatalogueCleanup.Plan())
+            else combine(
+                categoryDao.observe(c.sourceIds, MediaType.LIVE),
+                channelDao.observeCountsByCategory(c.sourceIds.ifEmpty { listOf(-1L) }),
+            ) { cats, counts ->
+                val byId = counts.associate { it.categoryId to it.itemCount }
+                LoungeLiveCatalogueCleanup.plan(cats.map { cat ->
+                    LoungeLiveCatalogueCleanup.Folder(
+                        id = cat.id,
+                        sourceId = cat.sourceId,
+                        sourceType = sourceById[cat.sourceId]?.type,
+                        name = cat.name,
+                        count = byId[cat.id],
+                        synced = sourceById[cat.sourceId]?.lastSyncAt != null,
+                    )
+                })
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, LoungeLiveCatalogueCleanup.Plan())
+
+    /** Recompute a reversible duplicate presentation map only after catalogue changes. */
+    private val duplicateSelection: StateFlow<LoungeLiveDuplicates.Result> = ctx
+        .flatMapLatest { c ->
+            if (c.profileId < 0) flowOf(LoungeLiveDuplicates.Result(emptySet(), emptyMap()))
+            else combine(
+                categoryDao.observe(c.sourceIds, MediaType.LIVE),
+                channelDao.observeCountsByCategory(c.sourceIds.ifEmpty { listOf(-1L) }),
+                loungeCuration,
+            ) { cats, _, plan -> cats to plan }
+                .debounce(1_500)
+                .mapLatest { (cats, plan) ->
+                    if (plan.sourceIds.isEmpty()) LoungeLiveDuplicates.Result(emptySet(), emptyMap())
+                    else withContext(Dispatchers.IO) {
+                        LoungeLiveDuplicates.choose(
+                            channelDao.snapshotAll(c.sourceIds, 25_000),
+                            cats.associateBy { it.id },
+                            plan.sourceIds,
+                            plan.hiddenIds,
+                        )
+                    }
+                }
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, LoungeLiveDuplicates.Result(emptySet(), emptyMap()))
 
     /** Contexts that actually have manual-order rows: only those folders pay the
      *  unindexable content_order join-sort; everything else stays on the plain indexed query. */
@@ -588,6 +670,7 @@ class LiveViewModel(
                 }
             }
         }
+        .combine(loungeCuration) { hidden, plan -> hidden + plan.hiddenIds }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
 
     /** Customizations + resolved hidden-category ids, bundled so the list pipeline takes one flow. */
@@ -610,33 +693,74 @@ class LiveViewModel(
                 // A–Z also sorts the category folders (custom categories included); manually moved
                 // categories stay pinned first. Custom categories ride the SAME customization keys,
                 // so renames/hides/reorders apply to them with no extra code.
-                val folders = cats.railCategories(
+                // Only one NZ category is unwanted. Keep the provider's Sky Sport
+                // RAW and HD folders with their ORIGINAL names and IDs. Never
+                // guess their identity or relabel one as the other.
+                val normalFolders = cats.railCategories(
                     cust,
                     kids = profile?.isKids == true,
                     alphaRest = sort == SettingsRepository.SortMode.ALPHA,
                 )
-                val multiSourceNames = c.sourceNames.takeIf { it.size > 1 }.orEmpty()
-                val categoriesById = cats.associateBy { it.id }
-                // A working independent NZ source should be the first NZ category
-                // customers reach, ahead of BEST's currently unreliable NZ feeds.
-                val nzIds = cats.asSequence().filter { category ->
+                val byId = cats.associateBy { it.id }
+                val existingIds = normalFolders.mapNotNullTo(hashSetOf()) { it.categoryId }
+                // Restore previously hidden NZ Sky Sport folders without renaming:
+                // settings may have hidden them during an earlier broken release.
+                val missingSky = if (profile?.isKids == true) emptyList() else cats
+                    .filter { cat ->
+                        cat.id !in existingIds &&
+                            isAllowedBestNzSportsCategory(sourceById[cat.sourceId]?.type, cat.name) &&
+                            !isUnwantedNzRailCategory(cat.name)
+                    }
+                    .map { cat ->
+                        val key = CustomizeKeys.category(cat)
+                        tv.own.owntv.core.customize.CustomizedCategory(
+                            key = key,
+                            displayName = cust.categoryNames[key] ?: cat.name,
+                            categoryId = cat.id,
+                        )
+                    }
+                val nzIds = cats.filter { category ->
                     sourceById[category.sourceId]?.let { source ->
                         source.type == SourceType.M3U &&
                             source.url.contains(NZ_FREEVIEW_PATH, ignoreCase = true)
                     } == true
-                }.map { it.id }.toSet()
-                val preferredNz = folders.filter { it.categoryId in nzIds }
-                val orderedFolders = if (preferredNz.isEmpty()) folders else
-                    preferredNz + folders.filterNot { it.categoryId in nzIds }
-                val displayFolders = orderedFolders.filterNot { e ->
-                    e.categoryId?.let(categoriesById::get)?.let { cat ->
-                        shouldHideBestNzCategory(sourceById[cat.sourceId]?.type, cat.name)
+                }.mapTo(hashSetOf()) { it.id }
+                val allowedFolders = (normalFolders + missingSky).filterNot { entry ->
+                    entry.categoryId?.let(byId::get)?.let { category ->
+                        isUnwantedNzRailCategory(category.name)
                     } == true
                 }
-                railWithCatchup(catchupCount > 0) + displayFolders.map { e ->
+                // The public NZ Freeview source must lead the NZ region on every
+                // launch. It is separate from BEST's Sky Sport RAW / FHD folders.
+                val firstNz = allowedFolders.filter { it.categoryId in nzIds }
+                val displayFolders = firstNz + allowedFolders.filterNot { it.categoryId in nzIds }
+                val categoriesById = byId
+                val multiSourceNames = c.sourceNames.takeIf { it.size > 1 }.orEmpty()
+                // Group categories by purpose rather than country. Explicit manual
+                // ordering stays pinned and custom folders remain at the front.
+                val orderIndex = cust.categoryOrder.withIndex().associate { (i, key) -> key to i }
+                val orderedFolders = displayFolders.withIndex().sortedWith(
+                    compareBy<IndexedValue<tv.own.owntv.core.customize.CustomizedCategory>>(
+                        { if (it.value.customId != null) -1 else if (it.value.categoryId in nzIds) 0
+                            else when (it.value.categoryId?.let(categoriesById::get)?.name?.let(::loungeLiveSectionOf)) {
+                                LoungeLiveSection.NEW_ZEALAND -> 1
+                                LoungeLiveSection.AUSTRALIA -> 2
+                                else -> 3
+                            } },
+                        { if (it.value.categoryId in nzIds) -1
+                            else if (it.value.key in orderIndex) orderIndex.getValue(it.value.key)
+                            else it.value.categoryId?.let(categoriesById::get)?.name
+                                ?.let(::loungeLiveSectionOf)?.ordinal ?: Int.MAX_VALUE },
+                        { it.index },
+                    ),
+                ).map { it.value }
+                railWithCatchup(catchupCount > 0) + orderedFolders.map { e ->
                     LiveRailItem(
                         key = e.categoryId?.let { LiveKey.Folder(it) } ?: LiveKey.Custom(e.customId!!),
                         title = e.displayName,
+                        section = if (e.customId != null) LoungeLiveSection.MY_CATEGORIES
+                            else if (e.categoryId in nzIds) LoungeLiveSection.NEW_ZEALAND
+                            else e.categoryId?.let(categoriesById::get)?.name?.let(::loungeLiveSectionOf),
                         providerName = e.categoryId
                             ?.let(categoriesById::get)
                             ?.sourceId
@@ -644,6 +768,15 @@ class LiveViewModel(
                     )
                 }
             }
+        }
+        .combine(loungeCuration) { items, plan ->
+            items.filterNot { (it.key as? LiveKey.Folder)?.id in plan.hiddenIds }
+                .map { item ->
+                    val folderId = (item.key as? LiveKey.Folder)?.id
+                    if (folderId != null && item.title == plan.originalNames[folderId]) {
+                        item.copy(title = plan.displayNames[folderId] ?: item.title)
+                    } else item
+                }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), defaultRail)
 
@@ -657,12 +790,16 @@ class LiveViewModel(
         // Rebuild the pager when a folder gains/loses manual order: the fast-path plain
         // PagingSource doesn't observe content_order, so the switch must recreate it.
         .combine(orderedContexts) { args, _ -> args }
-        .flatMapLatest { (key, c, query, sort, cs) ->
+        .combine(duplicateSelection) { args, duplicate -> args.copy(duplicateIds = duplicate.hiddenIds) }
+        // Before this, the NZ folder list often loaded *after* the default
+        // Pager had been created; its first-five sorting was never activated.
+        .combine(nzFreeviewFolderIds) { args, freeviewIds -> args.copy(nzFolderIds = freeviewIds) }
+        .flatMapLatest { (key, c, query, sort, cs, duplicateIds, nzFolderIds) ->
             // Customizations are applied to each fresh PagingData inside the pager chain — a PagingData
             // that the UI already collected must never be re-transformed (Paging forbids re-collection,
             // which is why hiding a channel used to crash). A customization change re-creates the pager.
             Pager(PagingConfig(pageSize = 80, prefetchDistance = 40, initialLoadSize = 120, maxSize = 400)) {
-                pagingSource(key, c, query, sort)
+                pagingSource(key, c, query, sort, nzFolderIds)
             }.flow.map { paging ->
                 val cust = cs.cust
                 val hiddenCats = cs.hiddenCats
@@ -680,12 +817,34 @@ class LiveViewModel(
 
                 // Keep only BEST NZ Sky Sport RAW and HD in the browsable lists.
                 // Do not delete provider data, favourites or independent M3U feeds.
-                customized.filter(::showInNzSelection)
+                customized
+                    .filter(::showInNzSelection)
+                    .filter { ch ->
+                        // User's hand-picked favourites, watch history and custom
+                        // categories can still address backup streams.
+                        key is LiveKey.Favorites || key is LiveKey.History ||
+                            key is LiveKey.Custom || ch.id !in duplicateIds
+                    }
+                    .filter { ch -> ch.sourceId !in loungeCuration.value.sourceIds ||
+                        !LoungeLiveCatalogueCleanup.divider(ch.name) }
+                    .map { ch ->
+                        val override = cust.itemNames[CustomizeKeys.channel(ch)]
+                        if (override != null || ch.sourceId !in loungeCuration.value.sourceIds) ch
+                        else ch.copy(name = LoungeLiveCatalogueCleanup.channelTitle(ch.name))
+                    }
             }
         }
         .cachedIn(viewModelScope)
 
-    private data class Args(val key: LiveKey, val ctx: Ctx, val query: String, val sort: SettingsRepository.SortMode, val cs: CustState)
+    private data class Args(
+        val key: LiveKey,
+        val ctx: Ctx,
+        val query: String,
+        val sort: SettingsRepository.SortMode,
+        val cs: CustState,
+        val duplicateIds: Set<Long> = emptySet(),
+        val nzFolderIds: Set<Long> = emptySet(),
+    )
 
     /** Hide the focused channel from all lists (undo via Settings → Customize → Hidden channels). */
     fun hideChannel(channel: ChannelEntity) {
@@ -841,17 +1000,86 @@ class LiveViewModel(
      */
     val railCounts: StateFlow<Map<LiveKey, Int>> = combine(ctx, hiddenCategoryIds, railItems) { c, hidden, items -> Triple(c, hidden, items) }
         .flatMapLatest { (c, hidden, items) ->
-            val single = items.filter { it.key !is LiveKey.Folder }.map { item ->
-                liveCountFlow(item.key, c.profileId, c.sourceIds, hidden, channelDao, customCategoryDao).map { mapOf(item.key to it) }
+            val countInputs = combine(custom, duplicateSelection, loungeCuration, folderContextKeys) { cust, duplicates, plan, folderKeys ->
+                VisibleCountInputs(cust, duplicates, plan, folderKeys)
             }
-            val folders = channelDao.observeCountsByCategory(c.sourceIds.ifEmpty { listOf(-1L) })
-                .map { rows -> rows.associate { LiveKey.Folder(it.categoryId) as LiveKey to it.itemCount } }
-            combine(single + folders) { parts -> parts.fold(emptyMap<LiveKey, Int>()) { acc, m -> acc + m } }.throttleLatest()
+            val single = items.filter { it.key !is LiveKey.Folder && it.key != LiveKey.All }.map { item ->
+                // Keep the indexed count as the database invalidation signal, then count the same
+                // post-filter rows the screen renders. Customer hides/moves are never rewritten.
+                liveCountFlow(item.key, c.profileId, c.sourceIds, hidden, channelDao, customCategoryDao)
+                    .combine(countInputs) { _, inputs -> inputs }
+                    .mapLatest { inputs ->
+                        val sources = c.sourceIds.ifEmpty { listOf(-1L) }
+                        val rows = withContext(Dispatchers.IO) {
+                            when (val key = item.key) {
+                                LiveKey.Favorites -> channelDao.snapshotFavoritesManual(
+                                    c.profileId, ContentOrderEntity.FAV_CONTEXT, sources, VISIBLE_COUNT_LIMIT,
+                                )
+                                LiveKey.History -> channelDao.recentlyWatched(c.profileId, VISIBLE_COUNT_LIMIT).first()
+                                LiveKey.Catchup -> channelDao.snapshotCatchup(sources, VISIBLE_COUNT_LIMIT)
+                                is LiveKey.Custom -> customCategoryDao.snapshotChannels(
+                                    c.profileId, key.id, sources, VISIBLE_COUNT_LIMIT,
+                                )
+                                LiveKey.All, is LiveKey.Folder -> emptyList()
+                            }
+                        }
+                        mapOf(item.key to visibleLiveCountForKey(
+                            rows,
+                            item.key,
+                            inputs.customizations,
+                            hidden,
+                            inputs.duplicates.hiddenIds,
+                        ) { channel ->
+                            showInNzSelection(channel) &&
+                                (channel.sourceId !in inputs.curation.sourceIds ||
+                                    !LoungeLiveCatalogueCleanup.divider(channel.name))
+                        })
+                    }
+            }
+            // A grouped SQL total cannot know which rows the customer hid or moved, nor which provider
+            // duplicates and divider rows Lounge TV suppresses. The grouped observation remains the cheap
+            // resync/restart invalidation signal; each change snapshots the active Live rows and applies the
+            // exact same predicates as the paging pipeline before publishing counts.
+            val visibleFolders = combine(
+                channelDao.observeCountsByCategory(c.sourceIds.ifEmpty { listOf(-1L) }),
+                custom,
+                duplicateSelection,
+                loungeCuration,
+                folderContextKeys,
+            ) { _, cust, duplicates, plan, folderKeys ->
+                VisibleCountInputs(cust, duplicates, plan, folderKeys)
+            }.mapLatest { inputs ->
+                val snapshot = withContext(Dispatchers.IO) {
+                    channelDao.snapshotAll(c.sourceIds.ifEmpty { listOf(-1L) }, VISIBLE_COUNT_LIMIT)
+                }
+                visibleLiveCounts(
+                    snapshot,
+                    inputs.customizations,
+                    hidden,
+                    inputs.duplicates.hiddenIds,
+                    inputs.folderKeys,
+                ) { channel ->
+                    showInNzSelection(channel) &&
+                        (channel.sourceId !in inputs.curation.sourceIds ||
+                            !LoungeLiveCatalogueCleanup.divider(channel.name))
+                }.let { visible ->
+                    buildMap<LiveKey, Int> {
+                        put(LiveKey.All, visible.all)
+                        visible.folders.forEach { (categoryId, count) -> put(LiveKey.Folder(categoryId), count) }
+                    }
+                }
+            }
+            combine(single + visibleFolders) { parts ->
+                parts.fold(emptyMap<LiveKey, Int>()) { acc, part -> acc + part }
+            }.throttleLatest()
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     val count: StateFlow<Int> = combine(_selected, ctx, hiddenCategoryIds) { key, c, hidden -> Triple(key, c, hidden) }
-        .flatMapLatest { (key, c, hidden) -> countFlow(key, c, hidden).throttleLatest() } // Cap live COUNT re-runs during bulk sync
+        .flatMapLatest { (key, c, hidden) -> countFlow(key, c, hidden).throttleLatest() }
+        .combine(railCounts) { raw, visible ->
+            visible[_selected.value] ?: raw
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
     val favoriteIds: StateFlow<Set<Long>> = ctx
@@ -1158,7 +1386,11 @@ class LiveViewModel(
     private suspend fun channelsInCategory(categoryId: Long): List<ChannelEntity> {
         val pid = currentProfileId() ?: return emptyList()
         val ctxKey = folderContextKeys.value[categoryId] ?: ""
-        return channelDao.snapshotByCategoryManual(categoryId, pid, ctxKey, ZAP_LIST_LIMIT).filter(::showInNzSelection)
+        val channels = channelDao.snapshotByCategoryManual(categoryId, pid, ctxKey, ZAP_LIST_LIMIT)
+            .filter(::showInNzSelection)
+        // The in-player category list must match Live TV's NZ Freeview order.
+        return if (categoryId in nzFreeviewFolderIds.value) LoungeNzOrder.firstFive(channels)
+            else channels
     }
 
     /** [channel]'s own provider category, with the same hide/rename treatment the browsing lists get,
@@ -2056,8 +2288,19 @@ class LiveViewModel(
         return if (preferred >= 0) profileDao.resolveExistingProfileId(preferred) else null
     }
 
-    private fun pagingSource(key: LiveKey, c: Ctx, query: String, sort: SettingsRepository.SortMode): PagingSource<Int, ChannelEntity> =
-        livePagingSource(
+    private fun pagingSource(
+        key: LiveKey, c: Ctx, query: String, sort: SettingsRepository.SortMode,
+        nzFolderIds: Set<Long> = nzFreeviewFolderIds.value,
+    ): PagingSource<Int, ChannelEntity> {
+        // Fixed launch five must lead in BOTH Playlist and A-Z modes. Keep the
+        // existing manual order for every other NZ channel and every other folder.
+        if (key is LiveKey.Folder && key.id in nzFolderIds && query.isBlank()) {
+            val contextKey = folderContextKeys.value[key.id].orEmpty()
+            return LoungeNzPriorityPagingSource {
+                channelDao.snapshotByCategoryManual(key.id, c.profileId, contextKey, 300)
+            }
+        }
+        return livePagingSource(
             key = key,
             profileId = c.profileId,
             sourceIds = c.sourceIds,
@@ -2068,6 +2311,7 @@ class LiveViewModel(
             contextKey = { folderContextKeys.value[it] },
             hasManualOrder = { it in orderedContexts.value },
         )
+    }
 
     fun enterMoveMode(channel: ChannelEntity, key: LiveKey) {
         viewModelScope.launch {
@@ -2168,6 +2412,8 @@ class LiveViewModel(
         // In-player channel lists: one category is normally far smaller, but cap the uncategorized
         // → All Channels fallback so a huge playlist can't be pulled into memory on every tune.
         const val ZAP_LIST_LIMIT = 2_000
+        /** Exact visible category counts without unbounded Room allocations on malformed providers. */
+        const val VISIBLE_COUNT_LIMIT = 100_000
 
         // The CH+/- timing constants (ZAP_TUNE_DELAY_MS, ZAP_ISOLATED_PRESS_MS) live in ZapTuneDelay.kt.
         const val HISTORY_LIST_LIMIT = 30
@@ -2215,10 +2461,37 @@ class LiveViewModel(
 
 private const val NZ_FREEVIEW_PATH = "i.mjh.nz/nz/kodi-tv.m3u8"
 
-/** Hide BEST NZ folders except Sky Sport groups that carry RAW or HD feeds. */
+/** Only two actual BEST Sky Sport category groups may appear in the NZ rail. */
+internal enum class BestNzSkyGroup { RAW, HD }
+
+internal fun bestNzSkyGroup(sourceType: SourceType?, categoryName: String): BestNzSkyGroup? {
+    if (sourceType != SourceType.XTREAM) return null
+    val normalized = java.text.Normalizer.normalize(categoryName, java.text.Normalizer.Form.NFKC)
+        .lowercase().replace(Regex("[^a-z0-9]+"), " ").trim()
+    val isRawOnly = normalized == "nz raw"
+    val isNz = isBestNzLabel(categoryName)
+    val isSkySport = isSkySportLabel(categoryName)
+    // BEST's two group names vary. Never admit a generic "NZ" or "NZ Sky
+    // Sport" group simply because one of its streams happens to say RAW/HD.
+    if (!isNz && normalized != "sky sport hd" && normalized != "sky sports hd") return null
+    val tokens = normalized.split(' ')
+    return when {
+        "raw" in tokens && (isSkySport || isRawOnly) -> BestNzSkyGroup.RAW
+        ("hd" in tokens || "fhd" in tokens) && isSkySport -> BestNzSkyGroup.HD
+        else -> null
+    }
+}
+
+/** Hide only the explicit "NZ | New Zealand" folder from the sidebar. */
+internal fun isUnwantedNzRailCategory(name: String): Boolean {
+    val compact = name.lowercase().filter { it.isLetterOrDigit() }
+    return compact == "nznewzealand"
+}
+
 internal fun isAllowedBestNzSportsCategory(sourceType: SourceType?, name: String): Boolean =
-    sourceType == SourceType.XTREAM && isBestNzLabel(name) &&
-        isSkySportLabel(name) && isRawOrHdLabel(name)
+    bestNzSkyGroup(sourceType, name) != null ||
+        (sourceType == SourceType.XTREAM &&
+            name.trim().replace(Regex("\\s+"), " ").equals("NZ| SKY SPORTS NZ", ignoreCase = true))
 
 internal fun shouldHideBestNzCategory(sourceType: SourceType?, name: String): Boolean =
     sourceType == SourceType.XTREAM && isBestNzLabel(name) &&
@@ -2234,7 +2507,7 @@ internal fun shouldHideBestNzChannel(sourceType: SourceType?, category: String?,
     if (isBrokenBestTvnzLabel(name)) return true
     val folder = category.orEmpty()
     if (!isBestNzLabel(folder) && !isBestNzLabel(name)) return false
-    val allowedFolder = isBestNzLabel(folder) && isSkySportLabel(folder) && isRawOrHdLabel(folder)
+    val allowedFolder = isAllowedBestNzSportsCategory(sourceType, folder)
     val allowedChannel = isSkySportLabel(name) && isRawOrHdLabel(name)
     return !allowedFolder && !allowedChannel
 }

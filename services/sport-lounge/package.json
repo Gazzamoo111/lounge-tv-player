@@ -1,0 +1,12 @@
+{
+  "name": "lounge-tv-sport-lounge-gateway",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "check": "wrangler deploy --dry-run"
+  },
+  "devDependencies": {
+    "wrangler": "^4.69.0"
+  }
+}

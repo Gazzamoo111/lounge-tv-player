@@ -5,6 +5,8 @@ package tv.own.owntv.features.epg
 import tv.own.owntv.core.epg.displayLogoUrl
 import tv.own.owntv.features.live.shouldHideBestNzChannel
 import tv.own.owntv.features.live.isAllowedBestNzSportsCategory
+import tv.own.owntv.features.live.LoungeLiveCatalogueCleanup
+import tv.own.owntv.features.live.LoungeLiveDuplicates
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.FlowPreview
@@ -884,7 +886,14 @@ class EpgViewModel(
             )
             return
         }
-        val playlistIds = activeSourceIds(settings, sourceDao, pid, MediaType.LIVE)
+        val normalSourceIds = activeSourceIds(settings, sourceDao, pid, MediaType.LIVE)
+        // Keep the independent NZ Freeview source merged into the Live guide
+        // even when the customer's normal Xtream playlist is selected.
+        val freeviewIds = sourceDao.observeForProfile(pid).first().filter { source ->
+            source.type == SourceType.M3U &&
+                source.url.contains("i.mjh.nz/nz/", ignoreCase = true)
+        }.map { it.id }
+        val playlistIds = (normalSourceIds + freeviewIds).distinct()
         val epgIds = epgSourceStore.getAll().map { it.id }
         // Channels come from the playlists; guide data is matched from BOTH the playlists' own EPG
         // (kept for compatibility) and the standalone EPG sources — by epgChannelId across all ids.
@@ -940,15 +949,29 @@ class EpgViewModel(
         // Hidden categories keep their channels out of the guide too (parity with Live TV), and a
         // filter pointing at a now-hidden category falls back to "All" instead of an empty grid.
     val isKidsProfile = profileDao.getById(pid)?.isKids == true
-    val hiddenCatIds = if (cust.hiddenCategories.isEmpty() && !isKidsProfile) {
+    val manualHidden = if (cust.hiddenCategories.isEmpty() && !isKidsProfile) {
         emptySet()
     } else {
         tv.own.owntv.core.content.AdultCategoryClassifier.hiddenCategoryIds(
-            categoryDao.observe(ids, MediaType.LIVE).first(),
-            cust.hiddenCategories,
-            isKidsProfile,
+            categories, cust.hiddenCategories, isKidsProfile,
         )
     }
+    val reviewedPlan = LoungeLiveCatalogueCleanup.plan(categories.map { cat ->
+        LoungeLiveCatalogueCleanup.Folder(
+            id = cat.id, sourceId = cat.sourceId,
+            sourceType = providerTypes[cat.sourceId],
+            name = cat.name, count = null, synced = true,
+        )
+    })
+    val hiddenCatIds = manualHidden + reviewedPlan.hiddenIds
+    val hiddenDuplicateIds = if (reviewedPlan.sourceIds.isEmpty()) emptySet() else
+        withContext(Dispatchers.IO) {
+            LoungeLiveDuplicates.choose(
+                channelDao.snapshotAll(playlistIds, 25_000),
+                categories.associateBy { it.id },
+                reviewedPlan.sourceIds, hiddenCatIds,
+            ).hiddenIds
+        }
         val filter = _categoryFilter.value
         // A provider folder keeps out the channels the user moved from it into a custom category.
         val folderKey = (filter as? tv.own.owntv.core.live.LiveKey.Folder)
@@ -972,6 +995,10 @@ class EpgViewModel(
                     )
                 }
                 .filter { CustomizeKeys.channel(it) !in cust.hiddenItems }
+                .filter { ch ->
+                    // Preserve explicitly saved favourites/history/custom selections.
+                    memberIds != null || ch.id !in hiddenDuplicateIds
+                }
                 .filter {
                     memberIds != null || it.categoryId == null || it.categoryId !in hiddenCatIds
                 }

@@ -18,6 +18,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.ref_name }}
+      - name: Checkout immutable OwnTV playback core for Lounge TV
+        uses: actions/checkout@v4
+        with:
+          repository: ahXN00/OwnTV_Core
+          ref: 1de78b1e2690c22b50c060e986bce221454bf880
+          path: shared-core
+          persist-credentials: false
+      - name: Apply reviewed Lounge TV playback fixes
+        run: python3 scripts/patch_lounge_playback_core.py shared-core
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -71,7 +80,7 @@ jobs:
           set -euo pipefail
           [ -n "$EXPECTED_PRODUCTION_CERT_SHA256" ] || { echo "Missing PRODUCTION_CERT_SHA256 repository variable"; exit 1; }
           chmod +x ./gradlew
-          ./gradlew :app:assembleStandardRelease :app:assembleX86_64Release --stacktrace
+          ./gradlew :app:assembleStandardRelease :app:assembleX86_64Release -Powntv.corePath="$GITHUB_WORKSPACE/shared-core" --stacktrace
           mkdir -p dist
           cp app/build/outputs/apk/standard/release/*.apk dist/LoungeTV.apk
           cp app/build/outputs/apk/x86_64/release/*.apk "dist/LoungeTV-x86_64-v${VERSION_NAME}.apk"

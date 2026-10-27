@@ -168,10 +168,32 @@ If the entire schedule is off by a fixed number of hours, check the guide time-o
 ## 6. Movies and Series
 
 ### Movies
-Open **Movies**, choose a title and press **OK**. Use the details screen to play it, resume it or review its information where available.
+Open **Movies**, choose a category and press **OK**. A larger cinematic hero shows the currently highlighted film's title, details and synopsis. At the top of each category, **Featured Movies** and **New Releases** highlight available films in larger cards; an **All Movies** heading separates these rows from the complete catalogue below. Featured and New Releases each show one row of **six full-sized portrait posters**, using the same size as the six-across **All Movies** grid. All sections scroll **vertically as one grid**, with no separately scrolling horizontal carousels. Use **Left / Right** to move between posters in a row and **Up / Down** to move between rows. Featured rotates six selections daily from a larger pool, and New Releases prioritises the six newest suitable films by release year. If a category has no suitable new titles, that row may be absent.
+
+Use a title's details screen to play it, resume it or review its information where available.
+
+**Keep your catalogue tidy — without deleting films or channels**
+
+1. Open **More → Settings → Customise** (sometimes labelled **Customize** or **Content**, depending on the settings view).
+2. Open the relevant content section: **Movies**, **Series** or **Live TV**.
+3. Hide unwanted categories or individual titles (for example, duplicate channels, foreign-language films or categories you never use).
+4. Return to Movies or Live TV: hidden entries should disappear from the browse lists and category highlight rows.
+5. To bring content back, return to **Settings → Customise** and restore or unhide the affected category or item.
+
+Hiding content changes what you see in your profile; it does **not** cancel your service or erase movies from your provider's catalogue. If a title disappears unexpectedly, check hidden categories and hidden items before resetting your source. Avoid deleting the playlist or app data to clean up the catalogue.
+
+**Optional title cleanup:** In **Settings → Customise**, open a Movies or Series category and choose **Auto cleanup** to preview tidier display names. Review the proposed changes and select **Apply/Done** only for the names you want. The original provider title and stream remain unchanged; this is a per-profile rename, not a database deletion. Use the restore option in the same category if you want the original names again.
+
+**Why Featured may differ from All:** Featured and New Releases prioritise playable, recognisable or well-rated titles, avoid explicitly foreign-language variants and poor known ratings, and suppress duplicate movie/show versions. These checks affect *recommendations only*. You can still find other titles through All Movies, All Series or Search; low ratings never automatically delete or hide catalogue content.
+
+**Browsing tip:** When choosing a new Movies category, the list opens at the **top**, starting with Featured or New Releases. From the first card of either highlight row, press **Left** to return to the category menu.
 
 ### Series
-Open **Series**, choose a show, then choose the season and episode. When available, **Continue Watching** resumes from your saved position. Whether the next episode starts automatically depends on your playback setting.
+Open **Series**, choose a category and browse **Featured Series** and **New Series** at the top. Like Movies, these highlights are single six-poster rows in the **same vertical six-across poster grid** as the full catalogue. The **All Series** heading marks the start of the complete catalogue below; there are no nested horizontal-scrolling rows. The hero updates to describe the focused show. Featured selections change periodically, while New Series uses the show's original release year, not the date the provider added it.
+
+Press **Left** from the first featured show to return to Categories. Selecting a different category returns to its top highlights. Press **OK** on a show to open its seasons and episodes. When available, **Continue Watching** resumes from your saved position. Whether the next episode starts automatically depends on your playback setting.
+
+If a series or category is unwanted, use **More → Settings → Customise** to hide it. Hidden shows should not appear in the Featured or New Series rows; you can restore them through the same Settings area.
 
 ### Trailers
 A **Trailer** button appears only when a title has a trailer reference. Lounge TV tries the embedded YouTube player. If YouTube blocks the embed or your device's WebView cannot play it, the app can offer to open YouTube externally. Trailers are a separate feature from playing your subscription's movies and episodes.

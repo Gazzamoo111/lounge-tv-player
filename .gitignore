@@ -4,6 +4,10 @@
 .idea/
 .kotlin/
 local.properties
+
+# Local dependencies and dry-run state for the optional Sport Lounge gateway
+/services/sport-lounge/node_modules/
+/services/sport-lounge/.wrangler/
 .DS_Store
 **/build/
 /captures

@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -25,6 +26,8 @@ import tv.own.owntv.core.customize.moveBlock
 import tv.own.owntv.core.customize.CustomizationStore
 import tv.own.owntv.core.customize.CustomizeKeys
 import tv.own.owntv.core.database.dao.CategoryDao
+import tv.own.owntv.core.database.dao.ChannelDao
+import tv.own.owntv.core.database.entity.CustomCategoryMemberEntity
 import tv.own.owntv.core.database.dao.ContentOrderDao
 import tv.own.owntv.core.database.entity.ContentOrderEntity
 import tv.own.owntv.core.database.dao.CustomCategoryDao
@@ -68,6 +71,7 @@ class CustomizeViewModel(
     private val settings: SettingsRepository,
     private val sourceDao: SourceDao,
     private val categoryDao: CategoryDao,
+    private val channelDao: ChannelDao,
     private val profileDao: tv.own.owntv.core.database.dao.ProfileDao,
     private val customCategoryDao: CustomCategoryDao,
     private val contentOrderDao: ContentOrderDao,
@@ -268,6 +272,47 @@ class CustomizeViewModel(
         if (pid < 0) return
         viewModelScope.launch {
             customize.createCustomCategory(pid, _section.value, name)
+        }
+    }
+
+    /**
+     * Copies every current channel in a provider folder into a custom Live TV
+     * folder. Original memberships, stream URLs, EPG links and favourites stay intact.
+     * Repeat after a provider resync to copy newly-added channels.
+     */
+    fun copyLiveCategoryInto(row: CustomizeCatRow, targetId: String) {
+        val categoryId = row.categoryId ?: return
+        val current = ctx.value
+        if (current.profileId < 0 || _section.value != MediaType.LIVE ||
+            !CustomizeKeys.isCustom(targetId)) return
+        viewModelScope.launch(Dispatchers.IO) {
+            val pid = current.profileId
+            val category = categoryDao.getById(categoryId) ?: return@launch
+            if (category.sourceId !in current.sourceIdsFor(MediaType.LIVE)) return@launch
+            val definitions = customize.observe(pid, MediaType.LIVE).first().customCategories
+            if (definitions.none { it.id == targetId }) return@launch
+            val known = customCategoryDao.itemIds(pid, MediaType.LIVE, targetId).toHashSet()
+            var position = customCategoryDao.maxPosition(pid, MediaType.LIVE, targetId) + 1
+            var lastSort = Int.MIN_VALUE
+            var lastId = Long.MIN_VALUE
+            while (true) {
+                val batch = channelDao.channelsAfterCategory(categoryId, lastSort, lastId, 300)
+                if (batch.isEmpty()) break
+                val newMembers = batch.filter { known.add(it.id) }.map { channel ->
+                    CustomCategoryMemberEntity(
+                        profileId = pid,
+                        mediaType = MediaType.LIVE,
+                        contextKey = targetId,
+                        itemId = channel.id,
+                        position = position++,
+                    )
+                }
+                if (newMembers.isNotEmpty()) customCategoryDao.insertAll(newMembers)
+                val last = batch.last()
+                lastSort = last.sortOrder
+                lastId = last.id
+                if (batch.size < 300) break
+            }
         }
     }
 

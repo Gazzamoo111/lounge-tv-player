@@ -14,6 +14,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Checkout immutable OwnTV playback core
+        uses: actions/checkout@v4
+        with:
+          repository: ahXN00/OwnTV_Core
+          ref: 1de78b1e2690c22b50c060e986bce221454bf880
+          path: shared-core
+          persist-credentials: false
+      - name: Apply Lounge TV playback fixes to pinned core
+        run: python3 scripts/patch_lounge_playback_core.py shared-core
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -66,7 +75,7 @@ jobs:
           QA_SIGNING_REQUIRED: ${{ github.event_name != 'pull_request' }}
         run: |
           chmod +x ./gradlew
-          ./gradlew :app:testStandardDebugUnitTest --stacktrace
+          ./gradlew :shared-core:player-core:testDebugUnitTest :app:testStandardDebugUnitTest -Powntv.corePath="$GITHUB_WORKSPACE/shared-core" --stacktrace
       - name: Compile QA APK
         env:
           QA_KEYSTORE_PASSWORD: ${{ secrets.QA_KEYSTORE_PASSWORD }}
@@ -76,7 +85,7 @@ jobs:
           EXPECTED_QA_CERT_SHA256: ${{ vars.QA_CERT_SHA256 }}
         run: |
           set -euo pipefail
-          ./gradlew :app:assembleStandardDebug --stacktrace
+          ./gradlew :app:assembleStandardDebug -Powntv.corePath="$GITHUB_WORKSPACE/shared-core" --stacktrace
           QA_APK=$(find app/build/outputs/apk/standard/debug -maxdepth 1 -name '*.apk' -print -quit)
           [ -n "$QA_APK" ] || { echo "QA APK was not produced"; exit 1; }
           if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
@@ -87,8 +96,8 @@ jobs:
             APK_ID=$(printf '%s' "$APK_BADGING" | sed -n '1p')
             echo "Built APK identity: $APK_ID"
             case "$APK_ID" in
-              "package: name='com.loungetv.player.eventqa' versionCode='$VERSION_CODE' "*) ;;
-              *) echo "Expected isolated eventqa package, got: $APK_ID"; exit 1 ;;
+              "package: name='com.loungetv.player.recoveryqa' versionCode='$VERSION_CODE' "*) ;;
+              *) echo "Expected isolated recoveryqa package, got: $APK_ID"; exit 1 ;;
             esac
             "$APKSIGNER" verify "$QA_APK"
           else
@@ -100,6 +109,6 @@ jobs:
       - name: Upload test APK
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event_name == 'pull_request' && 'lounge-tv-eventqa-preflight' || 'lounge-tv-qa' }}
+          name: ${{ github.event_name == 'pull_request' && 'lounge-tv-recoveryqa-preflight' || 'lounge-tv-qa' }}
           path: app/build/outputs/apk/standard/debug/*.apk
           if-no-files-found: error

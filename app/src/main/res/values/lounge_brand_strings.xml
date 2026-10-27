@@ -69,9 +69,30 @@
 <string name="setup_line_app_icon_mobile">How Lounge TV appears on your home screen</string>
     <!-- Use English text when TMDB supplies non-English Spider-Man title art. -->
     <string name="lounge_brand_new_day_english_title" translatable="false">Spider-Man: Brand New Day</string>
+    <string name="lounge_enable_channel_updates">Enable 6-hour updates &amp; sync now</string>
+    <string name="lounge_merge_category_action">Copy folder into…</string>
+    <string name="lounge_merge_category_title">Copy all channels into</string>
+    <string name="lounge_section_custom">My Categories</string>
+    <string name="lounge_section_sports">SPORTS</string>
+    <string name="lounge_section_entertainment">ENTERTAINMENT</string>
+    <string name="lounge_section_movies">MOVIES</string>
+    <string name="lounge_section_documentaries">DOCUMENTARIES &amp; LIFESTYLE</string>
+    <string name="lounge_section_kids">KIDS &amp; FAMILY</string>
+    <string name="lounge_section_nz">NEW ZEALAND</string>
+    <string name="lounge_section_aus">AUSTRALIA</string>
+    <string name="lounge_section_ppv">PAY-PER-VIEW</string>
+    <string name="lounge_section_streaming">STREAMING CHANNELS</string>
+    <string name="lounge_section_us_uk">US &amp; UK CHANNELS</string>
+    <string name="lounge_section_music">MUSIC</string>
+    <string name="lounge_section_seasonal">24/7 &amp; SEASONAL</string>
+    <string name="lounge_section_other">OTHER CHANNELS</string>
+    <string name="lounge_nz_sky_raw_group">NZ RAW</string>
+    <string name="lounge_nz_sky_hd_group">Sky Sport HD</string>
     <string name="lounge_sports_quick_links">Live Sports</string>
-    <string name="lounge_sports_all">Sports Hub</string>
+    <string name="lounge_sports_all">Sport Lounge</string>
     <string name="lounge_sports_all_sub">Live matches and fixtures</string>
+    <string name="lounge_guide_loading">Loading channels and TV guide…</string>
+    <string name="lounge_guide_loading_slow">Still loading. A large channel list or first-time EPG refresh can take longer. The guide will appear when channel data is ready.</string>
     <string name="lounge_sports_rugby">Rugby</string>
     <string name="lounge_sports_rugby_sub">Find rugby channels</string>
     <string name="lounge_sports_combat">UFC &amp; Boxing</string>
