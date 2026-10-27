@@ -32,12 +32,18 @@ class LoungeLiveCatalogueCleanupTest {
     )
 
     @Test fun aggressiveHidesBulkEventsButProtectsEssentialSports() {
-        val plan = LoungeLiveCatalogueCleanup.plan(audited)
+        val reviewedHidden = setOf(
+            "US| ESPN+ PPV VIP", "US| PARAMOUNT+ PPV", "US| FLO NETWORK",
+            "US| BIBLICAL/RELIGIOUS", "US| ESPN PLUS", "WORLD LIVE SPORTS",
+            "4K UHD 3840P", "NZ| NEW ZEALAND", "AU| NRL TV PPV",
+            "AU| STAN PPV", "UK| APPLE TV F1 PPV",
+        )
+        val plan = LoungeLiveCatalogueCleanup.plan(audited, reviewedHidden)
         assertTrue(plan.sourceIds.contains(1L))
-        for (id in listOf(1L, 2L, 7L, 8L, 9L, 10L, 11L, 13L)) {
+        for (id in listOf(1L, 2L, 7L, 8L, 9L, 10L, 11L, 13L, 15L, 16L, 17L)) {
             assertTrue("expected hidden category id=$id", id in plan.hiddenIds)
         }
-        for (id in listOf(3L, 4L, 5L, 6L, 12L, 14L, 15L, 16L, 17L, 18L)) {
+        for (id in listOf(3L, 4L, 5L, 6L, 12L, 14L, 18L)) {
             assertFalse("important channel folder hidden id=$id", id in plan.hiddenIds)
         }
     }
@@ -55,12 +61,16 @@ class LoungeLiveCatalogueCleanupTest {
 
     @Test fun incompleteSyncDoesNotHideSmallFolders() {
         assertFalse(LoungeLiveCatalogueCleanup.shouldHide("4K UHD 3840P", count = 1, synced = false))
-        assertTrue(LoungeLiveCatalogueCleanup.shouldHide("4K UHD 3840P", count = 1, synced = true))
+        assertTrue(LoungeLiveCatalogueCleanup.shouldHide(
+            "4K UHD 3840P", count = 1, synced = true, reviewedHidden = setOf("4K UHD 3840P")))
+        assertFalse(LoungeLiveCatalogueCleanup.shouldHide(
+            "UK| UFC/BOXING PPV", count = 18, reviewedHidden = setOf("UK| APPLE TV F1 PPV")))
+
     }
 
     @Test fun cleansTitlesWithoutChangingProviderIdentity() {
-        assertEquals("SKY SPORT 1", LoungeLiveCatalogueCleanup.channelTitle("NZ| SKY SPORT 1 FHD"))
-        assertEquals("Sky Sports Cricket", LoungeLiveCatalogueCleanup.channelTitle("UK| Sky Sports Cricket HD"))
+        assertEquals("SKY SPORT 1 FHD", LoungeLiveCatalogueCleanup.channelTitle("NZ| SKY SPORT 1 FHD"))
+        assertEquals("Sky Sports Cricket HD", LoungeLiveCatalogueCleanup.channelTitle("UK| Sky Sports Cricket HD"))
         assertTrue(LoungeLiveCatalogueCleanup.divider("##### MOVIES #####"))
         assertEquals("Australia", LoungeLiveCatalogueCleanup.categoryTitle("AU| AUSTRALIA"))
         assertEquals("US · Sports Network", LoungeLiveCatalogueCleanup.categoryTitle("US| SPORTS NETWORK"))
