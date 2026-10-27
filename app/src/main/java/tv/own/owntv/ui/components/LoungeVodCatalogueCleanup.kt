@@ -64,6 +64,28 @@ internal object LoungeVodCatalogueCleanup {
     fun explicitlyNonEnglishTitle(providerName: String): Boolean =
         foreignTitlePrefix.containsMatchIn(providerName)
 
+    /** Provider-supplied audio language is authoritative where present. Unknown is not
+     *  inferred from a title's nationality; MULTI without English proof is excluded. */
+    fun visibleEnglish(providerName: String, providerLanguage: String?): Boolean {
+        if (explicitlyNonEnglishTitle(providerName)) return false
+        val language = providerLanguage?.trim()?.lowercase().orEmpty()
+        if (language.isBlank() || language in setOf("unknown", "und", "n/a")) return true
+        val english = setOf("en", "eng", "english")
+        val tokens = language.split(Regex("""[,;/|+]""")).map { it.trim().substringBefore('-').substringBefore('_') }
+        if (tokens.all { it in english }) return true
+        val foreign = setOf(
+            "multi", "multilingual", "es", "spa", "spanish", "pt", "por", "portuguese",
+            "fr", "fra", "fre", "french", "de", "deu", "ger", "german",
+            "it", "ita", "italian", "ru", "rus", "russian", "tr", "tur", "turkish",
+            "ar", "ara", "arabic", "hi", "hin", "hindi", "ta", "tam", "tamil",
+            "te", "tel", "telugu", "ml", "mal", "bn", "ben", "pa", "pan", "urdu", "ur", "urd",
+            "ja", "jpn", "jp", "japanese", "ko", "kor", "korean", "zh", "zho", "chi", "chinese",
+            "th", "tha", "thai", "vi", "vie", "vietnamese", "id", "ind", "indonesian",
+            "pl", "pol", "polish", "fa", "fas", "persian",
+        )
+        return tokens.none { it in foreign }
+    }
+
     private val movieLabels = mapOf(
         "|EN| NEW RELEASED" to "New Releases",
         "|EN| ACTION/THRILLER" to "Action & Thrillers",
