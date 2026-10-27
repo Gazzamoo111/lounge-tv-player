@@ -144,7 +144,7 @@ internal object LoungeLiveCatalogueCleanup {
     }
 
     fun categoryTitle(original: String): String {
-        val n = original.replace(Regex("[ᴿᴬᵂ⁶⁰ᶠᵖˢ]+"), " ")
+        val n = original.replace("ᴿᴬᵂ", " RAW ").replace(Regex("[⁶⁰ᶠᵖˢ]+"), " ")
             .replace(Regex("\\bVIP\\b", RegexOption.IGNORE_CASE), " ")
             .replace(Regex("\\s+"), " ").trim()
         val match = Regex("^([A-Z]{2})\\|\\s*(.+)$").matchEntire(n)
@@ -168,7 +168,7 @@ internal object LoungeLiveCatalogueCleanup {
         if (divider(original)) return original
         var s = original.trim()
             .replace(Regex("^(?:NZ|AU|UK|US|IR|CA|NA|TV|PRIME|UK-BBCI)\\s*\\|\\s*", RegexOption.IGNORE_CASE), "")
-            .replace(Regex("[ᴿᴬᵂ⁶⁰ᶠᵖˢ]+"), " ")
+            .replace("ᴿᴬᵂ", " RAW ").replace(Regex("[⁶⁰ᶠᵖˢ]+"), " ")
             .replace(Regex("\\s+"), " ")
             .trim()
         // Drop ornamental quality suffixes, but keep RAW on Sky Sport so a
