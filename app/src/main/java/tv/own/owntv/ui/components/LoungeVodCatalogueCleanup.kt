@@ -1,5 +1,7 @@
 package tv.own.owntv.ui.components
 
+import tv.own.owntv.R
+
 /**
  * Reversible, source-scoped customer-facing cleanup for the audited BEST VOD catalogue.
  * Matches actual provider category names, not Room row IDs or playlist-local IDs.
@@ -87,55 +89,55 @@ internal object LoungeVodCatalogueCleanup {
     }
 
     private val movieLabels = mapOf(
-        "|EN| NEW RELEASED" to "New Releases",
-        "|EN| ACTION/THRILLER" to "Action & Thrillers",
-        "|EN| HORROR/THRILLER" to "Horror & Thrillers",
-        "|EN| SCIENCE FICTION/FANTASTY" to "Sci-Fi & Fantasy",
-        "|EN| ADVENTURE MOVIES" to "Adventure",
-        "|EN| CHILDREN/FAMILY" to "Family",
-        "|EN| CLASSIC MOVIES COLLECTION" to "Classics",
-        "|EN| DRAMA/ROMANCE" to "Romance & Drama",
-        "|EN| DRAMA/CRIME" to "Crime Drama",
-        "|EN| DRAMA/COMEDY" to "Comedy-Drama",
-        "|EN| DOCUMENTARY" to "Documentary",
-        "|EN| GANGSTER & MAFIA" to "Crime & Gangster",
-        "|EN| CHRISTMAS MOVIES" to "Christmas",
-        "|EN| NETFLIX" to "Netflix Picks",
-        "NETFLIX MOVIES" to "Netflix Movies",
-        "|EN| DISNEY+" to "Disney+ Picks",
-        "|EN| PRIME+" to "Prime Video",
-        "|EN| HBO MAX" to "HBO / Max",
-        "|EN| 4K MOVIES" to "4K Movies",
-        "|EN| ANIME" to "Anime",
-        "|EN| CLASSIC CARTOONS" to "Classic Animation",
-        "|EN| ACTORS & DIRECTORS" to "Actors & Directors",
-        "|EN| MOVIES 2018-2021" to "Movies 2018–2021",
-        "TOP IMDB/OSCAR MOVIES" to "Award Winners",
-        "|EN| PRE-RELEASES/SD CAM" to "Pre-Releases",
-        "|EN| BROADWAY/MUSICAL" to "Musicals",
-        "|EN| MUSIC/CONCERTS" to "Music & Concerts",
-        "|EN| BET/ALLBLK MOVIES" to "BET / ALLBLK",
-        "|EN| TV MOVIES" to "TV Movies",
+        "|EN| NEW RELEASED" to R.string.lounge_movies_new_releases,
+        "|EN| ACTION/THRILLER" to R.string.catalogue_action_thrillers,
+        "|EN| HORROR/THRILLER" to R.string.catalogue_horror_thrillers,
+        "|EN| SCIENCE FICTION/FANTASTY" to R.string.catalogue_sci_fi_fantasy,
+        "|EN| ADVENTURE MOVIES" to R.string.catalogue_adventure,
+        "|EN| CHILDREN/FAMILY" to R.string.catalogue_family,
+        "|EN| CLASSIC MOVIES COLLECTION" to R.string.catalogue_classics,
+        "|EN| DRAMA/ROMANCE" to R.string.catalogue_romance_drama,
+        "|EN| DRAMA/CRIME" to R.string.catalogue_crime_drama,
+        "|EN| DRAMA/COMEDY" to R.string.catalogue_comedy_drama,
+        "|EN| DOCUMENTARY" to R.string.catalogue_documentary,
+        "|EN| GANGSTER & MAFIA" to R.string.catalogue_crime_gangster,
+        "|EN| CHRISTMAS MOVIES" to R.string.catalogue_christmas,
+        "|EN| NETFLIX" to R.string.catalogue_netflix_picks,
+        "NETFLIX MOVIES" to R.string.catalogue_netflix_movies,
+        "|EN| DISNEY+" to R.string.catalogue_disney_plus_picks,
+        "|EN| PRIME+" to R.string.catalogue_prime_video,
+        "|EN| HBO MAX" to R.string.catalogue_hbo_max,
+        "|EN| 4K MOVIES" to R.string.catalogue_four_k_movies,
+        "|EN| ANIME" to R.string.catalogue_anime,
+        "|EN| CLASSIC CARTOONS" to R.string.catalogue_classic_animation,
+        "|EN| ACTORS & DIRECTORS" to R.string.catalogue_actors_directors,
+        "|EN| MOVIES 2018-2021" to R.string.catalogue_movies_2018_2021,
+        "TOP IMDB/OSCAR MOVIES" to R.string.catalogue_award_winners,
+        "|EN| PRE-RELEASES/SD CAM" to R.string.catalogue_pre_releases,
+        "|EN| BROADWAY/MUSICAL" to R.string.catalogue_musicals,
+        "|EN| MUSIC/CONCERTS" to R.string.catalogue_music_concerts,
+        "|EN| BET/ALLBLK MOVIES" to R.string.catalogue_bet_allblk,
+        "|EN| TV MOVIES" to R.string.catalogue_tv_movies,
     )
     private val seriesLabels = mapOf(
-        "|EN| ENGLISH SERIES" to "English Series",
-        "|EN| LATEST RELEASES" to "New Series",
-        "|EN| TOP SERIES" to "Top Series",
-        "|EN| REALITY SHOWS" to "Reality",
-        "|EN| DOCUMENTARIES" to "Documentary",
-        "|EN| COMEDY SERIES" to "Comedy",
-        "|EN| GANGSTER & MAFIA" to "Crime & Gangster",
-        "|EN| CLASSIC SERIES" to "Classics",
-        "|EN| ENGLISH KIDS" to "Kids & Family",
-        "|EN| DISNEY+ ANIMATION" to "Animation",
-        "|EN| CLASSIC CARTOONS" to "Classic Animation",
-        "|EN| AMAZON PRIME" to "Prime Video",
-        "|EN| APPLE TV+" to "Apple TV+",
-        "|EN| AMC+/MGM+" to "AMC+ / MGM+",
-        "|EN| NBC/PEACOCK" to "NBC / Peacock",
-        "|EN| CBS/PARAMOUNT+" to "CBS / Paramount+",
-        "|EN| HULU/FX/FOX/ABC" to "Hulu / FX / FOX / ABC",
-        "|EN| BET/ALLBLK SERIES" to "BET / ALLBLK",
+        "|EN| ENGLISH SERIES" to R.string.catalogue_english_series,
+        "|EN| LATEST RELEASES" to R.string.lounge_series_new_releases,
+        "|EN| TOP SERIES" to R.string.catalogue_top_series,
+        "|EN| REALITY SHOWS" to R.string.catalogue_reality,
+        "|EN| DOCUMENTARIES" to R.string.catalogue_documentary,
+        "|EN| COMEDY SERIES" to R.string.catalogue_comedy,
+        "|EN| GANGSTER & MAFIA" to R.string.catalogue_crime_gangster,
+        "|EN| CLASSIC SERIES" to R.string.catalogue_classics,
+        "|EN| ENGLISH KIDS" to R.string.catalogue_kids_family,
+        "|EN| DISNEY+ ANIMATION" to R.string.catalogue_animation,
+        "|EN| CLASSIC CARTOONS" to R.string.catalogue_classic_animation,
+        "|EN| AMAZON PRIME" to R.string.catalogue_prime_video,
+        "|EN| APPLE TV+" to R.string.catalogue_apple_tv_plus,
+        "|EN| AMC+/MGM+" to R.string.catalogue_amc_plus_mgm_plus,
+        "|EN| NBC/PEACOCK" to R.string.catalogue_nbc_peacock,
+        "|EN| CBS/PARAMOUNT+" to R.string.catalogue_cbs_paramount_plus,
+        "|EN| HULU/FX/FOX/ABC" to R.string.catalogue_hulu_fx_fox_abc,
+        "|EN| BET/ALLBLK SERIES" to R.string.catalogue_bet_allblk,
     )
     private val moviePriority = listOf(
         "|EN| NEW RELEASED", "|EN| ACTION/THRILLER", "|EN| COMEDY", "|EN| DRAMA",
@@ -149,9 +151,9 @@ internal object LoungeVodCatalogueCleanup {
         "|EN| ENGLISH KIDS", "|EN| UK SERIES", "|EN| TOP SERIES",
     )
 
-    private fun displayName(name: String, kind: Kind): String {
+    private fun displayName(name: String, kind: Kind, localize: (Int) -> String): String {
         val original = canonical(name)
-        (if (kind == Kind.MOVIE) movieLabels else seriesLabels)[original]?.let { return it }
+        (if (kind == Kind.MOVIE) movieLabels else seriesLabels)[original]?.let { return localize(it) }
         val plain = name.trim()
             .replace(Regex("""(?i)^\s*\|(?:EN|MULTI)\|\s*"""), "")
             .replace(Regex("""\s+"""), " ")
@@ -162,7 +164,7 @@ internal object LoungeVodCatalogueCleanup {
         }.replace("Netflix", "Netflix").replace("Disney+", "Disney+")
     }
 
-    fun plan(kind: Kind, folders: List<Folder>): Plan {
+    fun plan(kind: Kind, folders: List<Folder>, localize: (Int) -> String = { it.toString() }): Plan {
         val signatures = if (kind == Kind.MOVIE) movieSignatures else seriesSignatures
         val qualifiedSources = folders.groupBy { it.sourceId }
             .filterValues { sourceFolders ->
@@ -181,7 +183,7 @@ internal object LoungeVodCatalogueCleanup {
         }
         val hiddenKeys = hidden.mapTo(mutableSetOf()) { it.key }
         val visible = ours.filterNot { it.key in hiddenKeys }
-        val labels = visible.associate { it.key to displayName(it.name, kind) }
+        val labels = visible.associate { it.key to displayName(it.name, kind, localize) }
         val prioritized = (if (kind == Kind.MOVIE) moviePriority else seriesPriority)
             .mapNotNull { desired ->
                 visible.firstOrNull { canonical(it.name) == desired }?.key
