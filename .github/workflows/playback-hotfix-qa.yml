@@ -10,6 +10,7 @@ permissions:
 
 env:
   ISOLATED_EVENT_QA: 'true'
+  PLAYBACK_HOTFIX_QA: 'true'
 
 jobs:
   playback-preflight:
@@ -68,7 +69,7 @@ jobs:
           APK="$(find app/build/outputs/apk/standard/debug -maxdepth 1 -name '*.apk' -type f -print -quit)"
           [ -n "$APK" ]
           AAPT="$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)"
-          "$AAPT" dump badging "$APK" | head -n 1 | grep "name='com.loungetv.player.recoveryqa'"
+          "$AAPT" dump badging "$APK" | head -n 1 | grep "name='com.loungetv.player.playbackqa'"
 
       - name: Upload QA APK (not customer release)
         uses: actions/upload-artifact@v4
