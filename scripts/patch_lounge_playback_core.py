@@ -24,6 +24,10 @@ PATCHES = {
       "            \"provider refused with HTTP $status uri=${HttpClient.redactUrl(uri)}\","
     ],
     [
+      "            reason = PlayerFailureReason.ONE_SESSION_PROVIDER,\\n            detail = \"HTTP 458 while the previous engine's session was still open — waiting and retrying once\",",
+      "            reason = if (status == 458) PlayerFailureReason.ONE_SESSION_PROVIDER else PlayerFailureReason.NETWORK,\\n            detail = \"HTTP 458 while the previous engine's session was still open — waiting and retrying once\","
+    ],
+    [
       "            detail = \"HTTP 458 while the previous engine's session was still open — waiting and retrying once\",",
       "            detail = \"HTTP $status while opening a live stream — waiting for the gateway or previous session to release, then retrying\","
     ],
