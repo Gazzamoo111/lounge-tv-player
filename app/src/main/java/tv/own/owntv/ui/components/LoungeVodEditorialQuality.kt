@@ -30,6 +30,7 @@ internal object LoungeVodEditorialQuality {
         rating: Double?,
     ): Boolean {
         if (providerName.isBlank()) return false
+        if (!LoungeVodCatalogueCleanup.visibleEnglish(providerName, providerLanguage)) return false
         if (foreignPrefix.containsMatchIn(providerName) || foreignSuffix.containsMatchIn(providerName)) return false
         if (providerLanguage?.trim()?.let(foreignLanguage::matches) == true) return false
         // Keep unrated titles eligible where the provider has no rating data.
