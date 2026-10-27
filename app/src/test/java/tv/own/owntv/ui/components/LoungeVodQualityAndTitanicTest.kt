@@ -38,6 +38,12 @@ class LoungeVodQualityAndTitanicTest {
         val wrong = "https://example.com/poster-titanic-1953.jpg"
         val fixed = LoungeVodPosterCorrections.moviePoster("Titanic (1997)", "Titanic", 1997, wrong)
         assertEquals(LoungeVodPosterCorrections.TITANIC_1997_POSTER, fixed)
+        // A stale external lookup may supply 1953, or no year at all, even
+        // though the provider's actual record explicitly identifies 1997.
+        assertEquals(LoungeVodPosterCorrections.TITANIC_1997_POSTER,
+            LoungeVodPosterCorrections.moviePoster("Titanic (1997)", "Titanic", null, wrong))
+        assertEquals(LoungeVodPosterCorrections.TITANIC_1997_POSTER,
+            LoungeVodPosterCorrections.moviePoster("Titanic (1997)", "Titanic", 1953, wrong))
         assertEquals(wrong, LoungeVodPosterCorrections.moviePoster("Titanic", "Titanic", 1953, wrong))
         assertEquals(wrong, LoungeVodPosterCorrections.moviePoster("Titanic", "Titanic", null, wrong))
         assertEquals(wrong, LoungeVodPosterCorrections.moviePoster("Raise the Titanic", "Raise the Titanic", 1997, wrong))
