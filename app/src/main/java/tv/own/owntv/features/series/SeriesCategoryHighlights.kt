@@ -9,6 +9,7 @@ import tv.own.owntv.core.database.OwnTVDatabase
 import tv.own.owntv.core.database.dao.SeriesDao
 import tv.own.owntv.core.database.entity.SeriesEntity
 import tv.own.owntv.core.live.LiveKey
+import tv.own.owntv.ui.components.LoungeVodEditorialQuality
 import java.util.Calendar
 import kotlin.random.Random
 
@@ -74,12 +75,22 @@ internal class SeriesCategoryHighlightsReader(
 
         fun uniqueShows(ids: List<Long>): List<SeriesEntity> {
             val names = HashSet<String>()
-            return ids.mapNotNull(byId::get).filter(::visible).filter { show ->
-                val title = show.canonicalTitle.ifBlank { show.name }.lowercase()
-                    .replace(Regex("^(?:d\\+|nf|amzn|hbo|netflix|disney\\+|prime)\\s+"), "")
-                    .trim()
-                names.add(title)
-            }
+            return ids.mapNotNull(byId::get)
+                .filter(::visible)
+                .filter { show ->
+                    LoungeVodEditorialQuality.eligibleForHighlights(
+                        providerName = show.name,
+                        canonicalTitle = show.canonicalTitle,
+                        providerLanguage = show.providerLanguage,
+                        rating = show.rating,
+                    )
+                }
+                .filter { show ->
+                    names.add(LoungeVodEditorialQuality.duplicateKey(
+                        show.canonicalTitle.ifBlank { show.name },
+                        show.year ?: show.parsedYear,
+                    ))
+                }
         }
 
         val newReleases = uniqueShows(releaseIds).take(MAX_ROW_ITEMS)
