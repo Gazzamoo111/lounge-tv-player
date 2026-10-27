@@ -31,13 +31,80 @@ internal object LoungeLiveCatalogueCleanup {
         "us| biblical/religious",
     )
 
-    /** Audited choices are data, not an over-broad "hide all PPV" name rule. */
-    private val EMPTY_POLICY = emptySet<String>()
+    /** Exact 27 October KEEP/HIDE choices; editable data is also retained in the assets audit file. */
+    internal val REVIEWED_HIDDEN: Set<String> = setOf(
+        "4K UHD 3840P",
+        "AU| AFL PPV",
+        "AU| ESPN PLAY PPV",
+        "AU| NRL TV PPV",
+        "AU| STAN PPV",
+        "CA| OHL PPV",
+        "IR| CLUBBER PPV",
+        "IR| IRELAND",
+        "IR| LOI PPV",
+        "IR| NIFL PPV",
+        "IR| SETANTA PPV",
+        "NA| HOCKEY LEAGUE",
+        "NA| PPV & LIVE EVENTS",
+        "NZ| NEW ZEALAND",
+        "UK| APPLE TV F1 PPV",
+        "UK| BBC STREAM PPV",
+        "UK| CUP GAMES & INTERNATIONAL",
+        "UK| DAZN PPV",
+        "UK| EPL PREMIER LEAGUE+ PPV",
+        "UK| ESPN+ PPV",
+        "UK| GAA GO PPV",
+        "UK| LA LIGA TEAM PPV",
+        "UK| LIGUE 1 PPV",
+        "UK| MAX PPV",
+        "UK| PDC BOARD PPV",
+        "UK| SCOTTISH FOOTBALL",
+        "UK| SERIE A TEAM PPV",
+        "UK| SOCCER REPLAY",
+        "UK| SUPER LEAGUE+ PPV",
+        "UK| SUPERCROSS PPV",
+        "UK| TT RACE PPV",
+        "UK| ULSTER GAA PPV",
+        "UK| ULTIMATE POOL PPV",
+        "UK| VIAPLAY PPV",
+        "UK| VIDIO EPL PPV",
+        "UK| VOLLEY BALL WORLD PPV",
+        "UK| WORLD CUP 2026 REPLAY",
+        "US| APPLE TV F1 PPV",
+        "US| B/R MAX SPORTS PPV",
+        "US| B1G+ PPV",
+        "US| BIBLICAL/RELIGIOUS",
+        "US| BTN+ PPV",
+        "US| DAZN PPV",
+        "US| DIRTVISION PPV",
+        "US| ESPN PLUS",
+        "US| ESPN+ PPV VIP",
+        "US| FIFA+ PPV",
+        "US| FITE TV PPV",
+        "US| FLO COLLEGE PPV",
+        "US| FLO NETWORK",
+        "US| FLO RACING PPV",
+        "US| MILB TV PPV",
+        "US| MLS PPV",
+        "US| NEWS NETWORK",
+        "US| NFHS PPV",
+        "US| PARAMOUNT+ PPV",
+        "US| PARAMOUNT+ PPV ᴿᴬᵂ",
+        "US| PEACOCK PPV",
+        "US| SOCCER PPV",
+        "US| SPECTRUM NETWORK",
+        "US| STAN PPV",
+        "US| TELEMUNDO NETWORK",
+        "US| TENNIS CHANNEL PLUS",
+        "US| VIAPLAY NHL PPV",
+        "US| VIX+ DEPORTES",
+        "WORLD LIVE SPORTS",
+    )
 
     private fun norm(raw: String) = raw.trim().lowercase(Locale.ROOT)
         .replace(Regex("\\s+"), " ")
 
-    fun plan(folders: List<Folder>, reviewedHidden: Set<String> = EMPTY_POLICY): Plan {
+    fun plan(folders: List<Folder>, reviewedHidden: Set<String> = REVIEWED_HIDDEN): Plan {
         val auditedSources = folders.groupBy { it.sourceId }.filter { (_, entries) ->
             entries.any { it.sourceType == SourceType.XTREAM } &&
                 signatures.count { clue ->
@@ -64,7 +131,7 @@ internal object LoungeLiveCatalogueCleanup {
         name: String,
         count: Int?,
         synced: Boolean = true,
-        reviewedHidden: Set<String> = EMPTY_POLICY,
+        reviewedHidden: Set<String> = REVIEWED_HIDDEN,
     ): Boolean {
         val n = norm(name)
         if (n.startsWith("nz| sky sport")) return false
