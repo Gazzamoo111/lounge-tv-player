@@ -138,6 +138,7 @@ val appModule = module {
             externalPlayerLauncher = get(),
             streamUrlResolver = get(),
             subtitleController = get(),
+            appContext = get(),
         )
     }
     viewModelOf(::SearchViewModel)
