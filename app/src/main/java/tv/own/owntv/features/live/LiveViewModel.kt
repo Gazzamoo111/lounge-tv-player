@@ -368,6 +368,29 @@ class LiveViewModel(
             channel.name,
         )
 
+    /** Recompute audit-derived policy after provider catalogue refresh. Manual customizations stay separate. */
+    private val loungeCuration: StateFlow<LoungeLiveCatalogueCleanup.Plan> = ctx
+        .flatMapLatest { c ->
+            if (c.profileId < 0) flowOf(LoungeLiveCatalogueCleanup.Plan())
+            else combine(
+                categoryDao.observe(c.sourceIds, MediaType.LIVE),
+                channelDao.observeCountsByCategory(c.sourceIds.ifEmpty { listOf(-1L) }),
+            ) { cats, counts ->
+                val byId = counts.associate { it.categoryId to it.itemCount }
+                LoungeLiveCatalogueCleanup.plan(cats.map { cat ->
+                    LoungeLiveCatalogueCleanup.Folder(
+                        id = cat.id,
+                        sourceId = cat.sourceId,
+                        sourceType = sourceById[cat.sourceId]?.type,
+                        name = cat.name,
+                        count = byId[cat.id],
+                        synced = sourceById[cat.sourceId]?.lastSyncAt != null,
+                    )
+                })
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, LoungeLiveCatalogueCleanup.Plan())
+
     /** Contexts that actually have manual-order rows: only those folders pay the
      *  unindexable content_order join-sort; everything else stays on the plain indexed query. */
     private val orderedContexts: StateFlow<Set<String>> = ctx
@@ -589,6 +612,7 @@ class LiveViewModel(
                 }
             }
         }
+        .combine(loungeCuration) { hidden, plan -> hidden + plan.hiddenIds }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
 
     /** Customizations + resolved hidden-category ids, bundled so the list pipeline takes one flow. */
@@ -678,6 +702,15 @@ class LiveViewModel(
                 }
             }
         }
+        .combine(loungeCuration) { items, plan ->
+            items.filterNot { (it.key as? LiveKey.Folder)?.id in plan.hiddenIds }
+                .map { item ->
+                    val folderId = (item.key as? LiveKey.Folder)?.id
+                    if (folderId != null && item.title == plan.originalNames[folderId]) {
+                        item.copy(title = plan.displayNames[folderId] ?: item.title)
+                    } else item
+                }
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), defaultRail)
 
     val channels: Flow<PagingData<ChannelEntity>> = combine(
@@ -713,7 +746,15 @@ class LiveViewModel(
 
                 // Keep only BEST NZ Sky Sport RAW and HD in the browsable lists.
                 // Do not delete provider data, favourites or independent M3U feeds.
-                customized.filter(::showInNzSelection)
+                customized
+                    .filter(::showInNzSelection)
+                    .filter { ch -> ch.sourceId !in loungeCuration.value.sourceIds ||
+                        !LoungeLiveCatalogueCleanup.divider(ch.name) }
+                    .map { ch ->
+                        val override = cust.itemNames[CustomizeKeys.channel(ch)]
+                        if (override != null || ch.sourceId !in loungeCuration.value.sourceIds) ch
+                        else ch.copy(name = LoungeLiveCatalogueCleanup.channelTitle(ch.name))
+                    }
             }
         }
         .cachedIn(viewModelScope)
@@ -2276,7 +2317,9 @@ internal fun isUnwantedNzRailCategory(name: String): Boolean {
 }
 
 internal fun isAllowedBestNzSportsCategory(sourceType: SourceType?, name: String): Boolean =
-    bestNzSkyGroup(sourceType, name) != null
+    bestNzSkyGroup(sourceType, name) != null ||
+        (sourceType == SourceType.XTREAM &&
+            name.trim().replace(Regex("\\s+"), " ").equals("NZ| SKY SPORTS NZ", ignoreCase = true))
 
 internal fun shouldHideBestNzCategory(sourceType: SourceType?, name: String): Boolean =
     sourceType == SourceType.XTREAM && isBestNzLabel(name) &&
