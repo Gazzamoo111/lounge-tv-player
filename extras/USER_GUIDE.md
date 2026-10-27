@@ -182,6 +182,10 @@ Use a title's details screen to play it, resume it or review its information whe
 
 Hiding content changes what you see in your profile; it does **not** cancel your service or erase movies from your provider's catalogue. If a title disappears unexpectedly, check hidden categories and hidden items before resetting your source. Avoid deleting the playlist or app data to clean up the catalogue.
 
+**Optional title cleanup:** In **Settings → Customise**, open a Movies or Series category and choose **Auto cleanup** to preview tidier display names. Review the proposed changes and select **Apply/Done** only for the names you want. The original provider title and stream remain unchanged; this is a per-profile rename, not a database deletion. Use the restore option in the same category if you want the original names again.
+
+**Why Featured may differ from All:** Featured and New Releases prioritise playable, recognisable or well-rated titles, avoid explicitly foreign-language variants and poor known ratings, and suppress duplicate movie/show versions. These checks affect *recommendations only*. You can still find other titles through All Movies, All Series or Search; low ratings never automatically delete or hide catalogue content.
+
 **Browsing tip:** When choosing a new Movies category, the list opens at the **top**, starting with Featured or New Releases. From the first card of either highlight row, press **Left** to return to the category menu.
 
 ### Series
