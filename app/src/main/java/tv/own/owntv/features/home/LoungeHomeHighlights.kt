@@ -17,6 +17,7 @@ import tv.own.owntv.core.database.entity.MovieEntity
 import tv.own.owntv.core.database.entity.SeriesEntity
 import tv.own.owntv.core.model.MediaType
 import tv.own.owntv.core.metadata.TitleNormalizer
+import tv.own.owntv.ui.components.LoungeVodEditorialQuality
 import tv.own.owntv.core.repository.activeSourceIds
 import tv.own.owntv.core.settings.SettingsRepository
 
@@ -56,6 +57,7 @@ internal class LoungeHomeHighlightsReader(
             key = { item: MovieEntity -> titleKey(item.canonicalTitle.ifBlank { item.name }) },
             valid = { item: MovieEntity ->
                 item.posterUrl?.isNotBlank() == true &&
+                    LoungeVodEditorialQuality.publicBrowseEligible(item.name, item.canonicalTitle, item.providerLanguage, item.rating) &&
                     movieVisibility.allows(item.categoryId, CustomizeKeys.movie(item))
             },
             quality = { item: MovieEntity -> item.qualityRank },
@@ -66,6 +68,7 @@ internal class LoungeHomeHighlightsReader(
             key = { item: SeriesEntity -> titleKey(item.canonicalTitle.ifBlank { item.name }) },
             valid = { item: SeriesEntity ->
                 item.posterUrl?.isNotBlank() == true &&
+                    LoungeVodEditorialQuality.publicBrowseEligible(item.name, item.canonicalTitle, item.providerLanguage, item.rating) &&
                     seriesVisibility.allows(item.categoryId, CustomizeKeys.series(item))
             },
             quality = { item: SeriesEntity -> item.qualityRank },
