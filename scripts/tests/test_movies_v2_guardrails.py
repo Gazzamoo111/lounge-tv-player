@@ -120,7 +120,7 @@ class MoviesHighlightsGuardrailsTest(unittest.TestCase):
         self.assertIn("firstNewReleaseFocus", screen)
         self.assertEqual(screen.count("onLeftToCategories ="), 4)
 
-    def test_catalogue_cleaner_only_changes_read_only_highlights(self):
+    def test_catalogue_cleaner_suppresses_browse_and_highlights_without_db_deletes(self):
         quality = (ROOT / "app/src/main/java/tv/own/owntv/ui/components/LoungeVodEditorialQuality.kt").read_text()
         movie_reader = (MOVIES / "MovieCategoryHighlights.kt").read_text()
         series_reader = (ROOT / "app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt").read_text()
@@ -130,7 +130,13 @@ class MoviesHighlightsGuardrailsTest(unittest.TestCase):
         self.assertIn("eligibleForHighlights(", series_reader)
         self.assertIn("duplicateKey(", movie_reader)
         self.assertIn("duplicateKey(", series_reader)
-        self.assertIn("rating in 0.1..5.49", quality)
+        self.assertIn("rating < 6.5", quality)
+        self.assertIn("rating < 5.0", quality)
+        self.assertIn("explicitAdultTitle", quality)
+        self.assertIn("publicBrowseEligible(", quality)
+        self.assertIn("publicBrowseEligible(", (MOVIES / "MovieViewModel.kt").read_text())
+        self.assertIn("publicBrowseEligible(", (ROOT / "app/src/main/java/tv/own/owntv/features/series/SeriesViewModel.kt").read_text())
+        self.assertIn("publicBrowseEligible(", (ROOT / "app/src/main/java/tv/own/owntv/features/search/SearchViewModel.kt").read_text())
         self.assertIn("foreignLanguage", quality)
         self.assertIn("homeEditorial.featuredMovies", movies_screen)
         self.assertIn("homeEditorial.popularSeries", series_screen)
