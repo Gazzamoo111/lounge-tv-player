@@ -723,6 +723,8 @@ class LiveViewModel(
                         isUnwantedNzRailCategory(category.name)
                     } == true
                 }
+                // The public NZ Freeview source must lead the NZ region on every
+                // launch. It is separate from BEST's Sky Sport RAW / FHD folders.
                 val firstNz = allowedFolders.filter { it.categoryId in nzIds }
                 val displayFolders = firstNz + allowedFolders.filterNot { it.categoryId in nzIds }
                 val categoriesById = byId
@@ -732,15 +734,15 @@ class LiveViewModel(
                 val orderIndex = cust.categoryOrder.withIndex().associate { (i, key) -> key to i }
                 val orderedFolders = displayFolders.withIndex().sortedWith(
                     compareBy<IndexedValue<tv.own.owntv.core.customize.CustomizedCategory>>(
-                        { if (it.value.customId != null) -1 else when (
-                            it.value.categoryId?.let(categoriesById::get)?.name?.let(::loungeLiveSectionOf)
-                        ) {
-                            LoungeLiveSection.NEW_ZEALAND -> 0
-                            LoungeLiveSection.AUSTRALIA -> 1
-                            else -> 2
-                        } },
-                        { if (it.value.key in orderIndex) orderIndex.getValue(it.value.key) else
-                            it.value.categoryId?.let(categoriesById::get)?.name
+                        { if (it.value.customId != null) -1 else if (it.value.categoryId in nzIds) 0
+                            else when (it.value.categoryId?.let(categoriesById::get)?.name?.let(::loungeLiveSectionOf)) {
+                                LoungeLiveSection.NEW_ZEALAND -> 1
+                                LoungeLiveSection.AUSTRALIA -> 2
+                                else -> 3
+                            } },
+                        { if (it.value.categoryId in nzIds) -1
+                            else if (it.value.key in orderIndex) orderIndex.getValue(it.value.key)
+                            else it.value.categoryId?.let(categoriesById::get)?.name
                                 ?.let(::loungeLiveSectionOf)?.ordinal ?: Int.MAX_VALUE },
                         { it.index },
                     ),
@@ -750,6 +752,7 @@ class LiveViewModel(
                         key = e.categoryId?.let { LiveKey.Folder(it) } ?: LiveKey.Custom(e.customId!!),
                         title = e.displayName,
                         section = if (e.customId != null) LoungeLiveSection.MY_CATEGORIES
+                            else if (e.categoryId in nzIds) LoungeLiveSection.NEW_ZEALAND
                             else e.categoryId?.let(categoriesById::get)?.name?.let(::loungeLiveSectionOf),
                         providerName = e.categoryId
                             ?.let(categoriesById::get)
@@ -781,12 +784,15 @@ class LiveViewModel(
         // PagingSource doesn't observe content_order, so the switch must recreate it.
         .combine(orderedContexts) { args, _ -> args }
         .combine(duplicateSelection) { args, duplicate -> args.copy(duplicateIds = duplicate.hiddenIds) }
-        .flatMapLatest { (key, c, query, sort, cs, duplicateIds) ->
+        // Before this, the NZ folder list often loaded *after* the default
+        // Pager had been created; its first-five sorting was never activated.
+        .combine(nzFreeviewFolderIds) { args, freeviewIds -> args.copy(nzFolderIds = freeviewIds) }
+        .flatMapLatest { (key, c, query, sort, cs, duplicateIds, nzFolderIds) ->
             // Customizations are applied to each fresh PagingData inside the pager chain — a PagingData
             // that the UI already collected must never be re-transformed (Paging forbids re-collection,
             // which is why hiding a channel used to crash). A customization change re-creates the pager.
             Pager(PagingConfig(pageSize = 80, prefetchDistance = 40, initialLoadSize = 120, maxSize = 400)) {
-                pagingSource(key, c, query, sort)
+                pagingSource(key, c, query, sort, nzFolderIds)
             }.flow.map { paging ->
                 val cust = cs.cust
                 val hiddenCats = cs.hiddenCats
@@ -823,7 +829,15 @@ class LiveViewModel(
         }
         .cachedIn(viewModelScope)
 
-    private data class Args(val key: LiveKey, val ctx: Ctx, val query: String, val sort: SettingsRepository.SortMode, val cs: CustState, val duplicateIds: Set<Long> = emptySet())
+    private data class Args(
+        val key: LiveKey,
+        val ctx: Ctx,
+        val query: String,
+        val sort: SettingsRepository.SortMode,
+        val cs: CustState,
+        val duplicateIds: Set<Long> = emptySet(),
+        val nzFolderIds: Set<Long> = emptySet(),
+    )
 
     /** Hide the focused channel from all lists (undo via Settings → Customize → Hidden channels). */
     fun hideChannel(channel: ChannelEntity) {
@@ -2210,11 +2224,13 @@ class LiveViewModel(
         return if (preferred >= 0) profileDao.resolveExistingProfileId(preferred) else null
     }
 
-    private fun pagingSource(key: LiveKey, c: Ctx, query: String, sort: SettingsRepository.SortMode): PagingSource<Int, ChannelEntity> {
-        if (key is LiveKey.Folder && key.id in nzFreeviewFolderIds.value &&
-            query.isBlank() && sort == SettingsRepository.SortMode.PLAYLIST &&
-            folderContextKeys.value[key.id] !in orderedContexts.value
-        ) {
+    private fun pagingSource(
+        key: LiveKey, c: Ctx, query: String, sort: SettingsRepository.SortMode,
+        nzFolderIds: Set<Long> = nzFreeviewFolderIds.value,
+    ): PagingSource<Int, ChannelEntity> {
+        // Fixed launch five must lead in BOTH Playlist and A-Z modes. Keep the
+        // existing manual order for every other NZ channel and every other folder.
+        if (key is LiveKey.Folder && key.id in nzFolderIds && query.isBlank()) {
             val contextKey = folderContextKeys.value[key.id].orEmpty()
             return LoungeNzPriorityPagingSource {
                 channelDao.snapshotByCategoryManual(key.id, c.profileId, contextKey, 300)
