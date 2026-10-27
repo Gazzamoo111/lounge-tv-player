@@ -1326,7 +1326,11 @@ class LiveViewModel(
     private suspend fun channelsInCategory(categoryId: Long): List<ChannelEntity> {
         val pid = currentProfileId() ?: return emptyList()
         val ctxKey = folderContextKeys.value[categoryId] ?: ""
-        return channelDao.snapshotByCategoryManual(categoryId, pid, ctxKey, ZAP_LIST_LIMIT).filter(::showInNzSelection)
+        val channels = channelDao.snapshotByCategoryManual(categoryId, pid, ctxKey, ZAP_LIST_LIMIT)
+            .filter(::showInNzSelection)
+        // The in-player category list must match Live TV's NZ Freeview order.
+        return if (categoryId in nzFreeviewFolderIds.value) LoungeNzOrder.firstFive(channels)
+            else channels
     }
 
     /** [channel]'s own provider category, with the same hide/rename treatment the browsing lists get,
