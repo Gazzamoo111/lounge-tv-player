@@ -36,6 +36,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import tv.own.owntv.ui.components.LoungeVodCatalogueCleanup
 import tv.own.owntv.core.customize.CustomizationStore
 import tv.own.owntv.core.customize.CustomizeKeys
 import tv.own.owntv.core.customize.SectionCustomizations
@@ -225,12 +226,26 @@ class MovieViewModel(
             if (c.profileId < 0) {
                 flowOf(emptySet())
             } else {
-                combine(categoryDao.observe(c.sourceIds, MediaType.MOVIE), custom, profileDao.observeById(c.profileId)) { cats, cust, profile ->
-                    tv.own.owntv.core.content.AdultCategoryClassifier.hiddenCategoryIds(
-                        cats,
-                        cust.hiddenCategories,
-                        profile?.isKids == true,
+                combine(
+                    categoryDao.observe(c.sourceIds, MediaType.MOVIE),
+                    movieDao.observeCountsByCategory(c.sourceIds.ifEmpty { listOf(-1L) }),
+                    custom,
+                    profileDao.observeById(c.profileId),
+                ) { cats, counts, cust, profile ->
+                    val countsById = counts.associate { it.categoryId to it.itemCount }
+                    val plan = LoungeVodCatalogueCleanup.plan(
+                        LoungeVodCatalogueCleanup.Kind.MOVIE,
+                        cats.map { cat ->
+                            LoungeVodCatalogueCleanup.Folder(
+                                id = cat.id, sourceId = cat.sourceId,
+                                key = CustomizeKeys.category(cat), name = cat.name,
+                                count = countsById[cat.id],
+                            )
+                        },
                     )
+                    tv.own.owntv.core.content.AdultCategoryClassifier.hiddenCategoryIds(
+                        cats, cust.hiddenCategories, profile?.isKids == true,
+                    ) + plan.hiddenIds
                 }
             }
         }
@@ -394,6 +409,45 @@ class MovieViewModel(
     private var playingRef: PlayingRef? = null
 
     init {
+        // Apply one reversible, profile-scoped DataStore update after the provider's
+        // category/count observations settle. No Room rows or stream URLs are changed.
+        // Search and Home already honour this existing hidden-category store.
+        viewModelScope.launch {
+            ctx.flatMapLatest { c ->
+                if (c.profileId < 0 || c.sourceIds.isEmpty()) flowOf(null)
+                else combine(
+                    categoryDao.observe(c.sourceIds, MediaType.MOVIE),
+                    movieDao.observeCountsByCategory(c.sourceIds),
+                ) { cats, counts ->
+                    val countsById = counts.associate { it.categoryId to it.itemCount }
+                    c.profileId to LoungeVodCatalogueCleanup.plan(
+                        LoungeVodCatalogueCleanup.Kind.MOVIE,
+                        cats.map { cat ->
+                            LoungeVodCatalogueCleanup.Folder(
+                                id = cat.id, sourceId = cat.sourceId,
+                                key = CustomizeKeys.category(cat), name = cat.name,
+                                count = countsById[cat.id],
+                            )
+                        },
+                    )
+                }
+            }.debounce(5_000).collectLatest { snapshot ->
+                if (snapshot == null) return@collectLatest
+                val (profileId, plan) = snapshot
+                if (plan.hiddenKeys.isEmpty() && plan.names.isEmpty()) return@collectLatest
+                customize.update(profileId, MediaType.MOVIE) { previous ->
+                    val missingNames = plan.names.filterKeys { it !in previous.categoryNames }
+                    val newOrder = if (previous.categoryOrder.isEmpty()) plan.priorityKeys else previous.categoryOrder
+                    val nextHidden = previous.hiddenCategories + plan.hiddenKeys
+                    if (missingNames.isEmpty() && newOrder == previous.categoryOrder && nextHidden == previous.hiddenCategories) previous
+                    else previous.copy(
+                        hiddenCategories = nextHidden,
+                        categoryNames = previous.categoryNames + missingNames,
+                        categoryOrder = newOrder,
+                    )
+                }
+            }
+        }
         // Periodically persist resume position for the movie currently playing. This is the crash
         // backstop; the real saves happen on pause (below) and on leaving the player.
         viewModelScope.launch {
@@ -434,10 +488,22 @@ class MovieViewModel(
             if (c.profileId < 0) flowOf(defaultRail)
             else combine(
                 categoryDao.observe(c.sourceIds, MediaType.MOVIE),
+                movieDao.observeCountsByCategory(c.sourceIds.ifEmpty { listOf(-1L) }),
                 customize.observe(c.profileId, MediaType.MOVIE),
                 sortMode,
                 profileDao.observeById(c.profileId),
-            ) { cats, cust, sort, profile ->
+            ) { cats, counts, cust, sort, profile ->
+                val countsById = counts.associate { it.categoryId to it.itemCount }
+                val plan = LoungeVodCatalogueCleanup.plan(
+                        LoungeVodCatalogueCleanup.Kind.MOVIE,
+                        cats.map { cat ->
+                            LoungeVodCatalogueCleanup.Folder(
+                                id = cat.id, sourceId = cat.sourceId,
+                                key = CustomizeKeys.category(cat), name = cat.name,
+                                count = countsById[cat.id],
+                            )
+                        },
+                    )
                 // A–Z also sorts the category folders (custom categories included); manually moved
                 // categories stay pinned first. Custom categories ride the SAME customization keys,
                 // so renames/hides/reorders apply to them with no extra code.
@@ -448,10 +514,13 @@ class MovieViewModel(
                 )
                 val multiSourceNames = c.sourceNames.takeIf { it.size > 1 }.orEmpty()
                 val categoriesById = cats.associateBy { it.id }
-                defaultRail + folders.map { e ->
+                defaultRail + folders.filterNot { it.categoryId in plan.hiddenIds }.map { e ->
+                    val folderKey = e.categoryId?.let { categoryId ->
+                        categoriesById[categoryId]?.let(CustomizeKeys::category)
+                    }
                     LiveRailItem(
                         key = e.categoryId?.let { LiveKey.Folder(it) } ?: LiveKey.Custom(e.customId!!),
-                        title = e.displayName,
+                        title = folderKey?.let { cust.categoryNames[it] ?: plan.names[it] } ?: e.displayName,
                         providerName = e.categoryId
                             ?.let(categoriesById::get)
                             ?.sourceId
@@ -478,9 +547,12 @@ class MovieViewModel(
             }.flow.map { paging ->
                 val cust = cs.cust
                 val movedFrom = cust.movedFromOrigin
-                if (cust.hiddenItems.isEmpty() && cust.itemNames.isEmpty() && cs.hiddenCats.isEmpty() && movedFrom.isEmpty()) paging
+                if (cust.hiddenItems.isEmpty() && cust.itemNames.isEmpty() && cs.hiddenCats.isEmpty() && movedFrom.isEmpty()) paging.filter { item ->
+                    !LoungeVodCatalogueCleanup.explicitlyNonEnglishTitle(item.name)
+                }
                 else paging.filter { m ->
                     CustomizeKeys.movie(m) !in cust.hiddenItems &&
+                        !LoungeVodCatalogueCleanup.explicitlyNonEnglishTitle(m.name) &&
                         (m.categoryId == null || m.categoryId !in cs.hiddenCats) &&
                         // Moved-out items leave ONLY their origin folder (they stay in All/search).
                         (movedFrom[CustomizeKeys.movie(m)]?.let { origin ->
