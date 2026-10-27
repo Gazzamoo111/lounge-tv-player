@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
 import tv.own.owntv.ui.components.LoungeVodCatalogueCleanup
+import tv.own.owntv.ui.components.LoungeVodEditorialQuality
 import tv.own.owntv.core.customize.CustomizationStore
 import tv.own.owntv.core.customize.SectionCustomizations
 import tv.own.owntv.core.customize.applyCustomizations
@@ -646,11 +647,11 @@ class SeriesViewModel(
                 val cust = cs.cust
                 val movedFrom = cust.movedFromOrigin
                 if (cust.hiddenItems.isEmpty() && cust.itemNames.isEmpty() && cs.hiddenCats.isEmpty() && movedFrom.isEmpty()) paging.filter { item ->
-                    LoungeVodCatalogueCleanup.visibleEnglish(item.name, item.providerLanguage)
+                    LoungeVodEditorialQuality.publicBrowseEligible(item.name, item.canonicalTitle, item.providerLanguage, item.rating)
                 }
                 else paging.filter { s ->
                     CustomizeKeys.series(s) !in cust.hiddenItems &&
-                        LoungeVodCatalogueCleanup.visibleEnglish(s.name, s.providerLanguage) &&
+                        LoungeVodEditorialQuality.publicBrowseEligible(s.name, s.canonicalTitle, s.providerLanguage, s.rating) &&
                         (s.categoryId == null || s.categoryId !in cs.hiddenCats) &&
                         // Moved-out items leave ONLY their origin folder (they stay in All/search).
                         (movedFrom[CustomizeKeys.series(s)]?.let { origin ->
