@@ -514,7 +514,7 @@ class MovieViewModel(
                 )
                 val multiSourceNames = c.sourceNames.takeIf { it.size > 1 }.orEmpty()
                 val categoriesById = cats.associateBy { it.id }
-                defaultRail + folders.filterNot { it.categoryId in plan.hiddenIds }.map { e ->
+                defaultRail + folders.filterNot { folder -> folder.categoryId?.let { it in plan.hiddenIds } == true }.map { e ->
                     val folderKey = e.categoryId?.let { categoryId ->
                         categoriesById[categoryId]?.let(CustomizeKeys::category)
                     }
