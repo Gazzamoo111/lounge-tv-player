@@ -75,10 +75,14 @@
     <string name="lounge_section_custom">My Categories</string>
     <string name="lounge_section_sports">SPORTS</string>
     <string name="lounge_section_entertainment">ENTERTAINMENT</string>
-    <string name="lounge_section_movies">MOVIES &amp; PREMIUM</string>
+    <string name="lounge_section_movies">MOVIES</string>
     <string name="lounge_section_documentaries">DOCUMENTARIES &amp; LIFESTYLE</string>
     <string name="lounge_section_kids">KIDS &amp; FAMILY</string>
-    <string name="lounge_section_news">NEWS &amp; BUSINESS</string>
+    <string name="lounge_section_nz">NEW ZEALAND</string>
+    <string name="lounge_section_aus">AUSTRALIA</string>
+    <string name="lounge_section_ppv">PAY-PER-VIEW</string>
+    <string name="lounge_section_streaming">STREAMING CHANNELS</string>
+    <string name="lounge_section_us_uk">US &amp; UK CHANNELS</string>
     <string name="lounge_section_music">MUSIC</string>
     <string name="lounge_section_seasonal">24/7 &amp; SEASONAL</string>
     <string name="lounge_section_other">OTHER CHANNELS</string>
