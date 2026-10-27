@@ -3,10 +3,10 @@ package tv.own.owntv.ui.components
 import tv.own.owntv.core.metadata.TitleNormalizer
 
 /**
- * Presentation-only guardrails for automatic Movie and Series highlights.
- * Never removes, mutates, syncs or hides a provider catalogue item. Explicit
- * language markers and weak provider ratings prevent those items from being
- * prominently recommended; they remain searchable and playable in All.
+ * Read-only, deterministic presentation guardrails for the user-facing VOD
+ * catalogue, global Search, Home, and automatic editorial highlights.
+ * Suppressed items are hidden in the UI after every import, while provider
+ * streams, metadata rows and customer playback state remain unchanged.
  */
 internal object LoungeVodEditorialQuality {
     // Only EXPLICIT provider markers. Words in genuine film titles (e.g. nationality
