@@ -464,13 +464,27 @@ internal fun liveSectionRows(
 ): List<LiveSectionRow> {
     require(sections.size == matches.size)
     val out = mutableListOf<LiveSectionRow>()
+    if (searching) {
+        sections.indices.forEach { index ->
+            if (matches[index]) out += LiveSectionRow.ChannelFolder(index)
+        }
+        return out
+    }
+
+    // A section's count includes every folder assigned to it. Keep those folders
+    // together directly beneath their heading, even when manual category order
+    // interleaves Sports, Movies, and other groups in the provider rail.
     val seen = mutableSetOf<LoungeLiveSection>()
     sections.forEachIndexed { index, section ->
-        if (searching) {
-            if (matches[index]) out += LiveSectionRow.ChannelFolder(index)
-        } else {
-            if (section != null && seen.add(section)) out += LiveSectionRow.Heading(section)
-            if (section == null || section == expanded) out += LiveSectionRow.ChannelFolder(index)
+        if (section == null) {
+            out += LiveSectionRow.ChannelFolder(index)
+        } else if (seen.add(section)) {
+            out += LiveSectionRow.Heading(section)
+            if (section == expanded) {
+                sections.forEachIndexed { folderIndex, folderSection ->
+                    if (folderSection == section) out += LiveSectionRow.ChannelFolder(folderIndex)
+                }
+            }
         }
     }
     return out
