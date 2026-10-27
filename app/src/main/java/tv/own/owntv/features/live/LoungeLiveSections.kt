@@ -23,7 +23,9 @@ enum class LoungeLiveSection(val titleRes: Int) {
 
 /** Specific curated overrides have precedence over fuzzy keyword matching. */
 internal fun loungeLiveSectionOf(providerCategory: String): LoungeLiveSection {
-    val n = providerCategory.trim().lowercase(Locale.ROOT).replace(Regex("\\s+"), " ")
+    val n = providerCategory.trim().lowercase(Locale.ROOT)
+        .replace(Regex("\\s+"), " ")
+        .replace(Regex("\\s*\\|\\s*"), "| ")
     fun any(vararg clues: String) = clues.any { n.contains(it) }
     return when {
         n.startsWith("nz|") || n == "nz" || n.startsWith("nz freeview") -> LoungeLiveSection.NEW_ZEALAND
