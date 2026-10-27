@@ -26,7 +26,7 @@ internal object LoungeVodEditorialQuality {
     // Deliberately avoid generic words such as "adult", "romance" and "nude" in
     // a synopsis, so standard mainstream dramas are not misclassified.
     private val explicitAdultTitle = Regex(
-        """(?i)\b(?:xxx|porn(?:o|ography)?|erotic(?:a)?|softcore|hardcore|hentai|fetish|orgy|onlyfans|sexploitation|sex\s+tape|sex\s+scenes|sex\s+party|naked\s+girls|nude\s+models|striptease|adult\s+film|18\+)\b"""
+        """(?i)\b(?:xxx|porn(?:o|ography)?|erotic(?:a)?|softcore|hardcore|hentai|fetish|orgy|onlyfans|sexploitation|sex|sexy|sexual|nude|nudes|nudity|naked|striptease|stripper|strippers|playboy|playmate|escort|bondage|adult\s+film|18\+)\b"""
     )
     private val badProviderPrint = Regex(
         """(?i)(?:\[(?:CAM|CAMRIP|HDTS|TS|WORKPRINT)\]|\b(?:CAMRIP|TELESYNC|WORKPRINT)\b)"""
