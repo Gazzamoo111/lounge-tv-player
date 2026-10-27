@@ -176,6 +176,9 @@ internal object LoungeVodCatalogueCleanup {
         val hidden = ours.filter { folder ->
             val raw = canonical(folder.name)
             (folder.count != null && folder.count < 10) ||
+                // Never surface the BEST pre-release / SD cam bucket after a
+                // refresh, even if the provider later grows it beyond ten titles.
+                (kind == Kind.MOVIE && raw == "|EN| PRE-RELEASES/SD CAM") ||
                 raw.startsWith("|MULTI|") ||
                 nonEnglishTag.containsMatchIn(raw) ||
                 explicitForeignCategory.containsMatchIn(raw) ||
