@@ -32,7 +32,7 @@ class LoungeVodEditorialQualityTest {
         ))
         assertTrue(LoungeVodEditorialQuality.eligibleForHighlights(
             providerName = "Italian Job", canonicalTitle = "",
-            providerLanguage = "en", rating = 6.0,
+            providerLanguage = "en", rating = 7.0,
         ))
         assertFalse(LoungeVodEditorialQuality.eligibleForHighlights(
             providerName = "D+ Bug Juice", canonicalTitle = "",
