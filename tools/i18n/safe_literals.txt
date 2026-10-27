@@ -213,6 +213,7 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| APPLE TV F1 PPV
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| BBC STREAM PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| BBCI
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| CUP GAMES & INTERNATIONAL
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| DAZN PPV
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| EPL PREMIER LEAGUE+ PPV
@@ -222,6 +223,7 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| LIGUE 1 PPV
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| MAX PPV
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	uk| movies
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| NEWS
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| PDC BOARD PPV
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| SCOTTISH FOOTBALL
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| SERIE A TEAM PPV
@@ -262,6 +264,7 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| PARAMOUNT+ PPV
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| PARAMOUNT+ PPV ᴿᴬᵂ
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| PEACOCK PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| PLUTO TV
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| SOCCER PPV
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| SPECTRUM NETWORK
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| STAN PPV
@@ -273,6 +276,7 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	WORLD LIVE SPORTS
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	WWE
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	:
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	(BK)
 1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	[^A-Z0-9]+
 1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	[ᴿᴬᵂ⁶⁰ᶠᵖˢ]+
 1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	\\([^)]*\\)
@@ -298,6 +302,7 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	CHANNEL 10
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	CHANNEL 9
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	CHANNEL 9 GEM
+1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	CINEMANIA|NETFLIX|PLUTO|ON AIR|PRIME|MOVIES|TV SHOWS|DISNEY
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	FHD
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	FOX SPORTS 502
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	FOX SPORTS 502 LEAUGE
@@ -316,33 +321,36 @@
 2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	US
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	US|
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	VIC
+1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	\\s+
+1	empty	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	24/7
-1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	24x7
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	afl
-1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	al jazeera
-1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	bbc world
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	amazon prime
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	apple tv+
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	au| 9now
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	au| australia
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	bein
-1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	bloomberg
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	box office
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	boxing
-1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	business
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	cartoon
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	championship
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	christmas
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	cinema
-1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	cnbc
-1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	cnn
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	comedy
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	concert
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	cricket
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	dazn
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	discovery
-1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	disney
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	discovery +
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	disney+
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	docs
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	documentaries
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	documentary
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	drama
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	entertainment
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	espn
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	f1
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	fa player
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	factual
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	fight
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	film
@@ -354,16 +362,19 @@
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	golf
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	hallmark
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	halloween
-1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	hbo
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	hbo max
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	hgtv
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	history
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	holiday
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	hulu
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	investigation
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	junior
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	kayo
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	kids
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	league
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	lifestyle
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	max espn
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	mc video
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	mgm
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	mlb
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	motorsport
@@ -376,32 +387,74 @@
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	nature
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	nba
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	nbl
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	ncaa
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	netflix
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	network
-1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	news
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	nfl
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	nhl
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	nickelodeon
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	now tv
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	nrl
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	nz
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	nz freeview
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	nz|
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	paramount+
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	pay per view
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	peacock
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	pluto
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	ppv
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	premium
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	preschool
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	prime +
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	prime video
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	racing
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	radio
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	reality
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	rugby
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	series
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	showtime
-1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	sky news
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	sky sp
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	soccer
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	sport
-1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	stan event
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	starz
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	tennis
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	travel
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	tubi
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	ufc
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	uk| amazon prime +
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	uk| bbciplayer series
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	uk| championship
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	uk| fa player
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	uk| general
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	uk| general hevc
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	uk| itv x vip
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	uk| mc video ᴴᴰ
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	uk| prime ᴿᴬᵂ
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	uk| prime video series
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	uk| sky store
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	uk| skymix docs
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	uk| skymix series
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	uk| uefa replay
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	us| ncaab package
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	us| ncaaf package
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	us| prime
+2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	us| tv
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	vh1
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	wwe
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	xmas
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	maori tv
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	māori tv
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	one
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	te reo
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	te reo tv
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	three
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	tv 1
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	tv 2
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	tv 3
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	tv3
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	tvnz 1
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	tvnz 2
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	whakaata
 1	technical	app/src/main/java/tv/own/owntv/features/live/ScheduleRecordingDialog.kt	:
 1	technical	app/src/main/java/tv/own/owntv/features/live/ScheduleRecordingDialog.kt	EEEMMMd
 1	log	app/src/main/java/tv/own/owntv/features/live/ZapTuneDelay.kt	(single-connection)
@@ -1915,5 +1968,3 @@
 1	technical	app/src/main/java/tv/own/owntv/ui/theme/Glass.kt	glassPosition
 2	empty	app/src/main/java/tv/own/owntv/ui/theme/OwnTVColors.kt	\0
 2	empty	app/src/main/java/tv/own/owntv/ui/theme/Theme.kt	\0
-1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	(BK)
-1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	CINEMANIA|NETFLIX|PLUTO|ON AIR|PRIME|MOVIES|TV SHOWS|DISNEY
