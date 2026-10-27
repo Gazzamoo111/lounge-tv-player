@@ -313,16 +313,28 @@ class LiveViewModel(
     // create_link resolution) from M3U/Xtream (final URL already stored) without a DB round-trip.
     private var sourceById: Map<Long, tv.own.owntv.core.database.entity.SourceEntity> = emptyMap()
 
-    private val ctx: StateFlow<Ctx> = activeProfileSources(settings, sourceDao)
-        .map { aps ->
-            sourceById = aps.sources.associateBy { it.id }
-            val liveIds = aps.liveSourceIds
-            Ctx(
-                aps.profileId,
-                liveIds,
-                aps.sources.filter { it.id in liveIds }.associate { it.id to it.name },
-            )
+    private val ctx: StateFlow<Ctx> = combine(
+        activeProfileSources(settings, sourceDao),
+        settings.activeProfileId.flatMapLatest { pid ->
+            if (pid < 0) flowOf(emptyList<SourceEntity>())
+            else sourceDao.observeForProfile(pid)
+        },
+    ) { aps, linked ->
+        // An NZ free-to-air fallback should show beside BEST Live even if the
+        // customer's default IPTV provider remains selected. Do not change
+        // that selection (which also governs Movies and Series).
+        val nzFreeview = linked.filter {
+            it.type == SourceType.M3U && it.url.contains(NZ_FREEVIEW_PATH, ignoreCase = true)
         }
+        val visible = (aps.sources + nzFreeview).distinctBy { it.id }
+        sourceById = visible.associateBy { it.id }
+        val liveIds = visible.filter { it.syncLive }.map { it.id }
+        Ctx(
+            aps.profileId,
+            liveIds,
+            visible.filter { it.id in liveIds }.associate { it.id to it.name },
+        )
+    }
         .distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.Eagerly, Ctx(-1L, emptyList(), emptyMap()))
 
