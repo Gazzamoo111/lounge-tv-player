@@ -52,28 +52,66 @@ jobs:
           python3 scripts/check_branding.py
           PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/tests -p 'test_*.py'
 
+      # PR code never receives signing secrets. A manually dispatched build uses the persistent,
+      # non-production QA certificate so it can update PlaybackQA without resetting its data.
+      - name: Decode persistent QA signing key
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          QA_KEYSTORE_BASE64: ${{ secrets.QA_KEYSTORE_BASE64 }}
+          QA_KEYSTORE_PASSWORD: ${{ secrets.QA_KEYSTORE_PASSWORD }}
+          QA_KEY_ALIAS: ${{ secrets.QA_KEY_ALIAS }}
+          QA_KEY_PASSWORD: ${{ secrets.QA_KEY_PASSWORD }}
+          EXPECTED_QA_CERT_SHA256: ${{ vars.QA_CERT_SHA256 }}
+          EXPECTED_PRODUCTION_CERT_SHA256: ${{ vars.PRODUCTION_CERT_SHA256 }}
+        run: |
+          set -euo pipefail
+          for n in QA_KEYSTORE_BASE64 QA_KEYSTORE_PASSWORD QA_KEY_ALIAS QA_KEY_PASSWORD EXPECTED_QA_CERT_SHA256 EXPECTED_PRODUCTION_CERT_SHA256; do
+            [ -n "${!n:-}" ] || { echo "Missing required QA signing setting: $n"; exit 1; }
+          done
+          qa_cert=$(printf '%s' "$EXPECTED_QA_CERT_SHA256" | tr -cd '[:xdigit:]' | tr '[:upper:]' '[:lower:]')
+          production_cert=$(printf '%s' "$EXPECTED_PRODUCTION_CERT_SHA256" | tr -cd '[:xdigit:]' | tr '[:upper:]' '[:lower:]')
+          [ "${#qa_cert}" -eq 64 ] || { echo "QA_CERT_SHA256 is not a SHA-256 digest"; exit 1; }
+          [ "$qa_cert" != "$production_cert" ] || { echo "QA and production certificates must be different"; exit 1; }
+          printf '%s' "$QA_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/loungetv-qa.keystore"
+          echo "QA_KEYSTORE_FILE=$RUNNER_TEMP/loungetv-qa.keystore" >> "$GITHUB_ENV"
+
       - name: Build with pinned patched core, NOT published upstream artifacts
         env:
-          QA_SIGNING_REQUIRED: 'false'
+          QA_KEYSTORE_PASSWORD: ${{ secrets.QA_KEYSTORE_PASSWORD }}
+          QA_KEY_ALIAS: ${{ secrets.QA_KEY_ALIAS }}
+          QA_KEY_PASSWORD: ${{ secrets.QA_KEY_PASSWORD }}
+          QA_SIGNING_REQUIRED: ${{ github.event_name == 'workflow_dispatch' }}
         run: |
           set -euo pipefail
           chmod +x ./gradlew
           export VERSION_CODE="$(python3 scripts/qa_version_code.py "$GITHUB_RUN_NUMBER" "$GITHUB_RUN_ATTEMPT")"
           export VERSION_NAME="5.2.3.0-playback-preflight.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}"
+          echo "VERSION_CODE=$VERSION_CODE" >> "$GITHUB_ENV"
+          echo "VERSION_NAME=$VERSION_NAME" >> "$GITHUB_ENV"
           ./gradlew :shared-core:player-core:testDebugUnitTest :app:testStandardDebugUnitTest :app:assembleStandardDebug \
             -Powntv.corePath="$GITHUB_WORKSPACE/shared-core" --stacktrace
 
       - name: Verify isolated APK identity
+        env:
+          EXPECTED_QA_CERT_SHA256: ${{ vars.QA_CERT_SHA256 }}
         run: |
           set -euo pipefail
           APK="$(find app/build/outputs/apk/standard/debug -maxdepth 1 -name '*.apk' -type f -print -quit)"
           [ -n "$APK" ]
           AAPT="$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)"
           "$AAPT" dump badging "$APK" | head -n 1 | grep "name='com.loungetv.player.playbackqa'"
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          "$APKSIGNER" verify "$APK"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            python3 scripts/verify_update_compatibility.py "$APK" \
+              --expected-package com.loungetv.player.playbackqa \
+              --expected-cert-sha256 "$EXPECTED_QA_CERT_SHA256" \
+              --expected-version-code "$VERSION_CODE"
+          fi
 
       - name: Upload QA APK (not customer release)
         uses: actions/upload-artifact@v4
         with:
-          name: LoungeTV-Playback-RecoveryQA
+          name: ${{ github.event_name == 'workflow_dispatch' && 'LoungeTV-PlaybackQA-stable-update' || 'LoungeTV-Playback-RecoveryQA-preflight' }}
           path: app/build/outputs/apk/standard/debug/*.apk
           if-no-files-found: error

@@ -307,6 +307,13 @@ class LiveViewModel(
         val sourceNames: Map<Long, String>,
     )
 
+    private data class VisibleCountInputs(
+        val customizations: SectionCustomizations,
+        val duplicates: LoungeLiveDuplicates.Result,
+        val curation: LoungeLiveCatalogueCleanup.Plan,
+        val folderKeys: Map<Long, String>,
+    )
+
     // Observe the active profile's sources REACTIVELY so adding/removing a playlist refreshes Live TV
     // immediately (it used to be read once at startup, so a new playlist showed nothing until restart).
     // Full sources by id — lets the synchronous play() paths tell a Stalker source (needs play-time
@@ -993,32 +1000,85 @@ class LiveViewModel(
      */
     val railCounts: StateFlow<Map<LiveKey, Int>> = combine(ctx, hiddenCategoryIds, railItems) { c, hidden, items -> Triple(c, hidden, items) }
         .flatMapLatest { (c, hidden, items) ->
-            val single = items.filter { it.key !is LiveKey.Folder }.map { item ->
-                liveCountFlow(item.key, c.profileId, c.sourceIds, hidden, channelDao, customCategoryDao).map { mapOf(item.key to it) }
+            val countInputs = combine(custom, duplicateSelection, loungeCuration, folderContextKeys) { cust, duplicates, plan, folderKeys ->
+                VisibleCountInputs(cust, duplicates, plan, folderKeys)
             }
-            val folders = channelDao.observeCountsByCategory(c.sourceIds.ifEmpty { listOf(-1L) })
-                .map { rows -> rows.associate { LiveKey.Folder(it.categoryId) as LiveKey to it.itemCount } }
-            combine(single + folders) { parts -> parts.fold(emptyMap<LiveKey, Int>()) { acc, m -> acc + m } }.throttleLatest()
-        }
-        .combine(duplicateSelection) { raw, d ->
-            raw.mapValues { (key, count) ->
-                when (key) {
-                    is LiveKey.Folder -> (count - (d.hiddenByCategory[key.id] ?: 0)).coerceAtLeast(0)
-                    LiveKey.All -> (count - d.hiddenIds.size).coerceAtLeast(0)
-                    else -> count
+            val single = items.filter { it.key !is LiveKey.Folder && it.key != LiveKey.All }.map { item ->
+                // Keep the indexed count as the database invalidation signal, then count the same
+                // post-filter rows the screen renders. Customer hides/moves are never rewritten.
+                liveCountFlow(item.key, c.profileId, c.sourceIds, hidden, channelDao, customCategoryDao)
+                    .combine(countInputs) { _, inputs -> inputs }
+                    .mapLatest { inputs ->
+                        val sources = c.sourceIds.ifEmpty { listOf(-1L) }
+                        val rows = withContext(Dispatchers.IO) {
+                            when (val key = item.key) {
+                                LiveKey.Favorites -> channelDao.snapshotFavoritesManual(
+                                    c.profileId, ContentOrderEntity.FAV_CONTEXT, sources, VISIBLE_COUNT_LIMIT,
+                                )
+                                LiveKey.History -> channelDao.recentlyWatched(c.profileId, VISIBLE_COUNT_LIMIT).first()
+                                LiveKey.Catchup -> channelDao.snapshotCatchup(sources, VISIBLE_COUNT_LIMIT)
+                                is LiveKey.Custom -> customCategoryDao.snapshotChannels(
+                                    c.profileId, key.id, sources, VISIBLE_COUNT_LIMIT,
+                                )
+                                LiveKey.All, is LiveKey.Folder -> emptyList()
+                            }
+                        }
+                        mapOf(item.key to visibleLiveCountForKey(
+                            rows,
+                            item.key,
+                            inputs.customizations,
+                            hidden,
+                            inputs.duplicates.hiddenIds,
+                        ) { channel ->
+                            showInNzSelection(channel) &&
+                                (channel.sourceId !in inputs.curation.sourceIds ||
+                                    !LoungeLiveCatalogueCleanup.divider(channel.name))
+                        })
+                    }
+            }
+            // A grouped SQL total cannot know which rows the customer hid or moved, nor which provider
+            // duplicates and divider rows Lounge TV suppresses. The grouped observation remains the cheap
+            // resync/restart invalidation signal; each change snapshots the active Live rows and applies the
+            // exact same predicates as the paging pipeline before publishing counts.
+            val visibleFolders = combine(
+                channelDao.observeCountsByCategory(c.sourceIds.ifEmpty { listOf(-1L) }),
+                custom,
+                duplicateSelection,
+                loungeCuration,
+                folderContextKeys,
+            ) { _, cust, duplicates, plan, folderKeys ->
+                VisibleCountInputs(cust, duplicates, plan, folderKeys)
+            }.mapLatest { inputs ->
+                val snapshot = withContext(Dispatchers.IO) {
+                    channelDao.snapshotAll(c.sourceIds.ifEmpty { listOf(-1L) }, VISIBLE_COUNT_LIMIT)
+                }
+                visibleLiveCounts(
+                    snapshot,
+                    inputs.customizations,
+                    hidden,
+                    inputs.duplicates.hiddenIds,
+                    inputs.folderKeys,
+                ) { channel ->
+                    showInNzSelection(channel) &&
+                        (channel.sourceId !in inputs.curation.sourceIds ||
+                            !LoungeLiveCatalogueCleanup.divider(channel.name))
+                }.let { visible ->
+                    buildMap<LiveKey, Int> {
+                        put(LiveKey.All, visible.all)
+                        visible.folders.forEach { (categoryId, count) -> put(LiveKey.Folder(categoryId), count) }
+                    }
                 }
             }
+            combine(single + visibleFolders) { parts ->
+                parts.fold(emptyMap<LiveKey, Int>()) { acc, part -> acc + part }
+            }.throttleLatest()
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     val count: StateFlow<Int> = combine(_selected, ctx, hiddenCategoryIds) { key, c, hidden -> Triple(key, c, hidden) }
         .flatMapLatest { (key, c, hidden) -> countFlow(key, c, hidden).throttleLatest() }
-        .combine(duplicateSelection) { raw, d ->
-            when (val selected = _selected.value) {
-                is LiveKey.Folder -> (raw - (d.hiddenByCategory[selected.id] ?: 0)).coerceAtLeast(0)
-                LiveKey.All -> (raw - d.hiddenIds.size).coerceAtLeast(0)
-                else -> raw
-            }
+        .combine(railCounts) { raw, visible ->
+            visible[_selected.value] ?: raw
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
@@ -2352,6 +2412,8 @@ class LiveViewModel(
         // In-player channel lists: one category is normally far smaller, but cap the uncategorized
         // → All Channels fallback so a huge playlist can't be pulled into memory on every tune.
         const val ZAP_LIST_LIMIT = 2_000
+        /** Exact visible category counts without unbounded Room allocations on malformed providers. */
+        const val VISIBLE_COUNT_LIMIT = 100_000
 
         // The CH+/- timing constants (ZAP_TUNE_DELAY_MS, ZAP_ISOLATED_PRESS_MS) live in ZapTuneDelay.kt.
         const val HISTORY_LIST_LIMIT = 30

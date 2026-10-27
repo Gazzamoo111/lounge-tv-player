@@ -490,6 +490,12 @@ internal fun liveSectionRows(
     return out
 }
 
+/** The badge and expanded rows are derived from the same already-filtered category list. */
+internal fun liveSectionFolderCount(
+    sections: List<LoungeLiveSection?>,
+    section: LoungeLiveSection,
+): Int = sections.count { it == section }
+
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 internal fun LiveCategories(
@@ -688,7 +694,7 @@ internal fun LiveCategories(
                                     expandedSection = if (isOpen) null else section
                                 },
                                 icon = if (isOpen) OwnTVIcon.CHEVRON_DOWN else OwnTVIcon.CHEVRON,
-                                count = entries.count { it.item.section == section }.toString(),
+                                count = liveSectionFolderCount(sections, section).toString(),
                                 selected = isOpen,
                                 modifier = Modifier
                                     .focusRequester(headerFocusers.getValue(section))
