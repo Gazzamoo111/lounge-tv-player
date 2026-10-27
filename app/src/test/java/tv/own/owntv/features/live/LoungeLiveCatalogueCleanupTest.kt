@@ -60,9 +60,9 @@ class LoungeLiveCatalogueCleanupTest {
     }
 
     @Test fun incompleteSyncDoesNotHideSmallFolders() {
-        assertFalse(LoungeLiveCatalogueCleanup.shouldHide("4K UHD 3840P", count = 1, synced = false))
-        assertTrue(LoungeLiveCatalogueCleanup.shouldHide(
-            "4K UHD 3840P", count = 1, synced = true, reviewedHidden = setOf("4K UHD 3840P")))
+        assertFalse(LoungeLiveCatalogueCleanup.shouldHide("SMALL VALUABLE SPORTS", count = 1, synced = false))
+        assertFalse(LoungeLiveCatalogueCleanup.shouldHide("SMALL VALUABLE SPORTS", count = 1, synced = true))
+        assertTrue(LoungeLiveCatalogueCleanup.shouldHide("4K UHD 3840P", count = 1, synced = false))
         assertFalse(LoungeLiveCatalogueCleanup.shouldHide(
             "UK| UFC/BOXING PPV", count = 18, reviewedHidden = setOf("UK| APPLE TV F1 PPV")))
 
