@@ -999,8 +999,8 @@ class LiveViewModel(
 
     val count: StateFlow<Int> = combine(_selected, ctx, hiddenCategoryIds) { key, c, hidden -> Triple(key, c, hidden) }
         .flatMapLatest { (key, c, hidden) -> countFlow(key, c, hidden).throttleLatest() }
-        .combine(_selected, duplicateSelection) { raw, selected, d ->
-            when (selected) {
+        .combine(duplicateSelection) { raw, d ->
+            when (val selected = _selected.value) {
                 is LiveKey.Folder -> (raw - (d.hiddenByCategory[selected.id] ?: 0)).coerceAtLeast(0)
                 LiveKey.All -> (raw - d.hiddenIds.size).coerceAtLeast(0)
                 else -> raw
