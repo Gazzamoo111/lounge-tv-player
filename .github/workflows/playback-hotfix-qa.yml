@@ -60,7 +60,7 @@ jobs:
           chmod +x ./gradlew
           export VERSION_CODE="$(python3 scripts/qa_version_code.py "$GITHUB_RUN_NUMBER" "$GITHUB_RUN_ATTEMPT")"
           export VERSION_NAME="5.2.3.0-playback-preflight.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}"
-          ./gradlew :app:testStandardDebugUnitTest :app:assembleStandardDebug \
+          ./gradlew :shared-core:player-core:testDebugUnitTest :app:testStandardDebugUnitTest :app:assembleStandardDebug \
             -Powntv.corePath="$GITHUB_WORKSPACE/shared-core" --stacktrace
 
       - name: Verify isolated APK identity
