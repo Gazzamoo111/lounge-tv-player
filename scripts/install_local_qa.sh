@@ -44,11 +44,16 @@ SIGNED="$DEST/LoungeTV-LocalSigned-QA.apk"
 "$APKSIGNER" verify "$SIGNED"
 
 echo "=== INSTALL LOCAL-SIGNED QA ON $TV ==="
-adb connect "$TV"
+adb connect "$TV" </dev/null
+STATUS_PACKAGE="$(adb -s "$TV" shell service check package </dev/null 2>&1 || true)"
+if [[ "$STATUS_PACKAGE" != *"Service package: found"* ]]; then
+  echo "STOP: Fire Stick Android Package Manager is not available. No app data changed."
+  exit 1
+fi
 # Never automatically delete existing data. The first switch to this
 # machine's stable QA certificate needs deliberate consent, exactly once.
 set +e
-RESULT="$(adb -s "$TV" install -r "$SIGNED" 2>&1)"
+RESULT="$(adb -s "$TV" install --no-incremental -r "$SIGNED" </dev/null 2>&1)"
 STATUS=$?
 set -e
 echo "$RESULT"
@@ -58,5 +63,5 @@ if [ "$STATUS" -ne 0 ]; then
   exit 1
 fi
 
-adb -s "$TV" shell monkey -p "$QA" 1
+adb -s "$TV" shell monkey -p "$QA" 1 </dev/null
 echo "RECOVERY QA INSTALLED; PRODUCTION AND QA DATA PRESERVED"
