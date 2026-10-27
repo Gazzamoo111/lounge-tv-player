@@ -23,10 +23,10 @@ internal object LoungeVodEditorialQuality {
     // Persistently suppress explicit exploitation, adult-marketed and poor-copy records
     // by normalized title, not ephemeral provider/Room IDs. This still applies after a
     // BEST playlist reimport, profile refresh or reordered category.
-    // Deliberately avoid generic words such as "adult", "romance" and "nude" in
-    // a synopsis, so standard mainstream dramas are not misclassified.
+    // Avoid generic words alone (e.g. "Naked Gun", "Sex Education", "Sexy Beast")
+    // so legitimate mainstream titles are not accidentally removed.
     private val explicitAdultTitle = Regex(
-        """(?i)\b(?:xxx|porn(?:o|ography)?|erotic(?:a)?|softcore|hardcore|hentai|fetish|orgy|onlyfans|sexploitation|sex|sexy|sexual|nude|nudes|nudity|naked|striptease|stripper|strippers|playboy|playmate|escort|bondage|adult\s+film|18\+)\b"""
+        """(?i)\b(?:xxx|porn(?:o|ography)?|erotic(?:a)?|softcore|hardcore|hentai|fetish|orgy|onlyfans|sexploitation|striptease|stripper|strippers|playboy|playmate|escort|bondage|sex\s+(?:tape|party|scenes|compilation|collection|videos)|sexy\s+(?:movies|girls|babes)|nude\s+(?:models|women|girls|videos)|naked\s+(?:women|girls|babes)|adult\s+(?:film|movies|videos))\b"""
     )
     private val badProviderPrint = Regex(
         """(?i)(?:\[(?:CAM|CAMRIP|HDTS|TS|WORKPRINT)\]|\b(?:CAMRIP|TELESYNC|WORKPRINT)\b)"""
