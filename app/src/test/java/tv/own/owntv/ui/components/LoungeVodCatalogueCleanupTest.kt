@@ -66,6 +66,14 @@ class LoungeVodCatalogueCleanupTest {
         assertEquals(tv.own.owntv.R.string.catalogue_sci_fi_fantasy.toString(), plan.names["1:53"])
     }
 
+    @Test fun `BEST SD CAM pre releases remain hidden even when provider adds more titles`() {
+        val plan = policy.plan(LoungeVodCatalogueCleanup.Kind.MOVIE, movies(listOf(
+            folder(52, "|EN| PRE-RELEASES/SD CAM", 500),
+        )))
+        assertTrue(52L in plan.hiddenIds)
+        assertFalse(48L in plan.hiddenIds)
+    }
+
     @Test fun `nine entries hide and ten entries stay visible after playlist refresh`() {
         val current = policy.plan(LoungeVodCatalogueCleanup.Kind.MOVIE, movies(listOf(folder(95, "|EN| COMEDY", 9))))
         val refreshed = policy.plan(LoungeVodCatalogueCleanup.Kind.MOVIE, movies(listOf(folder(95, "|EN| COMEDY", 10))))
