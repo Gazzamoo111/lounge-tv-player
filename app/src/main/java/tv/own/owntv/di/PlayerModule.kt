@@ -22,7 +22,11 @@ val playerModule = module {
     // Muted ExoPlayer engine for the Home hero preview. The last argument lets it ask whether mpv is
     // already streaming, so a one-session provider isn't locked out by the hero preview.
     // Resolved lazily inside the lambda to keep this free of a construction-order dependency.
-    single { HeroPreviewEngine(androidContext(), get(), get(), streamInUse = { get<OwnTVPlayer>().hasActiveStream }) }
+    single { HeroPreviewEngine(androidContext(), get(), get(), streamInUse = {
+        // Live Preview uses ExoPlayer rather than mpv. It is still a real provider
+        // connection, and Home hero must not race it on single-session accounts.
+        get<OwnTVPlayer>().hasActiveStream || get<tv.own.owntv.player.LivePreviewEngine>().currentUrl != null
+    }) }
     // Every engine above, so Home / the screensaver / memory pressure reach all of them in one call —
     // the Multiview pool included, which the hand-kept list in MainActivity used to miss.
     single {

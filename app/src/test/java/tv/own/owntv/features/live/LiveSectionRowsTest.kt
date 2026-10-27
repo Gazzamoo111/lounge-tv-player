@@ -79,4 +79,30 @@ class LiveSectionRowsTest {
         val rows = liveSectionRows(sections, matches, null, true)
         assertEquals(listOf(LiveSectionRow.ChannelFolder(3), LiveSectionRow.ChannelFolder(6)), rows)
     }
+
+    @Test fun hiddenCategoriesAreAbsentFromBothBadgeAndExpandedRows() {
+        val visibleAfterProfileFilters = listOf(
+            null, LoungeLiveSection.SPORTS, LoungeLiveSection.MOVIES, LoungeLiveSection.SPORTS,
+        )
+        val rows = liveSectionRows(
+            visibleAfterProfileFilters,
+            List(visibleAfterProfileFilters.size) { true },
+            LoungeLiveSection.SPORTS,
+            false,
+        )
+        assertEquals(2, liveSectionFolderCount(visibleAfterProfileFilters, LoungeLiveSection.SPORTS))
+        assertEquals(
+            2,
+            rows.filterIsInstance<LiveSectionRow.ChannelFolder>()
+                .count { visibleAfterProfileFilters[it.index] == LoungeLiveSection.SPORTS },
+        )
+    }
+
+    @Test fun replacingSourcesOrRestartingHasNoStaleSectionCount() {
+        val firstSync = listOf(LoungeLiveSection.SPORTS, LoungeLiveSection.SPORTS)
+        val resync = listOf(LoungeLiveSection.SPORTS, LoungeLiveSection.MOVIES, LoungeLiveSection.MOVIES)
+        assertEquals(2, liveSectionFolderCount(firstSync, LoungeLiveSection.SPORTS))
+        assertEquals(1, liveSectionFolderCount(resync, LoungeLiveSection.SPORTS))
+        assertEquals(2, liveSectionFolderCount(resync.toList(), LoungeLiveSection.MOVIES))
+    }
 }

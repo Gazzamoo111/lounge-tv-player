@@ -12,14 +12,14 @@ from version_code import version_code
 
 class VersioningTests(unittest.TestCase):
     def test_current_production_and_next_hotfix(self):
-        self.assertEqual(version_code('5.2.2.0'), 5_020_200)
-        self.assertEqual(version_code('5.2.2.1'), 5_020_201)
+        self.assertEqual(version_code('5.2.3.0'), 5_020_300)
+        self.assertEqual(version_code('5.2.3.1'), 5_020_301)
 
     def test_qa_codes_are_reserved_and_monotonic(self):
         first = qa_version_code(41, 1)
         retry = qa_version_code(41, 2)
         next_run = qa_version_code(42, 1)
-        self.assertGreater(first, 5_020_200)
+        self.assertGreater(first, 5_020_300)
         self.assertLess(first, retry)
         self.assertLess(retry, next_run)
 
