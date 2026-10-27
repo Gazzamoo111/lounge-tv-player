@@ -20,12 +20,15 @@ internal object LoungeVodPosterCorrections {
         releaseYear: Int?,
         existingPoster: String?,
     ): String? {
-        if (releaseYear != 1997) return existingPoster
-        val title = canonicalTitle.ifBlank { providerTitle }
-            .trim()
-            .replace(platformPrefix, "")
-            .replace(yearSuffix, "")
-            .trim()
-        return if (title.equals("Titanic", ignoreCase = true)) TITANIC_1997_POSTER else existingPoster
+        // Provider titles explicitly marked (1997) are stronger evidence than a
+        // stale or incorrect cached TMDb release year. An unqualified "Titanic"
+        // must still have its resolved 1997 year to receive this correction.
+        val providerSays1997 = yearSuffix.containsMatchIn(providerTitle)
+        if (releaseYear != 1997 && !providerSays1997) return existingPoster
+        val titles = if (providerSays1997) listOf(providerTitle) else listOf(canonicalTitle.ifBlank { providerTitle })
+        return if (titles.any { raw ->
+                raw.trim().replace(platformPrefix, "").replace(yearSuffix, "")
+                    .trim().equals("Titanic", ignoreCase = true)
+            }) TITANIC_1997_POSTER else existingPoster
     }
 }
