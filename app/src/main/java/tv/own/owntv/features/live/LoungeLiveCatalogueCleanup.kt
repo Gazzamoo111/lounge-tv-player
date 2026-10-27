@@ -31,20 +31,13 @@ internal object LoungeLiveCatalogueCleanup {
         "us| biblical/religious",
     )
 
-    // These small sport event groups are intentionally protected, not hidden
-    // with the thousands of speculative/live-event placeholders.
-    private val protectedPpv = setOf(
-        "au| nrl tv ppv", "au| stan ppv",
-        "uk| apple tv f1 ppv", "uk| ufc/boxing ppv",
-    )
-    private val oversizedDirectories = setOf(
-        "world live sports", "us| flo network", "us| espn plus",
-    )
+    /** Audited choices are data, not an over-broad "hide all PPV" name rule. */
+    private val EMPTY_POLICY = emptySet<String>()
 
     private fun norm(raw: String) = raw.trim().lowercase(Locale.ROOT)
         .replace(Regex("\\s+"), " ")
 
-    fun plan(folders: List<Folder>): Plan {
+    fun plan(folders: List<Folder>, reviewedHidden: Set<String> = EMPTY_POLICY): Plan {
         val auditedSources = folders.groupBy { it.sourceId }.filter { (_, entries) ->
             entries.any { it.sourceType == SourceType.XTREAM } &&
                 signatures.count { clue ->
@@ -53,7 +46,7 @@ internal object LoungeLiveCatalogueCleanup {
         }.keys
         val relevant = folders.filter { it.sourceId in auditedSources }
         val hidden = relevant.filter { folder ->
-            shouldHide(folder.name, folder.count, folder.synced)
+            shouldHide(folder.name, folder.count, folder.synced, reviewedHidden)
         }.mapTo(HashSet()) { it.id }
         return Plan(
             hiddenIds = hidden,
@@ -63,14 +56,19 @@ internal object LoungeLiveCatalogueCleanup {
         )
     }
 
-    internal fun shouldHide(name: String, count: Int?, synced: Boolean = true): Boolean {
+    /** Exact category rules from the owner's reviewed screenshot decisions.
+     * A KEEP always wins over name heuristics. Unknown/new folders are left
+     * visible for review, rather than silently hiding important small sports.
+     */
+    internal fun shouldHide(
+        name: String,
+        count: Int?,
+        synced: Boolean = true,
+        reviewedHidden: Set<String> = EMPTY_POLICY,
+    ): Boolean {
         val n = norm(name)
-        if (n.startsWith("nz| sky sport") || n.startsWith("nz| sky sports")) return false
-        if (n.startsWith("nz| new zealand")) return true
-        if (n.contains("ppv") || n.contains("pay per view")) return n !in protectedPpv
-        if (n in oversizedDirectories) return true
-        if (Regex("biblical|religious|telemundo|vix\\+ deportes|adult|xxx").containsMatchIn(n)) return true
-        return synced && count != null && count < 10
+        if (n.startsWith("nz| sky sport")) return false
+        return reviewedHidden.any { norm(it) == n }
     }
 
     fun divider(name: String): Boolean {
@@ -108,7 +106,8 @@ internal object LoungeLiveCatalogueCleanup {
             .trim()
         // Drop ornamental quality suffixes, but keep RAW on Sky Sport so a
         // customer can distinguish backup feeds when required.
-        s = s.replace(Regex("\\s+(?:FHD|HD)(?:\\s*\\(BK\\))?$", RegexOption.IGNORE_CASE), "")
+        // Keep HD/FHD/HEVC distinguishable until stream reliability tests can
+        // select a primary and fallback: otherwise duplicate streams look identical.
         return s.ifBlank { original }
     }
 }
