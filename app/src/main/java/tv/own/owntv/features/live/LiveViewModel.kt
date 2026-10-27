@@ -411,6 +411,30 @@ class LiveViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, LoungeLiveCatalogueCleanup.Plan())
 
+    /** Recompute a reversible duplicate presentation map only after catalogue changes. */
+    private val duplicateSelection: StateFlow<LoungeLiveDuplicates.Result> = ctx
+        .flatMapLatest { c ->
+            if (c.profileId < 0) flowOf(LoungeLiveDuplicates.Result(emptySet(), emptyMap()))
+            else combine(
+                categoryDao.observe(c.sourceIds, MediaType.LIVE),
+                channelDao.observeCountsByCategory(c.sourceIds.ifEmpty { listOf(-1L) }),
+                loungeCuration,
+            ) { cats, _, plan -> cats to plan }
+                .debounce(1_500)
+                .mapLatest { (cats, plan) ->
+                    if (plan.sourceIds.isEmpty()) LoungeLiveDuplicates.Result(emptySet(), emptyMap())
+                    else withContext(Dispatchers.IO) {
+                        LoungeLiveDuplicates.choose(
+                            channelDao.snapshotAll(c.sourceIds, 25_000),
+                            cats.associateBy { it.id },
+                            plan.sourceIds,
+                            plan.hiddenIds,
+                        )
+                    }
+                }
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, LoungeLiveDuplicates.Result(emptySet(), emptyMap()))
+
     /** Contexts that actually have manual-order rows: only those folders pay the
      *  unindexable content_order join-sort; everything else stays on the plain indexed query. */
     private val orderedContexts: StateFlow<Set<String>> = ctx
@@ -743,7 +767,8 @@ class LiveViewModel(
         // Rebuild the pager when a folder gains/loses manual order: the fast-path plain
         // PagingSource doesn't observe content_order, so the switch must recreate it.
         .combine(orderedContexts) { args, _ -> args }
-        .flatMapLatest { (key, c, query, sort, cs) ->
+        .combine(duplicateSelection) { args, duplicate -> args.copy(duplicateIds = duplicate.hiddenIds) }
+        .flatMapLatest { (key, c, query, sort, cs, duplicateIds) ->
             // Customizations are applied to each fresh PagingData inside the pager chain — a PagingData
             // that the UI already collected must never be re-transformed (Paging forbids re-collection,
             // which is why hiding a channel used to crash). A customization change re-creates the pager.
@@ -768,6 +793,12 @@ class LiveViewModel(
                 // Do not delete provider data, favourites or independent M3U feeds.
                 customized
                     .filter(::showInNzSelection)
+                    .filter { ch ->
+                        // User's hand-picked favourites, watch history and custom
+                        // categories can still address backup streams.
+                        key is LiveKey.Favorites || key is LiveKey.History ||
+                            key is LiveKey.Custom || ch.id !in duplicateIds
+                    }
                     .filter { ch -> ch.sourceId !in loungeCuration.value.sourceIds ||
                         !LoungeLiveCatalogueCleanup.divider(ch.name) }
                     .map { ch ->
@@ -779,7 +810,7 @@ class LiveViewModel(
         }
         .cachedIn(viewModelScope)
 
-    private data class Args(val key: LiveKey, val ctx: Ctx, val query: String, val sort: SettingsRepository.SortMode, val cs: CustState)
+    private data class Args(val key: LiveKey, val ctx: Ctx, val query: String, val sort: SettingsRepository.SortMode, val cs: CustState, val duplicateIds: Set<Long> = emptySet())
 
     /** Hide the focused channel from all lists (undo via Settings → Customize → Hidden channels). */
     fun hideChannel(channel: ChannelEntity) {
