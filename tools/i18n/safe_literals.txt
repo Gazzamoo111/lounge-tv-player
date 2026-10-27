@@ -133,7 +133,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveStage.kt	tnum
 3	regex	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	[^a-z0-9]+
 1	regex	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	\\s+
-17	empty	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	\0
+16	empty	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	#$it
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	catch-up '${ch.name}' prog='${programme.title}' -> ${tv.own.owntv.core.network.HttpClient.redactUrl(url)}
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	catch-up external '${ch.name}' prog='${programme.title}'
@@ -191,13 +191,28 @@
 2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	NZ
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	NZ ·
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	nz| new zealand
+2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	nz| sky sport
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	nz| sky sports
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	nz| sky sports nz
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	pay per view
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	ppv
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	PPV
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	RAW
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	Sky
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	TNT
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UFC
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	uk| apple tv f1 ppv
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	uk| movies
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	uk| sports
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	uk| ufc/boxing ppv
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	us| biblical/religious
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	us| espn plus
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	us| espn+ ppv vip
+2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	us| flo network
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	us| paramount+ ppv
+2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	world live sports
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	WWE
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	24/7
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	24x7
@@ -920,6 +935,12 @@
 8	technical	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	\0
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	activeProfileChanged profile=$pid androidTvHomeEnabled=${settings.androidTvHomeEnabled.first()}
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	EPG migration failed; attempting to register guides
+2	url	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	https://i.mjh.nz/nz/epg.xml.gz
+1	url	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	https://i.mjh.nz/nz/kodi-tv.m3u8
+1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	i.mjh.nz/nz/
+2	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	lounge_nz_freeview
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	NZ Freeview added to existing profile=$pid, sync queued
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	NZ Freeview auto-setup failed; existing sources unaffected
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	OwnTVHome
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Unable to register automatic EPG sources
 1	json	app/src/main/java/tv/own/owntv/features/sports/data/FixtureReminderScheduler.kt	[]
