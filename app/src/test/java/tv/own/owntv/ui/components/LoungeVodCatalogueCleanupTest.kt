@@ -62,8 +62,8 @@ class LoungeVodCatalogueCleanupTest {
         )))
         assertTrue(plan.hiddenIds.containsAll(listOf(40L, 42L, 43L, 52L, 78L, 83L, 87L)))
         assertFalse(plan.hiddenIds.contains(86L))
-        assertEquals("New Releases", plan.names["1:48"])
-        assertEquals("Sci-Fi & Fantasy", plan.names["1:53"])
+        assertEquals(tv.own.owntv.R.string.lounge_movies_new_releases.toString(), plan.names["1:48"])
+        assertEquals(tv.own.owntv.R.string.catalogue_sci_fi_fantasy.toString(), plan.names["1:53"])
     }
 
     @Test fun `nine entries hide and ten entries stay visible after playlist refresh`() {
