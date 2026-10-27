@@ -50,6 +50,14 @@ PATCHES = {
     [
       "            if (player != null && (builtLoadControl != wanted || (memoryPressure && !builtLowRam) || builtTunneled != wantTunneling() ||\n                    builtHwDecoding != hwDecodingEnabled)) {",
       "            if (player != null && (protectionBoundary || builtLoadControl != wanted || (memoryPressure && !builtLowRam) || builtTunneled != wantTunneling() ||\n                    builtHwDecoding != hwDecodingEnabled)) {"
+    ],
+    [
+      "                player?.run { removeListener(listener); release() }\n                player = null\n                videoRenderer = null\n            }\n            val p = player ?: build().also { player = it }",
+      "                player?.run { removeListener(listener); release() }\n                player = null\n                videoRenderer = null\n                if (protectionBoundary) {\n                    // MediaTek secure codecs can inherit an unusable native window when switching\n                    // from plain TS to Widevine DASH. Recreate the SurfaceView as well as ExoPlayer.\n                    surface = null\n                    awaitingFreshSurface = true\n                    recreateSurface()\n                }\n            }\n            val p = player ?: build().also { player = it }"
+    ],
+    [
+      "                if (++openStuckPolls >= OPEN_STUCK_POLLS) {\n                    logHlsPlaylist(\"open stalled\")",
+      "                if (++openStuckPolls >= OPEN_STUCK_POLLS) {\n                    if (currentDrm != null && !tune.decoderRetryDone) {\n                        // DRM cannot fall back to mpv. If the secure decoder consumed buffered video\n                        // but rendered no frame, retry exactly once with fresh codec and surface.\n                        tune.decoderRetryDone = true\n                        LiveDiagnosticsLog.event(\"protected video buffered but no frame: resetting secure decoder and surface once\")\n                        rebuildDecoderAndSurface()\n                        return\n                    }\n                    logHlsPlaylist(\"open stalled\")"
     ]
   ]
 }
@@ -92,6 +100,7 @@ def apply(root: Path) -> None:
         ("2", "file-path", "/video/black.ts"),
         ("1", "log", "HTTP $status while opening a live stream — waiting for the gateway or previous session to release, then retrying"),
         ("1", "log", "Live provider returned a black placeholder instead of the channel"),
+        ("1", "log", "protected video buffered but no frame: resetting secure decoder and surface once"),
         ("1", "log", "provider refused with HTTP $status uri=${HttpClient.redactUrl(uri)}"),
     ]
     if not rows or "" not in rows:
