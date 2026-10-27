@@ -40,7 +40,9 @@ internal object LoungeLiveDuplicates {
                 .replace("FOX SPORTS 502 LEAUGE", "FOX SPORTS 502")
         }
         n = quality.replace(n, " ")
-        n = parentheses.replace(n, " ")
+        // US affiliate callsigns (WKAS, WKGB, etc.) and AU regional labels
+        // identify distinct feeds. Only remove UK backup markers.
+        if (area == "UK") n = n.replace("(BK)", " ")
         return punctuation.replace(n, " ").trim()
     }
 
@@ -78,7 +80,9 @@ internal object LoungeLiveDuplicates {
             // on different channels: never merge them by their generic slot name.
             val eventFolder = Regex("PPV|EVENT|PACKAGE|REPLAY|24/7", RegexOption.IGNORE_CASE)
                 .containsMatchIn(cat.name)
-            if (identity.isBlank() || eventFolder) "unique:" + ch.id
+            val marathonFolder = area == "US" && Regex("CINEMANIA|NETFLIX|PLUTO|ON AIR|PRIME|MOVIES|TV SHOWS|DISNEY", RegexOption.IGNORE_CASE)
+                .containsMatchIn(cat.name)
+            if (identity.isBlank() || eventFolder || marathonFolder) "unique:" + ch.id
             else area + ":" + identity
         }
         val hidden = HashSet<Long>()
