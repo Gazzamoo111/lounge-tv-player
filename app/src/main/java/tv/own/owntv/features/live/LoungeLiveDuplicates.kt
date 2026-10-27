@@ -6,7 +6,7 @@ import java.util.Locale
 
 /** Display-only deduplication. Backups and original provider rows are never deleted. */
 internal object LoungeLiveDuplicates {
-    data class Result(val hiddenIds: Set<Long>, val backups: Map<Long, List<Long>>)
+    data class Result(val hiddenIds: Set<Long>, val backups: Map<Long, List<Long>>, val hiddenByCategory: Map<Long, Int> = emptyMap())
 
     private val quality = Regex("\\b(?:HEVC|FHD|HD|UHD|4K|RAW|VIP|60\\s*FPS|BK)\\b")
     private val cities = Regex("\\b(?:SYDNEY|NSW|MELBOURNE|VIC|PERTH|WA|BRISBANE|QLD|ADELAIDE|SA|CANBERRA|DARWIN|HOBART|GOLD.COAST|LISMORE|NEWCASTLE|NATIONAL)\\b")
@@ -87,6 +87,7 @@ internal object LoungeLiveDuplicates {
         }
         val hidden = HashSet<Long>()
         val backups = HashMap<Long, List<Long>>()
+        val hiddenByCategory = HashMap<Long, Int>()
         for (group in groups.values) {
             if (group.size < 2) continue
             val sorted = group.sortedWith(compareByDescending<ChannelEntity> { ch ->
@@ -95,8 +96,12 @@ internal object LoungeLiveDuplicates {
             val primary = sorted.first()
             val other = sorted.drop(1).map { it.id }
             hidden.addAll(other)
+            sorted.drop(1).forEach { ch ->
+                val categoryId = ch.categoryId ?: return@forEach
+                hiddenByCategory[categoryId] = (hiddenByCategory[categoryId] ?: 0) + 1
+            }
             backups[primary.id] = other
         }
-        return Result(hidden, backups)
+        return Result(hidden, backups, hiddenByCategory)
     }
 }
