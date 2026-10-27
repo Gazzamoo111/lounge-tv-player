@@ -732,7 +732,13 @@ class LiveViewModel(
                 val orderIndex = cust.categoryOrder.withIndex().associate { (i, key) -> key to i }
                 val orderedFolders = displayFolders.withIndex().sortedWith(
                     compareBy<IndexedValue<tv.own.owntv.core.customize.CustomizedCategory>>(
-                        { if (it.value.customId != null) -1 else if (it.value.key in orderIndex) 0 else 1 },
+                        { if (it.value.customId != null) -1 else when (
+                            it.value.categoryId?.let(categoriesById::get)?.name?.let(::loungeLiveSectionOf)
+                        ) {
+                            LoungeLiveSection.NEW_ZEALAND -> 0
+                            LoungeLiveSection.AUSTRALIA -> 1
+                            else -> 2
+                        } },
                         { if (it.value.key in orderIndex) orderIndex.getValue(it.value.key) else
                             it.value.categoryId?.let(categoriesById::get)?.name
                                 ?.let(::loungeLiveSectionOf)?.ordinal ?: Int.MAX_VALUE },
