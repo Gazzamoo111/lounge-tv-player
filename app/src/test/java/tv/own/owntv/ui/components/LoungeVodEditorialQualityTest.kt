@@ -34,22 +34,22 @@ class LoungeVodEditorialQualityTest {
             providerName = "Italian Job", canonicalTitle = "",
             providerLanguage = "en", rating = 6.0,
         ))
-        assertTrue(LoungeVodEditorialQuality.eligibleForHighlights(
+        assertFalse(LoungeVodEditorialQuality.eligibleForHighlights(
             providerName = "D+ Bug Juice", canonicalTitle = "",
             providerLanguage = null, rating = null,
         ))
     }
 
-    @Test fun excludesPoorKnownRatingsButKeepsUnratedFilmsInTheLibrary() {
+    @Test fun excludesPoorAndUnratedTitlesFromEditorialShelves() {
         assertFalse(LoungeVodEditorialQuality.eligibleForHighlights(
             providerName = "Low Quality Film", canonicalTitle = "",
             providerLanguage = null, rating = 4.0,
         ))
-        assertTrue(LoungeVodEditorialQuality.eligibleForHighlights(
+        assertFalse(LoungeVodEditorialQuality.eligibleForHighlights(
             providerName = "Free Willy 2", canonicalTitle = "",
             providerLanguage = null, rating = 5.9,
         ))
-        assertTrue(LoungeVodEditorialQuality.eligibleForHighlights(
+        assertFalse(LoungeVodEditorialQuality.eligibleForHighlights(
             providerName = "Unrated Classic", canonicalTitle = "",
             providerLanguage = null, rating = null,
         ))
