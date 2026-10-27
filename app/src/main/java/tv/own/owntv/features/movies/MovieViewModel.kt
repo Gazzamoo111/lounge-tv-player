@@ -548,11 +548,11 @@ class MovieViewModel(
                 val cust = cs.cust
                 val movedFrom = cust.movedFromOrigin
                 if (cust.hiddenItems.isEmpty() && cust.itemNames.isEmpty() && cs.hiddenCats.isEmpty() && movedFrom.isEmpty()) paging.filter { item ->
-                    !LoungeVodCatalogueCleanup.explicitlyNonEnglishTitle(item.name)
+                    LoungeVodCatalogueCleanup.visibleEnglish(item.name, item.providerLanguage)
                 }
                 else paging.filter { m ->
                     CustomizeKeys.movie(m) !in cust.hiddenItems &&
-                        !LoungeVodCatalogueCleanup.explicitlyNonEnglishTitle(m.name) &&
+                        LoungeVodCatalogueCleanup.visibleEnglish(m.name, m.providerLanguage) &&
                         (m.categoryId == null || m.categoryId !in cs.hiddenCats) &&
                         // Moved-out items leave ONLY their origin folder (they stay in All/search).
                         (movedFrom[CustomizeKeys.movie(m)]?.let { origin ->
