@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import tv.own.owntv.ui.components.LoungeVodCatalogueCleanup
+import tv.own.owntv.ui.components.LoungeVodEditorialQuality
 import tv.own.owntv.core.customize.CustomizationStore
 import tv.own.owntv.core.customize.CustomizeKeys
 import tv.own.owntv.core.customize.SectionCustomizations
@@ -552,11 +553,11 @@ class MovieViewModel(
                 val cust = cs.cust
                 val movedFrom = cust.movedFromOrigin
                 if (cust.hiddenItems.isEmpty() && cust.itemNames.isEmpty() && cs.hiddenCats.isEmpty() && movedFrom.isEmpty()) paging.filter { item ->
-                    LoungeVodCatalogueCleanup.visibleEnglish(item.name, item.providerLanguage)
+                    LoungeVodEditorialQuality.publicBrowseEligible(item.name, item.canonicalTitle, item.providerLanguage, item.rating)
                 }
                 else paging.filter { m ->
                     CustomizeKeys.movie(m) !in cust.hiddenItems &&
-                        LoungeVodCatalogueCleanup.visibleEnglish(m.name, m.providerLanguage) &&
+                        LoungeVodEditorialQuality.publicBrowseEligible(m.name, m.canonicalTitle, m.providerLanguage, m.rating) &&
                         (m.categoryId == null || m.categoryId !in cs.hiddenCats) &&
                         // Moved-out items leave ONLY their origin folder (they stay in All/search).
                         (movedFrom[CustomizeKeys.movie(m)]?.let { origin ->
