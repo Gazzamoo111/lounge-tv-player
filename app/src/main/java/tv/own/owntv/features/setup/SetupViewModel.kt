@@ -14,6 +14,7 @@ import tv.own.owntv.core.model.SourceType
 import tv.own.owntv.core.backup.BackupManager
 import tv.own.owntv.core.setup.SourceImporter
 import tv.own.owntv.core.settings.PlaylistRefresh
+import tv.own.owntv.core.settings.PlaylistAutoRefresh
 import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.core.sync.SyncScopeChoice
 import java.io.File
