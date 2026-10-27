@@ -380,14 +380,6 @@ class LiveViewModel(
             channel.name,
         )
 
-    /** The audited category selections are packaged as immutable data, not guessed from PPV names. */
-    private val reviewedLiveHidden: Set<String> by lazy {
-        runCatching {
-            appContext.assets.open("lounge_live_hidden_categories_20261027.txt")
-                .bufferedReader().use { it.readLines().filter(String::isNotBlank).toSet() }
-        }.getOrDefault(emptySet())
-    }
-
     /** Recompute audit-derived policy after provider catalogue refresh. Manual customizations stay separate. */
     private val loungeCuration: StateFlow<LoungeLiveCatalogueCleanup.Plan> = ctx
         .flatMapLatest { c ->
@@ -406,7 +398,7 @@ class LiveViewModel(
                         count = byId[cat.id],
                         synced = sourceById[cat.sourceId]?.lastSyncAt != null,
                     )
-                }, reviewedHidden = reviewedLiveHidden)
+                })
             }
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, LoungeLiveCatalogueCleanup.Plan())
