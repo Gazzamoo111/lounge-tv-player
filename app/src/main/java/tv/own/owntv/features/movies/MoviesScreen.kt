@@ -266,9 +266,15 @@ fun MoviesScreen(
     val viewMode = if (lockedKey == null) SettingsRepository.VodViewMode.GRID else storedViewMode
     val highlights = categoryHighlights.takeIf { it.categoryKey == selectedKey }
     val categoryFeatured = highlights?.featured.orEmpty()
-    val allMoviesEditorial = if (selectedKey == LiveKey.All) {
+    // Give recognisable, exactly matched Home picks priority in All and when they
+    // genuinely belong to the selected provider category. They remain real playable
+    // BEST items, not invented recommendations. Fallback stays category-scoped.
+    val allMoviesEditorial = if (selectedKey == LiveKey.All || selectedKey is LiveKey.Folder) {
         val day = highlights?.day ?: System.currentTimeMillis() / 86_400_000L
-        val famous = homeEditorial.featuredMovies.shuffled(Random(day.toInt())).take(8)
+        val famous = homeEditorial.featuredMovies
+            .filter { selectedKey == LiveKey.All || it.categoryId == (selectedKey as LiveKey.Folder).id }
+            .shuffled(Random((day xor selectedKey.hashCode().toLong()).toInt()))
+            .take(8)
         (famous + categoryFeatured).distinctBy { it.id }.take(20)
     } else categoryFeatured
     val newMovies = highlights?.newReleases.orEmpty()
