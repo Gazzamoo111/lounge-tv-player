@@ -16,4 +16,20 @@ class LoungeNzOrderTest {
             sorted.take(5))
         assertTrue(sorted.indexOf("HGTV") >= 5)
     }
+    @Test fun firstFiveSurvivePrefixAndQualityVariations() {
+        val variants = listOf(
+            "NZ | TVNZ 1 HD" to 0,
+            "TVNZ2 FHD" to 1,
+            "NZ| THREE SD" to 2,
+            "Whakaata Maori HD" to 3,
+            "Māori TV" to 3,
+            "Te Reo HD" to 4,
+            "SKY SPORT 1 FHD" to 10,
+            "Bravo" to 10,
+        )
+        variants.forEach { (channelName, expected) ->
+            assertEquals(channelName, expected, LoungeNzOrder.priority(channelName))
+        }
+    }
+
 }
