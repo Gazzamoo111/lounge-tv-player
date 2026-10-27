@@ -9,7 +9,7 @@ class LiveSectionRowsTest {
     private val sections = listOf(
         null, null, LoungeLiveSection.SPORTS, LoungeLiveSection.SPORTS,
         LoungeLiveSection.SPORTS, LoungeLiveSection.MOVIES, LoungeLiveSection.MOVIES,
-        LoungeLiveSection.NEWS,
+        LoungeLiveSection.STREAMING,
     )
     private val all = List(sections.size) { true }
 
@@ -20,7 +20,7 @@ class LiveSectionRowsTest {
                 LiveSectionRow.ChannelFolder(0), LiveSectionRow.ChannelFolder(1),
                 LiveSectionRow.Heading(LoungeLiveSection.SPORTS),
                 LiveSectionRow.Heading(LoungeLiveSection.MOVIES),
-                LiveSectionRow.Heading(LoungeLiveSection.NEWS),
+                LiveSectionRow.Heading(LoungeLiveSection.STREAMING),
             ), rows,
         )
     }
