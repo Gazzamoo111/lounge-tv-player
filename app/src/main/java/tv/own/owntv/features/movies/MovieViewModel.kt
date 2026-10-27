@@ -105,6 +105,7 @@ class MovieViewModel(
     private val externalPlayerLauncher: tv.own.owntv.core.player.ExternalPlayerLauncher,
     private val streamUrlResolver: tv.own.owntv.core.stalker.StreamUrlResolver,
     private val subtitleController: tv.own.owntv.core.subtitles.SubtitleController,
+    private val appContext: android.content.Context,
 ) : ViewModel() {
 
     /** The categories' search text, held here so it survives the player (see LiveViewModel). */
@@ -242,6 +243,7 @@ class MovieViewModel(
                                 count = countsById[cat.id],
                             )
                         },
+                        { appContext.getString(it) },
                     )
                     tv.own.owntv.core.content.AdultCategoryClassifier.hiddenCategoryIds(
                         cats, cust.hiddenCategories, profile?.isKids == true,
@@ -429,6 +431,7 @@ class MovieViewModel(
                                 count = countsById[cat.id],
                             )
                         },
+                        { appContext.getString(it) },
                     )
                 }
             }.debounce(5_000).collectLatest { snapshot ->
@@ -503,6 +506,7 @@ class MovieViewModel(
                                 count = countsById[cat.id],
                             )
                         },
+                        { appContext.getString(it) },
                     )
                 // A–Z also sorts the category folders (custom categories included); manually moved
                 // categories stay pinned first. Custom categories ride the SAME customization keys,
