@@ -120,6 +120,25 @@ class MoviesHighlightsGuardrailsTest(unittest.TestCase):
         self.assertIn("firstNewReleaseFocus", screen)
         self.assertEqual(screen.count("onLeftToCategories ="), 4)
 
+    def test_catalogue_cleaner_only_changes_read_only_highlights(self):
+        quality = (ROOT / "app/src/main/java/tv/own/owntv/ui/components/LoungeVodEditorialQuality.kt").read_text()
+        movie_reader = (MOVIES / "MovieCategoryHighlights.kt").read_text()
+        series_reader = (ROOT / "app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt").read_text()
+        movies_screen = (MOVIES / "MoviesScreen.kt").read_text()
+        series_screen = (ROOT / "app/src/main/java/tv/own/owntv/features/series/SeriesScreen.kt").read_text()
+        self.assertIn("eligibleForHighlights(", movie_reader)
+        self.assertIn("eligibleForHighlights(", series_reader)
+        self.assertIn("duplicateKey(", movie_reader)
+        self.assertIn("duplicateKey(", series_reader)
+        self.assertIn("rating in 0.1..5.49", quality)
+        self.assertIn("foreignLanguage", quality)
+        self.assertIn("homeEditorial.featuredMovies", movies_screen)
+        self.assertIn("homeEditorial.popularSeries", series_screen)
+        self.assertNotIn("DELETE FROM movies", quality + movie_reader)
+        self.assertNotIn("DELETE FROM series", quality + series_reader)
+        self.assertNotIn("UPDATE movies", quality + movie_reader)
+        self.assertNotIn("UPDATE series", quality + series_reader)
+
     def test_guide_explains_hide_and_restore(self):
         guide = (ROOT / "extras/USER_GUIDE.md").read_text()
         self.assertIn("Settings → Customise", guide)
