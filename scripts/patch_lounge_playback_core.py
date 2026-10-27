@@ -59,6 +59,20 @@ PATCHES = {
       "                if (++openStuckPolls >= OPEN_STUCK_POLLS) {\n                    logHlsPlaylist(\"open stalled\")",
       "                if (++openStuckPolls >= OPEN_STUCK_POLLS) {\n                    if (currentDrm != null && !tune.decoderRetryDone) {\n                        // DRM cannot fall back to mpv. If the secure decoder consumed buffered video\n                        // but rendered no frame, retry exactly once with fresh codec and surface.\n                        tune.decoderRetryDone = true\n                        LiveDiagnosticsLog.event(\"protected video buffered but no frame: resetting secure decoder and surface once\")\n                        rebuildDecoderAndSurface()\n                        return\n                    }\n                    logHlsPlaylist(\"open stalled\")"
     ]
+  ],
+  "player-core/src/main/java/tv/own/owntv/player/LiveTuneController.kt": [
+    [
+      "    fun preview(channel: ChannelEntity, muted: Boolean) {",
+      "    /** Releasing the old preview socket before starting a different channel is essential on\n     *  one-stream Xtream accounts. Keeping the preview feature does not mean two connections\n     *  are permitted to overlap while the user changes focus. */\n    private suspend fun handoffPreviewSession(\n        channel: ChannelEntity, source: SourceEntity?, nextUrl: String,\n    ): Boolean {\n        val previousUrl = engines.exoUrl\n        if (previousUrl != null && previousUrl != nextUrl && singleSessionPanel(channel, source)) {\n            engines.exoStop()\n            delay(LivePreviewEngine.SESSION_RELEASE_MS)\n        }\n        // A later focus move or fullscreen tune supersedes the delayed preview.\n        return !_liveOnExo.value && previewedChannelId == channel.id\n    }\n\n    fun preview(channel: ChannelEntity, muted: Boolean) {"
+    ],
+    [
+      "                if (blockedBySingleSession(url, channel)) return@launch\n                exoStalkerCmd = channel.streamUrl",
+      "                if (blockedBySingleSession(url, channel)) return@launch\n                if (!handoffPreviewSession(channel, source, url)) return@launch\n                exoStalkerCmd = channel.streamUrl"
+    ],
+    [
+      "            exoStalkerCmd = null\n            setReconnect(null, null)\n            engines.exoPlay(url, muted, request(channel, source))",
+      "            if (!handoffPreviewSession(channel, source, url)) return@launch\n            exoStalkerCmd = null\n            setReconnect(null, null)\n            engines.exoPlay(url, muted, request(channel, source))"
+    ]
   ]
 }
 
