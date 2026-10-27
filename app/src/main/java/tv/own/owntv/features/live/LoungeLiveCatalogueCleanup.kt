@@ -99,6 +99,9 @@ internal object LoungeLiveCatalogueCleanup {
         "US| VIAPLAY NHL PPV",
         "US| VIX+ DEPORTES",
         "WORLD LIVE SPORTS",
+        "UK| BBCI",
+        "UK| NEWS",
+        "US| PLUTO TV",
     )
 
     private fun norm(raw: String) = raw.trim().lowercase(Locale.ROOT)
