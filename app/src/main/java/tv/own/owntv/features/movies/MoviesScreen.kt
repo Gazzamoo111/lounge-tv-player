@@ -3,6 +3,7 @@
 package tv.own.owntv.features.movies
 
 import tv.own.owntv.ui.components.loungeVodTitle
+import tv.own.owntv.ui.components.LoungeVodPosterCorrections
 
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.PaddingValues
@@ -550,7 +551,12 @@ fun MoviesScreen(
         vm.onMovieFocused(movie)
         if (rememberMovies) perCategoryMovieIds[selectedKey] = movie.id
     }
-    val posterOf: (MovieEntity) -> String? = { it.posterUrl?.takeIf { u -> u.isNotBlank() } ?: cachedPosters[it.id] }
+    val posterOf: (MovieEntity) -> String? = { movie ->
+        LoungeVodPosterCorrections.moviePoster(
+            movie.name, movie.canonicalTitle, movie.year ?: movie.parsedYear,
+            movie.posterUrl?.takeIf { it.isNotBlank() } ?: cachedPosters[movie.id],
+        )
+    }
     val playHint = stringResource(R.string.common_ok) to stringResource(R.string.content_play)
     val optionsHint = stringResource(R.string.content_key_hold_ok) to stringResource(R.string.content_key_options)
 
@@ -1398,7 +1404,10 @@ private fun buildMovieDetails(
 ): tv.own.owntv.features.shell.components.MediaDetailsUi {
     val providerPoster = movie.posterUrl?.takeIf { it.isNotBlank() }
     val tmdbPoster = tv.own.owntv.core.metadata.MetadataImages.poster(meta?.posterPath)
-    val poster = if (tmdbWins) tmdbPoster ?: providerPoster else providerPoster ?: tmdbPoster
+    val poster = LoungeVodPosterCorrections.moviePoster(
+        movie.name, movie.canonicalTitle, movie.year ?: movie.parsedYear,
+        if (tmdbWins) tmdbPoster ?: providerPoster else providerPoster ?: tmdbPoster,
+    )
     // Backdrop is TMDB-only (providers don't carry one); fall back to the provider's if it exists.
     val backdrop = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath)
         ?: movie.backdropUrl?.takeIf { it.isNotBlank() }
@@ -1441,7 +1450,10 @@ internal fun movieTitleInfo(
         logoUrl = tv.own.owntv.core.metadata.MetadataImages.logo(meta?.logoPath),
         backdropUrl = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath, size = "w1280")
             ?: movie.backdropUrl?.takeIf { it.isNotBlank() },
-        posterUrl = if (tmdbWins) tmdbPoster ?: providerPoster else providerPoster ?: tmdbPoster,
+        posterUrl = LoungeVodPosterCorrections.moviePoster(
+            movie.name, movie.canonicalTitle, movie.year ?: movie.parsedYear,
+            if (tmdbWins) tmdbPoster ?: providerPoster else providerPoster ?: tmdbPoster,
+        ),
         year = if (tmdbWins) meta?.year ?: movie.year else movie.year ?: meta?.year,
         genres = jsonList(meta?.genresJson),
         runtimeSecs = movie.durationSecs?.takeIf { it > 0 },
