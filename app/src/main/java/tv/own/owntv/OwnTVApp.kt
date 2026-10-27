@@ -165,11 +165,39 @@ class OwnTVApp : Application(), SingletonImageLoader.Factory, androidx.work.Conf
                 prefs.applyStageDefaults()
             }
         }
+        // Refresh enabled provider catalogues while the TV app remains open for
+        // long sessions. Core checks the per-source 6/12-hour staleness setting,
+        // skips Off sources, and holds automatic WorkManager refreshes while playing.
+        // A check is cheap; it does not fetch a catalogue until one is stale.
+        appScope.launch {
+            while (true) {
+                kotlinx.coroutines.delay(60 * 60_000L)
+                runCatching {
+                    GlobalContext.get()
+                        .get<tv.own.owntv.core.sync.AutoRefresh>()
+                        .check(includeStartup = false)
+                }
+            }
+        }
         // Sports: core decides from Auto rebuild whether the stored board is due ("on every app start",
         // or older than the chosen hours). It reads one small file and touches no database.
         appScope.launch {
             kotlinx.coroutines.delay(SPORTS_START_DELAY_MS)
             runCatching { GlobalContext.get().get<tv.own.owntv.core.sports.SportsRepository>().appStarted() }
+        }
+        // Fixture reminders are app-wide: they must still surface when Lounge TV is running on Home,
+        // Live TV or another section, without requiring Sport Lounge to have been opened first.
+        appScope.launch {
+            val settings = GlobalContext.get().get<tv.own.owntv.core.settings.SettingsRepository>()
+            val reminders = GlobalContext.get().get<tv.own.owntv.features.sports.data.FixtureReminderScheduler>()
+            while (true) {
+                reminders.takeDue(settings.activeProfileIdNow(), System.currentTimeMillis()).forEach { reminder ->
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        android.widget.Toast.makeText(this@OwnTVApp, reminder.title, android.widget.Toast.LENGTH_LONG).show()
+                    }
+                }
+                kotlinx.coroutines.delay(30_000L)
+            }
         }
         // NOTE: cold start does ZERO heavy DB work. Index + ANALYZE maintenance is piggy-backed onto the
         // operation that actually changes the data — ImportFinalizer.finalize() for normal re-syncs, the

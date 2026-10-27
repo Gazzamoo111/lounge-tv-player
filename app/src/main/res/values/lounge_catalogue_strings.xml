@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="catalogue_action_thrillers">Action &amp; Thrillers</string>
+    <string name="catalogue_horror_thrillers">Horror &amp; Thrillers</string>
+    <string name="catalogue_sci_fi_fantasy">Sci-Fi &amp; Fantasy</string>
+    <string name="catalogue_adventure">Adventure</string>
+    <string name="catalogue_family">Family</string>
+    <string name="catalogue_classics">Classics</string>
+    <string name="catalogue_romance_drama">Romance &amp; Drama</string>
+    <string name="catalogue_crime_drama">Crime Drama</string>
+    <string name="catalogue_comedy_drama">Comedy-Drama</string>
+    <string name="catalogue_documentary">Documentary</string>
+    <string name="catalogue_crime_gangster">Crime &amp; Gangster</string>
+    <string name="catalogue_christmas">Christmas</string>
+    <string name="catalogue_netflix_picks">Netflix Picks</string>
+    <string name="catalogue_netflix_movies">Netflix Movies</string>
+    <string name="catalogue_disney_plus_picks">Disney+ Picks</string>
+    <string name="catalogue_prime_video">Prime Video</string>
+    <string name="catalogue_hbo_max">HBO / Max</string>
+    <string name="catalogue_four_k_movies">4K Movies</string>
+    <string name="catalogue_anime">Anime</string>
+    <string name="catalogue_classic_animation">Classic Animation</string>
+    <string name="catalogue_actors_directors">Actors &amp; Directors</string>
+    <string name="catalogue_movies_2018_2021">Movies 2018–2021</string>
+    <string name="catalogue_award_winners">Award Winners</string>
+    <string name="catalogue_pre_releases">Pre-Releases</string>
+    <string name="catalogue_musicals">Musicals</string>
+    <string name="catalogue_music_concerts">Music &amp; Concerts</string>
+    <string name="catalogue_bet_allblk">BET / ALLBLK</string>
+    <string name="catalogue_tv_movies">TV Movies</string>
+    <string name="catalogue_english_series">English Series</string>
+    <string name="catalogue_top_series">Top Series</string>
+    <string name="catalogue_reality">Reality</string>
+    <string name="catalogue_comedy">Comedy</string>
+    <string name="catalogue_kids_family">Kids &amp; Family</string>
+    <string name="catalogue_animation">Animation</string>
+    <string name="catalogue_apple_tv_plus">Apple TV+</string>
+    <string name="catalogue_amc_plus_mgm_plus">AMC+ / MGM+</string>
+    <string name="catalogue_nbc_peacock">NBC / Peacock</string>
+    <string name="catalogue_cbs_paramount_plus">CBS / Paramount+</string>
+    <string name="catalogue_hulu_fx_fox_abc">Hulu / FX / FOX / ABC</string>
+</resources>

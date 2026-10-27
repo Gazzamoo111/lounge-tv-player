@@ -27,6 +27,8 @@ import tv.own.owntv.features.shell.components.VodGroupOrganise
 import tv.own.owntv.features.shell.components.VodGroupWatch
 import tv.own.owntv.features.shell.components.VodHeader
 import tv.own.owntv.features.shell.components.VodHero
+import tv.own.owntv.features.shell.components.LoungeBrowseSpotlight
+import tv.own.owntv.features.shell.components.LoungeBrowseSpotlight
 import tv.own.owntv.features.shell.components.VodListRow
 import tv.own.owntv.features.shell.components.VodOptionsMenu
 import tv.own.owntv.features.shell.components.VodPosterArt
@@ -84,6 +86,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 // Aliased: the grid and list versions share a name, and both are used in this file.
 import androidx.compose.foundation.lazy.grid.itemsIndexed as gridItemsIndexed
@@ -156,6 +159,7 @@ import tv.own.owntv.ui.components.gridFocusTarget
 import tv.own.owntv.ui.format.localizedInteger
 import tv.own.owntv.ui.format.rememberAirDateFormatter
 import tv.own.owntv.core.live.LiveKey
+import kotlin.random.Random
 
 @Composable
 fun SeriesScreen(
@@ -253,6 +257,13 @@ private fun SeriesGrid(
     val context = androidx.compose.ui.platform.LocalContext.current
     val toast = rememberInAppToast()
     val series = vm.series.collectAsLazyPagingItems()
+    // Shared Home picks are exact, playable title matches, not provider-rated guesses.
+    val homeVm: tv.own.owntv.features.home.HomeViewModel = koinViewModel()
+    val homeEditorial by homeVm.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(homeVm, lockedKey) {
+        if (lockedKey == null && homeVm.uiState.value.isLoading) homeVm.refresh()
+    }
+    val categoryHighlights by vm.categoryHighlights.collectAsStateWithLifecycle()
     val moveState by vm.moveState.collectAsStateWithLifecycle()
     val categoryMoveState by vm.categoryMoveState.collectAsStateWithLifecycle()
     var contextCategory by remember { mutableStateOf<LiveRailItem?>(null) }
@@ -288,6 +299,8 @@ private fun SeriesGrid(
     val selectedLabel = selectedItem?.displayLabel(R.string.content_category_all_series) ?: stringResource(R.string.content_category_all_series)
     val gridSelFocus = remember { androidx.compose.ui.focus.FocusRequester() }
     val firstItemFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+    val firstFeaturedFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+    val firstNewReleaseFocus = remember { androidx.compose.ui.focus.FocusRequester() }
     // Right from the rail on an empty list: the list's search box, so a search with no results can be cleared.
     val listSearchFocus = remember { androidx.compose.ui.focus.FocusRequester() }
     val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
@@ -302,7 +315,33 @@ private fun SeriesGrid(
     val cinematicDetailsPct by settingsVm.cinematicDetailsHeight(PanelSection.SERIES).collectAsStateWithLifecycle()
     // Cinematic is grid-only. The stored choice is deliberately not rewritten, so switching back to
     // Separate restores the user's List.
-    val viewMode = if (cinematic) SettingsRepository.VodViewMode.GRID else storedViewMode
+    // The main Movies/Series browser is one vertical poster grid. List mode remains
+    // available for locked Favourites/History screens, not the normal six-across browse.
+    val viewMode = if (lockedKey == null) SettingsRepository.VodViewMode.GRID else storedViewMode
+    val highlights = categoryHighlights.takeIf { it.categoryKey == selectedKey }
+    val categoryFeatured = highlights?.featured.orEmpty()
+    val featuredShows = if (selectedKey == LiveKey.All || selectedKey is LiveKey.Folder) {
+        val day = highlights?.day ?: System.currentTimeMillis() / 86_400_000L
+        val famous = homeEditorial.popularSeries
+            .filter { selectedKey == LiveKey.All || it.categoryId == (selectedKey as LiveKey.Folder).id }
+            .shuffled(Random((day xor selectedKey.hashCode().toLong()).toInt()))
+            .take(8)
+        (famous + categoryFeatured).distinctBy { it.id }.take(20)
+    } else categoryFeatured
+    val newShows = highlights?.newReleases.orEmpty()
+    val displayFeatured = lockedKey == null && searchQuery.isBlank() && featuredShows.isNotEmpty()
+    val displayNewReleases = lockedKey == null && searchQuery.isBlank() && newShows.isNotEmpty()
+    val featuredPreview = if (displayFeatured) featuredShows.take(6) else emptyList()
+    val newPreview = if (displayNewReleases) newShows.take(6) else emptyList()
+    val editorialRowCount = (if (displayFeatured) 1 else 0) + (if (displayNewReleases) 1 else 0)
+    val showCatalogueHeading = editorialRowCount > 0 && series.itemCount > 0
+    // LazyGrid indexes count every tile, not only the three section headings.
+    // Offset all restore, paging and poster probing by the EXACT number of tiles.
+    val headerRowCount = (if (displayFeatured) 1 + featuredPreview.size else 0) +
+        (if (displayNewReleases) 1 + newPreview.size else 0) +
+        (if (showCatalogueHeading) 1 else 0)
+    val gridHeaderOffset = if (viewMode == SettingsRepository.VodViewMode.GRID) headerRowCount else 0
+    val listHeaderOffset = if (viewMode == SettingsRepository.VodViewMode.LIST) headerRowCount else 0
     val chNavEnabled by settingsVm.chNavEnabled.collectAsStateWithLifecycle()
     val chNavUpSkip by settingsVm.chNavUpSkip.collectAsStateWithLifecycle()
     val chNavDownSkip by settingsVm.chNavDownSkip.collectAsStateWithLifecycle()
@@ -318,18 +357,22 @@ private fun SeriesGrid(
     // @Composable/rememberSaveable call here would register slots conditionally and corrupt the slot table.
     val effectiveGridState = if (rememberSeries) perCategoryGrid.getOrPut(selectedKey) { androidx.compose.foundation.lazy.grid.LazyGridState() } else gridState
     val effectiveListState = if (rememberSeries) perCategoryList.getOrPut(selectedKey) { androidx.compose.foundation.lazy.LazyListState() } else listState
+    // Sidebar category switches begin with Featured and New Series. Player restore uses
+    // the unchanged category selection and its existing series id based focus recovery.
     LaunchedEffect(selectedKey, rememberSeries) {
-        if (!rememberSeries) { runCatching { gridState.scrollToItem(0) }; runCatching { listState.scrollToItem(0) } }
+        runCatching { effectiveGridState.scrollToItem(0) }
+        runCatching { effectiveListState.scrollToItem(0) }
     }
     // The List view scrolls a LazyListState, the grids (Cinematic and Separate) a LazyGridState.
     val usesList = viewMode == SettingsRepository.VodViewMode.LIST
     suspend fun scrollToIndex(i: Int) {
-        runCatching { if (usesList) effectiveListState.scrollToItem(i) else effectiveGridState.scrollToItem(i) }
+        runCatching { if (usesList) effectiveListState.scrollToItem(i + listHeaderOffset) else effectiveGridState.scrollToItem(i + gridHeaderOffset) }
     }
     val stepper = remember { VodStepper(scope) { effectiveListState } }
     val playlistMarks by vm.playlistMarks.collectAsStateWithLifecycle()
     // Separate keeps the categories on screen; Cinematic opens them as a sheet (◀, or the Categories tool).
     var categoriesOpen by remember { mutableStateOf(false) }
+    var pendingCategoryFocus by remember { mutableStateOf<LiveKey?>(null) }
     var sheetHadFocus by remember { mutableStateOf(false) }
     var sortOpen by remember { mutableStateOf(false) }
     val sortFocus = remember { FocusRequester() }
@@ -342,12 +385,13 @@ private fun SeriesGrid(
     // Tiles the provider gave no artwork for: ask for the TMDB poster already cached from an earlier
     // focus, so the placeholder is only shown when nothing at all is known (mirrors Movies).
     val cachedPosters by vm.cachedPosters.collectAsStateWithLifecycle()
-    LaunchedEffect(effectiveGridState, effectiveListState, viewMode, series) {
+    LaunchedEffect(effectiveGridState, effectiveListState, viewMode, series, gridHeaderOffset, listHeaderOffset) {
         val grid = !usesList
         snapshotFlow {
             val indices = if (grid) effectiveGridState.layoutInfo.visibleItemsInfo.map { it.index }
             else effectiveListState.layoutInfo.visibleItemsInfo.map { it.index }
-            indices.filter { it < series.itemCount }
+            indices.map { if (grid) it - gridHeaderOffset else it - listHeaderOffset }
+                .filter { it >= 0 && it < series.itemCount }
                 .mapNotNull { series.peek(it) }
                 .filter { it.posterUrl.isNullOrBlank() }
         }.distinctUntilChanged().collect { vm.onPosterlessVisible(it) }
@@ -453,29 +497,24 @@ private fun SeriesGrid(
         runCatching { gridSelFocus.requestFocus() }.getOrDefault(false) ||
             runCatching { contextFocus.requestFocus() }.getOrDefault(false) ||
             runCatching { firstItemFocus.requestFocus() }.getOrDefault(false)
-    // From the categories to the shows: the remembered one, else the first; the search field when empty.
+    // Enter a Series category at its editorial highlights, not the prior category's
+    // remembered scroll position. Returning from an episode uses its own restore flow.
     fun focusTitles() {
-        val targetId = if (rememberSeries) perCategorySeriesIds[selectedKey] ?: selectedSeries?.id else selectedSeries?.id
         scope.launch {
-            if (series.itemCount > 0) {
-                val targetIdx = targetId?.let { id -> series.itemSnapshotList.items.indexOfFirst { it.id == id }.takeIf { it >= 0 } } ?: 0
-                scrollToIndex(targetIdx)
+            runCatching { effectiveGridState.scrollToItem(0) }
+            runCatching { effectiveListState.scrollToItem(0) }
+            repeat(12) {
                 withFrameNanos { }
-                // A category just picked is still loading: the first attempt can land on a title of the
-                // old list, which then vanishes and drops focus to the rail. So keep watching for about
-                // 0.7 s and take focus back whenever the titles lost it.
-                repeat(40) {
-                    if (!gridPaneFocused) {
-                        if (!(targetId != null && focusCurrentTitle())) runCatching { firstItemFocus.requestFocus() }
-                    }
-                    withFrameNanos { }
+                val target = when {
+                    displayFeatured -> firstFeaturedFocus
+                    displayNewReleases -> firstNewReleaseFocus
+                    series.itemCount > 0 -> firstItemFocus
+                    else -> listSearchFocus
                 }
-            } else {
-                runCatching { listSearchFocus.requestFocus() }
+                if (runCatching { target.requestFocus() }.getOrDefault(false)) return@launch
             }
         }
     }
-
     // The way in from the rail: Separate lands on the open category in the column (as Live TV's
     // Separate panels), Cinematic on the title the hero shows. The shell's focus restorer would
     // otherwise return to whatever had focus last, such as the search field.
@@ -526,8 +565,31 @@ private fun SeriesGrid(
             onJumpToIndex = { idx -> catFocusIndex = idx; railFocusRow = idx },
         )
     val onCategorySelect: (Int) -> Unit = { idx ->
-        railItems.getOrNull(idx)?.let { vm.select(it.key) }
-        if (categoriesOpen) { categoriesOpen = false; focusTitles() }
+        railItems.getOrNull(idx)?.let { item ->
+            pendingCategoryFocus = item.key
+            perCategorySeriesIds.remove(item.key)
+            vm.select(item.key)
+        }
+        if (categoriesOpen) categoriesOpen = false
+    }
+    LaunchedEffect(selectedKey, pendingCategoryFocus, categoryHighlights.categoryKey, displayFeatured, displayNewReleases, categoriesOpen) {
+        if (pendingCategoryFocus != selectedKey || categoryHighlights.categoryKey != selectedKey || categoriesOpen) return@LaunchedEffect
+        runCatching { effectiveGridState.scrollToItem(0) }
+        runCatching { effectiveListState.scrollToItem(0) }
+        repeat(16) {
+            withFrameNanos { }
+            val target = when {
+                displayFeatured -> firstFeaturedFocus
+                displayNewReleases -> firstNewReleaseFocus
+                series.itemCount > 0 -> firstItemFocus
+                else -> listSearchFocus
+            }
+            if (runCatching { target.requestFocus() }.getOrDefault(false)) {
+                pendingCategoryFocus = null
+                return@LaunchedEffect
+            }
+        }
+        pendingCategoryFocus = null
     }
     val onCategoryLongSelect: (Int) -> Unit = { idx ->
         railItems.getOrNull(idx)?.let { item ->
@@ -544,6 +606,10 @@ private fun SeriesGrid(
         if (rememberSeries) perCategorySeriesIds[selectedKey] = show.id
     }
     val posterOf: (tv.own.owntv.core.database.entity.SeriesEntity) -> String? = { it.posterUrl?.takeIf { u -> u.isNotBlank() } ?: cachedPosters[it.id] }
+    val openHighlightedShow: (tv.own.owntv.core.database.entity.SeriesEntity) -> Unit = { show ->
+        onOpenAt(series.itemSnapshotList.indexOfFirst { it?.id == show.id })
+        vm.openSeries(show)
+    }
     val playHint = stringResource(R.string.common_ok) to stringResource(R.string.content_episodes)
     val optionsHint = stringResource(R.string.content_key_hold_ok) to stringResource(R.string.content_key_options)
 
@@ -563,8 +629,8 @@ private fun SeriesGrid(
                 val sel = selectedSeries
                 val idx = if (sel != null) series.itemSnapshotList.items.indexOfFirst { it.id == sel.id } else -1
                 if (idx >= 0) idx
-                else if (usesList) effectiveListState.firstVisibleItemIndex
-                else effectiveGridState.firstVisibleItemIndex
+                else if (usesList) (effectiveListState.firstVisibleItemIndex - listHeaderOffset).coerceAtLeast(0)
+                else (effectiveGridState.firstVisibleItemIndex - gridHeaderOffset).coerceAtLeast(0)
             },
             onJumpToIndex = { idx ->
                 // Scroll the target into view, then set it as the selected show so selFocus binds to it
@@ -626,7 +692,10 @@ private fun SeriesGrid(
         val screenW = maxWidth
         fun fx(px: Int) = screenW * (px / 1920f)
         if (cinematic) {
-            val heroH = if (panelShares != null) maxHeight * (cinematicDetailsPct / 100f) else 464.mpx
+            val showcaseActive = displayFeatured || displayNewReleases
+            val heroH = if (showcaseActive) minOf(maxHeight * 0.325f, 350.mpx)
+                else if (panelShares != null) maxHeight * (cinematicDetailsPct / 100f)
+                else 464.mpx
             val toolTop = 122.mpx + heroH
             Box(Modifier.fillMaxSize().then(if (categoriesOpen) Modifier.graphicsLayer { alpha = 0.36f } else Modifier)) {
                 VodCinematicBackdrop(titleInfo?.backdropUrl, series = true, Modifier.align(Alignment.TopEnd))
@@ -634,7 +703,10 @@ private fun SeriesGrid(
                     section = stringResource(R.string.common_nav_series), category = headerLabel, count = vodCount(true, count),
                     showChevron = true, modifier = Modifier.padding(start = fx(84), top = 52.mpx).width(fx(900)),
                 )
-                titleInfo?.let { VodHero(it, Modifier.padding(start = fx(84), top = 122.mpx).width(fx(1000)).height(heroH)) }
+                titleInfo?.let {
+                    val location = Modifier.padding(start = fx(84), top = 122.mpx).width(fx(1050)).height(heroH)
+                    if (showcaseActive) LoungeBrowseSpotlight(it, location) else VodHero(it, location)
+                }
                 Column(Modifier.padding(top = toolTop).fillMaxSize().then(paneModifier)) {
                     Row(
                         Modifier.padding(start = fx(68), end = fx(64)).fillMaxWidth()
@@ -655,14 +727,15 @@ private fun SeriesGrid(
                         Spacer(Modifier.weight(1f))
                         StageKeyHints(listOf(playHint, optionsHint, "◀" to stringResource(R.string.content_category_browser_title)))
                     }
-                    if (series.itemCount == 0) {
+                    if (series.itemCount == 0 && headerRowCount == 0) {
                         Text(emptyText, style = stageText(20, 500), color = StageColors.Muted, modifier = Modifier.padding(start = fx(84), top = 60.mpx))
                     } else {
                         // The 196 × 294 posters, 26 apart, as many across as fit; the grid grows downwards
                         // (a grid, not a single row). Glow room on every side.
                         val glowRoom = 24.mpx
                         val rowW = screenW - fx(84) - fx(64)
-                        val columns = ((rowW + 26.mpx) / 222.mpx).toInt().coerceAtLeast(1)
+                        val columns = 6
+                        val posterW = (rowW - 26.mpx * (columns - 1)) / columns
                         // A fixed gap under the toolbar that scrolling posters never enter; the grid's own
                         // top padding is only the room the focused poster's lift and ring need.
                         Spacer(Modifier.height(14.mpx))
@@ -675,12 +748,80 @@ private fun SeriesGrid(
                                 contentPadding = PaddingValues(start = fx(84), end = fx(64), top = 14.mpx, bottom = glowRoom),
                                 modifier = Modifier.fillMaxWidth().weight(1f),
                             ) {
+                                if (displayFeatured) {
+                                    item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
+                                        Text(
+                                            text = stringResource(R.string.lounge_series_featured),
+                                            style = stageText(28, 800),
+                                            color = StageColors.Text,
+                                            modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
+                                        )
+                                    }
+                                    items(
+                                        count = featuredPreview.size,
+                                        key = { index -> Long.MIN_VALUE + 100L + index.toLong() },
+                                        contentType = { 11 },
+                                    ) { index ->
+                                        val show = featuredPreview[index]
+                                        LoungeSeriesEditorialPoster(
+                                            item = show,
+                                            width = posterW,
+                                            title = homeEditorial.popularSeriesNames[show.id] ?: show.canonicalTitle.ifBlank { show.name },
+                                            posterUrl = posterOf(show),
+                                            firstInSection = index == 0,
+                                            atLeftEdge = index % columns == 0,
+                                            focusRequester = firstFeaturedFocus,
+                                            onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                            onFocus = onShowFocus,
+                                            onOpen = openHighlightedShow,
+                                        )
+                                    }
+                                }
+                                if (displayNewReleases) {
+                                    item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
+                                        Text(
+                                            text = stringResource(R.string.lounge_series_new_releases),
+                                            style = stageText(28, 800),
+                                            color = StageColors.Text,
+                                            modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
+                                        )
+                                    }
+                                    items(
+                                        count = newPreview.size,
+                                        key = { index -> Long.MIN_VALUE + 200L + index.toLong() },
+                                        contentType = { 12 },
+                                    ) { index ->
+                                        val show = newPreview[index]
+                                        LoungeSeriesEditorialPoster(
+                                            item = show,
+                                            width = posterW,
+                                            title = homeEditorial.popularSeriesNames[show.id] ?: show.canonicalTitle.ifBlank { show.name },
+                                            posterUrl = posterOf(show),
+                                            firstInSection = index == 0,
+                                            atLeftEdge = index % columns == 0,
+                                            focusRequester = firstNewReleaseFocus,
+                                            onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                            onFocus = onShowFocus,
+                                            onOpen = openHighlightedShow,
+                                        )
+                                    }
+                                }
+                                if (showCatalogueHeading) {
+                                    item(key = Long.MIN_VALUE + 2L, span = { GridItemSpan(maxLineSpan) }, contentType = 3) {
+                                        Text(
+                                            text = stringResource(R.string.content_category_all_series),
+                                            style = stageText(27, 800),
+                                            color = StageColors.Text,
+                                            modifier = Modifier.fillMaxWidth().padding(top = 32.mpx, bottom = 16.mpx),
+                                        )
+                                    }
+                                }
                                 items(count = series.itemCount, key = series.itemKey { it.id }, contentType = series.itemContentType { "series" }) { index ->
                                     val show = series[index] ?: return@items
                                     StagePoster(
                                         title = loungeVodTitle(show.name),
                                         rating = show.rating?.takeIf { it > 0 }?.let(::vodRating),
-                                        width = 196.mpx, height = 294.mpx,
+                                        width = posterW, height = posterW * 1.5f,
                                         progress = seriesProgress[show.id],
                                         onClick = { onOpenAt(index); vm.openSeries(show) },
                                         onLongClick = { openMenu(show, index) },
@@ -776,7 +917,7 @@ private fun SeriesGrid(
                     val placeable = measurable.measure(constraints.copy(minWidth = constraints.minWidth + extra * 2, maxWidth = constraints.maxWidth + extra * 2))
                     layout(constraints.maxWidth, constraints.maxHeight) { placeable.place(-extra, 0) }
                 }
-                if (series.itemCount == 0) {
+                if (series.itemCount == 0 && headerRowCount == 0) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(emptyText, style = stageText(20, 500), color = StageColors.Muted)
                     }
@@ -789,6 +930,16 @@ private fun SeriesGrid(
                             contentPadding = PaddingValues(start = glowRoom, end = glowRoom, bottom = 16.mpx),
                             modifier = Modifier.fillMaxWidth().weight(1f).then(glowWide),
                         ) {
+                            if (showCatalogueHeading) {
+                                item(key = Long.MIN_VALUE + 2L, contentType = 3) {
+                                    Text(
+                                        text = stringResource(R.string.content_category_all_series),
+                                        style = stageText(27, 800),
+                                        color = StageColors.Text,
+                                        modifier = Modifier.fillMaxWidth().padding(top = 32.mpx, bottom = 16.mpx),
+                                    )
+                                }
+                            }
                             items(count = series.itemCount, key = series.itemKey { it.id }, contentType = series.itemContentType { "series" }) { index ->
                                 val show = series[index] ?: return@items
                                 VodListRow(
@@ -826,7 +977,8 @@ private fun SeriesGrid(
                     }
                 } else {
                     // 156 × 234 posters 20 apart (5 across in an 860 panel); a wider panel gains columns.
-                    val columns = ((listW + 20.mpx) / 176.mpx).toInt().coerceAtLeast(1)
+                    // Narrow Separate panels adapt; Cinematic always uses exactly six across.
+                    val columns = ((listW + 20.mpx) / 176.mpx).toInt().coerceIn(1, 6)
                     val posterW = (listW - 20.mpx * (columns - 1)) / columns
                     // A fixed gap under the toolbar that scrolled posters never enter (as Cinematic).
                     Spacer(Modifier.height(20.mpx))
@@ -839,6 +991,74 @@ private fun SeriesGrid(
                             contentPadding = PaddingValues(start = glowRoom, end = glowRoom, top = 12.mpx, bottom = 24.mpx),
                             modifier = Modifier.fillMaxWidth().weight(1f).then(glowWide),
                         ) {
+                            if (displayFeatured) {
+                                item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
+                                    Text(
+                                        text = stringResource(R.string.lounge_series_featured),
+                                        style = stageText(28, 800),
+                                        color = StageColors.Text,
+                                        modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
+                                    )
+                                }
+                                items(
+                                    count = featuredPreview.size,
+                                    key = { index -> Long.MIN_VALUE + 100L + index.toLong() },
+                                    contentType = { 11 },
+                                ) { index ->
+                                    val show = featuredPreview[index]
+                                    LoungeSeriesEditorialPoster(
+                                        item = show,
+                                        width = posterW,
+                                        title = homeEditorial.popularSeriesNames[show.id] ?: show.canonicalTitle.ifBlank { show.name },
+                                        posterUrl = posterOf(show),
+                                        firstInSection = index == 0,
+                                        atLeftEdge = index % columns == 0,
+                                        focusRequester = firstFeaturedFocus,
+                                        onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                        onFocus = onShowFocus,
+                                        onOpen = openHighlightedShow,
+                                    )
+                                }
+                            }
+                            if (displayNewReleases) {
+                                item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
+                                    Text(
+                                        text = stringResource(R.string.lounge_series_new_releases),
+                                        style = stageText(28, 800),
+                                        color = StageColors.Text,
+                                        modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
+                                    )
+                                }
+                                items(
+                                    count = newPreview.size,
+                                    key = { index -> Long.MIN_VALUE + 200L + index.toLong() },
+                                    contentType = { 12 },
+                                ) { index ->
+                                    val show = newPreview[index]
+                                    LoungeSeriesEditorialPoster(
+                                        item = show,
+                                        width = posterW,
+                                        title = homeEditorial.popularSeriesNames[show.id] ?: show.canonicalTitle.ifBlank { show.name },
+                                        posterUrl = posterOf(show),
+                                        firstInSection = index == 0,
+                                        atLeftEdge = index % columns == 0,
+                                        focusRequester = firstNewReleaseFocus,
+                                        onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                        onFocus = onShowFocus,
+                                        onOpen = openHighlightedShow,
+                                    )
+                                }
+                            }
+                            if (showCatalogueHeading) {
+                                item(key = Long.MIN_VALUE + 2L, span = { GridItemSpan(maxLineSpan) }, contentType = 3) {
+                                    Text(
+                                        text = stringResource(R.string.content_category_all_series),
+                                        style = stageText(27, 800),
+                                        color = StageColors.Text,
+                                        modifier = Modifier.fillMaxWidth().padding(top = 32.mpx, bottom = 16.mpx),
+                                    )
+                                }
+                            }
                             items(count = series.itemCount, key = series.itemKey { it.id }, contentType = series.itemContentType { "series" }) { index ->
                                 val show = series[index] ?: return@items
                                 StagePoster(

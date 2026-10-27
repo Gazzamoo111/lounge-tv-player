@@ -79,6 +79,41 @@ import tv.own.owntv.ui.theme.mpx
 import tv.own.owntv.ui.theme.stageAccent
 import tv.own.owntv.ui.theme.stageText
 
+/**
+ * A truthful loading explanation for slow initial provider guide scans.
+ * Shows after eight seconds rather than leaving users with an unlabelled spinner.
+ */
+@Composable
+private fun LoungeGuideLoadingStatus() {
+    var extended by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(8_000L)
+        extended = true
+    }
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        OwnTVSpinner(sizeDp = 44)
+        Spacer(Modifier.height(18.mpx))
+        Text(
+            stringResource(R.string.lounge_guide_loading),
+            style = stageText(20, 650), color = StageColors.Text,
+            textAlign = TextAlign.Center,
+        )
+        if (extended) {
+            Spacer(Modifier.height(12.mpx))
+            Text(
+                stringResource(R.string.lounge_guide_loading_slow),
+                style = stageText(17, 400), color = StageColors.Muted,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 120.mpx),
+            )
+        }
+    }
+}
+
 @Composable
 private fun epgMessageText(message: EpgMessage): String = when (message) {
     EpgMessage.CreateProfile -> stringResource(R.string.content_epg_create_profile)
@@ -533,7 +568,7 @@ fun EpgScreen(
         // The grid: ruler at 518, rows from 566.
         Box(Modifier.fillMaxWidth().weight(1f).padding(top = 18.mpx)) {
             when {
-                state.loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { OwnTVSpinner(sizeDp = 44) }
+                state.loading -> LoungeGuideLoadingStatus()
                 // No EPG feed added yet → a guide it can't fill. Point the user to EPG Sources.
                 !state.hasEpgSources && state.channels.isEmpty() -> GuideEmpty(
                     title = stringResource(R.string.content_epg_empty),

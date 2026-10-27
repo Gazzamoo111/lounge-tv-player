@@ -2,6 +2,7 @@ package tv.own.owntv.features.sports
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.content.Context
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -31,6 +32,7 @@ import tv.own.owntv.core.sports.RebuildState
 import tv.own.owntv.core.sports.FollowedTeam
 import tv.own.owntv.core.sports.GuideSport
 import tv.own.owntv.core.sports.GuideSportItem
+import tv.own.owntv.core.sports.MatchNotifications
 import tv.own.owntv.core.sports.SportOnChannels
 import tv.own.owntv.core.sports.SportsAlertsSetup
 import tv.own.owntv.core.sports.SportsBoard
@@ -39,6 +41,7 @@ import tv.own.owntv.core.sports.SportsHomeRow
 import tv.own.owntv.core.sports.SportsConfig
 import tv.own.owntv.core.sports.SportsMemory
 import tv.own.owntv.core.sports.SportsRepository
+import tv.own.owntv.core.sports.SportsSource
 import tv.own.owntv.core.sports.WatchFilter
 import tv.own.owntv.core.sports.WatchList
 import tv.own.owntv.core.sports.WatchOption
@@ -50,6 +53,10 @@ import tv.own.owntv.core.sports.model.MatchSummary
 import tv.own.owntv.core.sports.model.StandingsTable
 import tv.own.owntv.core.sports.model.Sport
 import java.util.Locale
+import java.io.File
+import tv.own.owntv.features.sports.data.FileSportEventCache
+import tv.own.owntv.features.sports.data.FixtureReminderScheduler
+import tv.own.owntv.features.sports.data.FixtureSchedule
 
 /** Where a match page's Find channels stands (channels are searched only when asked). */
 sealed interface ChannelSearch {
@@ -96,6 +103,9 @@ data class SportsHubState(
     val rebuilding: Boolean = false,
     /** Start times of the profile's programme reminders, keyed `start|title`, so a card can show "Reminder". */
     val reminders: Set<String> = emptySet(),
+    /** Profile-independent, bounded fixtures used when a new profile follows no competitions. */
+    val discovery: SportLoungeDiscoverySnapshot = SportLoungeDiscoverySnapshot(),
+    val discoveryLoading: Boolean = false,
 )
 
 /**
@@ -111,6 +121,9 @@ class SportsViewModel(
     private val alerts: SportsAlertsSetup,
     private val reminders: ReminderManager,
     private val playback: SportsPlayback,
+    private val fixtureReminders: FixtureReminderScheduler,
+    sportsSource: SportsSource,
+    private val context: Context,
     sourceDao: SourceDao,
 ) : ViewModel() {
 
@@ -140,13 +153,46 @@ class SportsViewModel(
         .onStart { emit(emptyMap()) }
 
     private val reminderKeys = settings.activeProfileId.flatMapLatest { pid ->
-        if (pid < 0) flowOf(emptySet()) else reminders.observe(pid).map { list -> list.map { reminderKey(it.startMs, it.title) }.toSet() }
+        if (pid < 0) flowOf(emptySet()) else fixtureReminders.observe(pid).map { list -> list.map { it.fixtureId }.toSet() }
     }
+
+    private val discovery = SportLoungeDiscovery(
+        sportsSource,
+        FileSportEventCache(File(context.filesDir, "sport-lounge/events-v1.json")),
+    )
+    // Discovery belongs to EVERY customer, not just a zero-follow profile.
+    // Show cached fixtures immediately while the seven-day schedule refreshes.
+    private val discoveryState = flow {
+        emit(discovery.cached() to true)
+        while (true) {
+            emit(discovery.load() to false)
+            delay(DISCOVERY_REFRESH_MS)
+        }
+    }.flowOn(Dispatchers.IO)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SportLoungeDiscoverySnapshot() to false)
 
     val hub: StateFlow<SportsHubState> = combine(board, config, onNow, hasPlaylist, repository.rebuild) { b, c, n, has, r ->
         SportsHubState(b, c, n, has, rebuilding = r is RebuildState.Running)
     }.combine(reminderKeys) { s, r -> s.copy(reminders = r) }
+        .combine(discoveryState) { s, (snapshot, loading) -> s.copy(discovery = snapshot, discoveryLoading = loading) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SportsHubState())
+
+    init {
+        viewModelScope.launch {
+            combine(settings.activeProfileId, board, discoveryState) { pid, current, discovery -> pid to (current.matches + discovery.first.matches) }
+                .collect { (pid, matches) ->
+                    if (pid >= 0) fixtureReminders.reconcile(pid, matches.map {
+                        FixtureSchedule(
+                            it.key,
+                            MatchNotifications.pair(context, it),
+                            it.startMs,
+                            active = it.state != tv.own.owntv.core.sports.model.MatchState.CANCELLED &&
+                                it.state != tv.own.owntv.core.sports.model.MatchState.POSTPONED,
+                        )
+                    })
+                }
+        }
+    }
 
     /** The profile's sports settings alone — no scores are asked for by reading it. */
     val sportsConfig: StateFlow<SportsConfig> = config.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SportsConfig())
@@ -330,10 +376,11 @@ class SportsViewModel(
         }
     }
 
-    /** "Remind me" on a match not started yet; the best channel's programme reminder. */
+    /** Toggle a profile's fixture reminder; channel/EPG discovery is not required. */
     fun remind(match: Match, channels: List<WatchOption>) = viewModelScope.launch {
         val pid = settings.activeProfileIdNow()
-        alerts.remind(pid, match, channels, config.first().reminderLeadMinutes)
+        if (match.key in reminderKeys.first()) fixtureReminders.remove(pid, match.key)
+        else fixtureReminders.set(pid, FixtureSchedule(match.key, MatchNotifications.pair(context, match), match.startMs), config.first().reminderLeadMinutes)
     }
 
     /**
@@ -368,6 +415,7 @@ class SportsViewModel(
 
     companion object {
         private const val HOME_ROW_DELAY_MS = 3_000L
+        private const val DISCOVERY_REFRESH_MS = 15 * 60_000L
 
         fun reminderKey(startMs: Long, title: String) = "$startMs|$title"
     }

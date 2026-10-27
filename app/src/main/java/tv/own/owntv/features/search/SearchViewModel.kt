@@ -33,6 +33,8 @@ import tv.own.owntv.core.database.dao.SourceDao
 import tv.own.owntv.core.database.dao.resolveExistingProfileId
 import tv.own.owntv.core.content.SearchIntent
 import tv.own.owntv.core.content.SearchKind
+import tv.own.owntv.ui.components.LoungeVodCatalogueCleanup
+import tv.own.owntv.ui.components.LoungeVodEditorialQuality
 import tv.own.owntv.core.content.SearchReader
 import tv.own.owntv.core.content.SearchResults
 import tv.own.owntv.core.repository.ActiveProfileSources
@@ -108,14 +110,21 @@ class SearchViewModel(
     val curatedResults: StateFlow<SearchResults> = combine(_intent, ctx) { i, c -> i to c }
         .flatMapLatest { (i, c) ->
             if (i == null) flowOf(SearchResults())
-            else flowOf(searchReader.curated(c.profileId, c, i))
+            else flowOf(englishOnly(searchReader.curated(c.profileId, c, i)))
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SearchResults())
 
     private suspend fun search(q: String): SearchResults {
         val pid = currentProfileId() ?: return SearchResults()
-        return searchReader.search(pid, ctx.value, q)
+        return englishOnly(searchReader.search(pid, ctx.value, q))
     }
+
+    /** The core SearchReader already respects persisted category and item hides.
+     *  Also enforce deterministic adult/quality exclusions in search and curated rows. */
+    private fun englishOnly(result: SearchResults): SearchResults = result.copy(
+        movies = result.movies.filter { LoungeVodEditorialQuality.publicBrowseEligible(it.name, it.canonicalTitle, it.providerLanguage, it.rating) },
+        series = result.series.filter { LoungeVodEditorialQuality.publicBrowseEligible(it.name, it.canonicalTitle, it.providerLanguage, it.rating) },
+    )
 
     // --- Stage page ---
 

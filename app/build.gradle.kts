@@ -219,7 +219,13 @@ android {
         debug {
             // Keep debug builds isolated from production (different signing keys and data).
             // Draft PR builds install alongside production and stable QA, never over either.
-            applicationIdSuffix = if (System.getenv("ISOLATED_EVENT_QA") == "true") ".eventqa" else ".qa"
+            applicationIdSuffix = when {
+                // The VOD editorial preflight must not replace older recovery QA
+                // or customer installations. It uses Android's isolated test identity.
+                System.getenv("LOUNGE_VOD_QA") == "true" -> ".vodqa"
+                System.getenv("ISOLATED_EVENT_QA") == "true" -> ".recoveryqa"
+                else -> ".qa"
+            }
             versionNameSuffix = "-qa"
             if (qaSigning.isComplete) {
                 signingConfig = signingConfigs.getByName("qa")

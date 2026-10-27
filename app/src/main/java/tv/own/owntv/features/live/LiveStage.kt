@@ -449,6 +449,47 @@ internal fun liveCategoryEntries(railItems: List<LiveRailItem>, railCounts: Map<
  * Focus rules: entering lands on the requested row (last browsed in the player, otherwise selected);
  * vertical exits are trapped; Right hands focus to the channel list ([onNavigateRight]).
  */
+/** Remote-first accordion: one expanded section; headings always visible. */
+internal sealed interface LiveSectionRow {
+    data class Heading(val section: LoungeLiveSection) : LiveSectionRow
+    data class ChannelFolder(val index: Int) : LiveSectionRow
+}
+
+/** Pure list model used by BOTH Live TV category layouts and fullscreen overlays. */
+internal fun liveSectionRows(
+    sections: List<LoungeLiveSection?>,
+    matches: List<Boolean>,
+    expanded: LoungeLiveSection?,
+    searching: Boolean,
+): List<LiveSectionRow> {
+    require(sections.size == matches.size)
+    val out = mutableListOf<LiveSectionRow>()
+    if (searching) {
+        sections.indices.forEach { index ->
+            if (matches[index]) out += LiveSectionRow.ChannelFolder(index)
+        }
+        return out
+    }
+
+    // A section's count includes every folder assigned to it. Keep those folders
+    // together directly beneath their heading, even when manual category order
+    // interleaves Sports, Movies, and other groups in the provider rail.
+    val seen = mutableSetOf<LoungeLiveSection>()
+    sections.forEachIndexed { index, section ->
+        if (section == null) {
+            out += LiveSectionRow.ChannelFolder(index)
+        } else if (seen.add(section)) {
+            out += LiveSectionRow.Heading(section)
+            if (section == expanded) {
+                sections.forEachIndexed { folderIndex, folderSection ->
+                    if (folderSection == section) out += LiveSectionRow.ChannelFolder(folderIndex)
+                }
+            }
+        }
+    }
+    return out
+}
+
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 internal fun LiveCategories(
@@ -481,36 +522,61 @@ internal fun LiveCategories(
     var localQuery by remember { mutableStateOf("") }
     val query = searchQuery ?: localQuery
     val setQuery: (String) -> Unit = onSearchQueryChange ?: { localQuery = it }
-    val visible = remember(entries, query) {
-        val q = query.trim()
-        if (q.isEmpty()) entries.indices.toList() else entries.indices.filter { entries[it].label.contains(q, ignoreCase = true) }
+    val sections = remember(entries) { entries.map { it.item.section } }
+    val startingSection = entries.getOrNull(entryFocusIndex)?.item?.section
+    // Closed by default when browsing fixed entries (All/Favourites). The section
+    // holding the selected category opens automatically when returning to it.
+    var expandedSection by remember(entryFocusIndex) {
+        mutableStateOf(startingSection)
     }
-    val rowFocusers = remember(visible.size) { List(visible.size) { FocusRequester() } }
+    val searching = query.isNotBlank()
+    val matches = remember(entries, query) {
+        val q = query.trim()
+        entries.map { q.isEmpty() || it.label.contains(q, ignoreCase = true) }
+    }
+    val rows = remember(sections, matches, expandedSection, searching) {
+        liveSectionRows(sections, matches, expandedSection, searching)
+    }
+    // Keys are based on ORIGINAL channel-rail indices, not visible positions:
+    // collapsing a group must never retarget an action to the wrong category.
+    val rowFocusers = remember(entries.map { it.item.key }) {
+        entries.map { FocusRequester() }
+    }
+    val headerFocusers = remember {
+        LoungeLiveSection.entries.associateWith { FocusRequester() }
+    }
     val searchFocus = remember { FocusRequester() }
     val scope = rememberCoroutineScope()
-    // CH+/− in the categories changes the selection; the highlight follows it there.
     var hasFocus by remember { mutableStateOf(false) }
+
+    fun rowPosition(index: Int): Int = rows.indexOfFirst {
+        it is LiveSectionRow.ChannelFolder && it.index == index
+    }
+
     LaunchedEffect(entryFocusIndex) {
-        val pos = visible.indexOf(entryFocusIndex)
+        val pos = rowPosition(entryFocusIndex)
         if (!hasFocus || pos < 0) return@LaunchedEffect
-        runCatching { listState.scrollToItem(pos + 1) } // +1: the search field is item 0
+        runCatching { listState.scrollToItem(pos + 1) }
         withFrameNanos { }
-        runCatching { rowFocusers[pos].requestFocus() }
+        runCatching { rowFocusers[entryFocusIndex].requestFocus() }
     }
-    LaunchedEffect(focusRowIndex, visible) {
+    LaunchedEffect(focusRowIndex, rows) {
         val target = focusRowIndex ?: return@LaunchedEffect
-        visible.indexOf(target).takeIf { it >= 0 }?.let { pos ->
-            // A row further than the screen (a CH± jump) is not composed yet: scroll to it first.
-            if (!runCatching { rowFocusers[pos].requestFocus() }.getOrDefault(false)) {
-                runCatching { listState.scrollToItem(pos + 1) } // +1: the search field is item 0
-                withFrameNanos { }
-                runCatching { rowFocusers[pos].requestFocus() }
-            }
+        val targetSection = sections.getOrNull(target)
+        // CH+/- and any external category jump still work even if the target's
+        // accordion section is closed.
+        if (!searching && targetSection != null && targetSection != expandedSection) {
+            expandedSection = targetSection
+            return@LaunchedEffect
         }
-        onRowFocused()
+        val pos = rowPosition(target)
+        if (pos >= 0) {
+            runCatching { listState.scrollToItem(pos + 1) }
+            withFrameNanos { }
+            runCatching { rowFocusers[target].requestFocus() }
+            onRowFocused()
+        }
     }
-    // The search stays until it is cleared: Back inside the list clears it and returns to the field,
-    // so a long filtered list is one press from the top. With no search, Back does what it always did.
     androidx.activity.compose.BackHandler(enabled = hasFocus && query.isNotEmpty()) {
         setQuery("")
         scope.launch {
@@ -519,10 +585,30 @@ internal fun LiveCategories(
             runCatching { searchFocus.requestFocus() }
         }
     }
-    // Where the fixed entries end and the provider groups begin (the "GROUPS · DE" heading).
-    val firstGroup = entries.indexOfFirst { it.item.key is tv.own.owntv.core.live.LiveKey.Folder || it.item.key is tv.own.owntv.core.live.LiveKey.Custom }
+    // From anywhere inside a long Sports/Movies section, one Back collapses it
+    // and returns focus to its heading. Down then reaches the next heading.
+    androidx.activity.compose.BackHandler(
+        enabled = hasFocus && query.isBlank() && expandedSection != null,
+    ) {
+        val section = expandedSection ?: return@BackHandler
+        expandedSection = null
+        scope.launch {
+            withFrameNanos { }
+            val collapsed = liveSectionRows(sections, matches, null, false)
+            val pos = collapsed.indexOfFirst {
+                it is LiveSectionRow.Heading && it.section == section
+            }
+            if (pos >= 0) {
+                runCatching { listState.scrollToItem(pos + 1) }
+                withFrameNanos { }
+                runCatching { headerFocusers.getValue(section).requestFocus() }
+            }
+        }
+    }
     val rightKey = Modifier.onPreviewKeyEvent { e ->
-        if (e.type == KeyEventType.KeyDown && e.key == Key.DirectionRight) { onNavigateRight(); true } else false
+        if (e.type == KeyEventType.KeyDown && e.key == Key.DirectionRight) {
+            onNavigateRight(); true
+        } else false
     }
     val a = stageAccent
     Column(
@@ -550,11 +636,19 @@ internal fun LiveCategories(
                 .onFocusChanged { hasFocus = it.hasFocus }
                 .focusProperties {
                     onEnter = {
-                        val pos = visible.indexOf(entryFocusIndex)
-                        val target = if (pos in rowFocusers.indices) rowFocusers[pos] else searchFocus
+                        val pos = rowPosition(entryFocusIndex)
+                        val section = sections.getOrNull(entryFocusIndex)
+                        val target = when {
+                            pos >= 0 -> rowFocusers[entryFocusIndex]
+                            section != null -> headerFocusers.getValue(section)
+                            else -> searchFocus
+                        }
                         if (!runCatching { target.requestFocus() }.getOrDefault(false)) {
                             scope.launch {
-                                runCatching { listState.scrollToItem(if (pos >= 0) pos + 1 else 0) }
+                                val targetRow = if (pos >= 0) pos else rows.indexOfFirst {
+                                    it is LiveSectionRow.Heading && it.section == section
+                                }
+                                runCatching { listState.scrollToItem((targetRow + 1).coerceAtLeast(0)) }
                                 withFrameNanos { }
                                 runCatching { target.requestFocus() }
                             }
@@ -582,38 +676,68 @@ internal fun LiveCategories(
                     horizontalPadding = if (sheet) 16.mpx else 18.mpx,
                 )
             }
-            visible.forEachIndexed { pos, index ->
-                val entry = entries[index]
-                if (index == firstGroup && query.isBlank()) {
-                    item(key = "__groups__") {
-                        if (sheet) StageGroupLabel(groupsHeading, sheet = true)
-                        else Text(
-                            groupsHeading, style = stageText(12.5f, 800, 0.13.em), color = StageColors.Dim, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(start = 14.mpx, top = 8.mpx, bottom = 8.mpx),
-                        )
+            rows.forEach { row ->
+                when (row) {
+                    is LiveSectionRow.Heading -> {
+                        val section = row.section
+                        item(key = "__section_${section.name}") {
+                            val isOpen = expandedSection == section
+                            StageSheetItem(
+                                text = stringResource(section.titleRes),
+                                onClick = {
+                                    expandedSection = if (isOpen) null else section
+                                },
+                                icon = if (isOpen) OwnTVIcon.CHEVRON_DOWN else OwnTVIcon.CHEVRON,
+                                count = entries.count { it.item.section == section }.toString(),
+                                selected = isOpen,
+                                modifier = Modifier
+                                    .focusRequester(headerFocusers.getValue(section))
+                                    .onFocusChanged {
+                                        if (it.hasFocus) {
+                                            entries.indexOfFirst { entry -> entry.item.section == section }
+                                                .takeIf { index -> index >= 0 }?.let(onRowFocus)
+                                        }
+                                    },
+                            )
+                        }
                     }
-                }
-                item(key = entry.item.key.toString()) {
-                    val rowModifier = Modifier.focusRequester(rowFocusers[pos]).then(rightKey)
-                        .onFocusChanged { if (it.hasFocus) onRowFocus(index) }
-                    val selected = index == selectedIndex
-                    if (sheet) {
-                        StageSheetItem(
-                            text = entry.label,
-                            onClick = { onSelect(index) },
-                            icon = entry.icon,
-                            count = entry.count?.let { tv.own.owntv.ui.components.formatCount(it) },
-                            selected = selected,
-                            maxLines = 2,
-                            tags = if (entry.name?.tags.isNullOrEmpty()) null else { focused ->
-                                entry.name.tags.forEach { StageTag(it, onAccent = if (focused) a.onAccent else null) }
-                            },
-                            trailing = entry.mark?.let { m -> { _ -> StagePlaylistMark(m) } },
-                            onLongClick = { onLongSelect(index) },
-                            modifier = rowModifier,
-                        )
-                    } else {
-                        LiveColumnItem(entry, selected, onClick = { onSelect(index) }, onLongClick = { onLongSelect(index) }, modifier = rowModifier)
+                    is LiveSectionRow.ChannelFolder -> {
+                        val index = row.index
+                        val entry = entries[index]
+                        item(key = entry.item.key.toString()) {
+                            val rowModifier = Modifier
+                                .focusRequester(rowFocusers[index])
+                                .then(rightKey)
+                                .onFocusChanged { if (it.hasFocus) onRowFocus(index) }
+                            val selected = index == selectedIndex
+                            if (sheet) {
+                                StageSheetItem(
+                                    text = entry.label,
+                                    onClick = { onSelect(index) },
+                                    icon = entry.icon,
+                                    count = entry.count?.let { tv.own.owntv.ui.components.formatCount(it) },
+                                    selected = selected,
+                                    maxLines = 2,
+                                    tags = if (entry.name?.tags.isNullOrEmpty()) null else { focused ->
+                                        entry.name.tags.forEach {
+                                            StageTag(it, onAccent = if (focused) a.onAccent else null)
+                                        }
+                                    },
+                                    trailing = entry.mark?.let { mark ->
+                                        { _: Boolean -> StagePlaylistMark(mark) }
+                                    },
+                                    onLongClick = { onLongSelect(index) },
+                                    modifier = rowModifier,
+                                )
+                            } else {
+                                LiveColumnItem(
+                                    entry, selected,
+                                    onClick = { onSelect(index) },
+                                    onLongClick = { onLongSelect(index) },
+                                    modifier = rowModifier,
+                                )
+                            }
+                        }
                     }
                 }
             }

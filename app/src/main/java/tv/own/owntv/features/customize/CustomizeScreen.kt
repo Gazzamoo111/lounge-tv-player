@@ -98,6 +98,7 @@ fun CustomizeScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     var rangeEnd by remember { mutableStateOf<CustomizeCatRow?>(null) }
     // ＋ New category: name prompt, then the empty combined category appears in the list.
     var creatingCategory by remember { mutableStateOf(false) }
+    var mergingCategory by remember { mutableStateOf<CustomizeCatRow?>(null) }
     // Custom category pending deletion — confirmed in a scrim before anything is removed.
     var deletingCategory by remember { mutableStateOf<CustomizeCatRow?>(null) }
     // PIN gate: asked on every entry (state is per-composition, so leaving the screen re-locks it).
@@ -116,7 +117,7 @@ fun CustomizeScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
     // Opener row for whichever dialog (new-category picker, rename) is open — restored on close so
     // focus doesn't always jump back to the Live TV section chip.
     var dialogReturn by tv.own.owntv.ui.components.rememberDialogFocusRestore(
-        anyDialogOpen = showNewCatPicker || showSortPicker || showFilterPicker || showMoreMenu || restoringDefaults || renaming != null || creatingCategory ||
+        anyDialogOpen = showNewCatPicker || showSortPicker || showFilterPicker || showMoreMenu || restoringDefaults || renaming != null || creatingCategory || mergingCategory != null ||
             deletingCategory != null || rangeEnd != null || editingPin != null,
     )
 
@@ -367,6 +368,8 @@ fun CustomizeScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                                 }
                             },
                             onToggleHidden = { vm.setCategoryHidden(row, !row.hidden) },
+                            onMerge = { mergingCategory = row },
+                            allowMerge = section == MediaType.LIVE && row.categoryId != null,
                             onHideLongPress = { dialogReturn = rowFocusers[row.key]; vm.beginRange(row) },
                             onPickRangeEnd = {
                                 if (row.key == rangeAnchorKey) vm.cancelRange()
@@ -467,6 +470,29 @@ fun CustomizeScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             },
             onDismiss = { showFilterPicker = false },
         )
+    }
+
+    // Copy ALL current channels in a provider folder into a custom folder.
+    // Existing source folders are not renamed or removed.
+    mergingCategory?.let { origin ->
+        val targets = rows.filter { it.categoryId == null && !it.hidden }
+        if (targets.isEmpty()) {
+            LaunchedEffect(origin.key) {
+                mergingCategory = null
+                creatingCategory = true
+            }
+        } else {
+            PickerDialog(
+                title = stringResource(R.string.lounge_merge_category_title),
+                options = targets.map { it.key to it.displayName },
+                selected = targets.first().key,
+                onSelect = { chosen ->
+                    vm.copyLiveCategoryInto(origin, chosen)
+                    mergingCategory = null
+                },
+                onDismiss = { mergingCategory = null },
+            )
+        }
     }
 
     // Custom category pending deletion (opened from the rename dialog's Delete) — confirmed first.
@@ -634,6 +660,8 @@ private fun CategoryRow(
     onRenameLongPress: () -> Unit,
     onPickRenameEnd: () -> Unit,
     onToggleHidden: () -> Unit,
+    onMerge: () -> Unit,
+    allowMerge: Boolean,
     onHideLongPress: () -> Unit,
     onPickRangeEnd: () -> Unit,
     onOpenItems: () -> Unit,
@@ -644,7 +672,10 @@ private fun CategoryRow(
         row.providerName,
     ).joinToString(stringResource(R.string.settings_customize_metadata_separator))
     // A held OK on a Move, Rename or Hide action anchors a span; a normal press on a second row picks its end.
-    val actions = listOf(
+    val actions = listOfNotNull(
+        if (allowMerge) StageAction(
+            OwnTVIcon.MOVE, stringResource(R.string.lounge_merge_category_action), onMerge,
+        ) else null,
         StageAction(OwnTVIcon.PAGE_TOWARD_FIRST, stringResource(R.string.settings_customize_move_top), onMoveTop, onMoveLongPress),
         StageAction(OwnTVIcon.CHEVRON_UP, stringResource(R.string.settings_row_menu_move_up), onMoveUp, onMoveLongPress),
         StageAction(OwnTVIcon.CHEVRON_DOWN, stringResource(R.string.settings_row_menu_move_down), onMoveDown, onMoveLongPress),

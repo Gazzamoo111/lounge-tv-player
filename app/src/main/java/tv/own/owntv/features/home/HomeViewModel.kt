@@ -1,6 +1,7 @@
 package tv.own.owntv.features.home
 
 import tv.own.owntv.ui.components.loungeVodTitle
+import tv.own.owntv.ui.components.LoungeVodEditorialQuality
 
 import androidx.compose.runtime.Immutable
 
@@ -408,13 +409,25 @@ class HomeViewModel(
     private suspend fun loadHomeData(profileId: Long) {
         val previous = _uiState.value
         val data = feed.load(profileId)
+        // Prevent hard-excluded provider movies/series resurfacing in the Home
+        // trending carousel after a provider sync or profile refresh.
+        val cleanTrending = data.trendingItems.filter { item ->
+            when (item) {
+                is TrendingHomeItem.Movie -> LoungeVodEditorialQuality.publicBrowseEligible(
+                    item.movie.name, item.movie.canonicalTitle, item.movie.providerLanguage, item.movie.rating,
+                )
+                is TrendingHomeItem.Series -> LoungeVodEditorialQuality.publicBrowseEligible(
+                    item.series.name, item.series.canonicalTitle, item.series.providerLanguage, item.series.rating,
+                )
+            }
+        }
         _uiState.value = HomeUiState(
-            trendingItems = data.trendingItems,
+            trendingItems = cleanTrending,
             activeTrendingIndex = previous.activeTrendingIndex
-                .coerceIn(0, (data.trendingItems.size - 1).coerceAtLeast(0)),
+                .coerceIn(0, (cleanTrending.size - 1).coerceAtLeast(0)),
             trendingPreferredLanguage = data.trendingPreferredLanguage,
             trendingSeasonCounts = data.trendingSeasonCounts,
-            trendingExtras = previous.trendingExtras.filterKeys { key -> data.trendingItems.any { it.stableKey == key } },
+            trendingExtras = previous.trendingExtras.filterKeys { key -> cleanTrending.any { it.stableKey == key } },
             heroItems = data.heroItems,
             activeHeroIndex = 0,
             continueMovies = data.continueMovies,

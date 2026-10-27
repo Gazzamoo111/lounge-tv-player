@@ -3,6 +3,7 @@
 package tv.own.owntv.features.movies
 
 import tv.own.owntv.ui.components.loungeVodTitle
+import tv.own.owntv.ui.components.LoungeVodPosterCorrections
 
 import androidx.compose.foundation.gestures.LocalBringIntoViewSpec
 import androidx.compose.foundation.layout.PaddingValues
@@ -25,6 +26,7 @@ import tv.own.owntv.features.shell.components.VodGroupOrganise
 import tv.own.owntv.features.shell.components.VodGroupWatch
 import tv.own.owntv.features.shell.components.VodHeader
 import tv.own.owntv.features.shell.components.VodHero
+import tv.own.owntv.features.shell.components.LoungeBrowseSpotlight
 import tv.own.owntv.features.shell.components.VodListRow
 import tv.own.owntv.features.shell.components.VodOptionsMenu
 import tv.own.owntv.features.shell.components.VodPosterArt
@@ -64,6 +66,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -93,6 +96,7 @@ import androidx.paging.compose.itemKey
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 import tv.own.owntv.features.live.LiveRailItem
 import tv.own.owntv.features.live.displayLabel
 import org.koin.androidx.compose.koinViewModel
@@ -144,6 +148,14 @@ fun MoviesScreen(
     onEntryHook: (((() -> Boolean)?) -> Unit)? = null,
 ) {
     val vm: MovieViewModel = koinViewModel()
+    // Reuse the established Home editorial picks. No extra provider fetch or catalogue filter.
+    val homeVm: tv.own.owntv.features.home.HomeViewModel = koinViewModel()
+    val homeEditorial by homeVm.uiState.collectAsStateWithLifecycle()
+    // Movies may open before Home: initialise its editorial picks without a full-list rewrite.
+    // Only request the shared Home data when it has never been loaded this session.
+    LaunchedEffect(homeVm, lockedKey) {
+        if (lockedKey == null && homeVm.uiState.value.isLoading) homeVm.refresh()
+    }
     // Locking and unlocking are one pair: the pin belongs to this screen's lifetime, not to the view
     // model's. On the television that view model is a single instance shared with the browse section,
     // so a pin left behind froze its category rail. `DisposableEffect` (not `LaunchedEffect`) also
@@ -207,6 +219,7 @@ fun MoviesScreen(
     val movieProgress by vm.movieProgress.collectAsStateWithLifecycle()
     val downloadStates by vm.downloadStates.collectAsStateWithLifecycle()
     val movies = vm.movies.collectAsLazyPagingItems()
+    val categoryHighlights by vm.categoryHighlights.collectAsStateWithLifecycle()
     val resumeMode by vm.resumeMode.collectAsStateWithLifecycle()
     // Global external-player toggle: never mount the fullscreen in-app player (it spins up mpv)
     // when playback is handed to an external app.
@@ -235,6 +248,8 @@ fun MoviesScreen(
     val listState = rememberLazyListState()
     val selFocus = remember { FocusRequester() }
     val firstItemFocus = remember { FocusRequester() }
+    val firstFeaturedFocus = remember { FocusRequester() }
+    val firstNewReleaseFocus = remember { FocusRequester() }
     // Right from the rail on an empty list: the list's search box, so a search with no results can be cleared.
     val listSearchFocus = remember { FocusRequester() }
 
@@ -247,7 +262,38 @@ fun MoviesScreen(
     val cinematicDetailsPct by settingsVm.cinematicDetailsHeight(PanelSection.MOVIES).collectAsStateWithLifecycle()
     // Cinematic is grid-only: the List rows have nowhere to put a full-bleed backdrop. The stored
     // choice is deliberately not rewritten, so switching back to Separate restores the user's List.
-    val viewMode = if (cinematic) SettingsRepository.VodViewMode.GRID else storedViewMode
+    // The main Movies/Series browser is one vertical poster grid. List mode remains
+    // available for locked Favourites/History screens, not the normal six-across browse.
+    val viewMode = if (lockedKey == null) SettingsRepository.VodViewMode.GRID else storedViewMode
+    val highlights = categoryHighlights.takeIf { it.categoryKey == selectedKey }
+    val categoryFeatured = highlights?.featured.orEmpty()
+    // Give recognisable, exactly matched Home picks priority in All and when they
+    // genuinely belong to the selected provider category. They remain real playable
+    // BEST items, not invented recommendations. Fallback stays category-scoped.
+    val allMoviesEditorial = if (selectedKey == LiveKey.All || selectedKey is LiveKey.Folder) {
+        val day = highlights?.day ?: System.currentTimeMillis() / 86_400_000L
+        val famous = homeEditorial.featuredMovies
+            .filter { selectedKey == LiveKey.All || it.categoryId == (selectedKey as LiveKey.Folder).id }
+            .shuffled(Random((day xor selectedKey.hashCode().toLong()).toInt()))
+            .take(8)
+        (famous + categoryFeatured).distinctBy { it.id }.take(20)
+    } else categoryFeatured
+    val newMovies = highlights?.newReleases.orEmpty()
+    val displayFeatured = lockedKey == null && searchQuery.isBlank() && allMoviesEditorial.isNotEmpty()
+    val displayNewReleases = lockedKey == null && searchQuery.isBlank() && newMovies.isNotEmpty()
+    // One six-poster row per section. Featured rotates daily from its larger candidate
+    // pool; New Releases contains the six newest matches. Both share the full-grid size.
+    val featuredPreview = if (displayFeatured) allMoviesEditorial.take(6) else emptyList()
+    val newPreview = if (displayNewReleases) newMovies.take(6) else emptyList()
+    val editorialRowCount = (if (displayFeatured) 1 else 0) + (if (displayNewReleases) 1 else 0)
+    val showCatalogueHeading = editorialRowCount > 0 && movies.itemCount > 0
+    // LazyGrid indexes count every tile, not only the three section headings.
+    // Offset all restore, paging and poster probing by the EXACT number of tiles.
+    val headerRowCount = (if (displayFeatured) 1 + featuredPreview.size else 0) +
+        (if (displayNewReleases) 1 + newPreview.size else 0) +
+        (if (showCatalogueHeading) 1 else 0)
+    val gridHeaderOffset = if (viewMode == SettingsRepository.VodViewMode.GRID) headerRowCount else 0
+    val listHeaderOffset = if (viewMode == SettingsRepository.VodViewMode.LIST) headerRowCount else 0
     val chNavEnabled by settingsVm.chNavEnabled.collectAsStateWithLifecycle()
     val chNavUpSkip by settingsVm.chNavUpSkip.collectAsStateWithLifecycle()
     val chNavDownSkip by settingsVm.chNavDownSkip.collectAsStateWithLifecycle()
@@ -263,18 +309,22 @@ fun MoviesScreen(
     // @Composable/rememberSaveable call here would register slots conditionally and corrupt the slot table.
     val effectiveGridState = if (rememberMovies) perCategoryGrid.getOrPut(selectedKey) { LazyGridState() } else gridState
     val effectiveListState = if (rememberMovies) perCategoryList.getOrPut(selectedKey) { LazyListState() } else listState
+    // New sidebar selections start at the top, independently of remember-last-item.
+    // Returning from playback leaves selectedKey unchanged and retains existing restoration.
     LaunchedEffect(selectedKey, rememberMovies) {
-        if (!rememberMovies) { runCatching { gridState.scrollToItem(0) }; runCatching { listState.scrollToItem(0) } }
+        runCatching { effectiveGridState.scrollToItem(0) }
+        runCatching { effectiveListState.scrollToItem(0) }
     }
     // The List view scrolls a LazyListState, the grids (Cinematic and Separate) a LazyGridState.
     val usesList = viewMode == SettingsRepository.VodViewMode.LIST
     suspend fun scrollToIndex(i: Int) {
-        runCatching { if (usesList) effectiveListState.scrollToItem(i) else effectiveGridState.scrollToItem(i) }
+        runCatching { if (usesList) effectiveListState.scrollToItem(i + listHeaderOffset) else effectiveGridState.scrollToItem(i + gridHeaderOffset) }
     }
     val stepper = remember { VodStepper(scope) { effectiveListState } }
     val playlistMarks by vm.playlistMarks.collectAsStateWithLifecycle()
     // Separate keeps the categories on screen; Cinematic opens them as a sheet (◀, or the Categories tool).
     var categoriesOpen by remember { mutableStateOf(false) }
+    var pendingCategoryFocus by remember { mutableStateOf<LiveKey?>(null) }
     var sheetHadFocus by remember { mutableStateOf(false) }
     var sortOpen by remember { mutableStateOf(false) }
     val sortFocus = remember { FocusRequester() }
@@ -288,12 +338,12 @@ fun MoviesScreen(
     // focus, so the placeholder is only shown when nothing at all is known. peek() reads the loaded
     // page without triggering a fetch.
     val cachedPosters by vm.cachedPosters.collectAsStateWithLifecycle()
-    LaunchedEffect(effectiveGridState, effectiveListState, viewMode, movies) {
+    LaunchedEffect(effectiveGridState, effectiveListState, viewMode, movies, gridHeaderOffset, listHeaderOffset) {
         val grid = !usesList
         snapshotFlow {
             val info = if (grid) effectiveGridState.layoutInfo.visibleItemsInfo.map { it.index }
             else effectiveListState.layoutInfo.visibleItemsInfo.map { it.index }
-            info.filter { it < movies.itemCount }
+            info.map { if (grid) it - gridHeaderOffset else it - listHeaderOffset }.filter { it >= 0 && it < movies.itemCount }
                 .mapNotNull { movies.peek(it) }
                 .filter { it.posterUrl.isNullOrBlank() }
         }.distinctUntilChanged().collect { vm.onPosterlessVisible(it) }
@@ -392,29 +442,23 @@ fun MoviesScreen(
         runCatching { selFocus.requestFocus() }.getOrDefault(false) ||
             runCatching { contextFocus.requestFocus() }.getOrDefault(false) ||
             runCatching { firstItemFocus.requestFocus() }.getOrDefault(false)
-    // From the categories to the titles: the remembered movie, else the first; the search field when empty.
+    // Entering Movies from the category sidebar begins at the featured highlights.
     fun focusTitles() {
-        val targetId = if (rememberMovies) perCategoryMovieIds[selectedKey] ?: selectedMovie?.id else selectedMovie?.id
         scope.launch {
-            if (movies.itemCount > 0) {
-                val targetIdx = targetId?.let { id -> movies.itemSnapshotList.items.indexOfFirst { it.id == id }.takeIf { it >= 0 } } ?: 0
-                scrollToIndex(targetIdx)
+            runCatching { effectiveGridState.scrollToItem(0) }
+            runCatching { effectiveListState.scrollToItem(0) }
+            repeat(12) {
                 withFrameNanos { }
-                // A category just picked is still loading: the first attempt can land on a title of the
-                // old list, which then vanishes and drops focus to the rail. So keep watching for about
-                // 0.7 s and take focus back whenever the titles lost it.
-                repeat(40) {
-                    if (!gridPaneFocused) {
-                        if (!(targetId != null && focusCurrentTitle())) runCatching { firstItemFocus.requestFocus() }
-                    }
-                    withFrameNanos { }
+                val requester = when {
+                    displayFeatured -> firstFeaturedFocus
+                    displayNewReleases -> firstNewReleaseFocus
+                    movies.itemCount > 0 -> firstItemFocus
+                    else -> listSearchFocus
                 }
-            } else {
-                runCatching { listSearchFocus.requestFocus() }
+                if (runCatching { requester.requestFocus() }.getOrDefault(false)) return@launch
             }
         }
     }
-
     // The way in from the rail: Separate lands on the open category in the column (as Live TV's
     // Separate panels), Cinematic on the title the hero shows. The shell's focus restorer would
     // otherwise return to whatever had focus last, such as the search field.
@@ -465,8 +509,33 @@ fun MoviesScreen(
             onJumpToIndex = { idx -> catFocusIndex = idx; railFocusRow = idx },
         )
     val onCategorySelect: (Int) -> Unit = { idx ->
-        railItems.getOrNull(idx)?.let { vm.select(it.key) }
-        if (categoriesOpen) { categoriesOpen = false; focusTitles() }
+        railItems.getOrNull(idx)?.let { item ->
+            // Hold the intended category until its highlights finish loading. Avoid focusing
+            // an old category's remembered position while the new pager is still switching.
+            pendingCategoryFocus = item.key
+            perCategoryMovieIds.remove(item.key)
+            vm.select(item.key)
+        }
+        if (categoriesOpen) categoriesOpen = false
+    }
+    LaunchedEffect(selectedKey, pendingCategoryFocus, categoryHighlights.categoryKey, displayFeatured, displayNewReleases, categoriesOpen) {
+        if (pendingCategoryFocus != selectedKey || categoryHighlights.categoryKey != selectedKey || categoriesOpen) return@LaunchedEffect
+        runCatching { effectiveGridState.scrollToItem(0) }
+        runCatching { effectiveListState.scrollToItem(0) }
+        repeat(16) {
+            withFrameNanos { }
+            val requester = when {
+                displayFeatured -> firstFeaturedFocus
+                displayNewReleases -> firstNewReleaseFocus
+                movies.itemCount > 0 -> firstItemFocus
+                else -> listSearchFocus
+            }
+            if (runCatching { requester.requestFocus() }.getOrDefault(false)) {
+                pendingCategoryFocus = null
+                return@LaunchedEffect
+            }
+        }
+        pendingCategoryFocus = null
     }
     val onCategoryLongSelect: (Int) -> Unit = { idx ->
         railItems.getOrNull(idx)?.let { item ->
@@ -482,7 +551,12 @@ fun MoviesScreen(
         vm.onMovieFocused(movie)
         if (rememberMovies) perCategoryMovieIds[selectedKey] = movie.id
     }
-    val posterOf: (MovieEntity) -> String? = { it.posterUrl?.takeIf { u -> u.isNotBlank() } ?: cachedPosters[it.id] }
+    val posterOf: (MovieEntity) -> String? = { movie ->
+        LoungeVodPosterCorrections.moviePoster(
+            movie.name, movie.canonicalTitle, movie.year ?: movie.parsedYear,
+            movie.posterUrl?.takeIf { it.isNotBlank() } ?: cachedPosters[movie.id],
+        )
+    }
     val playHint = stringResource(R.string.common_ok) to stringResource(R.string.content_play)
     val optionsHint = stringResource(R.string.content_key_hold_ok) to stringResource(R.string.content_key_options)
 
@@ -502,8 +576,8 @@ fun MoviesScreen(
                 val sel = selectedMovie
                 val idx = if (sel != null) movies.itemSnapshotList.items.indexOfFirst { it.id == sel.id } else -1
                 if (idx >= 0) idx
-                else if (usesList) effectiveListState.firstVisibleItemIndex
-                else effectiveGridState.firstVisibleItemIndex
+                else if (usesList) (effectiveListState.firstVisibleItemIndex - listHeaderOffset).coerceAtLeast(0)
+                else (effectiveGridState.firstVisibleItemIndex - gridHeaderOffset).coerceAtLeast(0)
             },
             onJumpToIndex = { idx ->
                 // Scroll the target into view, then set it as the selected movie so selFocus binds to it
@@ -565,7 +639,12 @@ fun MoviesScreen(
         val screenW = maxWidth
         fun fx(px: Int) = screenW * (px / 1920f)
         if (cinematic) {
-            val heroH = if (panelShares != null) maxHeight * (cinematicDetailsPct / 100f) else 464.mpx
+            // A pinned, readable hero stays above the scrolling highlight rails.
+            // 226px leaves room for a complete focused portrait card AND its heading.
+            val showcaseActive = displayFeatured || displayNewReleases
+            val heroH = if (showcaseActive) minOf(maxHeight * 0.325f, 350.mpx)
+                else if (panelShares != null) maxHeight * (cinematicDetailsPct / 100f)
+                else 464.mpx
             val toolTop = 122.mpx + heroH
             Box(Modifier.fillMaxSize().then(if (categoriesOpen) Modifier.graphicsLayer { alpha = 0.36f } else Modifier)) {
                 VodCinematicBackdrop(titleInfo?.backdropUrl, series = false, Modifier.align(Alignment.TopEnd))
@@ -573,7 +652,10 @@ fun MoviesScreen(
                     section = stringResource(R.string.common_nav_movies), category = headerLabel, count = vodCount(false, count),
                     showChevron = true, modifier = Modifier.padding(start = fx(84), top = 52.mpx).width(fx(900)),
                 )
-                titleInfo?.let { VodHero(it, Modifier.padding(start = fx(84), top = 122.mpx).width(fx(1000)).height(heroH)) }
+                titleInfo?.let {
+                    val location = Modifier.padding(start = fx(84), top = 122.mpx).width(fx(1050)).height(heroH)
+                    if (showcaseActive) LoungeBrowseSpotlight(it, location) else VodHero(it, location)
+                }
                 Column(Modifier.padding(top = toolTop).fillMaxSize().then(paneModifier)) {
                     Row(
                         Modifier.padding(start = fx(68), end = fx(64)).fillMaxWidth()
@@ -594,14 +676,15 @@ fun MoviesScreen(
                         Spacer(Modifier.weight(1f))
                         StageKeyHints(listOf(playHint, optionsHint, "◀" to stringResource(R.string.content_category_browser_title)))
                     }
-                    if (movies.itemCount == 0) {
+                    if (movies.itemCount == 0 && headerRowCount == 0) {
                         Text(emptyText, style = stageText(20, 500), color = StageColors.Muted, modifier = Modifier.padding(start = fx(84), top = 60.mpx))
                     } else {
                         // The 196 × 294 posters, 26 apart, as many across as fit; the grid grows downwards
                         // (a grid, not a single row). Glow room on every side.
                         val glowRoom = 24.mpx
                         val rowW = screenW - fx(84) - fx(64)
-                        val columns = ((rowW + 26.mpx) / 222.mpx).toInt().coerceAtLeast(1)
+                        val columns = 6
+                        val posterW = (rowW - 26.mpx * (columns - 1)) / columns
                         // A fixed gap under the toolbar that scrolling posters never enter; the grid's own
                         // top padding is only the room the focused poster's lift and ring need.
                         Spacer(Modifier.height(14.mpx))
@@ -614,6 +697,75 @@ fun MoviesScreen(
                                 contentPadding = PaddingValues(start = fx(84), end = fx(64), top = 14.mpx, bottom = glowRoom),
                                 modifier = Modifier.fillMaxWidth().weight(1f),
                             ) {
+                                // Two large rows scroll up with the existing paged grid.
+                                if (displayFeatured) {
+                                    item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
+                                        Text(
+                                            text = stringResource(R.string.lounge_home_featured_movies),
+                                            style = stageText(28, 800),
+                                            color = StageColors.Text,
+                                            modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
+                                        )
+                                    }
+                                    items(
+                                        count = featuredPreview.size,
+                                        key = { index -> Long.MIN_VALUE + 100L + index.toLong() },
+                                        contentType = { 11 },
+                                    ) { index ->
+                                        val movie = featuredPreview[index]
+                                        LoungeMoviesEditorialPoster(
+                                            item = movie,
+                                            width = posterW,
+                                            title = homeEditorial.featuredMovieNames[movie.id] ?: movie.canonicalTitle.ifBlank { movie.name },
+                                            posterUrl = posterOf(movie),
+                                            firstInSection = index == 0,
+                                            atLeftEdge = index % columns == 0,
+                                            focusRequester = firstFeaturedFocus,
+                                            onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                            onFocus = onMovieFocus,
+                                            onOpen = startMovie,
+                                        )
+                                    }
+                                }
+                                if (displayNewReleases) {
+                                    item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
+                                        Text(
+                                            text = stringResource(R.string.lounge_movies_new_releases),
+                                            style = stageText(28, 800),
+                                            color = StageColors.Text,
+                                            modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
+                                        )
+                                    }
+                                    items(
+                                        count = newPreview.size,
+                                        key = { index -> Long.MIN_VALUE + 200L + index.toLong() },
+                                        contentType = { 12 },
+                                    ) { index ->
+                                        val movie = newPreview[index]
+                                        LoungeMoviesEditorialPoster(
+                                            item = movie,
+                                            width = posterW,
+                                            title = movie.canonicalTitle.ifBlank { movie.name },
+                                            posterUrl = posterOf(movie),
+                                            firstInSection = index == 0,
+                                            atLeftEdge = index % columns == 0,
+                                            focusRequester = firstNewReleaseFocus,
+                                            onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                            onFocus = onMovieFocus,
+                                            onOpen = startMovie,
+                                        )
+                                    }
+                                }
+                                if (showCatalogueHeading) {
+                                    item(key = Long.MIN_VALUE + 2L, span = { GridItemSpan(maxLineSpan) }, contentType = 3) {
+                                        Text(
+                                            text = stringResource(R.string.content_category_all_movies),
+                                            style = stageText(27, 800),
+                                            color = StageColors.Text,
+                                            modifier = Modifier.fillMaxWidth().padding(top = 32.mpx, bottom = 16.mpx),
+                                        )
+                                    }
+                                }
                                 items(count = movies.itemCount, key = movies.itemKey { it.id }, contentType = movies.itemContentType { "movie" }) { index ->
                                     val movie = movies[index] ?: return@items
                                     val prog = movieProgress[movie.id]
@@ -621,7 +773,7 @@ fun MoviesScreen(
                                     StagePoster(
                                         title = loungeVodTitle(movie.name),
                                         rating = movie.rating?.takeIf { it > 0 }?.let(::vodRating),
-                                        width = 196.mpx, height = 294.mpx,
+                                        width = posterW, height = posterW * 1.5f,
                                         progress = prog?.takeIf { it.durationMs > 0 }?.let { it.positionMs.toFloat() / it.durationMs },
                                         watched = done,
                                         onClick = { startMovie(movie) },
@@ -718,7 +870,7 @@ fun MoviesScreen(
                     val placeable = measurable.measure(constraints.copy(minWidth = constraints.minWidth + extra * 2, maxWidth = constraints.maxWidth + extra * 2))
                     layout(constraints.maxWidth, constraints.maxHeight) { placeable.place(-extra, 0) }
                 }
-                if (movies.itemCount == 0) {
+                if (movies.itemCount == 0 && headerRowCount == 0) {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(emptyText, style = stageText(20, 500), color = StageColors.Muted)
                     }
@@ -731,6 +883,16 @@ fun MoviesScreen(
                             contentPadding = PaddingValues(start = glowRoom, end = glowRoom, bottom = 16.mpx),
                             modifier = Modifier.fillMaxWidth().weight(1f).then(glowWide),
                         ) {
+                            if (showCatalogueHeading) {
+                                item(key = Long.MIN_VALUE + 2L, contentType = 3) {
+                                    Text(
+                                        text = stringResource(R.string.content_category_all_movies),
+                                        style = stageText(27, 800),
+                                        color = StageColors.Text,
+                                        modifier = Modifier.fillMaxWidth().padding(top = 32.mpx, bottom = 16.mpx),
+                                    )
+                                }
+                            }
                             items(count = movies.itemCount, key = movies.itemKey { it.id }, contentType = movies.itemContentType { "movie" }) { index ->
                                 val movie = movies[index] ?: return@items
                                 val prog = movieProgress[movie.id]
@@ -770,7 +932,8 @@ fun MoviesScreen(
                     }
                 } else {
                     // 156 × 234 posters 20 apart (5 across in an 860 panel); a wider panel gains columns.
-                    val columns = ((listW + 20.mpx) / 176.mpx).toInt().coerceAtLeast(1)
+                    // Narrow Separate panels adapt; Cinematic always uses exactly six across.
+                    val columns = ((listW + 20.mpx) / 176.mpx).toInt().coerceIn(1, 6)
                     val posterW = (listW - 20.mpx * (columns - 1)) / columns
                     // A fixed gap under the toolbar that scrolled posters never enter (as Cinematic).
                     Spacer(Modifier.height(20.mpx))
@@ -783,6 +946,74 @@ fun MoviesScreen(
                             contentPadding = PaddingValues(start = glowRoom, end = glowRoom, top = 12.mpx, bottom = 24.mpx),
                             modifier = Modifier.fillMaxWidth().weight(1f).then(glowWide),
                         ) {
+                            if (displayFeatured) {
+                                item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
+                                    Text(
+                                        text = stringResource(R.string.lounge_home_featured_movies),
+                                        style = stageText(28, 800),
+                                        color = StageColors.Text,
+                                        modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
+                                    )
+                                }
+                                items(
+                                    count = featuredPreview.size,
+                                    key = { index -> Long.MIN_VALUE + 100L + index.toLong() },
+                                    contentType = { 11 },
+                                ) { index ->
+                                    val movie = featuredPreview[index]
+                                    LoungeMoviesEditorialPoster(
+                                        item = movie,
+                                        width = posterW,
+                                        title = homeEditorial.featuredMovieNames[movie.id] ?: movie.canonicalTitle.ifBlank { movie.name },
+                                        posterUrl = posterOf(movie),
+                                        firstInSection = index == 0,
+                                        atLeftEdge = index % columns == 0,
+                                        focusRequester = firstFeaturedFocus,
+                                        onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                        onFocus = onMovieFocus,
+                                        onOpen = startMovie,
+                                    )
+                                }
+                            }
+                            if (displayNewReleases) {
+                                item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
+                                    Text(
+                                        text = stringResource(R.string.lounge_movies_new_releases),
+                                        style = stageText(28, 800),
+                                        color = StageColors.Text,
+                                        modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
+                                    )
+                                }
+                                items(
+                                    count = newPreview.size,
+                                    key = { index -> Long.MIN_VALUE + 200L + index.toLong() },
+                                    contentType = { 12 },
+                                ) { index ->
+                                    val movie = newPreview[index]
+                                    LoungeMoviesEditorialPoster(
+                                        item = movie,
+                                        width = posterW,
+                                        title = movie.canonicalTitle.ifBlank { movie.name },
+                                        posterUrl = posterOf(movie),
+                                        firstInSection = index == 0,
+                                        atLeftEdge = index % columns == 0,
+                                        focusRequester = firstNewReleaseFocus,
+                                        onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                        onFocus = onMovieFocus,
+                                        onOpen = startMovie,
+                                    )
+                                }
+                            }
+                            if (showCatalogueHeading) {
+                                item(key = Long.MIN_VALUE + 2L, span = { GridItemSpan(maxLineSpan) }, contentType = 3) {
+                                    Text(
+                                        text = stringResource(R.string.content_category_all_movies),
+                                        style = stageText(27, 800),
+                                        color = StageColors.Text,
+                                        modifier = Modifier.fillMaxWidth().padding(top = 32.mpx, bottom = 16.mpx),
+                                    )
+                                }
+                            }
                             items(count = movies.itemCount, key = movies.itemKey { it.id }, contentType = movies.itemContentType { "movie" }) { index ->
                                 val movie = movies[index] ?: return@items
                                 val prog = movieProgress[movie.id]
@@ -1173,7 +1404,10 @@ private fun buildMovieDetails(
 ): tv.own.owntv.features.shell.components.MediaDetailsUi {
     val providerPoster = movie.posterUrl?.takeIf { it.isNotBlank() }
     val tmdbPoster = tv.own.owntv.core.metadata.MetadataImages.poster(meta?.posterPath)
-    val poster = if (tmdbWins) tmdbPoster ?: providerPoster else providerPoster ?: tmdbPoster
+    val poster = LoungeVodPosterCorrections.moviePoster(
+        movie.name, movie.canonicalTitle, movie.year ?: movie.parsedYear,
+        if (tmdbWins) tmdbPoster ?: providerPoster else providerPoster ?: tmdbPoster,
+    )
     // Backdrop is TMDB-only (providers don't carry one); fall back to the provider's if it exists.
     val backdrop = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath)
         ?: movie.backdropUrl?.takeIf { it.isNotBlank() }
@@ -1216,7 +1450,10 @@ internal fun movieTitleInfo(
         logoUrl = tv.own.owntv.core.metadata.MetadataImages.logo(meta?.logoPath),
         backdropUrl = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath, size = "w1280")
             ?: movie.backdropUrl?.takeIf { it.isNotBlank() },
-        posterUrl = if (tmdbWins) tmdbPoster ?: providerPoster else providerPoster ?: tmdbPoster,
+        posterUrl = LoungeVodPosterCorrections.moviePoster(
+            movie.name, movie.canonicalTitle, movie.year ?: movie.parsedYear,
+            if (tmdbWins) tmdbPoster ?: providerPoster else providerPoster ?: tmdbPoster,
+        ),
         year = if (tmdbWins) meta?.year ?: movie.year else movie.year ?: meta?.year,
         genres = jsonList(meta?.genresJson),
         runtimeSecs = movie.durationSecs?.takeIf { it > 0 },
