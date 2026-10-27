@@ -34,6 +34,7 @@ import tv.own.owntv.core.database.dao.resolveExistingProfileId
 import tv.own.owntv.core.content.SearchIntent
 import tv.own.owntv.core.content.SearchKind
 import tv.own.owntv.ui.components.LoungeVodCatalogueCleanup
+import tv.own.owntv.ui.components.LoungeVodEditorialQuality
 import tv.own.owntv.core.content.SearchReader
 import tv.own.owntv.core.content.SearchResults
 import tv.own.owntv.core.repository.ActiveProfileSources
@@ -119,10 +120,10 @@ class SearchViewModel(
     }
 
     /** The core SearchReader already respects persisted category and item hides.
-     *  Also filter unambiguous provider language prefixes in search and curated rows. */
+     *  Also enforce deterministic adult/quality exclusions in search and curated rows. */
     private fun englishOnly(result: SearchResults): SearchResults = result.copy(
-        movies = result.movies.filter { LoungeVodCatalogueCleanup.visibleEnglish(it.name, it.providerLanguage) },
-        series = result.series.filter { LoungeVodCatalogueCleanup.visibleEnglish(it.name, it.providerLanguage) },
+        movies = result.movies.filter { LoungeVodEditorialQuality.publicBrowseEligible(it.name, it.canonicalTitle, it.providerLanguage, it.rating) },
+        series = result.series.filter { LoungeVodEditorialQuality.publicBrowseEligible(it.name, it.canonicalTitle, it.providerLanguage, it.rating) },
     )
 
     // --- Stage page ---
