@@ -262,8 +262,7 @@
 2	sql	app/src/main/java/tv/own/owntv/features/movies/MovieCategoryHighlights.kt	?
 1	sql	app/src/main/java/tv/own/owntv/features/movies/MovieCategoryHighlights.kt	) AND m.posterUrl IS NOT NULL AND TRIM(m.posterUrl) <> ''
 1	sql	app/src/main/java/tv/own/owntv/features/movies/MovieCategoryHighlights.kt	))
-3	empty	app/src/main/java/tv/own/owntv/features/movies/MovieCategoryHighlights.kt	\0
-1	regex	app/src/main/java/tv/own/owntv/features/movies/MovieCategoryHighlights.kt	^(?:d\\+|nf|amzn|hbo|netflix|disney\\+|prime)\\s+
+2	empty	app/src/main/java/tv/own/owntv/features/movies/MovieCategoryHighlights.kt	\0
 1	sql	app/src/main/java/tv/own/owntv/features/movies/MovieCategoryHighlights.kt	AND (m.categoryId IS NULL OR m.categoryId NOT IN (
 1	sql	app/src/main/java/tv/own/owntv/features/movies/MovieCategoryHighlights.kt	AND COALESCE(m.year, m.parsedYear, 0) BETWEEN ? AND ?
 1	sql	app/src/main/java/tv/own/owntv/features/movies/MovieCategoryHighlights.kt	AND m.categoryId = ?
@@ -338,8 +337,7 @@
 2	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	?
 1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	) AND m.posterUrl IS NOT NULL AND TRIM(m.posterUrl) <> ''
 1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	))
-3	empty	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	\0
-1	regex	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	^(?:d\\+|nf|amzn|hbo|netflix|disney\\+|prime)\\s+
+2	empty	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	\0
 1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	AND (m.categoryId IS NULL OR m.categoryId NOT IN (
 1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	AND COALESCE(m.year, m.parsedYear, 0) BETWEEN ? AND ?
 1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	AND m.categoryId = ?
