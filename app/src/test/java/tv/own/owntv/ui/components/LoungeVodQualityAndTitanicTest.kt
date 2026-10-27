@@ -21,6 +21,9 @@ class LoungeVodQualityAndTitanicTest {
 
     @Test fun `mainstream and unknown rating movies survive conservative curation`() {
         assertTrue(LoungeVodEditorialQuality.publicBrowseEligible("Titanic (1997)", "Titanic", "en", 7.8))
+        assertTrue(LoungeVodEditorialQuality.publicBrowseEligible("The Naked Gun", "The Naked Gun", "en", 7.3))
+        assertTrue(LoungeVodEditorialQuality.publicBrowseEligible("Sex Education", "Sex Education", "en", 8.2))
+        assertTrue(LoungeVodEditorialQuality.publicBrowseEligible("Sexy Beast", "Sexy Beast", "en", 7.4))
         assertTrue(LoungeVodEditorialQuality.publicBrowseEligible("The French Connection", "The French Connection", null, null))
         assertTrue(LoungeVodEditorialQuality.publicBrowseEligible("Italian Job", "The Italian Job", "English", 6.8))
     }
