@@ -372,6 +372,21 @@ class LiveViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyMap())
 
+    /** Independent NZ playlist folder IDs; no changes to customer-added sources. */
+    private val nzFreeviewFolderIds: StateFlow<Set<Long>> = ctx
+        .flatMapLatest { c ->
+            if (c.profileId < 0) flowOf(emptySet<Long>())
+            else categoryDao.observe(c.sourceIds, MediaType.LIVE).map { categories ->
+                categories.filter { category ->
+                    sourceById[category.sourceId]?.let { source ->
+                        source.type == SourceType.M3U &&
+                            source.url.contains(NZ_FREEVIEW_PATH, ignoreCase = true)
+                    } == true
+                }.mapTo(HashSet()) { it.id }
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
+
     /** One NZ visibility rule used by lists, saved history and channel zapping. */
     private fun showInNzSelection(channel: ChannelEntity): Boolean =
         !shouldHideBestNzChannel(
@@ -2189,8 +2204,17 @@ class LiveViewModel(
         return if (preferred >= 0) profileDao.resolveExistingProfileId(preferred) else null
     }
 
-    private fun pagingSource(key: LiveKey, c: Ctx, query: String, sort: SettingsRepository.SortMode): PagingSource<Int, ChannelEntity> =
-        livePagingSource(
+    private fun pagingSource(key: LiveKey, c: Ctx, query: String, sort: SettingsRepository.SortMode): PagingSource<Int, ChannelEntity> {
+        if (key is LiveKey.Folder && key.id in nzFreeviewFolderIds.value &&
+            query.isBlank() && sort == SettingsRepository.SortMode.PLAYLIST &&
+            folderContextKeys.value[key.id] !in orderedContexts.value
+        ) {
+            val contextKey = folderContextKeys.value[key.id].orEmpty()
+            return LoungeNzPriorityPagingSource {
+                channelDao.snapshotByCategoryManual(key.id, c.profileId, contextKey, 300)
+            }
+        }
+        return livePagingSource(
             key = key,
             profileId = c.profileId,
             sourceIds = c.sourceIds,
@@ -2201,6 +2225,7 @@ class LiveViewModel(
             contextKey = { folderContextKeys.value[it] },
             hasManualOrder = { it in orderedContexts.value },
         )
+    }
 
     fun enterMoveMode(channel: ChannelEntity, key: LiveKey) {
         viewModelScope.launch {
