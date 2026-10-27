@@ -56,6 +56,7 @@
 1	log	app/src/main/java/tv/own/owntv/features/epg/EpgViewModel.kt	EpgViewModel
 1	log	app/src/main/java/tv/own/owntv/features/epg/EpgViewModel.kt	first-load
 1	log	app/src/main/java/tv/own/owntv/features/epg/EpgViewModel.kt	guide_load channels=${channels.size} rawChannels=${rawChannels.size}
+1	url	app/src/main/java/tv/own/owntv/features/epg/EpgViewModel.kt	i.mjh.nz/nz/
 1	log	app/src/main/java/tv/own/owntv/features/epg/EpgViewModel.kt	lookbackH=${lookbackMs / 3_600_000}
 1	log	app/src/main/java/tv/own/owntv/features/epg/EpgViewModel.kt	rebuilt=$windowChanged reason=$rebuildReason cachedRows=${cachedRowCount()}
 1	log	app/src/main/java/tv/own/owntv/features/epg/EpgViewModel.kt	sources-changed
@@ -133,7 +134,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveStage.kt	tnum
 3	regex	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	[^a-z0-9]+
 1	regex	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	\\s+
-16	empty	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	\0
+9	empty	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	#$it
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	catch-up '${ch.name}' prog='${programme.title}' -> ${tv.own.owntv.core.network.HttpClient.redactUrl(url)}
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	catch-up external '${ch.name}' prog='${programme.title}'
@@ -143,7 +144,6 @@
 2	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	hd
 1	url	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	i.mjh.nz/nz/kodi-tv.m3u8
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	LiveEngine
-1	file-path	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	lounge_live_hidden_categories_20261027.txt
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	New Zealand
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	NZ
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	nz raw
@@ -164,7 +164,7 @@
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveZapList.kt	direct tune: zap rebuild failed
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveZapList.kt	LiveZapList
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	·
-2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	[ᴿᴬᵂ⁶⁰ᶠᵖˢ]+
+2	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	[⁶⁰ᶠᵖˢ]+
 1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	\\bVIP\\b
 3	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	\\s+
 8	empty	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	\0
@@ -172,39 +172,150 @@
 1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	^(?:NZ|AU|UK|US|IR|CA|NA|TV|PRIME|UK-BBCI)\\s*\\|\\s*
 1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	^([A-Z]{2})\\|\\s*(.+)$
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	4K
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	4K UHD 3840P
 2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	AU
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	AU| AFL PPV
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	au| australia
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	AU| ESPN PLAY PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	AU| NRL TV PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	AU| STAN PPV
 2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	Australia
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	CA| OHL PPV
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	ESPN
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	F1
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	FOX
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	HBO
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	HD
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	HEVC
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	IR| CLUBBER PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	IR| IRELAND
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	IR| LOI PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	IR| NIFL PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	IR| SETANTA PPV
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	MLB
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	NA| HOCKEY LEAGUE
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	NA| PPV & LIVE EVENTS
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	NBA
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	NFL
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	NHL
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	NRL
 2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	NZ
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	NZ ·
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	NZ| NEW ZEALAND
 2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	nz| sky sport
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	nz| sky sports nz
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	PPV
-1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	RAW
+3	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	RAW
+2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	ᴿᴬᵂ
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	Sky
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	TNT
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UFC
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| APPLE TV F1 PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| BBC STREAM PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| CUP GAMES & INTERNATIONAL
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| DAZN PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| EPL PREMIER LEAGUE+ PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| ESPN+ PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| GAA GO PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| LA LIGA TEAM PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| LIGUE 1 PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| MAX PPV
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	uk| movies
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| PDC BOARD PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| SCOTTISH FOOTBALL
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| SERIE A TEAM PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| SOCCER REPLAY
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	uk| sports
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| SUPER LEAGUE+ PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| SUPERCROSS PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| TT RACE PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| ULSTER GAA PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| ULTIMATE POOL PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| VIAPLAY PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| VIDIO EPL PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| VOLLEY BALL WORLD PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	UK| WORLD CUP 2026 REPLAY
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| APPLE TV F1 PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| B/R MAX SPORTS PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| B1G+ PPV
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	us| biblical/religious
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| BIBLICAL/RELIGIOUS
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| BTN+ PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| DAZN PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| DIRTVISION PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| ESPN PLUS
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	us| espn+ ppv vip
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| ESPN+ PPV VIP
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| FIFA+ PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| FITE TV PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| FLO COLLEGE PPV
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	us| flo network
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| FLO NETWORK
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| FLO RACING PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| MILB TV PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| MLS PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| NEWS NETWORK
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| NFHS PPV
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	us| paramount+ ppv
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| PARAMOUNT+ PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| PARAMOUNT+ PPV ᴿᴬᵂ
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| PEACOCK PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| SOCCER PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| SPECTRUM NETWORK
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| STAN PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| TELEMUNDO NETWORK
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| TENNIS CHANNEL PLUS
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| VIAPLAY NHL PPV
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	US| VIX+ DEPORTES
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	world live sports
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	WORLD LIVE SPORTS
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveCatalogueCleanup.kt	WWE
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	:
+1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	[^A-Z0-9]+
+1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	[ᴿᴬᵂ⁶⁰ᶠᵖˢ]+
+1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	\\([^)]*\\)
+1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	\\b(?:HEVC|FHD|HD|UHD|4K|RAW|VIP|60\\s*FPS|BK)\\b
+1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	\\b(?:SYDNEY|NSW|MELBOURNE|VIC|PERTH|WA|BRISBANE|QLD|ADELAIDE|SA|CANBERRA|DARWIN|HOBART|GOLD.COAST|LISMORE|NEWCASTLE|NATIONAL)\\b
+8	empty	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	\0
+1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	^(?:AU|UK|US)\\s*(?:\\||:)\\s*
+1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	^#{3,}
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	10
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	4K
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	9
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	9 GEM
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	9 GO
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	9 LIFE
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	9 RUSH
+2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	9GEM
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	9GO
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	9LIFE
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	9NOW
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	9RUSH
+3	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	AU
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	AU|
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	CHANNEL 10
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	CHANNEL 9
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	CHANNEL 9 GEM
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	FHD
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	FOX SPORTS 502
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	FOX SPORTS 502 LEAUGE
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	HD
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	HEVC
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	KAYO -
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	MELBOURNE
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	NATIONAL
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	NSW
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	PPV|EVENT|PACKAGE|REPLAY|24/7
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	SYDNEY
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	UHD
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	UK
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	UK|
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	unique:
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	US
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	US|
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	VIC
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	24/7
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	24x7
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	afl
