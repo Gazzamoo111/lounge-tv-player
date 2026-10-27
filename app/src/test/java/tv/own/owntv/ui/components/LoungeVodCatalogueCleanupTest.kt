@@ -29,7 +29,7 @@ class LoungeVodCatalogueCleanupTest {
     ) + seed
 
     @Test fun `Turkish and Asian series are hidden even with more than ten entries`() {
-        val plan = policy.plan(policy.Kind.SERIES, series(listOf(
+        val plan = policy.plan(LoungeVodCatalogueCleanup.Kind.SERIES, series(listOf(
             folder(16, "|EN| TURKISH SERIES SUB", 89),
             folder(36, "|EN| ASIAN SERIES", 96),
         )))
@@ -39,7 +39,7 @@ class LoungeVodCatalogueCleanupTest {
     }
 
     @Test fun `all MULTI series categories are hidden while audited English categories remain`() {
-        val plan = policy.plan(policy.Kind.SERIES, series(listOf(
+        val plan = policy.plan(LoungeVodCatalogueCleanup.Kind.SERIES, series(listOf(
             folder(1, "|MULTI| NETFLIX SERIES 4K", 89),
             folder(2, "|MULTI| NETFLIX SERIES", 1147),
             folder(3, "|MULTI| NETFLIX ASIA", 363),
@@ -50,7 +50,7 @@ class LoungeVodCatalogueCleanupTest {
     }
 
     @Test fun `audited non-English movie folders and tiny categories are hidden`() {
-        val plan = policy.plan(policy.Kind.MOVIE, movies(listOf(
+        val plan = policy.plan(LoungeVodCatalogueCleanup.Kind.MOVIE, movies(listOf(
             folder(40, "|EN| FRENCH MOVIES / ENG SUB", 961),
             folder(42, "|EN| ITALIAN MOVIES / ENG SUB", 201),
             folder(43, "|EN| FOREIGN MOVIES", 414),
@@ -67,17 +67,17 @@ class LoungeVodCatalogueCleanupTest {
     }
 
     @Test fun `nine entries hide and ten entries stay visible after playlist refresh`() {
-        val current = policy.plan(policy.Kind.MOVIE, movies(listOf(folder(95, "|EN| COMEDY", 9))))
-        val refreshed = policy.plan(policy.Kind.MOVIE, movies(listOf(folder(95, "|EN| COMEDY", 10))))
+        val current = policy.plan(LoungeVodCatalogueCleanup.Kind.MOVIE, movies(listOf(folder(95, "|EN| COMEDY", 9))))
+        val refreshed = policy.plan(LoungeVodCatalogueCleanup.Kind.MOVIE, movies(listOf(folder(95, "|EN| COMEDY", 10))))
         assertTrue(95L in current.hiddenIds)
         assertFalse(95L in refreshed.hiddenIds)
-        val unknown = policy.plan(policy.Kind.MOVIE, movies(listOf(folder(95, "|EN| COMEDY", null))))
+        val unknown = policy.plan(LoungeVodCatalogueCleanup.Kind.MOVIE, movies(listOf(folder(95, "|EN| COMEDY", null))))
         assertFalse(95L in unknown.hiddenIds)
     }
 
     @Test fun `do not apply BEST audit rules to unrelated playlists`() {
         val other = folder(999, "|EN| TURKISH SERIES SUB", 89, source = 43L)
-        val plan = policy.plan(policy.Kind.SERIES, series(listOf(other)))
+        val plan = policy.plan(LoungeVodCatalogueCleanup.Kind.SERIES, series(listOf(other)))
         assertFalse(999L in plan.hiddenIds)
         assertFalse(plan.names.containsKey("43:999"))
     }
