@@ -159,6 +159,7 @@ import tv.own.owntv.ui.components.gridFocusTarget
 import tv.own.owntv.ui.format.localizedInteger
 import tv.own.owntv.ui.format.rememberAirDateFormatter
 import tv.own.owntv.core.live.LiveKey
+import kotlin.random.Random
 
 @Composable
 fun SeriesScreen(
@@ -256,6 +257,12 @@ private fun SeriesGrid(
     val context = androidx.compose.ui.platform.LocalContext.current
     val toast = rememberInAppToast()
     val series = vm.series.collectAsLazyPagingItems()
+    // Shared Home picks are exact, playable title matches, not provider-rated guesses.
+    val homeVm: tv.own.owntv.features.home.HomeViewModel = koinViewModel()
+    val homeEditorial by homeVm.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(homeVm, lockedKey) {
+        if (lockedKey == null && homeVm.uiState.value.isLoading) homeVm.refresh()
+    }
     val categoryHighlights by vm.categoryHighlights.collectAsStateWithLifecycle()
     val moveState by vm.moveState.collectAsStateWithLifecycle()
     val categoryMoveState by vm.categoryMoveState.collectAsStateWithLifecycle()
@@ -312,7 +319,15 @@ private fun SeriesGrid(
     // available for locked Favourites/History screens, not the normal six-across browse.
     val viewMode = if (lockedKey == null) SettingsRepository.VodViewMode.GRID else storedViewMode
     val highlights = categoryHighlights.takeIf { it.categoryKey == selectedKey }
-    val featuredShows = highlights?.featured.orEmpty()
+    val categoryFeatured = highlights?.featured.orEmpty()
+    val featuredShows = if (selectedKey == LiveKey.All || selectedKey is LiveKey.Folder) {
+        val day = highlights?.day ?: System.currentTimeMillis() / 86_400_000L
+        val famous = homeEditorial.popularSeries
+            .filter { selectedKey == LiveKey.All || it.categoryId == (selectedKey as LiveKey.Folder).id }
+            .shuffled(Random((day xor selectedKey.hashCode().toLong()).toInt()))
+            .take(8)
+        (famous + categoryFeatured).distinctBy { it.id }.take(20)
+    } else categoryFeatured
     val newShows = highlights?.newReleases.orEmpty()
     val displayFeatured = lockedKey == null && searchQuery.isBlank() && featuredShows.isNotEmpty()
     val displayNewReleases = lockedKey == null && searchQuery.isBlank() && newShows.isNotEmpty()
@@ -751,7 +766,7 @@ private fun SeriesGrid(
                                         LoungeSeriesEditorialPoster(
                                             item = show,
                                             width = posterW,
-                                            title = show.canonicalTitle.ifBlank { show.name },
+                                            title = homeEditorial.popularSeriesNames[show.id] ?: show.canonicalTitle.ifBlank { show.name },
                                             posterUrl = posterOf(show),
                                             firstInSection = index == 0,
                                             atLeftEdge = index % columns == 0,
@@ -780,7 +795,7 @@ private fun SeriesGrid(
                                         LoungeSeriesEditorialPoster(
                                             item = show,
                                             width = posterW,
-                                            title = show.canonicalTitle.ifBlank { show.name },
+                                            title = homeEditorial.popularSeriesNames[show.id] ?: show.canonicalTitle.ifBlank { show.name },
                                             posterUrl = posterOf(show),
                                             firstInSection = index == 0,
                                             atLeftEdge = index % columns == 0,
@@ -994,7 +1009,7 @@ private fun SeriesGrid(
                                     LoungeSeriesEditorialPoster(
                                         item = show,
                                         width = posterW,
-                                        title = show.canonicalTitle.ifBlank { show.name },
+                                        title = homeEditorial.popularSeriesNames[show.id] ?: show.canonicalTitle.ifBlank { show.name },
                                         posterUrl = posterOf(show),
                                         firstInSection = index == 0,
                                         atLeftEdge = index % columns == 0,
@@ -1023,7 +1038,7 @@ private fun SeriesGrid(
                                     LoungeSeriesEditorialPoster(
                                         item = show,
                                         width = posterW,
-                                        title = show.canonicalTitle.ifBlank { show.name },
+                                        title = homeEditorial.popularSeriesNames[show.id] ?: show.canonicalTitle.ifBlank { show.name },
                                         posterUrl = posterOf(show),
                                         firstInSection = index == 0,
                                         atLeftEdge = index % columns == 0,
