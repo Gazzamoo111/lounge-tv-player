@@ -67,7 +67,10 @@ internal object LoungeVodEditorialQuality {
         // Editorial shelves must be demonstrably well rated: no anonymous/unrated
         // titles or low-rated C-list titles immediately after Featured/New Releases.
         if (rating == null || !rating.isFinite() || rating < 6.5) return false
-        return key(canonicalTitle.ifBlank { providerName }).isNotBlank()
+        // The provider title was already checked above. TitleNormalizer may return an
+        // empty search key for a legitimate title beginning with a country/language
+        // word (e.g. "Italian Job"); that must not silently exclude it from shelves.
+        return true
     }
 
     fun key(raw: String): String = TitleNormalizer.normalize(loungeVodTitle(raw)).query
