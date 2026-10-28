@@ -18,9 +18,12 @@ export class NativePlayer {
  }
  stop(){this.generation++;this.playing=false;if(this.platform==='tizen'){const p=this.env.webapis.avplay;try{const s=p.getState();if(['PLAYING','PAUSED','READY'].includes(s))p.stop();p.close();}catch{/* no active session */}}else{this.video.pause();this.video.removeAttribute('src');this.video.load();}}
  pause(){if(this.platform==='tizen')this.env.webapis.avplay.pause();else this.video.pause();this.playing=false;}
- resume(){if(this.platform==='tizen')this.env.webapis.avplay.play();else return this.video.play();this.playing=true;}
+ async resume(){if(this.platform==='tizen')this.env.webapis.avplay.play();else await this.video.play();this.playing=true;this.onState('playing');}
  position(){return this.platform==='tizen'?this.env.webapis.avplay.getCurrentTime():Math.round((this.video.currentTime||0)*1000);}
  seek(ms){if(this.platform==='tizen')this.env.webapis.avplay.seekTo(Math.max(0,ms));else this.video.currentTime=Math.max(0,ms)/1000;}
  tracks(){return this.platform==='tizen'?this.env.webapis.avplay.getTotalTrackInfo():{audio:this.video.audioTracks??[],subtitles:this.video.textTracks??[]};}
+ duration(){return this.platform==='tizen'?this.env.webapis.avplay.getDuration():Math.round((Number.isFinite(this.video.duration)?this.video.duration:0)*1000);}
+ selectTrack(type,index){if(this.platform==='tizen'){this.env.webapis.avplay.setSelectTrack(type,index);return;}const tracks=type==='AUDIO'?this.video.audioTracks:this.video.textTracks;if(!tracks)throw Error('TRACK_SELECTION_UNAVAILABLE');for(let i=0;i<tracks.length;i++){if(type==='AUDIO')tracks[i].enabled=i===index;else tracks[i].mode=i===index?'showing':'disabled';}}
+ aspect(mode){if(this.platform==='tizen')this.env.webapis.avplay.setDisplayMethod({fit:'PLAYER_DISPLAY_MODE_LETTER_BOX',fill:'PLAYER_DISPLAY_MODE_FULL_SCREEN',stretch:'PLAYER_DISPLAY_MODE_AUTO_ASPECT_RATIO'}[mode]??'PLAYER_DISPLAY_MODE_LETTER_BOX');else this.video.style.objectFit=mode==='fill'?'cover':mode==='stretch'?'fill':'contain';}
 }
 export function registerRemoteKeys(env=globalThis){if(!env.tizen?.tvinputdevice)return;for(const key of ['MediaPlay','MediaPause','MediaPlayPause','MediaStop','MediaFastForward','MediaRewind','ChannelUp','ChannelDown','ColorF0Red','ColorF1Green','ColorF2Yellow','ColorF3Blue']){try{env.tizen.tvinputdevice.registerKey(key);}catch{/* Unsupported key, keep basic D-pad available. */}}}
