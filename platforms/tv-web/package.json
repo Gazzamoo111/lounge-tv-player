@@ -1,6 +1,6 @@
 {
   "name": "lounge-tv-native-web",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "license": "GPL-3.0-only",
@@ -12,6 +12,7 @@
     "targets": "npm run build && node scripts/prepare-targets.mjs"
   },
   "devDependencies": {
+    "jsdom": "^26.1.0",
     "vite": "5.4.21"
   }
 }
