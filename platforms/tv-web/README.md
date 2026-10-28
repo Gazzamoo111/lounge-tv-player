@@ -1,48 +1,23 @@
 # Lounge TV — LG webOS / Samsung Tizen port
 
-This is the platform port of the actual Lounge TV Android application. ZUI is not a dependency.
-Android 5.2.3.1 source commit and core 1.0.69 are pinned in `src/contract.json`.
-The parent repository's GPLv3 licence applies; copied/translated OwnTV/Lounge source and notices must remain available with distributed builds.
+GPLv3 platform port of Lounge TV Android 5.2.3.1, pinned source/core inventory in src/contract.json. ZUI is not a dependency.
 
-## Scope and current increment
+## Development build 0.2.0
 
-The target is complete feature and visual parity: Home/hero and all rails, Live TV, Sport Lounge, Guide, Movies, Series, Downloads, More, profiles, favourites/history, backups/sync, all twelve settings groups and their subpages. Nothing is implicitly dropped because it is Android-specific.
+Implemented flows: editorial catalogue-backed Home hero and rails, live/movie/series categories with bounded 36-card pages, VOD details and episodes, global search, favourites/history/resume per profile, twelve settings groups with validated implemented preferences, EPG and manual XMLTV import, real Sport Lounge fixture feeds and match channel suggestions, teams, native LG video and Samsung AVPlay adapters, audio/subtitle selection when exposed, aspect and sleep controls. Remembered Xtream sources use AES-GCM with a non-exportable IndexedDB key; unsupported storage falls back to session sign-in. Backups exclude credentials and provider URLs.
 
-This first increment is **not a complete port or a customer candidate**. It establishes:
+Not a complete Android port or customer release. Pending: exact Trending gateway and complete visual comparison, advanced settings, profile PIN enforcement, league standings, reminder notifications, local sync, recording/download/multiview mapping, physical LG playback/performance acceptance and Samsung signing/device tests. Reminder buttons save selections only; no alerts are claimed. Source contract statuses remain conservative until complete screen acceptance.
 
-- Exact Stage palette/geometry and original Lounge brand/font assets, rather than another player's theme.
-- Android rail order and settings groups extracted from Kotlin source, plus every screen/settings source unit with implementation status. Status is deliberately `not_ported` until the corresponding complete screen passes acceptance; a partial shell does not count.
-- Sport Lounge's actual selection rules: Live now / Today / Upcoming, seven local dates, lifecycle deduplication, My Teams, distinct NFL/football categories and NZ/AU ordering.
-- Native LG HTML video and Samsung AVPlay adapters, remote key registration and focus-only navigation.
-- Xtream authentication, category-based live/VOD/series requests and media URLs; incremental 48-card rendering, episode browsing, basic session favourites/history.
-- Twelve-group settings navigation, with only genuinely implemented preferences exposed as editable controls.
-- Separate webOS and Tizen build directories. No public hosting or production release.
-
-Still pending: precise screen-by-screen visual reproduction, Home artwork/Trending and all curation rules, sports feeds/match and league pages/channel matching/follows/reminders, full guide/XMLTV, complete search, profile persistence, secure credential persistence, all remaining settings, recordings/downloads/multiview capability mapping, error recovery, subtitle/audio controls and physical device validation. Browser playback is not TV playback validation. The small functional shell is not presented as a substitute finished layout.
-
-## Development
+## Build and check
 
 ```sh
 npm ci --ignore-scripts
-npm test
 npm run build
+npm test
 node scripts/prepare-targets.mjs
+npx --yes --package @webos-tools/cli ares-package targets/webos -o packages
 ```
 
-Run `npm run dev` only for interface development. The packaged TV is required to prove native playback and HTTP-provider behaviour. `targets/webos` may be packaged with the LG CLI; Samsung additionally needs the customer's TV certificate/signing workflow. Do not distribute either before device acceptance.
+24 automated checks include production-bundle DOM boot/navigation, catalogue caching and credential-safe errors, bounded pagination, editorial matching, profile isolation/backup, sports timezone/filter/feed rules and native player adapter sequencing. DOM simulation and adapter tests do not demonstrate real TV playback or frame rate. Samsung target files require signing with the TV certificate before installation.
 
-Regenerate the source inventory from the pinned Android checkout and English XML resources from OwnTV_Core tag `core-1.0.69`:
-
-```sh
-CORE_STRINGS_DIR=/path/to/core-1.0.69/core/src/main/res/values npm run contract
-```
-
-## Performance and data rules
-
-Remote movement changes DOM focus, not application state. Catalogues load per category, cache only within the session, and render bounded pages rather than mounting the whole provider library. No per-card timers, animated blur or smooth-scroll queues are introduced.
-
-Development credentials remain in memory only, are never logged or embedded in DOM attributes, and are cleared on page exit. Settings persist only whitelisted values. No production Supabase connection, BEST panel request, subscription mutation, or customer record is part of this port. Existing Android and live onboarding remain untouched.
-
-## Acceptance
-
-Each feature needs (1) Android source mapping, (2) implementation, (3) behaviour tests, (4) visual comparison with the same real content, and (5) LG and Samsung device results. Platform limitations must be explicit and reviewed rather than hidden behind inert controls. Do not mark the port complete based on a successful build.
+Existing Android app, live onboarding, Supabase, BEST accounts and subscriptions are untouched. Each complete screen still requires source mapping, behaviour checks, visual comparison and physical TV results. This build is for development testing only.
