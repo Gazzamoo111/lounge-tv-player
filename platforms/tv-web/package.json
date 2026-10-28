@@ -1,0 +1,17 @@
+{
+  "name": "lounge-tv-native-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "license": "GPL-3.0-only",
+  "scripts": {
+    "dev": "node scripts/sync-assets.mjs && vite",
+    "build": "node scripts/sync-assets.mjs && vite build",
+    "test": "node --test test/*.test.mjs",
+    "contract": "python3 scripts/extract-contract.py",
+    "targets": "npm run build && node scripts/prepare-targets.mjs"
+  },
+  "devDependencies": {
+    "vite": "5.4.21"
+  }
+}
