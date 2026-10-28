@@ -1,0 +1,7 @@
+node_modules/
+dist/
+targets/
+public/*.png
+public/*.ttf
+.env
+.env.*
