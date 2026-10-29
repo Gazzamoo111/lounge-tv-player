@@ -320,6 +320,16 @@ private fun SeriesGrid(
     val viewMode = if (lockedKey == null) SettingsRepository.VodViewMode.GRID else storedViewMode
     val highlights = categoryHighlights.takeIf { it.categoryKey == selectedKey }
     val categoryFeatured = highlights?.featured.orEmpty()
+    val trendingMatches = remember(homeEditorial.trendingItems) {
+        homeEditorial.trendingItems.filterIsInstance<tv.own.owntv.core.home.TrendingHomeItem.Series>()
+            .sortedBy { it.snapshot.trendingRank }
+    }
+    val visibleTrending by remember(trendingMatches, vm) {
+        vm.discoverySeries(trendingMatches.map { it.series })
+    }.collectAsStateWithLifecycle(initialValue = emptyList())
+    val rankedShows = visibleTrending.filter { selectedKey == LiveKey.All || (selectedKey is LiveKey.Folder && it.categoryId == (selectedKey as LiveKey.Folder).id) }
+    val seriesRanks = trendingMatches.associate { it.series.id to it.snapshot.trendingRank }
+
     val featuredShows = if (selectedKey == LiveKey.All || selectedKey is LiveKey.Folder) {
         val day = highlights?.day ?: System.currentTimeMillis() / 86_400_000L
         val famous = homeEditorial.popularSeries
@@ -329,9 +339,9 @@ private fun SeriesGrid(
         (famous + categoryFeatured).distinctBy { it.id }.take(20)
     } else categoryFeatured
     val newShows = highlights?.newReleases.orEmpty()
-    val displayFeatured = lockedKey == null && searchQuery.isBlank() && featuredShows.isNotEmpty()
+    val displayFeatured = lockedKey == null && searchQuery.isBlank() && (rankedShows.isNotEmpty() || featuredShows.isNotEmpty())
     val displayNewReleases = lockedKey == null && searchQuery.isBlank() && newShows.isNotEmpty()
-    val featuredPreview = if (displayFeatured) featuredShows.take(6) else emptyList()
+    val featuredPreview = if (displayFeatured) (rankedShows.ifEmpty { featuredShows }).take(6) else emptyList()
     val newPreview = if (displayNewReleases) newShows.take(6) else emptyList()
     val editorialRowCount = (if (displayFeatured) 1 else 0) + (if (displayNewReleases) 1 else 0)
     val showCatalogueHeading = editorialRowCount > 0 && series.itemCount > 0
@@ -606,6 +616,22 @@ private fun SeriesGrid(
         if (rememberSeries) perCategorySeriesIds[selectedKey] = show.id
     }
     val posterOf: (tv.own.owntv.core.database.entity.SeriesEntity) -> String? = { it.posterUrl?.takeIf { u -> u.isNotBlank() } ?: cachedPosters[it.id] }
+    var discoveryShow by remember { mutableStateOf<SeriesEntity?>(null) }
+    var discoveryOrigin by remember { mutableStateOf<SeriesEntity?>(null) }
+    var relatedShows by remember { mutableStateOf(tv.own.owntv.features.shell.components.LoungeRelatedSelection<SeriesEntity>()) }
+    LaunchedEffect(discoveryShow?.id, selectedSeriesMeta, metadataMode) {
+        relatedShows = tv.own.owntv.features.shell.components.LoungeRelatedSelection()
+        val show = discoveryShow ?: return@LaunchedEffect
+        val cache = selectedSeriesMeta?.takeIf { it.seriesId == show.id }?.cache
+        if (metadataMode.enrich && selectedSeriesMeta?.seriesId != show.id) return@LaunchedEffect
+        relatedShows = try { vm.relatedSeries(show, cache) } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+        catch (_: Exception) { tv.own.owntv.features.shell.components.LoungeRelatedSelection() }
+    }
+    val openDiscoveryShow: (SeriesEntity) -> Unit = { show ->
+        discoveryOrigin = show
+        discoveryShow = show
+        vm.onSeriesFocused(show)
+    }
     val openHighlightedShow: (tv.own.owntv.core.database.entity.SeriesEntity) -> Unit = { show ->
         onOpenAt(series.itemSnapshotList.indexOfFirst { it?.id == show.id })
         vm.openSeries(show)
@@ -693,7 +719,7 @@ private fun SeriesGrid(
         fun fx(px: Int) = screenW * (px / 1920f)
         if (cinematic) {
             val showcaseActive = displayFeatured || displayNewReleases
-            val heroH = if (showcaseActive) minOf(maxHeight * 0.325f, 350.mpx)
+            val heroH = if (showcaseActive) minOf(maxHeight * 0.36f, 390.mpx)
                 else if (panelShares != null) maxHeight * (cinematicDetailsPct / 100f)
                 else 464.mpx
             val toolTop = 122.mpx + heroH
@@ -751,7 +777,7 @@ private fun SeriesGrid(
                                 if (displayFeatured) {
                                     item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
                                         Text(
-                                            text = stringResource(R.string.lounge_series_featured),
+                                            text = stringResource(if (rankedShows.isNotEmpty()) R.string.lounge_discovery_trending else R.string.lounge_series_featured),
                                             style = stageText(28, 800),
                                             color = StageColors.Text,
                                             modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
@@ -767,13 +793,14 @@ private fun SeriesGrid(
                                             item = show,
                                             width = posterW,
                                             title = homeEditorial.popularSeriesNames[show.id] ?: show.canonicalTitle.ifBlank { show.name },
+                                            rank = seriesRanks[show.id].takeIf { rankedShows.isNotEmpty() },
                                             posterUrl = posterOf(show),
                                             firstInSection = index == 0,
                                             atLeftEdge = index % columns == 0,
                                             focusRequester = firstFeaturedFocus,
                                             onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
                                             onFocus = onShowFocus,
-                                            onOpen = openHighlightedShow,
+                                            onOpen = openDiscoveryShow,
                                         )
                                     }
                                 }
@@ -802,7 +829,7 @@ private fun SeriesGrid(
                                             focusRequester = firstNewReleaseFocus,
                                             onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
                                             onFocus = onShowFocus,
-                                            onOpen = openHighlightedShow,
+                                            onOpen = openDiscoveryShow,
                                         )
                                     }
                                 }
@@ -823,7 +850,7 @@ private fun SeriesGrid(
                                         rating = show.rating?.takeIf { it > 0 }?.let(::vodRating),
                                         width = posterW, height = posterW * 1.5f,
                                         progress = seriesProgress[show.id],
-                                        onClick = { onOpenAt(index); vm.openSeries(show) },
+                                        onClick = { openDiscoveryShow(show) },
                                         onLongClick = { openMenu(show, index) },
                                         modifier = Modifier
                                             .gridFocusTarget(
@@ -949,7 +976,7 @@ private fun SeriesGrid(
                                     placeholder = OwnTVIcon.SERIES,
                                     progress = seriesProgress[show.id],
                                     mark = playlistMarks[show.sourceId],
-                                    onClick = { onOpenAt(index); vm.openSeries(show) },
+                                    onClick = { openDiscoveryShow(show) },
                                     onLongClick = { openMenu(show, index) },
                                     modifier = Modifier
                                         .gridFocusTarget(
@@ -994,7 +1021,7 @@ private fun SeriesGrid(
                             if (displayFeatured) {
                                 item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
                                     Text(
-                                        text = stringResource(R.string.lounge_series_featured),
+                                        text = stringResource(if (rankedShows.isNotEmpty()) R.string.lounge_discovery_trending else R.string.lounge_series_featured),
                                         style = stageText(28, 800),
                                         color = StageColors.Text,
                                         modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
@@ -1010,13 +1037,14 @@ private fun SeriesGrid(
                                         item = show,
                                         width = posterW,
                                         title = homeEditorial.popularSeriesNames[show.id] ?: show.canonicalTitle.ifBlank { show.name },
+                                            rank = seriesRanks[show.id].takeIf { rankedShows.isNotEmpty() },
                                         posterUrl = posterOf(show),
                                         firstInSection = index == 0,
                                         atLeftEdge = index % columns == 0,
                                         focusRequester = firstFeaturedFocus,
                                         onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
                                         onFocus = onShowFocus,
-                                        onOpen = openHighlightedShow,
+                                        onOpen = openDiscoveryShow,
                                     )
                                 }
                             }
@@ -1045,7 +1073,7 @@ private fun SeriesGrid(
                                         focusRequester = firstNewReleaseFocus,
                                         onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
                                         onFocus = onShowFocus,
-                                        onOpen = openHighlightedShow,
+                                        onOpen = openDiscoveryShow,
                                     )
                                 }
                             }
@@ -1067,7 +1095,7 @@ private fun SeriesGrid(
                                     width = posterW, height = posterW * 1.5f,
                                     compact = true,
                                     progress = seriesProgress[show.id],
-                                    onClick = { onOpenAt(index); vm.openSeries(show) },
+                                    onClick = { openDiscoveryShow(show) },
                                     onLongClick = { openMenu(show, index) },
                                     modifier = Modifier
                                         .gridFocusTarget(
@@ -1243,6 +1271,24 @@ private fun SeriesGrid(
             runCatching { contextFocus.requestFocus() }
         }
     }
+    discoveryShow?.let { show ->
+        val cache = selectedSeriesMeta?.takeIf { it.seriesId == show.id }?.cache
+        tv.own.owntv.features.shell.components.LoungeTitlePage(
+            identity = show.id, details = buildSeriesDetails(show, cache, metadataMode.tmdbWins),
+            series = true, favorite = show.id in favoriteIds,
+            recommendations = relatedShows.items.takeIf { relatedShows.ownerId == show.id }.orEmpty().map { tv.own.owntv.features.shell.components.LoungeRelatedCard(it.id, loungeVodTitle(it.name), it.posterUrl) },
+            genreMatched = relatedShows.genreMatched,
+            onPlay = { discoveryShow = null; openHighlightedShow(show) },
+            onFavorite = { vm.toggleFavorite(show) },
+            onRelated = { id -> relatedShows.items.firstOrNull { it.id == id }?.let { discoveryShow = it; vm.onSeriesFocused(it) } },
+            onExit = {
+                discoveryShow = null
+                discoveryOrigin?.let { vm.onSeriesFocused(it) }
+                scope.launch { withFrameNanos { }; focusCurrentTitle() }
+            },
+        )
+    }
+
     detailsSeries?.let { s ->
         val cache = selectedSeriesMeta?.takeIf { it.seriesId == s.id }?.cache
         tv.own.owntv.features.shell.components.MediaDetailsScreen(
@@ -1384,7 +1430,7 @@ private fun buildSeriesDetails(
     val providerPoster = s.posterUrl?.takeIf { it.isNotBlank() }
     val tmdbPoster = tv.own.owntv.core.metadata.MetadataImages.poster(meta?.posterPath)
     val poster = if (tmdbWins) tmdbPoster ?: providerPoster else providerPoster ?: tmdbPoster
-    val backdrop = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath)
+    val backdrop = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath, size = "w1280")
         ?: s.backdropUrl?.takeIf { it.isNotBlank() }
     val plot = if (tmdbWins) meta?.overview ?: s.plot else s.plot?.takeIf { it.isNotBlank() } ?: meta?.overview
     val year = if (tmdbWins) meta?.year ?: s.year else s.year ?: meta?.year

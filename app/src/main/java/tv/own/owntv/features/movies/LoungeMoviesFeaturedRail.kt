@@ -28,6 +28,7 @@ internal fun LoungeMoviesEditorialPoster(
     width: Dp,
     title: String,
     posterUrl: String?,
+    rank: Int? = null,
     firstInSection: Boolean,
     atLeftEdge: Boolean,
     focusRequester: FocusRequester,
@@ -35,10 +36,12 @@ internal fun LoungeMoviesEditorialPoster(
     onFocus: (MovieEntity) -> Unit,
     onOpen: (MovieEntity) -> Unit,
 ) {
-    StagePoster(
+    tv.own.owntv.features.shell.components.LoungeRankedPoster(
         title = loungeVodTitle(title),
         width = width,
-        height = width * 1.5f,
+        posterUrl = posterUrl,
+        rank = rank,
+        series = false,
         onClick = { onOpen(item) },
         modifier = Modifier
             .then(if (firstInSection) Modifier.focusRequester(focusRequester) else Modifier)
@@ -49,7 +52,5 @@ internal fun LoungeMoviesEditorialPoster(
                 } else false
             }
             .onFocusChanged { if (it.isFocused) onFocus(item) },
-    ) {
-        VodPosterArt(posterUrl, OwnTVIcon.MOVIES)
-    }
+    )
 }

@@ -662,6 +662,55 @@ class MovieViewModel(
         }
     }
     fun setSearchQuery(query: String) { _search.value = query }
+
+    /** Revalidate Home's Trending matches against this section's current profile and visibility. */
+    fun discoveryMovies(items: List<MovieEntity>): Flow<List<MovieEntity>> =
+        combine(ctx, custom, hiddenCategoryIds) { c, cust, hidden ->
+            items.filter { item ->
+                item.sourceId in c.sourceIds && item.categoryId !in hidden &&
+                    CustomizeKeys.movie(item) !in cust.hiddenItems &&
+                    LoungeVodCatalogueCleanup.visibleEnglish(item.name, item.providerLanguage)
+            }.distinctBy { tv.own.owntv.ui.components.LoungeVodEditorialQuality.duplicateKey(it.canonicalTitle.ifBlank { it.name }, it.year ?: it.parsedYear) }
+        }
+
+    /** Runs only after explicitly opening a title. Reads local, bounded pools; never starts playback. */
+    internal suspend fun relatedMovies(
+        target: MovieEntity,
+        targetMeta: tv.own.owntv.core.database.entity.MetadataCacheEntity?,
+    ): tv.own.owntv.features.shell.components.LoungeRelatedSelection<MovieEntity> {
+        val c = ctx.value
+        if (c.profileId < 0 || target.sourceId !in c.sourceIds) return tv.own.owntv.features.shell.components.LoungeRelatedSelection()
+        val cust = customize.observe(c.profileId, MediaType.MOVIE).first()
+        val cats = categoryDao.observe(c.sourceIds, MediaType.MOVIE).first()
+        val counts = movieDao.observeCountsByCategory(c.sourceIds).first().associate { it.categoryId to it.itemCount }
+        val kids = profileDao.getById(c.profileId)?.isKids == true
+        val plan = LoungeVodCatalogueCleanup.plan(
+            LoungeVodCatalogueCleanup.Kind.MOVIE,
+            cats.map { cat -> LoungeVodCatalogueCleanup.Folder(cat.id, cat.sourceId, CustomizeKeys.category(cat), cat.name, counts[cat.id]) },
+            { appContext.getString(it) },
+        )
+        val hidden = tv.own.owntv.core.content.AdultCategoryClassifier.hiddenCategoryIds(cats, cust.hiddenCategories, kids) + plan.hiddenIds
+        if (target.categoryId in hidden || CustomizeKeys.movie(target) in cust.hiddenItems) return tv.own.owntv.features.shell.components.LoungeRelatedSelection()
+        val reader = MovieCategoryHighlightsReader(highlightDatabase, movieDao)
+        suspend fun pool(key: LiveKey): List<MovieEntity> {
+            val result = reader.load(key, c.profileId, c.sourceIds, hidden, cust, null, 0L)
+            return (result.featured + result.newReleases).distinctBy { it.id }.take(20)
+        }
+        val nearby = target.categoryId?.let { pool(LiveKey.Folder(it)) }.orEmpty()
+        val candidates = (nearby + pool(LiveKey.All)).distinctBy { it.id }.take(40)
+        val cfg = settings.metadataConfig()
+        fun signal(item: MovieEntity) = tv.own.owntv.ui.components.LoungeDiscoveryRules.Candidate(
+            item.id, item.canonicalTitle.ifBlank { item.name }, item.year ?: item.parsedYear, item.categoryId, rating = item.rating,
+        )
+        val result = tv.own.owntv.features.shell.components.cachedRelatedTitles(
+            highlightDatabase,
+            signal(target).copy(genres = if (cfg.enabled) tv.own.owntv.features.shell.components.genreNames(targetMeta) else emptySet()),
+            candidates, ::signal, { tv.own.owntv.core.metadata.MetadataRepository.movieLocalKey(it) },
+            false, cfg.resolvedLanguage, kids, cfg.enabled,
+        )
+        return if (ctx.value.profileId == c.profileId) result else tv.own.owntv.features.shell.components.LoungeRelatedSelection()
+    }
+
     fun onMovieFocused(movie: MovieEntity) { _selectedMovie.value = movie }
 
     /** Search's "Go to movie": the titles scroll to [reveal] and focus it, then call [revealDone]. */
