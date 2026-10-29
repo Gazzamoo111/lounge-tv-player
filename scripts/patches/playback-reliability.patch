@@ -376,12 +376,12 @@
          tuneGeneration++
          currentUrl = null
          deadlineArmed = false
-@@ -2108,12 +2115,10 @@
+@@ -2108,13 +2115,14 @@
              // Coalesce the backoff delay with the resolve: whichever is later wins, but the resolve must
              // complete before we reload. Post the reload so it lands on the main thread's Looper after delay.
              lateinit var reload: Runnable
 -            reload = Runnable {
-+            reload = recoveryTasks.post(delayMs, { tuneGeneration == generation && currentUrl == url && player === p }) {
++            reload = recoveryTasks.post(delayMs, { tuneGeneration == generation && currentUrl == url }) {
                  // Only its own: a reload left over from a channel since left must not clear the current one's.
                  if (pendingReload === reload) pendingReload = null
 -                if (tuneGeneration != generation || currentUrl != url) {
@@ -389,9 +389,13 @@
 -                } // superseded (zapped / stopped), even if the replacement channel reuses the same URL
 +                if (tuneGeneration != generation || currentUrl != url) return@post // superseded (zapped / stopped), even if the replacement channel reuses the same URL
                  tune.reconnectPending = false
++                // A decoder rebuild can replace the player without changing the channel. Only this
++                // tune may clear its pending flag, and a released player must never be prepared again.
++                if (player !== p) return@post
                  // Media3 kept retrying during the delay and got the stream back by itself. Re-preparing now
                  // would tear down a stream that is already playing or already refilling — measured: a
-@@ -2128,7 +2133,7 @@
+                 // recovered channel was restarted 11s later, and a response already 450 KB in was thrown
+@@ -2128,7 +2136,7 @@
                      LiveDiagnosticsLog.event("reconnect skipped — the stream came back on its own")
                      // Still buffering: if this refill stalls again, the watchdog reconnects as usual.
                      if (refilling) { mainHandler.removeCallbacks(stallWatchdog); mainHandler.postDelayed(stallWatchdog, STALL_MS) }
@@ -400,7 +404,7 @@
                  }
                  val loadUrl = fresh ?: url // null provider/result → replay the (still-valid) stored URL
                  if (fresh != null && fresh != url) {
-@@ -2145,7 +2150,6 @@
+@@ -2145,7 +2153,6 @@
                  }
              }
              pendingReload = reload
@@ -408,7 +412,7 @@
          }
      }
  
-@@ -2287,12 +2291,12 @@
+@@ -2287,12 +2294,12 @@
      private fun retryAfterSessionRelease() {
          val p = player ?: return
          val url = currentUrl ?: return
@@ -423,7 +427,7 @@
              runCatching {
                  reprepare(p, url)
              }.onFailure {
-@@ -2301,7 +2305,7 @@
+@@ -2301,7 +2308,7 @@
                  _error.value = PlaybackFailure.Channel
                  _errorInfo.value = ErrorInfo(PlayerErrors.reasonFor(it.message.orEmpty()), exoSpec(), it.message)
              }
@@ -432,7 +436,7 @@
      }
  
      /**
-@@ -2681,6 +2685,7 @@
+@@ -2681,6 +2688,7 @@
      /** Release the player and its codec, recreate the surface, and reopen the current channel on both. */
      private fun rebuildDecoderAndSurface() {
          val url = currentUrl ?: return
@@ -440,7 +444,7 @@
          _state.value = State.LOADING; _buffering.value = true
          _error.value = null; _errorInfo.value = null
          // Drop the whole player: removeListener first so this release doesn't come back as STATE_IDLE.
-@@ -2697,8 +2702,7 @@
+@@ -2697,8 +2705,7 @@
          awaitingFreshSurface = true
          // Let the OMX component actually tear down before the replacement asks for it — the same
          // reason the mpv→ExoPlayer swap in LiveViewModel waits before re-tuning.
@@ -450,7 +454,7 @@
              runCatching {
                  val p = build().also { player = it }
                  surface?.let { p.setVideoSurface(it) }
-@@ -2717,7 +2721,7 @@
+@@ -2717,7 +2724,7 @@
                  _error.value = PlaybackFailure.Channel
                  _errorInfo.value = ErrorInfo(PlayerErrors.reasonFor(it.message ?: ""), exoSpec(), it.message ?: "")
              }
@@ -513,7 +517,7 @@
          assertEquals("segment", HttpDiagnostics.requestRole("http://h/a/seg1.ts"))
 --- /dev/null
 +++ b/player-core/src/test/java/tv/own/owntv/player/TuneRecoveryTasksTest.kt
-@@ -0,0 +1,84 @@
+@@ -0,0 +1,95 @@
 +package tv.own.owntv.player
 +
 +import org.junit.Assert.assertEquals
@@ -583,6 +587,17 @@
 +        player = Any()
 +        c.advance(2000)
 +        assertEquals(0, prepares)
++    }
++
++    @Test fun `generation guard blocks same URL work even without queue cancellation`() {
++        val c = Clock()
++        var generation = 1L
++        val captured = generation
++        var currentTunePending = true
++        c.tasks.post(1500, { generation == captured }) { currentTunePending = false }
++        generation += 2 // A to B to A, identical final URL but a new tune identity.
++        c.advance(1500)
++        assertTrue(currentTunePending)
 +    }
 +
 +    @Test fun `fast tracking a reconnect runs once and natural recovery remains respected`() {
