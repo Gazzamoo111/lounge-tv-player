@@ -302,8 +302,8 @@ class SeriesViewModel(
         }
     }.distinctUntilChanged()
 
-    internal val categoryHighlights: StateFlow<SeriesCategoryHighlights> = combine(
-        _selected, ctx, custom, hiddenCategoryIds, highlightDay,
+    internal fun discoveryHighlights(key: LiveKey): Flow<SeriesCategoryHighlights> = combine(
+        kotlinx.coroutines.flow.flowOf(key), ctx, custom, hiddenCategoryIds, highlightDay,
     ) { key, c, cust, hidden, day -> HighlightScope(key, c, cust, hidden, day) }
         .debounce(300)
         .mapLatest { scope ->
@@ -327,6 +327,9 @@ class SeriesViewModel(
                 }
             }
         }
+
+    internal val categoryHighlights: StateFlow<SeriesCategoryHighlights> = _selected
+        .flatMapLatest(::discoveryHighlights)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SeriesCategoryHighlights())
 
     // Bumped after a favourite/history mutation so the pager rebuilds its (manual, non-reactive)
@@ -630,6 +633,11 @@ class SeriesViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), defaultRail)
 
+    internal val discoveryFilter = MutableStateFlow(tv.own.owntv.ui.components.LoungeBrowseFilter())
+    internal fun setDiscoveryFilter(filter: tv.own.owntv.ui.components.LoungeBrowseFilter) {
+        discoveryFilter.value = filter
+    }
+
     val series: Flow<PagingData<SeriesEntity>> = combine(
         _selected, ctx, _search.map { it.trim() }.debounce(300).distinctUntilChanged(), sortMode, _listRefresh,
     ) { key, c, query, sort, _ -> Args(key, c, query, sort) }
@@ -637,12 +645,24 @@ class SeriesViewModel(
         // Rebuild the pager when a folder gains/loses manual order: the fast-path plain
         // PagingSource doesn't observe content_order, so the switch must recreate it.
         .combine(orderedContexts) { p, _ -> p }
+        .combine(discoveryFilter) { pair, filter -> pair.first.copy(filter = filter) to pair.second }
         .flatMapLatest { (args, cs) ->
             // Hidden items/categories are filtered on each fresh PagingData inside the pager chain —
             // a customization change re-creates the pager (same pattern as Live TV).
-            Pager(PagingConfig(pageSize = 60, prefetchDistance = 30, initialLoadSize = 90, maxSize = 300)) {
-                pagingSource(args.key, args.ctx, args.query, args.sort)
-            }.flow.map { paging ->
+            Pager(PagingConfig(pageSize = 60, prefetchDistance = 18, initialLoadSize = 60, maxSize = 300, enablePlaceholders = false)) {
+                val folder = args.key as? LiveKey.Folder
+                // Preserve the established manual/custom/favourites paths. Plain folders and All
+                // use bounded ID queries so curated IDs/release years are filtered before paging.
+                if (args.key == LiveKey.All || (folder != null && (args.filter.releaseYearDescending || args.sort != SettingsRepository.SortMode.PLAYLIST || folderContextKeys.value[folder.id] !in orderedContexts.value))) {
+                    tv.own.owntv.ui.components.LoungeCataloguePagingSource(
+                        database = highlightDatabase, table = "series", sourceIds = args.ctx.sourceIds,
+                        categoryId = folder?.id, query = args.query, sort = args.sort,
+                        filter = args.filter, hydrate = { seriesDao.getSeriesByIds(it) }, idOf = { it.id },
+                    )
+                } else pagingSource(args.key, args.ctx, args.query, args.sort)
+            }.flow.map { raw ->
+                val paging = raw.filter { item -> args.filter.accepts(item.id, item.year ?: item.parsedYear) }
+
                 val cust = cs.cust
                 val movedFrom = cust.movedFromOrigin
                 if (cust.hiddenItems.isEmpty() && cust.itemNames.isEmpty() && cs.hiddenCats.isEmpty() && movedFrom.isEmpty()) paging.filter { item ->
@@ -664,7 +684,7 @@ class SeriesViewModel(
         }
         .cachedIn(viewModelScope)
 
-    private data class Args(val key: LiveKey, val ctx: Ctx, val query: String, val sort: SettingsRepository.SortMode)
+    private data class Args(val key: LiveKey, val ctx: Ctx, val query: String, val sort: SettingsRepository.SortMode, val filter: tv.own.owntv.ui.components.LoungeBrowseFilter = tv.own.owntv.ui.components.LoungeBrowseFilter())
 
     val count: StateFlow<Int> = combine(_selected, ctx, hiddenCategoryIds) { key, c, hidden -> Triple(key, c, hidden) }
         .flatMapLatest { (key, c, hidden) -> countFlow(key, c, hidden).throttleLatest() } // Cap live COUNT re-runs during bulk sync
@@ -792,6 +812,7 @@ class SeriesViewModel(
     private var previousKey: LiveKey? = null
 
     fun lock(key: LiveKey) {
+        discoveryFilter.value = tv.own.owntv.ui.components.LoungeBrowseFilter()
         if (lockedKey == null) previousKey = _selected.value
         lockedKey = key
         _selected.value = key
@@ -814,6 +835,7 @@ class SeriesViewModel(
 
     fun select(key: LiveKey) {
         if (lockedKey != null) return
+        discoveryFilter.value = tv.own.owntv.ui.components.LoungeBrowseFilter()
         _selected.value = key
         // Core's lazy-catalogue drain fills categories in the provider's order; tell it the user is
         // here so this one is served next. A no-op for every playlist that was not

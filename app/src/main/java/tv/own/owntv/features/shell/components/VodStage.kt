@@ -485,7 +485,7 @@ internal fun VodSortTool(mode: SortMode, modifier: Modifier = Modifier, onClick:
 
 /** Sort: "Sort movies · Applies to every category in this section", 560 wide; ✓ on the current order. */
 @Composable
-internal fun VodSortMenu(series: Boolean, current: SortMode, x: Float, top: Dp, onPick: (SortMode) -> Unit, onDismiss: () -> Unit) {
+internal fun VodSortMenu(series: Boolean, current: SortMode, x: Float, top: Dp, onPick: (SortMode) -> Unit, onDismiss: () -> Unit, yearSelected: Boolean = false, onYear: (() -> Unit)? = null) {
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
     GuideMenuHost(x = x, top = top, width = 560.mpx, onDismiss = onDismiss) {
@@ -493,8 +493,13 @@ internal fun VodSortMenu(series: Boolean, current: SortMode, x: Float, top: Dp, 
             title = stringResource(if (series) R.string.content_sort_series_title else R.string.content_sort_movies_title),
             subtitle = stringResource(R.string.content_sort_applies_hint),
         )
+        if (onYear != null) StageMenuItem(
+            text = stringResource(R.string.lounge_browse_year_sort), icon = OwnTVIcon.SORT,
+            checked = yearSelected, onClick = { onYear(); onDismiss() },
+            modifier = if (yearSelected) Modifier.focusRequester(focus) else Modifier,
+        )
         VodSorts.forEach { (mode, label, hint) ->
-            val on = mode == current
+            val on = mode == current && !yearSelected
             StageMenuItem(
                 text = stringResource(label), icon = OwnTVIcon.SORT,
                 value = if (on) null else hint?.let { stringResource(it) }, checked = on,

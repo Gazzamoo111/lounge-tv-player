@@ -1,0 +1,84 @@
+name: Lounge TV VOD Navigation QA
+on:
+  push:
+    branches: [feature/vod-discovery-navigation]
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  VOD_NAVIGATION_QA: 'true'
+  ISOLATED_EVENT_QA: ${{ github.event_name == 'pull_request' }}
+  RELIABILITY_AUDIT_QA: ${{ github.event_name == 'pull_request' }}
+jobs:
+  tests:
+    uses: ./.github/workflows/playback-tests.yml
+  test:
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout immutable OwnTV playback core
+        uses: actions/checkout@v4
+        with:
+          repository: ahXN00/OwnTV_Core
+          ref: 1de78b1e2690c22b50c060e986bce221454bf880
+          path: shared-core
+          persist-credentials: false
+      - name: Apply Lounge TV playback fixes to pinned core
+        run: python3 scripts/patch_lounge_playback_core.py shared-core
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Render transparent Lounge TV couch icons
+        run: |
+          python3 -m pip install --disable-pip-version-check Pillow
+          python3 scripts/generate_loungetv_brand_assets.py
+      - name: Check branding and release guardrails
+        run: |
+          python3 scripts/check_branding.py
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/tests -p 'test_*.py'
+      - name: Set monotonic QA version
+        run: |
+          set -euo pipefail
+          QA_VERSION_CODE=$(python3 scripts/qa_version_code.py "$GITHUB_RUN_NUMBER" "$GITHUB_RUN_ATTEMPT")
+          echo "VERSION_CODE=$QA_VERSION_CODE" >> "$GITHUB_ENV"
+          echo "VERSION_NAME=5.2.3.2-vod-navigation.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+      # No persistent QA key is configured. Every run/attempt gets its own install identity,
+      # so a fresh debug signer never overwrites an earlier QA installation or its data.
+      - name: Compile isolated VOD QA APK
+        env:
+          QA_SIGNING_REQUIRED: 'false'
+        run: |
+          set -euo pipefail
+          export VOD_QA_INSTALL_ID="b${GITHUB_RUN_NUMBER}a${GITHUB_RUN_ATTEMPT}"
+          QA_PACKAGE="com.loungetv.player.vodnavigationqa.$VOD_QA_INSTALL_ID"
+          ./gradlew :app:assembleStandardDebug -Powntv.corePath="$GITHUB_WORKSPACE/shared-core" --stacktrace
+          QA_APK=$(find app/build/outputs/apk/standard/debug -maxdepth 1 -name '*.apk' -print -quit)
+          [ -n "$QA_APK" ] || { echo "QA APK was not produced"; exit 1; }
+          AAPT=$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)
+          "$AAPT" dump badging "$QA_APK" > "$RUNNER_TEMP/vod-badging.txt"
+          head -n 1 "$RUNNER_TEMP/vod-badging.txt" | grep "name='$QA_PACKAGE' versionCode='$VERSION_CODE'"
+          "$APKSIGNER" verify --print-certs "$QA_APK" > "$RUNNER_TEMP/vod-cert.txt"
+          {
+            echo "Commit: $GITHUB_SHA"
+            echo "Package: $QA_PACKAGE"
+            echo "Version: $VERSION_NAME ($VERSION_CODE)"
+            echo "Signing: isolated debug certificate; not a production or prior-QA update"
+            sha256sum "$QA_APK"
+            cat "$RUNNER_TEMP/vod-cert.txt"
+          } > app/build/outputs/apk/standard/debug/QA-IDENTITY.txt
+          cat app/build/outputs/apk/standard/debug/QA-IDENTITY.txt
+      - name: Upload test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: lounge-tv-vod-navigation-qa
+          path: |
+            app/build/outputs/apk/standard/debug/*.apk
+            app/build/outputs/apk/standard/debug/QA-IDENTITY.txt
+          if-no-files-found: error

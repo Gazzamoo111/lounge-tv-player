@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="lounge_recovery_qa_app_name">Lounge TV Recovery QA</string>
+    <string name="lounge_vod_navigation_qa_app_name">Lounge TV VOD QA</string>
 </resources>

@@ -91,6 +91,10 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 // Aliased: the grid and list versions share a name, and both are used in this file.
 import androidx.compose.foundation.lazy.grid.itemsIndexed as gridItemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
+import kotlinx.coroutines.flow.map
+import tv.own.owntv.features.shell.components.LoungeCollection
+import tv.own.owntv.features.shell.components.LoungeVodBrowser
+import tv.own.owntv.ui.components.LoungeBrowseFilter
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -200,6 +204,7 @@ fun SeriesScreen(
     // first page on the way back, so a show further down is found only after scrolling there again.
     var returnToIndex by remember { mutableIntStateOf(-1) }
 
+    val browseState = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
     if (openedSeries != null) {
         EpisodeView(
             series = openedSeries!!,
@@ -213,6 +218,7 @@ fun SeriesScreen(
     } else {
         // Not in a show → nothing episode-specific to restore; clear the flag so it doesn't linger.
         if (restoreFocus) onRestored()
+        browseState.SaveableStateProvider("series-browser") {
         SeriesGrid(
             vm = vm,
             onChildFocused = onChildFocused,
@@ -224,6 +230,7 @@ fun SeriesScreen(
             onEntryHook = onEntryHook,
             modifier = modifier,
         )
+        }
     }
 }
 
@@ -529,11 +536,11 @@ private fun SeriesGrid(
     // Separate panels), Cinematic on the title the hero shows. The shell's focus restorer would
     // otherwise return to whatever had focus last, such as the search field.
     DisposableEffect(onEntryHook, cinematic) {
-        onEntryHook?.invoke {
+        if (lockedKey != null) onEntryHook?.invoke {
             // The column's own row path (scrolls to it if needed), not the list's first child: the search field.
             if (!cinematic && lockedKey == null) { railFocusRow = selectedIndex; true } else focusCurrentTitle()
         }
-        onDispose { onEntryHook?.invoke(null) }
+        onDispose { if (lockedKey != null) onEntryHook?.invoke(null) }
     }
 
     // Manual panel widths (Settings → Layout → Panel widths), mapped onto Stage: Separate = the column,
@@ -721,7 +728,59 @@ private fun SeriesGrid(
         // Horizontal geometry is a fraction of the 1920 design width, so every zoom reflows.
         val screenW = maxWidth
         fun fx(px: Int) = screenW * (px / 1920f)
-        if (cinematic) {
+        if (lockedKey == null) {
+            val allHighlights by remember(vm) { vm.discoveryHighlights(LiveKey.All) }
+                .collectAsStateWithLifecycle(initialValue = SeriesCategoryHighlights())
+            val browseFilter by vm.discoveryFilter.collectAsStateWithLifecycle()
+            val curated = allHighlights.featured
+            val recent = allHighlights.newReleases
+            val recommendedLabel = stringResource(R.string.lounge_browse_featured)
+            val trendingLabel = stringResource(R.string.lounge_discovery_trending)
+            val recentLabel = stringResource(R.string.lounge_browse_recent_releases)
+            val year = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+            val collectionRows = buildList<LoungeCollection<SeriesEntity>> {
+                if (visibleTrending.isNotEmpty()) add(LoungeCollection(
+                    id = "trending", label = trendingLabel, titles = visibleTrending,
+                    filter = LoungeBrowseFilter(ids = visibleTrending.map { it.id }.toSet()), ranks = seriesRanks,
+                ))
+                if (curated.isNotEmpty()) add(LoungeCollection(
+                    id = "featured", label = recommendedLabel, titles = curated,
+                    filter = LoungeBrowseFilter(ids = curated.map { it.id }.toSet()),
+                ))
+                if (recent.isNotEmpty()) add(LoungeCollection(
+                    id = "recent", label = recentLabel, titles = recent,
+                    filter = LoungeBrowseFilter(releaseYears = (year - 2)..year),
+                ))
+                // Actual, already-cleaned provider folders. No synthetic genre assignment.
+                val preferred = listOf("action", "comedy", "drama", "thriller", "sci", "horror", "family", "document", "crime", "animation", "adventure", "fantasy")
+                railItems.filter { it.key is LiveKey.Folder }
+                    .map { it to ProviderTags.parse(it.title.orEmpty()).name }
+                    .filter { (_, label) -> preferred.any { label.contains(it, ignoreCase = true) } }
+                    .distinctBy { (_, label) -> label.lowercase() }
+                    .sortedBy { (_, label) -> preferred.indexOfFirst { label.contains(it, ignoreCase = true) } }
+                    .take(12).forEach { (item, label) ->
+                        val preview = androidx.compose.runtime.key(item.key) { remember(vm, item.key) { vm.discoveryHighlights(item.key).map { it.featured } } }
+                        add(LoungeCollection(id = item.key.toString(), label = label, key = item.key, preview = preview))
+                    }
+            }
+            val fallbackHero = curated.firstOrNull() ?: visibleTrending.firstOrNull()
+            val heroTitle = selectedSeries ?: fallbackHero
+            LoungeVodBrowser(
+                series = true, profileId = discoveryProfileId, category = selectedKey,
+                categories = railItems, collections = collectionRows, items = series,
+                idOf = { it.id }, titleOf = { it.name }, posterOf = posterOf,
+                progressOf = { item -> seriesProgress[item.id] },
+                hero = heroTitle?.let { seriesTitleInfo(it, selectedSeriesMeta?.takeIf { meta -> meta.seriesId == it.id }?.cache, metadataMode.tmdbWins) },
+                heroItem = heroTitle, query = searchQuery, onQuery = vm::setSearchQuery,
+                sort = sortMode, yearSort = browseFilter.releaseYearDescending,
+                onSort = { mode -> vm.setDiscoveryFilter(browseFilter.copy(releaseYearDescending = false)); vm.setSort(mode) },
+                onYearSort = { vm.setDiscoveryFilter(browseFilter.copy(releaseYearDescending = true)) },
+                onSelect = { key, filter -> vm.select(key); vm.setDiscoveryFilter(filter) },
+                onFocus = onShowFocus, onOpen = openDiscoveryShow, onPlayHero = openHighlightedShow, onMenu = openMenu,
+                modalOpen = discoveryShow != null || contextSeries != null || detailsSeries != null,
+                onEntryHook = onEntryHook,
+            )
+        } else if (cinematic) {
             val showcaseActive = displayFeatured || displayNewReleases
             val heroH = if (showcaseActive) minOf(maxHeight * 0.36f, 390.mpx)
                 else if (panelShares != null) maxHeight * (cinematicDetailsPct / 100f)

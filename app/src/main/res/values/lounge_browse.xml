@@ -1,0 +1,13 @@
+<resources>
+    <string name="lounge_browse_all_movies">Browse All Movies</string>
+    <string name="lounge_browse_all_series">Browse All Series</string>
+    <string name="lounge_browse_view_all">View All</string>
+    <string name="lounge_browse_play">Play</string>
+    <string name="lounge_browse_info">More Info</string>
+    <string name="lounge_browse_featured">Featured picks</string>
+    <string name="lounge_browse_recent_releases">Recent releases</string>
+    <string name="lounge_browse_loading">Loading titles…</string>
+    <string name="lounge_browse_empty">No titles in this collection</string>
+    <string name="lounge_browse_retry">Retry loading</string>
+    <string name="lounge_browse_year_sort">Release year: newest first</string>
+</resources>
