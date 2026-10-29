@@ -1,0 +1,108 @@
+name: Lounge TV VOD Navigation QA
+on:
+  push:
+    branches: [feature/vod-discovery-navigation]
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  VOD_NAVIGATION_QA: 'true'
+  ISOLATED_EVENT_QA: ${{ github.event_name == 'pull_request' }}
+  RELIABILITY_AUDIT_QA: ${{ github.event_name == 'pull_request' }}
+jobs:
+  tests:
+    uses: ./.github/workflows/playback-tests.yml
+  test:
+    needs: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout immutable OwnTV playback core
+        uses: actions/checkout@v4
+        with:
+          repository: ahXN00/OwnTV_Core
+          ref: 1de78b1e2690c22b50c060e986bce221454bf880
+          path: shared-core
+          persist-credentials: false
+      - name: Apply Lounge TV playback fixes to pinned core
+        run: python3 scripts/patch_lounge_playback_core.py shared-core
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Render transparent Lounge TV couch icons
+        run: |
+          python3 -m pip install --disable-pip-version-check Pillow
+          python3 scripts/generate_loungetv_brand_assets.py
+      - name: Check branding and release guardrails
+        run: |
+          python3 scripts/check_branding.py
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/tests -p 'test_*.py'
+      - name: Set monotonic QA version
+        run: |
+          set -euo pipefail
+          QA_VERSION_CODE=$(python3 scripts/qa_version_code.py "$GITHUB_RUN_NUMBER" "$GITHUB_RUN_ATTEMPT")
+          echo "VERSION_CODE=$QA_VERSION_CODE" >> "$GITHUB_ENV"
+          echo "VERSION_NAME=5.2.3.2-vod-navigation.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+      # PRs compile with an isolated ephemeral debug signer. Stable QA signing remains
+      # mandatory for main/workflow_dispatch and is never supplied to untrusted PR code.
+      - name: Decode persistent QA signing key
+        if: github.event_name != 'pull_request'
+        env:
+          QA_KEYSTORE_BASE64: ${{ secrets.QA_KEYSTORE_BASE64 }}
+          QA_KEYSTORE_PASSWORD: ${{ secrets.QA_KEYSTORE_PASSWORD }}
+          QA_KEY_ALIAS: ${{ secrets.QA_KEY_ALIAS }}
+          QA_KEY_PASSWORD: ${{ secrets.QA_KEY_PASSWORD }}
+          EXPECTED_QA_CERT_SHA256: ${{ vars.QA_CERT_SHA256 }}
+          EXPECTED_PRODUCTION_CERT_SHA256: ${{ vars.PRODUCTION_CERT_SHA256 }}
+        run: |
+          set -euo pipefail
+          for n in QA_KEYSTORE_BASE64 QA_KEYSTORE_PASSWORD QA_KEY_ALIAS QA_KEY_PASSWORD EXPECTED_QA_CERT_SHA256 EXPECTED_PRODUCTION_CERT_SHA256; do
+            [ -n "${!n:-}" ] || { echo "Missing required QA signing setting: $n"; exit 1; }
+          done
+          qa_cert=$(printf '%s' "$EXPECTED_QA_CERT_SHA256" | tr -cd '[:xdigit:]' | tr '[:upper:]' '[:lower:]')
+          production_cert=$(printf '%s' "$EXPECTED_PRODUCTION_CERT_SHA256" | tr -cd '[:xdigit:]' | tr '[:upper:]' '[:lower:]')
+          [ "${#qa_cert}" -eq 64 ] || { echo "QA_CERT_SHA256 is not a SHA-256 digest"; exit 1; }
+          [ "$qa_cert" != "$production_cert" ] || { echo "QA and production certificates must be different"; exit 1; }
+          printf '%s' "$QA_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/loungetv-qa.keystore"
+          echo "QA_KEYSTORE_FILE=$RUNNER_TEMP/loungetv-qa.keystore" >> "$GITHUB_ENV"
+      - name: Compile QA APK
+        env:
+          QA_KEYSTORE_PASSWORD: ${{ secrets.QA_KEYSTORE_PASSWORD }}
+          QA_KEY_ALIAS: ${{ secrets.QA_KEY_ALIAS }}
+          QA_KEY_PASSWORD: ${{ secrets.QA_KEY_PASSWORD }}
+          QA_SIGNING_REQUIRED: ${{ github.event_name != 'pull_request' }}
+          EXPECTED_QA_CERT_SHA256: ${{ vars.QA_CERT_SHA256 }}
+        run: |
+          set -euo pipefail
+          ./gradlew :app:assembleStandardDebug -Powntv.corePath="$GITHUB_WORKSPACE/shared-core" --stacktrace
+          QA_APK=$(find app/build/outputs/apk/standard/debug -maxdepth 1 -name '*.apk' -print -quit)
+          [ -n "$QA_APK" ] || { echo "QA APK was not produced"; exit 1; }
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            # Debug-signed preflight can never be installed as a stable QA update.
+            AAPT=$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)
+            APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)
+            APK_BADGING=$("$AAPT" dump badging "$QA_APK")
+            APK_ID=$(printf '%s' "$APK_BADGING" | sed -n '1p')
+            echo "Built APK identity: $APK_ID"
+            case "$APK_ID" in
+              "package: name='com.loungetv.player.auditqa' versionCode='$VERSION_CODE' "*) ;;
+              *) echo "Expected isolated auditqa package, got: $APK_ID"; exit 1 ;;
+            esac
+            "$APKSIGNER" verify "$QA_APK"
+          else
+            python3 scripts/verify_update_compatibility.py "$QA_APK" \
+              --expected-package com.loungetv.player.vodnavigationqa \
+              --expected-cert-sha256 "$EXPECTED_QA_CERT_SHA256" \
+              --expected-version-code "$VERSION_CODE"
+          fi
+      - name: Upload test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: lounge-tv-vod-navigation-qa
+          path: app/build/outputs/apk/standard/debug/*.apk
+          if-no-files-found: error
