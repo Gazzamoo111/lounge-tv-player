@@ -12,14 +12,11 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.Dp
 import tv.own.owntv.core.database.entity.SeriesEntity
-import tv.own.owntv.features.shell.components.VodPosterArt
-import tv.own.owntv.ui.components.OwnTVIcon
 import tv.own.owntv.ui.components.loungeVodTitle
-import tv.own.owntv.ui.stage.StagePoster
 
 /**
  * A standard 2:3 portrait tile within the SINGLE vertical browse grid.
- * Featured, new and full-library cards use identical measured dimensions.
+ * Trending adds a rank beside its 2:3 artwork; unranked cards retain the full grid width.
  * No nested LazyRow, no independent sideways scroll or mismatched focus geometry.
  */
 @Composable
@@ -28,6 +25,7 @@ internal fun LoungeSeriesEditorialPoster(
     width: Dp,
     title: String,
     posterUrl: String?,
+    rank: Int? = null,
     firstInSection: Boolean,
     atLeftEdge: Boolean,
     focusRequester: FocusRequester,
@@ -35,10 +33,12 @@ internal fun LoungeSeriesEditorialPoster(
     onFocus: (SeriesEntity) -> Unit,
     onOpen: (SeriesEntity) -> Unit,
 ) {
-    StagePoster(
+    tv.own.owntv.features.shell.components.LoungeRankedPoster(
         title = loungeVodTitle(title),
         width = width,
-        height = width * 1.5f,
+        posterUrl = posterUrl,
+        rank = rank,
+        series = true,
         onClick = { onOpen(item) },
         modifier = Modifier
             .then(if (firstInSection) Modifier.focusRequester(focusRequester) else Modifier)
@@ -49,7 +49,5 @@ internal fun LoungeSeriesEditorialPoster(
                 } else false
             }
             .onFocusChanged { if (it.isFocused) onFocus(item) },
-    ) {
-        VodPosterArt(posterUrl, OwnTVIcon.SERIES)
-    }
+    )
 }
