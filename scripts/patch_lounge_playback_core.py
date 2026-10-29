@@ -224,6 +224,10 @@ def apply(root: Path) -> None:
     body = sorted(rows[header_end:], key=lambda row: (row.split("\t", 3)[2], row.split("\t", 3)[3]))
     manifest.write_text("\n".join(rows[:header_end] + body) + "\n", encoding="utf-8")
     print("Reviewed protocol and log literals in pinned-core i18n inventory")
+    reliability_patch = Path(__file__).resolve().parent / "patches/playback-reliability.patch"
+    subprocess.run(["git", "-C", str(root), "apply", "--check", str(reliability_patch)], check=True)
+    subprocess.run(["git", "-C", str(root), "apply", str(reliability_patch)], check=True)
+    print("Applied reviewed tune-cancellation and credential backport")
     print(f"Playback core patch applied to pinned commit {PIN}")
 
 if __name__ == "__main__":

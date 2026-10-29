@@ -1,0 +1,1729 @@
+--- a/core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt
++++ b/core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt
+@@ -5,6 +5,8 @@
+ import tv.own.owntv.core.database.entity.SourceEntity
+ import tv.own.owntv.core.model.SourceType
+ import tv.own.owntv.core.parser.XtreamClient
++import java.net.URLDecoder
++import java.net.URLEncoder
+ import java.util.TimeZone
+ 
+ /**
+@@ -156,7 +158,16 @@
+      */
+     fun timeshiftPhpAlternate(url: String?): String? {
+         val g = url?.let { TIMESHIFT_PATH.find(it) }?.groupValues ?: return null
+-        return "${g[1]}/streaming/timeshift.php?username=${g[2]}&password=${g[3]}&stream=${g[6]}&start=${g[5]}&duration=${g[4]}"
++        return "${g[1]}/streaming/timeshift.php?username=${queryValue(g[2])}&password=${queryValue(g[3])}&stream=${g[6]}&start=${g[5]}&duration=${g[4]}"
++    }
++
++    /**
++     * A path segment re-encoded as a query value. A `+` or `&` is literal in a path but not in a
++     * query, so the segment is decoded first (keeping `+` a plus, as a path means it) and encoded again.
++     */
++    private fun queryValue(pathSegment: String): String {
++        val decoded = runCatching { URLDecoder.decode(pathSegment.replace("+", "%2B"), "UTF-8") }.getOrDefault(pathSegment)
++        return URLEncoder.encode(decoded, "UTF-8")
+     }
+ 
+     /**
+--- a/core/src/main/java/tv/own/owntv/core/network/HttpClient.kt
++++ b/core/src/main/java/tv/own/owntv/core/network/HttpClient.kt
+@@ -44,7 +44,7 @@
+ 
+         val coroutineContext = currentCoroutineContext()
+         val startedAt = SystemClock.elapsedRealtime()
+-        val safeUrl = redact(url)
++        val safeUrl = redactUrl(url)
+         val attempts = maxAttempts.coerceAtLeast(1)
+         var attempt = 1
+         while (attempt <= attempts) {
+@@ -59,7 +59,7 @@
+                 call.execute().use { response ->
+                     responseReceived = true
+                     val headersAt = SystemClock.elapsedRealtime()
+-                    if (!response.isSuccessful) throw HttpStatusException(response.code, "HTTP ${response.code} for ${redact(url)}")
++                    if (!response.isSuccessful) throw HttpStatusException(response.code, "HTTP ${response.code} for ${redactUrl(url)}")
+                     val body = response.body
+                     val totalBytes = body.contentLength().takeIf { it >= 0 }
+                     // Info, not debug, and deliberately so: release builds strip Log.d, and this one
+@@ -109,10 +109,6 @@
+         throw IOException("GET failed for $safeUrl")
+     }
+ 
+-    /** Mask credentials in a URL before it appears in an error/log — Xtream embeds user/pass in the query. */
+-    private fun redact(url: String): String =
+-        url.replace(Regex("(?i)(username|password|user|pass|token)=[^&]*"), "$1=***")
+-
+     /** Convenience for small responses (e.g. Xtream category lists). */
+     suspend fun getText(
+         url: String,
+@@ -145,15 +141,21 @@
+         private const val MAX_RETRY_DELAY_MS = 3_000L
+ 
+         /** Mask credentials for display (info overlay / logs): query params AND Xtream `/type/user/pass/`
+-         *  path segments, which is where live URLs embed them. */
++         *  and `/user/pass/{id}` path segments, which is where live URLs embed them. Safe on free text
++         *  (an error message with a URL in it), not just on a bare URL. */
+         fun redactUrl(url: String): String = url
+             .replace(QUERY_CREDENTIALS, "$1=***")
+             .replace(PATH_CREDENTIALS, "$1•••/•••/")
++            // The short form an Xtream `get.php` playlist uses for live channels: `host/user/pass/{id}`,
++            // no type segment. A numeric last segment right after two others is that shape; the odd
++            // non-Xtream path of the same shape loses two segments of a log line, never a secret.
++            .replace(SHORT_XTREAM_PATH, "$1•••/•••/$2")
+             .replace(USERINFO, "$1***@")
+ 
+         // Compiled once: redactUrl runs on every logged HTTP response and every play() line, several times
+         // a second while a live channel plays with detailed logging on.
+-        private val QUERY_CREDENTIALS = Regex("(?i)(username|password|user|pass|token|data|auth|signature|sig|key)=[^&]*")
++        // `mac` is a Stalker portal's credential (`…/play/live.php?mac=…`).
++        private val QUERY_CREDENTIALS = Regex("(?i)(username|password|user|pass|token|data|auth|signature|sig|key|mac)=[^&]*")
+         // `timeshift` is the catch-up/archive form (/timeshift/user/pass/duration/start/id.ts) — it embeds
+         // the same credentials as a live URL, so it must be masked here too.
+         private val PATH_CREDENTIALS = Regex("(?i)(://[^/]+/(?:live|movie|series|vod|timeshift)/)([^/]+)/([^/]+)/")
+@@ -164,6 +166,9 @@
+         /** Mask a bare hostname for display (logs, errors), as [redactUrl] masks a URL's credentials: the
+          *  provider's host identifies the account's panel as surely as the credentials do. */
+         fun redactHost(hostname: String): String = "•••"
++
++        private val SHORT_XTREAM_PATH =
++            Regex("(://[^/\\s]+/)[^/\\s?#]+/[^/\\s?#]+/(\\d+(?:\\.[A-Za-z0-9]+)?)(?=$|[?#:\\s\"'),;\\]>])")
+     }
+ }
+ 
+--- a/core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt
++++ b/core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt
+@@ -38,6 +38,30 @@
+     val airDateMs: Long? = null,
+ )
+ data class XtSeriesInfo(val episodes: List<XtEpisode>)
++
++/**
++ * [value] as one URL path segment, for the Xtream stream paths (`…/live/{user}/{pass}/{id}.ts`).
++ * Only what a segment cannot hold raw is percent-encoded — `/ ? # %`, spaces, other ASCII outside
++ * RFC 3986's `pchar`, and non-ASCII bytes — so a credential made of letters, digits and the usual
++ * punctuation keeps exactly the URL it always had, while one with a `#` or `/` no longer cuts the
++ * URL short. The `player_api.php` calls already encode the same values, as query parameters.
++ */
++internal fun xtreamPathSegment(value: String?): String {
++    val bytes = value.orEmpty().toByteArray(Charsets.UTF_8)
++    val out = StringBuilder(bytes.size)
++    for (b in bytes) {
++        val c = b.toInt() and 0xFF
++        if (c < 0x80 && c.toChar().let { it.isLetterOrDigit() || it in PATH_SEGMENT_SAFE }) {
++            out.append(c.toChar())
++        } else {
++            out.append('%').append(HEX[c shr 4]).append(HEX[c and 0x0F])
++        }
++    }
++    return out.toString()
++}
++
++private const val PATH_SEGMENT_SAFE = "-._~!$&'()*+,;=:@"
++private const val HEX = "0123456789ABCDEF"
+ 
+ /**
+  * An episode whose `episode_num` the panel left blank (or 0) takes its position within its season
+@@ -494,7 +518,7 @@
+     // Live uses the raw MPEG-TS endpoint (.ts) — the universal Xtream live format. The .m3u8/HLS
+     // wrapper isn't served by every panel (mpegts-only providers 404 on it, so channels won't load),
+     // whereas every panel serves .ts and mpv plays it natively.
+-    fun liveUrl(s: SourceEntity, streamId: String) = "${base(s)}/live/${s.username}/${s.password}/$streamId.ts"
++    fun liveUrl(s: SourceEntity, streamId: String) = "${base(s)}/live/${credentials(s)}/$streamId.ts"
+ 
+     /**
+      * Catch-up (timeshift) URL for a past programme:
+@@ -503,12 +527,12 @@
+      */
+     fun timeshiftUrl(s: SourceEntity, streamId: String, startMs: Long, durationMinutes: Int, tz: java.util.TimeZone = java.util.TimeZone.getTimeZone("UTC"), ext: String = "ts"): String {
+         val fmt = java.text.SimpleDateFormat("yyyy-MM-dd:HH-mm", java.util.Locale.US).apply { timeZone = tz }
+-        return "${base(s)}/timeshift/${s.username}/${s.password}/$durationMinutes/${fmt.format(java.util.Date(startMs))}/$streamId.$ext"
++        return "${base(s)}/timeshift/${credentials(s)}/$durationMinutes/${fmt.format(java.util.Date(startMs))}/$streamId.$ext"
+     }
+     fun movieUrl(s: SourceEntity, streamId: String, ext: String?) =
+-        "${base(s)}/movie/${s.username}/${s.password}/$streamId.${ext ?: "mp4"}"
++        "${base(s)}/movie/${credentials(s)}/$streamId.${ext ?: "mp4"}"
+     fun seriesEpisodeUrl(s: SourceEntity, episodeId: String, ext: String?) =
+-        "${base(s)}/series/${s.username}/${s.password}/$episodeId.${ext ?: "mp4"}"
++        "${base(s)}/series/${credentials(s)}/$episodeId.${ext ?: "mp4"}"
+ 
+     /** Full XMLTV guide for the whole account (all channels) — the bulk EPG used by the guide grid. */
+     data class XtAccountDetails(
+@@ -734,7 +758,7 @@
+      * and never plays anything, so it costs one short request.
+      */
+     suspend fun probeHls(s: SourceEntity, streamId: String): HlsProbe {
+-        val url = "${base(s)}/live/${s.username}/${s.password}/$streamId.m3u8"
++        val url = "${base(s)}/live/${credentials(s)}/$streamId.m3u8"
+         return try {
+             http.get(url, s.userAgent) { input ->
+                 val head = ByteArray(HLS_PROBE_BYTES)
+@@ -816,6 +840,9 @@
+ 
+     // --- helpers ---
+     private fun base(s: SourceEntity) = s.url.trimEnd('/')
++
++    /** The `{user}/{pass}` pair of a stream path, each encoded as a path segment. */
++    private fun credentials(s: SourceEntity) = "${xtreamPathSegment(s.username)}/${xtreamPathSegment(s.password)}"
+ 
+     private fun api(s: SourceEntity, action: String, extra: String = ""): String {
+         val u = URLEncoder.encode(s.username.orEmpty(), "UTF-8")
+--- a/core/src/test/java/tv/own/owntv/core/network/RedactUrlTest.kt
++++ b/core/src/test/java/tv/own/owntv/core/network/RedactUrlTest.kt
+@@ -1,38 +1,65 @@
+ package tv.own.owntv.core.network
+ 
+ import org.junit.Assert.assertEquals
++import org.junit.Assert.assertFalse
+ import org.junit.Test
+ 
+-/** Credentials never reach a log line, whatever shape the URL has. */
++/** What [HttpClient.redactUrl] masks — it runs on every URL bound for a log line or the error log. */
+ class RedactUrlTest {
+ 
+     private fun redact(url: String) = HttpClient.redactUrl(url)
+ 
+     @Test
+-    fun `xtream path credentials are masked`() {
+-        assertEquals("http://host:80/live/•••/•••/123.ts", redact("http://host:80/live/alice/s3cret/123.ts"))
++    fun `query credentials are masked`() {
+         assertEquals(
+-            "http://host/timeshift/•••/•••/60/2026-10-20:10-00/9.ts",
+-            redact("http://host/timeshift/alice/s3cret/60/2026-10-20:10-00/9.ts"),
++            "http://panel.invalid/get.php?username=***&password=***&type=m3u_plus",
++            redact("http://panel.invalid/get.php?username=alice&password=s3cret&type=m3u_plus"),
+         )
+     }
+ 
+     @Test
+-    fun `query credentials are masked`() {
++    fun `typed Xtream paths are masked`() {
++        assertEquals("http://panel.invalid:8080/live/•••/•••/123.ts", redact("http://panel.invalid:8080/live/alice/s3cret/123.ts"))
++        assertEquals("http://panel.invalid/movie/•••/•••/55.mkv", redact("http://panel.invalid/movie/alice/s3cret/55.mkv"))
+         assertEquals(
+-            "http://host/play/live.php?mac=00:1A&stream=5&play_token=***",
+-            redact("http://host/play/live.php?mac=00:1A&stream=5&play_token=abc"),
++            "http://panel.invalid/timeshift/•••/•••/60/2026-01-01:20-00/9.ts",
++            redact("http://panel.invalid/timeshift/alice/s3cret/60/2026-01-01:20-00/9.ts"),
+         )
+-        assertEquals("http://h/get.php?username=***&password=***&type=m3u", redact("http://h/get.php?username=a&password=b&type=m3u"))
+     }
+ 
+     @Test
+-    fun `userinfo is masked`() {
+-        assertEquals("http://***@proxy:8080/x", redact("http://bob:pw@proxy:8080/x"))
++    fun `the short get-php live form is masked`() {
++        assertEquals("http://panel.invalid:8080/•••/•••/123", redact("http://panel.invalid:8080/alice/s3cret/123"))
++        assertEquals("http://panel.invalid:8080/•••/•••/123.m3u8", redact("http://panel.invalid:8080/alice/s3cret/123.m3u8"))
++        assertEquals("https://panel.invalid/•••/•••/123.ts?x=1", redact("https://panel.invalid/alice/s3cret/123.ts?x=1"))
+     }
+ 
+     @Test
+-    fun `a clean url is unchanged`() {
+-        assertEquals("https://example.org/a/b.m3u8", redact("https://example.org/a/b.m3u8"))
++    fun `a URL inside an error message is masked without eating the text after it`() {
++        assertEquals(
++            "Failed to open http://panel.invalid/•••/•••/123.ts: 403 Forbidden",
++            redact("Failed to open http://panel.invalid/alice/s3cret/123.ts: 403 Forbidden"),
++        )
++    }
++
++    @Test
++    fun `a Stalker MAC in the query is masked`() {
++        val out = redact("http://portal.invalid/play/live.php?mac=00:1A:79:AA:BB:CC&stream=1&play_token=abc")
++        assertFalse(out, out.contains("00:1A:79"))
++        assertEquals("http://portal.invalid/play/live.php?mac=***&stream=1&play_token=***", out)
++    }
++
++    @Test
++    fun `userinfo credentials are masked`() {
++        assertEquals("http://***@proxy.invalid:3128/", redact("http://bob:hunter2@proxy.invalid:3128/"))
++    }
++
++    @Test
++    fun `URLs without credentials are left alone`() {
++        listOf(
++            "http://cdn.invalid/hls/index.m3u8",
++            "http://cdn.invalid/channel/123.m3u8",
++            "http://cdn.invalid/a/b/c/123.ts",
++        ).forEach { assertEquals(it, redact(it)) }
+     }
+ }
+--- /dev/null
++++ b/core/src/test/java/tv/own/owntv/core/parser/XtreamStreamUrlTest.kt
+@@ -0,0 +1,54 @@
++package tv.own.owntv.core.parser
++
++import okhttp3.OkHttpClient
++import org.junit.Assert.assertEquals
++import org.junit.Test
++import tv.own.owntv.core.database.entity.SourceEntity
++import tv.own.owntv.core.epg.CatchupUrl
++import tv.own.owntv.core.model.SourceType
++import tv.own.owntv.core.network.HttpClient
++
++/**
++ * Xtream stream URLs carry the credentials as path segments. A password the API login accepts must
++ * give a URL that reaches the same account, and a plain one must give exactly the URL it always did.
++ */
++class XtreamStreamUrlTest {
++
++    private val client = XtreamClient(HttpClient(OkHttpClient()))
++
++    private fun source(user: String, pass: String) =
++        SourceEntity(name = "t", type = SourceType.XTREAM, url = "http://panel.invalid:8080/", username = user, password = pass)
++
++    @Test
++    fun `plain credentials keep the URL they always had`() {
++        val s = source("alice", "s3cret")
++        assertEquals("http://panel.invalid:8080/live/alice/s3cret/7.ts", client.liveUrl(s, "7"))
++        assertEquals("http://panel.invalid:8080/movie/alice/s3cret/7.mkv", client.movieUrl(s, "7", "mkv"))
++        assertEquals("http://panel.invalid:8080/series/alice/s3cret/7.mp4", client.seriesEpisodeUrl(s, "7", null))
++    }
++
++    @Test
++    fun `characters that would cut the URL short are encoded`() {
++        val s = source("alice", "p#ss/w?rd%1")
++        assertEquals("http://panel.invalid:8080/live/alice/p%23ss%2Fw%3Frd%251/7.ts", client.liveUrl(s, "7"))
++    }
++
++    @Test
++    fun `spaces and non-ASCII are encoded, path-legal punctuation is not`() {
++        assertEquals("a%20b", xtreamPathSegment("a b"))
++        assertEquals("%C3%A9t%C3%A9", xtreamPathSegment("été"))
++        assertEquals("-._~!$&'()*+,;=:@", xtreamPathSegment("-._~!$&'()*+,;=:@"))
++        assertEquals("", xtreamPathSegment(null))
++    }
++
++    @Test
++    fun `the timeshift PHP form carries the decoded credentials as query values`() {
++        val s = source("alice", "a+b&c#d")
++        val path = client.timeshiftUrl(s, "9", startMs = 0L, durationMinutes = 60)
++        assertEquals("http://panel.invalid:8080/timeshift/alice/a+b&c%23d/60/1970-01-01:00-00/9.ts", path)
++        assertEquals(
++            "http://panel.invalid:8080/streaming/timeshift.php?username=alice&password=a%2Bb%26c%23d&stream=9&start=1970-01-01:00-00&duration=60",
++            CatchupUrl.timeshiftPhpAlternate(path),
++        )
++    }
++}
+--- a/player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt
++++ b/player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt
+@@ -39,19 +39,25 @@
+             .replace(Regex("\\s+"), " ")
+             .filter { it.code in 32..126 }
+             .trim()
+-            .take(160)
+         return HttpClient.redactUrl(secretsIn(requestUrl).fold(text) { acc, secret -> acc.replace(secret, "***") })
+             .replace('"', '\'')
++            .take(160)
+     }
+ 
+     /** Credential-bearing substrings of [url] — path segments and signed query values — never logged. */
+     private fun secretsIn(url: String): List<String> {
+         val path = url.substringBefore('?')
+-        val segments = Regex("(?i)/(?:live|movie|series|vod|timeshift)/([^/]+)/([^/]+)/")
++        val typed = Regex("(?i)/(?:live|movie|series|vod|timeshift)/([^/]+)/([^/]+)/")
+             .find(path)?.groupValues?.drop(1).orEmpty()
++        val segments = runCatching { java.net.URI(url).rawPath.trim('/').split('/') }.getOrDefault(emptyList())
++        val short = if (segments.size == 3 && segments[2].substringBefore('.').toLongOrNull() != null)
++            segments.take(2) else emptyList()
+         val queryValues = url.substringAfter('?', "").split('&')
+-            .mapNotNull { it.substringAfter('=', "").takeIf { v -> v.length >= 6 } }
+-        return (segments + queryValues).filter { it.length >= 3 }
++            .map { it.substringAfter('=', "") }
++        return (typed + short + queryValues).filter { it.isNotEmpty() }
++            .flatMap { value ->
++                listOf(value, runCatching { java.net.URLDecoder.decode(value.replace("+", "%2B"), "UTF-8") }.getOrDefault(value))
++            }.distinct().sortedByDescending { it.length }
+     }
+ 
+     /** What this request was for — the one thing a bare URL in the log doesn't say. */
+--- a/player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt
++++ b/player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt
+@@ -760,6 +760,10 @@
+     // re-fetches from the live edge instead of dead-ending. A channel that NEVER opened keeps the old
+     // ERROR (so the VM falls back to mpv). tune.retryCount resets whenever playback goes healthy again.
+     private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
++    private val recoveryTasks = TuneRecoveryTasks(
++        { task, delay -> mainHandler.postDelayed(task, delay); Unit },
++        { task -> mainHandler.removeCallbacks(task) },
++    )
+     private val audioOnlyConfirmation = Runnable {
+         if (currentUrl != null && tune.hasAudioTrack && !tune.hasVideoTrack && !_audioOnly.value &&
+             player?.playbackState == Player.STATE_READY
+@@ -1630,6 +1634,7 @@
+          *  never the URL tuned first — see [tv.own.owntv.core.database.entity.ChannelEntity.directSource]. */
+         directSource: String? = null,
+     ) {
++        recoveryTasks.cancelAll()
+         tuneGeneration++
+         LiveDiagnosticsLog.event("play() engine=$engineId url=${HttpClient.redactUrl(url)} muted=$muted")
+         // THE reset. Everything a new channel must not inherit from the previous one lives in
+@@ -1968,6 +1973,7 @@
+     fun stop() {
+         LiveDiagnosticsLog.event("stop() — intentional")
+         tune.stoppingIntentionally = true
++        recoveryTasks.cancelAll()
+         tuneGeneration++
+         currentUrl = null
+         tune.hasPlayed = false; deadlineArmed = false; tune.retryCount = 0; tune.reconnectPending = false; tune.gaveUp = false; tune.decoderRetryDone = false
+@@ -2037,6 +2043,7 @@
+         player = null
+         videoRenderer = null
+         surface = null
++        recoveryTasks.cancelAll()
+         tuneGeneration++
+         currentUrl = null
+         deadlineArmed = false
+@@ -2108,13 +2115,14 @@
+             // Coalesce the backoff delay with the resolve: whichever is later wins, but the resolve must
+             // complete before we reload. Post the reload so it lands on the main thread's Looper after delay.
+             lateinit var reload: Runnable
+-            reload = Runnable {
++            reload = recoveryTasks.post(delayMs, { tuneGeneration == generation && currentUrl == url }) {
+                 // Only its own: a reload left over from a channel since left must not clear the current one's.
+                 if (pendingReload === reload) pendingReload = null
+-                if (tuneGeneration != generation || currentUrl != url) {
+-                    tune.reconnectPending = false; return@Runnable
+-                } // superseded (zapped / stopped), even if the replacement channel reuses the same URL
++                if (tuneGeneration != generation || currentUrl != url) return@post // superseded (zapped / stopped), even if the replacement channel reuses the same URL
+                 tune.reconnectPending = false
++                // A decoder rebuild can replace the player without changing the channel. Only this
++                // tune may clear its pending flag, and a released player must never be prepared again.
++                if (player !== p) return@post
+                 // Media3 kept retrying during the delay and got the stream back by itself. Re-preparing now
+                 // would tear down a stream that is already playing or already refilling — measured: a
+                 // recovered channel was restarted 11s later, and a response already 450 KB in was thrown
+@@ -2128,7 +2136,7 @@
+                     LiveDiagnosticsLog.event("reconnect skipped — the stream came back on its own")
+                     // Still buffering: if this refill stalls again, the watchdog reconnects as usual.
+                     if (refilling) { mainHandler.removeCallbacks(stallWatchdog); mainHandler.postDelayed(stallWatchdog, STALL_MS) }
+-                    return@Runnable
++                    return@post
+                 }
+                 val loadUrl = fresh ?: url // null provider/result → replay the (still-valid) stored URL
+                 if (fresh != null && fresh != url) {
+@@ -2145,7 +2153,6 @@
+                 }
+             }
+             pendingReload = reload
+-            mainHandler.postDelayed(reload, delayMs)
+         }
+     }
+ 
+@@ -2287,12 +2294,12 @@
+     private fun retryAfterSessionRelease() {
+         val p = player ?: return
+         val url = currentUrl ?: return
++        val generation = tuneGeneration
+         tune.sessionLimitRetryDone = true
+         _state.value = State.LOADING; _buffering.value = true
+         _error.value = null; _errorInfo.value = null
+         LiveDiagnosticsLog.event("waiting ${SESSION_RELEASE_MS}ms for the provider to free the account session, then retrying")
+-        mainHandler.postDelayed({
+-            if (currentUrl != url) return@postDelayed
++        recoveryTasks.post(SESSION_RELEASE_MS, { tuneGeneration == generation && currentUrl == url && player === p }) {
+             runCatching {
+                 reprepare(p, url)
+             }.onFailure {
+@@ -2301,7 +2308,7 @@
+                 _error.value = PlaybackFailure.Channel
+                 _errorInfo.value = ErrorInfo(PlayerErrors.reasonFor(it.message.orEmpty()), exoSpec(), it.message)
+             }
+-        }, SESSION_RELEASE_MS)
++        }
+     }
+ 
+     /**
+@@ -2681,6 +2688,7 @@
+     /** Release the player and its codec, recreate the surface, and reopen the current channel on both. */
+     private fun rebuildDecoderAndSurface() {
+         val url = currentUrl ?: return
++        val generation = tuneGeneration
+         _state.value = State.LOADING; _buffering.value = true
+         _error.value = null; _errorInfo.value = null
+         // Drop the whole player: removeListener first so this release doesn't come back as STATE_IDLE.
+@@ -2697,8 +2705,7 @@
+         awaitingFreshSurface = true
+         // Let the OMX component actually tear down before the replacement asks for it — the same
+         // reason the mpv→ExoPlayer swap in LiveViewModel waits before re-tuning.
+-        mainHandler.postDelayed({
+-            if (currentUrl != url) return@postDelayed // zapped away / stopped while we waited
++        recoveryTasks.post(DECODER_REBUILD_DELAY_MS, { tuneGeneration == generation && currentUrl == url }) {
+             runCatching {
+                 val p = build().also { player = it }
+                 surface?.let { p.setVideoSurface(it) }
+@@ -2717,7 +2724,7 @@
+                 _error.value = PlaybackFailure.Channel
+                 _errorInfo.value = ErrorInfo(PlayerErrors.reasonFor(it.message ?: ""), exoSpec(), it.message ?: "")
+             }
+-        }, DECODER_REBUILD_DELAY_MS)
++        }
+     }
+ 
+     // --- Audio Mode: keep audio playing, release the video surface ---
+--- /dev/null
++++ b/player-core/src/main/java/tv/own/owntv/player/TuneRecoveryTasks.kt
+@@ -0,0 +1,26 @@
++package tv.own.owntv.player
++
++/** Main-thread recovery work owned by a tune, including callbacks already dequeued at cancellation. */
++internal class TuneRecoveryTasks(
++    private val schedule: (Runnable, Long) -> Unit,
++    private val remove: (Runnable) -> Unit,
++) {
++    private val pending = mutableSetOf<Runnable>()
++
++    fun post(delayMs: Long, isCurrent: () -> Boolean, action: () -> Unit): Runnable {
++        lateinit var task: Runnable
++        task = Runnable {
++            // Removal is an ownership check too: a cancelled or already-run task is always inert.
++            if (pending.remove(task) && isCurrent()) action()
++        }
++        pending += task
++        schedule(task, delayMs)
++        return task
++    }
++
++    fun cancelAll() {
++        val obsolete = pending.toList()
++        pending.clear()
++        obsolete.forEach(remove)
++    }
++}
+--- a/player-core/src/test/java/tv/own/owntv/player/HttpDiagnosticsTest.kt
++++ b/player-core/src/test/java/tv/own/owntv/player/HttpDiagnosticsTest.kt
+@@ -32,6 +32,20 @@
+     }
+ 
+     @Test
++    fun `short Xtream paths and decoded secrets are scrubbed before truncation`() {
++        val url = "http://panel.example/alice/p%23ss/123.ts?token=short"
++        val text = HttpDiagnostics.textPrefix(
++            ("x".repeat(155) + " alice p#ss p%23ss short").toByteArray(), url,
++        )
++        assertFalse(text.contains("alice"))
++        assertFalse(text.contains("p#ss"))
++        assertFalse(text.contains("p%23ss"))
++        assertFalse(text.endsWith("ali"))
++        val plain = HttpDiagnostics.textPrefix("alice p#ss p%23ss short".toByteArray(), url)
++        assertEquals("*** *** *** ***", plain)
++    }
++
++    @Test
+     fun `request roles`() {
+         assertEquals("playlist", HttpDiagnostics.requestRole("http://h/a/index.M3U8?t=1"))
+         assertEquals("segment", HttpDiagnostics.requestRole("http://h/a/seg1.ts"))
+--- /dev/null
++++ b/player-core/src/test/java/tv/own/owntv/player/TuneRecoveryTasksTest.kt
+@@ -0,0 +1,95 @@
++package tv.own.owntv.player
++
++import org.junit.Assert.assertEquals
++import org.junit.Assert.assertTrue
++import org.junit.Test
++
++class TuneRecoveryTasksTest {
++    private class Clock {
++        var now = 0L
++        val queued = linkedMapOf<Runnable, Long>()
++        val tasks = TuneRecoveryTasks({ r, delay -> queued[r] = now + delay }, { queued.remove(it) })
++        fun advance(ms: Long) {
++            now += ms
++            val due = queued.filterValues { it <= now }.keys.toList()
++            due.forEach { queued.remove(it); it.run() }
++        }
++    }
++
++    @Test fun `superseded reconnect cannot clear replacement tune pending state`() {
++        val c = Clock()
++        var generation = 1L
++        var newTunePending = true
++        val captured = generation
++        val old = c.tasks.post(1500, { generation == captured }) { newTunePending = false }
++        c.tasks.cancelAll()
++        generation++
++        // Simulate a callback that the platform dequeued before removeCallbacks.
++        old.run()
++        c.advance(1500)
++        assertTrue(newTunePending)
++        assertTrue(c.queued.isEmpty())
++    }
++
++    @Test fun `same URL after A B A never revives obsolete session or decoder work`() {
++        val c = Clock()
++        var generation = 1L
++        var url = "A"
++        val firstGeneration = generation
++        var prepares = 0
++        val old = c.tasks.post(2000, { generation == firstGeneration && url == "A" }) { prepares++ }
++        c.tasks.cancelAll(); generation++; url = "B"
++        c.tasks.cancelAll(); generation++; url = "A"
++        val currentGeneration = generation
++        c.tasks.post(500, { generation == currentGeneration && url == "A" }) { prepares++ }
++        old.run(); c.advance(2000)
++        assertEquals(1, prepares)
++    }
++
++    @Test fun `stop and release cancel every recovery type even if URL is unchanged`() {
++        val c = Clock()
++        var prepares = 0
++        val tasks = listOf(500L, 1500L, 2000L).map {
++            c.tasks.post(it, { true }) { prepares++ }
++        }
++        c.tasks.cancelAll()
++        tasks.forEach { it.run() }
++        c.advance(2000)
++        assertEquals(0, prepares)
++    }
++
++    @Test fun `replaced player identity blocks a delayed prepare`() {
++        val c = Clock()
++        var player = Any()
++        val captured = player
++        var prepares = 0
++        c.tasks.post(2000, { player === captured }) { prepares++ }
++        player = Any()
++        c.advance(2000)
++        assertEquals(0, prepares)
++    }
++
++    @Test fun `generation guard blocks same URL work even without queue cancellation`() {
++        val c = Clock()
++        var generation = 1L
++        val captured = generation
++        var currentTunePending = true
++        c.tasks.post(1500, { generation == captured }) { currentTunePending = false }
++        generation += 2 // A to B to A, identical final URL but a new tune identity.
++        c.advance(1500)
++        assertTrue(currentTunePending)
++    }
++
++    @Test fun `fast tracking a reconnect runs once and natural recovery remains respected`() {
++        val c = Clock()
++        var playing = false
++        var prepares = 0
++        val r = c.tasks.post(15000, { true }) { if (!playing) prepares++ }
++        r.run(); r.run(); c.advance(15000)
++        assertEquals(1, prepares)
++        c.tasks.post(1500, { true }) { if (!playing) prepares++ }
++        playing = true
++        c.advance(1500)
++        assertEquals(1, prepares)
++    }
++}
+--- a/tools/i18n/hardcoded_baseline.txt
++++ b/tools/i18n/hardcoded_baseline.txt
+@@ -191,7 +191,6 @@
+ 1	core/src/main/java/tv/own/owntv/core/network/DnsConfig.kt	https://dns.google/dns-query
+ 1	core/src/main/java/tv/own/owntv/core/network/DnsConfig.kt	https://dns.quad9.net/dns-query
+ 1	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36
+-1	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	${base(s)}/timeshift/${s.username}/${s.password}/$durationMinutes/${fmt.format(java.util.Date(startMs))}/$streamId.$ext
+ 1	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	allowed_output_formats
+ 1	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	fetchAccountDetails failed for source ${s.id}
+ 2	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	m3u8
+--- a/tools/i18n/safe_literals.txt
++++ b/tools/i18n/safe_literals.txt
+@@ -44,6 +44,7 @@
+ 1	json	core/src/main/java/tv/own/owntv/core/backup/BackupCrypto.kt	kdf
+ 2	json	core/src/main/java/tv/own/owntv/core/backup/BackupCrypto.kt	salt
+ 1	json	core/src/main/java/tv/own/owntv/core/backup/BackupCrypto.kt	scheme
++2	empty	core/src/main/java/tv/own/owntv/core/backup/BackupManager.kt	\0
+ 1	json	core/src/main/java/tv/own/owntv/core/backup/BackupManager.kt	$LOCAL_SUB_PREFIX$mapped
+ 1	technical	core/src/main/java/tv/own/owntv/core/backup/BackupManager.kt	$base|${normalizeMacForMatch(mac)}
+ 1	technical	core/src/main/java/tv/own/owntv/core/backup/BackupManager.kt	$mapped:${k.substringAfter(':')}
+@@ -70,7 +71,6 @@
+ 1	log	core/src/main/java/tv/own/owntv/core/backup/BackupManager.kt	Restore start file=${file.name} sections=${sections.joinToString(",") { it.name }}
+ 1	log	core/src/main/java/tv/own/owntv/core/backup/BackupManager.kt	Restore: skipping source '${o.optString("name")}' — unknown type '${o.optString("type")}'
+ 1	log	core/src/main/java/tv/own/owntv/core/backup/BackupManager.kt	Wallpaper restore failed: ${it.message}
+-2	empty	core/src/main/java/tv/own/owntv/core/backup/BackupManager.kt	\0
+ 4	technical	core/src/main/java/tv/own/owntv/core/backup/BackupManager.kt	a
+ 2	json	core/src/main/java/tv/own/owntv/core/backup/BackupManager.kt	activeProfileId
+ 2	technical	core/src/main/java/tv/own/owntv/core/backup/BackupManager.kt	al
+@@ -198,10 +198,10 @@
+ 2	json	core/src/main/java/tv/own/owntv/core/backup/BackupManager.kt	vodMpvUrls
+ 1	json	core/src/main/java/tv/own/owntv/core/backup/BackupManager.kt	wallpaper
+ 2	json	core/src/main/java/tv/own/owntv/core/backup/BackupManager.kt	z
++2	empty	core/src/main/java/tv/own/owntv/core/backup/DeviceIdentity.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/backup/DeviceIdentity.kt	${Build.MANUFACTURER} ${Build.MODEL}
+ 1	technical	core/src/main/java/tv/own/owntv/core/backup/DeviceIdentity.kt	%02x
+ 1	technical	core/src/main/java/tv/own/owntv/core/backup/DeviceIdentity.kt	SHA-256
+-2	empty	core/src/main/java/tv/own/owntv/core/backup/DeviceIdentity.kt	\0
+ 2	json	core/src/main/java/tv/own/owntv/core/backup/DeviceIdentity.kt	id
+ 2	json	core/src/main/java/tv/own/owntv/core/backup/DeviceIdentity.kt	name
+ 9	json	core/src/main/java/tv/own/owntv/core/backup/UserDataResolver.kt	at
+@@ -233,6 +233,7 @@
+ 4	json	core/src/main/java/tv/own/owntv/core/backup/UserDataWriter.kt	his
+ 1	json	core/src/main/java/tv/own/owntv/core/backup/UserDataWriter.kt	member
+ 3	json	core/src/main/java/tv/own/owntv/core/backup/UserDataWriter.kt	prog
++1	empty	core/src/main/java/tv/own/owntv/core/brand/AppIcon.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/brand/AppIcon.kt	Board
+ 1	technical	core/src/main/java/tv/own/owntv/core/brand/AppIcon.kt	Cobalt
+ 1	technical	core/src/main/java/tv/own/owntv/core/brand/AppIcon.kt	Olive
+@@ -241,12 +242,12 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/brand/AppIcon.kt	Pixel
+ 1	technical	core/src/main/java/tv/own/owntv/core/brand/AppIcon.kt	Sunflower
+ 1	technical	core/src/main/java/tv/own/owntv/core/brand/AppIcon.kt	Tomato
+-1	empty	core/src/main/java/tv/own/owntv/core/brand/AppIcon.kt	\0
++2	empty	core/src/main/java/tv/own/owntv/core/brand/AppIconSwitcher.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/brand/AppIconSwitcher.kt	/proc/self/cmdline
+ 1	technical	core/src/main/java/tv/own/owntv/core/brand/AppIconSwitcher.kt	:restart
+-2	empty	core/src/main/java/tv/own/owntv/core/brand/AppIconSwitcher.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/brand/AppRestartActivity.kt	component
+ 1	technical	core/src/main/java/tv/own/owntv/core/brand/AppRestartActivity.kt	pid
++7	empty	core/src/main/java/tv/own/owntv/core/catalog/ProviderCatalogMetadata.kt	\0
+ 1	regex	core/src/main/java/tv/own/owntv/core/catalog/ProviderCatalogMetadata.kt	(?i)(?:\\b5[._ ]1\\b|\\bDDP?\\s*5[._ ]1\\b|\\bAC-?3\\s*5[._ ]1\\b)
+ 1	regex	core/src/main/java/tv/own/owntv/core/catalog/ProviderCatalogMetadata.kt	(?i)(?:\\b7[._ ]1\\b|\\bDDP?\\s*7[._ ]1\\b)
+ 1	regex	core/src/main/java/tv/own/owntv/core/catalog/ProviderCatalogMetadata.kt	(?i)[|\\[({]\\s*($LANGUAGE_CODES)\\s*[|\\])}]
+@@ -270,11 +271,11 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/catalog/ProviderCatalogMetadata.kt	HDR
+ 1	technical	core/src/main/java/tv/own/owntv/core/catalog/ProviderCatalogMetadata.kt	HDR10
+ 1	technical	core/src/main/java/tv/own/owntv/core/catalog/ProviderCatalogMetadata.kt	HDR10+
+-7	empty	core/src/main/java/tv/own/owntv/core/catalog/ProviderCatalogMetadata.kt	\0
+ 1	regex	core/src/main/java/tv/own/owntv/core/catalog/ProviderCatalogMetadata.kt	\\s($LANGUAGE_CODES)\\s*$
+ 1	regex	core/src/main/java/tv/own/owntv/core/catalog/ProviderCatalogMetadata.kt	^\\s*($LANGUAGE_CODES)(?=\\s*[|:_-])
+ 1	technical	core/src/main/java/tv/own/owntv/core/catalog/ProviderCatalogMetadata.kt	__unmatchable_${rawName.hashCode().toUInt().toString(16)}
+ 1	technical	core/src/main/java/tv/own/owntv/core/catalog/ProviderCatalogMetadata.kt	•
++4	empty	core/src/main/java/tv/own/owntv/core/companion/CompanionController.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/companion/CompanionController.kt	(unnamed)
+ 1	technical	core/src/main/java/tv/own/owntv/core/companion/CompanionController.kt	.$extension
+ 1	technical	core/src/main/java/tv/own/owntv/core/companion/CompanionController.kt	.json
+@@ -289,13 +290,13 @@
+ 1	log	core/src/main/java/tv/own/owntv/core/companion/CompanionController.kt	Received remote background image (${bytes.size} bytes) → ${file.name}
+ 1	log	core/src/main/java/tv/own/owntv/core/companion/CompanionController.kt	Received remote backup (${file.length()} bytes) → ${file.name}
+ 1	compiler	core/src/main/java/tv/own/owntv/core/companion/CompanionController.kt	ResourceType
+-4	empty	core/src/main/java/tv/own/owntv/core/companion/CompanionController.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/companion/CompanionController.kt	base64,
+ 1	technical	core/src/main/java/tv/own/owntv/core/companion/CompanionController.kt	data:
+ 1	technical	core/src/main/java/tv/own/owntv/core/companion/CompanionController.kt	owntv-remote-bg
+ 1	technical	core/src/main/java/tv/own/owntv/core/companion/CompanionController.kt	owntv-remote-restore
+ 1	file-path	core/src/main/java/tv/own/owntv/core/companion/CompanionController.kt	remote-backup-export
+ 1	json	core/src/main/java/tv/own/owntv/core/companion/CompanionController.kt	{}
++4	empty	core/src/main/java/tv/own/owntv/core/companion/CompanionHtml.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/companion/CompanionHtml.kt	"
+ 1	technical	core/src/main/java/tv/own/owntv/core/companion/CompanionHtml.kt	%1$d
+ 1	technical	core/src/main/java/tv/own/owntv/core/companion/CompanionHtml.kt	&
+@@ -323,7 +324,6 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/companion/CompanionHtml.kt	<svg viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+ 1	technical	core/src/main/java/tv/own/owntv/core/companion/CompanionHtml.kt	>
+ 1	protocol	core/src/main/java/tv/own/owntv/core/companion/CompanionHtml.kt	MANUAL:$days
+-4	empty	core/src/main/java/tv/own/owntv/core/companion/CompanionHtml.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/companion/CompanionHtml.kt	__STATUS__
+ 1	technical	core/src/main/java/tv/own/owntv/core/companion/CompanionHtml.kt	application/json
+ 1	locale	core/src/main/java/tv/own/owntv/core/companion/CompanionHtml.kt	en
+@@ -340,12 +340,12 @@
+ 2	technical	core/src/main/java/tv/own/owntv/core/companion/CompanionHtml.kt	syncSeries
+ 1	technical	core/src/main/java/tv/own/owntv/core/companion/CompanionHtml.kt	text/plain
+ 1	technical	core/src/main/java/tv/own/owntv/core/companion/CompanionHtml.kt	}} </select></label>
++2	empty	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpProtocol.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpProtocol.kt	/background
+ 1	protocol	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpProtocol.kt	/backup
+ 1	protocol	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpProtocol.kt	1
+ 1	technical	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpProtocol.kt	Body ended at $total of $declared bytes
+ 1	protocol	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpProtocol.kt	OFF
+-2	empty	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpProtocol.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpProtocol.kt	application/json
+ 1	protocol	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpProtocol.kt	autoRefresh
+ 1	protocol	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpProtocol.kt	auto_refresh
+@@ -392,6 +392,7 @@
+ 1	protocol	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpProtocol.kt	username
+ 1	protocol	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpProtocol.kt	yes
+ 1	protocol	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpProtocol.kt	{
++7	empty	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpServer.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpServer.kt	"
+ 2	protocol	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpServer.kt	/
+ 1	protocol	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpServer.kt	/background
+@@ -425,7 +426,6 @@
+ 6	uri	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpServer.kt	POST
+ 1	protocol	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpServer.kt	Payload Too Large
+ 1	protocol	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpServer.kt	Unauthorized
+-7	empty	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpServer.kt	\0
+ 1	regex	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpServer.kt	^data:image/([a-zA-Z0-9.+-]+);base64,
+ 1	uri	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpServer.kt	application/json; charset=utf-8
+ 2	protocol	core/src/main/java/tv/own/owntv/core/companion/CompanionHttpServer.kt	bmp
+@@ -449,12 +449,12 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/companion/CompanionLink.kt	192.168.
+ 1	url	core/src/main/java/tv/own/owntv/core/companion/CompanionLink.kt	http://$host:$port/
+ 1	url	core/src/main/java/tv/own/owntv/core/companion/CompanionLink.kt	http://$it:$port/
++12	empty	core/src/main/java/tv/own/owntv/core/companion/CompanionPayload.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/companion/CompanionPayload.kt	OFF
+-12	empty	core/src/main/java/tv/own/owntv/core/companion/CompanionPayload.kt	\0
++4	empty	core/src/main/java/tv/own/owntv/core/content/AdultCategoryClassifier.kt	\0
+ 1	regex	core/src/main/java/tv/own/owntv/core/content/AdultCategoryClassifier.kt	(?:^|\\s)(?:18\\+|\\+18|21\\+|\\+21)(?:$|\\s)
+ 1	regex	core/src/main/java/tv/own/owntv/core/content/AdultCategoryClassifier.kt	(?:yetiskin|для\\s+взрослых|взрослые|للكبار|بالغين|成人|成年人|성인)
+ 1	regex	core/src/main/java/tv/own/owntv/core/content/AdultCategoryClassifier.kt	[^\\p{L}\\p{N}+]
+-4	empty	core/src/main/java/tv/own/owntv/core/content/AdultCategoryClassifier.kt	\0
+ 1	regex	core/src/main/java/tv/own/owntv/core/content/AdultCategoryClassifier.kt	\\b(?:adulte|adultes|adulto|adultos|adulti|volwassenen|vuxen|voksne|aikuisille)\\b
+ 1	regex	core/src/main/java/tv/own/owntv/core/content/AdultCategoryClassifier.kt	\\b(?:adult|adults|xxx|porn|porno|pornography|erotic|erotica|erotik|sex|sexy|playboy|hustler|redlight)\\b
+ 1	regex	core/src/main/java/tv/own/owntv/core/content/AdultCategoryClassifier.kt	\\b(?:dla\\s+doros.ych|pro\\s+dospele|pro\\s+dospely|fur\\s+erwachsene|para\\s+adultos)\\b
+@@ -469,15 +469,15 @@
+ 3	empty	core/src/main/java/tv/own/owntv/core/content/EpisodeTitles.kt	\0
+ 1	regex	core/src/main/java/tv/own/owntv/core/content/EpisodeTitles.kt	^(?:S\\d{1,3}\\s*E\\d{1,4}|\\d{1,3}x\\d{1,4})\\b
+ 1	regex	core/src/main/java/tv/own/owntv/core/content/EpisodeTitles.kt	^[\\s\\-–—:|.·]+
++1	empty	core/src/main/java/tv/own/owntv/core/content/SearchReader.kt	\0
+ 1	sql	core/src/main/java/tv/own/owntv/core/content/SearchReader.kt	$it*
+ 1	technical	core/src/main/java/tv/own/owntv/core/content/SearchReader.kt	[^\\p{L}\\p{Nd}]+
+-1	empty	core/src/main/java/tv/own/owntv/core/content/SearchReader.kt	\0
+ 1	empty	core/src/main/java/tv/own/owntv/core/customize/BulkRenameSession.kt	\0
++1	empty	core/src/main/java/tv/own/owntv/core/customize/CustomizationStore.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/customize/CustomizationStore.kt	${c.sourceId}:${c.remoteId ?: c.name}
+ 1	technical	core/src/main/java/tv/own/owntv/core/customize/CustomizationStore.kt	${ch.sourceId}:${ch.remoteId ?: ch.name}
+ 1	technical	core/src/main/java/tv/own/owntv/core/customize/CustomizationStore.kt	${m.sourceId}:${m.remoteId ?: m.name}
+ 1	technical	core/src/main/java/tv/own/owntv/core/customize/CustomizationStore.kt	${s.sourceId}:${s.remoteId ?: s.name}
+-1	empty	core/src/main/java/tv/own/owntv/core/customize/CustomizationStore.kt	\0
+ 2	json	core/src/main/java/tv/own/owntv/core/customize/CustomizationStore.kt	catNames
+ 2	json	core/src/main/java/tv/own/owntv/core/customize/CustomizationStore.kt	catOrder
+ 2	technical	core/src/main/java/tv/own/owntv/core/customize/CustomizationStore.kt	cust_
+@@ -488,6 +488,7 @@
+ 2	json	core/src/main/java/tv/own/owntv/core/customize/CustomizationStore.kt	hiddenItems
+ 2	json	core/src/main/java/tv/own/owntv/core/customize/CustomizationStore.kt	itemNames
+ 1	technical	core/src/main/java/tv/own/owntv/core/customize/CustomizationStore.kt	owntv_customizations
++2	room-schema	core/src/main/java/tv/own/owntv/core/database/BulkInsertHelper.kt	\0
+ 1	room-schema	core/src/main/java/tv/own/owntv/core/database/BulkInsertHelper.kt	$msg — no canonical indexes for ${state.table}, indexes were dropped and NOT restored
+ 1	room-schema	core/src/main/java/tv/own/owntv/core/database/BulkInsertHelper.kt	+ FTS
+ 1	room-schema	core/src/main/java/tv/own/owntv/core/database/BulkInsertHelper.kt	+ FTS trigger
+@@ -504,7 +505,6 @@
+ 1	room-schema	core/src/main/java/tv/own/owntv/core/database/BulkInsertHelper.kt	UNIQUE
+ 1	room-schema	core/src/main/java/tv/own/owntv/core/database/BulkInsertHelper.kt	Unknown FTS table: $ftsTable
+ 2	room-schema	core/src/main/java/tv/own/owntv/core/database/BulkInsertHelper.kt	Unknown table: $table
+-2	room-schema	core/src/main/java/tv/own/owntv/core/database/BulkInsertHelper.kt	\0
+ 1	room-schema	core/src/main/java/tv/own/owntv/core/database/BulkInsertHelper.kt	categories
+ 1	room-schema	core/src/main/java/tv/own/owntv/core/database/BulkInsertHelper.kt	channels_fts
+ 1	room-schema	core/src/main/java/tv/own/owntv/core/database/BulkInsertHelper.kt	epg_channels
+@@ -1503,9 +1503,9 @@
+ 1	room-schema	core/src/main/java/tv/own/owntv/core/database/entity/CatalogBackfillEntities.kt	id
+ 2	room-schema	core/src/main/java/tv/own/owntv/core/database/entity/CatalogBackfillEntities.kt	mediaType
+ 4	room-schema	core/src/main/java/tv/own/owntv/core/database/entity/CatalogBackfillEntities.kt	sourceId
++4	empty	core/src/main/java/tv/own/owntv/core/database/entity/ContentEntities.kt	\0
+ 4	room-schema	core/src/main/java/tv/own/owntv/core/database/entity/ContentEntities.kt	''
+ 7	room-schema	core/src/main/java/tv/own/owntv/core/database/entity/ContentEntities.kt	0
+-4	empty	core/src/main/java/tv/own/owntv/core/database/entity/ContentEntities.kt	\0
+ 4	room-schema	core/src/main/java/tv/own/owntv/core/database/entity/ContentEntities.kt	addedAt
+ 1	room-schema	core/src/main/java/tv/own/owntv/core/database/entity/ContentEntities.kt	categories
+ 16	room-schema	core/src/main/java/tv/own/owntv/core/database/entity/ContentEntities.kt	categoryId
+@@ -1626,6 +1626,7 @@
+ 1	file-path	core/src/main/java/tv/own/owntv/core/di/DataModule.kt	backgrounds
+ 1	technical	core/src/main/java/tv/own/owntv/core/di/DataModule.kt	sports
+ 1	json	core/src/main/java/tv/own/owntv/core/di/DataModule.kt	subtitles
++3	empty	core/src/main/java/tv/own/owntv/core/di/DatabaseModule.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/di/DatabaseModule.kt	)
+ 1	log	core/src/main/java/tv/own/owntv/core/di/DatabaseModule.kt	, heal=
+ 1	log	core/src/main/java/tv/own/owntv/core/di/DatabaseModule.kt	, journal=
+@@ -1635,17 +1636,16 @@
+ 1	sql	core/src/main/java/tv/own/owntv/core/di/DatabaseModule.kt	PRAGMA journal_mode=WAL
+ 1	sql	core/src/main/java/tv/own/owntv/core/di/DatabaseModule.kt	PRAGMA synchronous=NORMAL
+ 1	sql	core/src/main/java/tv/own/owntv/core/di/DatabaseModule.kt	SELECT sqlite_version()
+-3	empty	core/src/main/java/tv/own/owntv/core/di/DatabaseModule.kt	\0
+ 1	log	core/src/main/java/tv/own/owntv/core/di/DatabaseModule.kt	clean
+ 1	log	core/src/main/java/tv/own/owntv/core/di/DatabaseModule.kt	db-open(sqlite=
+ 1	log	core/src/main/java/tv/own/owntv/core/di/DatabaseModule.kt	forced-wal
+ 1	log	core/src/main/java/tv/own/owntv/core/di/DatabaseModule.kt	repaired
+ 1	technical	core/src/main/java/tv/own/owntv/core/di/DatabaseModule.kt	wal
++2	empty	core/src/main/java/tv/own/owntv/core/download/DownloadEngine.kt	\0
+ 2	protocol	core/src/main/java/tv/own/owntv/core/download/DownloadEngine.kt	Content-Range
+ 1	log	core/src/main/java/tv/own/owntv/core/download/DownloadEngine.kt	DownloadManager
+ 1	log	core/src/main/java/tv/own/owntv/core/download/DownloadEngine.kt	Range
+ 1	log	core/src/main/java/tv/own/owntv/core/download/DownloadEngine.kt	User-Agent
+-2	empty	core/src/main/java/tv/own/owntv/core/download/DownloadEngine.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/download/DownloadEngine.kt	bytes
+ 1	protocol	core/src/main/java/tv/own/owntv/core/download/DownloadEngine.kt	bytes=$from-${to ?: ""}
+ 2	log	core/src/main/java/tv/own/owntv/core/download/DownloadEngine.kt	download attempt $attempt/$MAX_ATTEMPTS failed id=$id: ${e.message}
+@@ -1654,21 +1654,21 @@
+ 1	log	core/src/main/java/tv/own/owntv/core/download/DownloadManager.kt	cannot create download target in ${root.stored} for $fileName
+ 1	technical	core/src/main/java/tv/own/owntv/core/download/DownloadNotifications.kt	$effectiveLocale:${localized.getString(R.string.common_nav_downloads)}
+ 1	technical	core/src/main/java/tv/own/owntv/core/download/DownloadNotifications.kt	owntv_downloads
++2	empty	core/src/main/java/tv/own/owntv/core/download/DownloadReasons.kt	\0
+ 1	log	core/src/main/java/tv/own/owntv/core/download/DownloadReasons.kt	(HTTP $it)
+ 1	protocol	core/src/main/java/tv/own/owntv/core/download/DownloadReasons.kt	EFBIG
+ 1	protocol	core/src/main/java/tv/own/owntv/core/download/DownloadReasons.kt	ENOSPC
+ 1	protocol	core/src/main/java/tv/own/owntv/core/download/DownloadReasons.kt	File too large
+ 1	protocol	core/src/main/java/tv/own/owntv/core/download/DownloadReasons.kt	No space left
+-2	empty	core/src/main/java/tv/own/owntv/core/download/DownloadReasons.kt	\0
+ 1	log	core/src/main/java/tv/own/owntv/core/download/DownloadReasons.kt	download failed: $reason${httpCode?.let { " (HTTP $it)" } ?: ""}
+ 1	log	core/src/main/java/tv/own/owntv/core/download/DownloadWorker.kt	owntv-downloads
++3	empty	core/src/main/java/tv/own/owntv/core/drm/DrmConfig.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/drm/DrmConfig.kt	%02x
+ 1	technical	core/src/main/java/tv/own/owntv/core/drm/DrmConfig.kt	-
+ 1	protocol	core/src/main/java/tv/own/owntv/core/drm/DrmConfig.kt	B
+ 1	protocol	core/src/main/java/tv/own/owntv/core/drm/DrmConfig.kt	R
+ 1	protocol	core/src/main/java/tv/own/owntv/core/drm/DrmConfig.kt	R{SSM}
+ 1	technical	core/src/main/java/tv/own/owntv/core/drm/DrmConfig.kt	UTF-8
+-3	empty	core/src/main/java/tv/own/owntv/core/drm/DrmConfig.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/drm/DrmConfig.kt	b{SSM}
+ 1	json	core/src/main/java/tv/own/owntv/core/drm/DrmConfig.kt	clearKeys
+ 2	protocol	core/src/main/java/tv/own/owntv/core/drm/DrmConfig.kt	clearkey
+@@ -1684,22 +1684,25 @@
+ 1	json	core/src/main/java/tv/own/owntv/core/drm/DrmConfig.kt	scheme
+ 2	protocol	core/src/main/java/tv/own/owntv/core/drm/DrmConfig.kt	widevine
+ 1	technical	core/src/main/java/tv/own/owntv/core/drm/DrmConfig.kt	{
++2	empty	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	\0
+ 1	uri	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	$base&$body
+ 1	uri	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	$base?$body
+ 1	protocol	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	${g[1]}/streaming/timeshift.php?username=${g[2]}&password=${g[3]}&stream=${g[4]}
+-1	protocol	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	${g[1]}/streaming/timeshift.php?username=${g[2]}&password=${g[3]}&stream=${g[6]}&start=${g[5]}&duration=${g[4]}
++1	protocol	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	${g[1]}/streaming/timeshift.php?username=${queryValue(g[2])}&password=${queryValue(g[3])}&stream=${g[6]}&start=${g[5]}&duration=${g[4]}
+ 1	protocol	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	${prefix}archive-$startS-$durationS.ts$query
+ 1	protocol	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	${prefix}timeshift_abs-$startS.m3u8$query
++1	protocol	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	%2B
+ 1	protocol	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	&
+ 1	protocol	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	&start=$start&duration=$durationMin
++1	protocol	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	+
+ 1	protocol	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	.m3u8
+ 1	protocol	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	.ts
+ 1	uri	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	?
+ 1	protocol	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	?$it
+ 1	protocol	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	?utc={utc}&lutc={lutc}
+ 2	protocol	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	UTC
++2	protocol	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	UTF-8
+ 1	protocol	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	YmdHMS
+-2	empty	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	\0
+ 1	regex	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	\\$?\\{([A-Za-z_][A-Za-z0-9_-]*)(?::([^}]*))?\\}
+ 1	protocol	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	^(.+?)/timeshift/([^/]+)/([^/]+)/([^/]+)/([^/]+)/([^/.]+)\\.(?:ts|m3u8)$
+ 1	regex	core/src/main/java/tv/own/owntv/core/epg/CatchupUrl.kt	^(https?://[^/]+)/(?:live/)?([^/]+)/([^/]+)/(\\d+)(?:\\.[A-Za-z0-9]+)?$
+@@ -1734,6 +1737,7 @@
+ 1	log	core/src/main/java/tv/own/owntv/core/epg/EpgAutoMatcher.kt	totalMs=${SystemClock.elapsedRealtime() - startedAt}
+ 1	empty	core/src/main/java/tv/own/owntv/core/epg/EpgDedupe.kt	\0
+ 1	regex	core/src/main/java/tv/own/owntv/core/epg/EpgDedupe.kt	\\s+
++9	empty	core/src/main/java/tv/own/owntv/core/epg/EpgMatcher.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/epg/EpgMatcher.kt	0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/epg/EpgMatcher.kt	1
+ 1	protocol	core/src/main/java/tv/own/owntv/core/epg/EpgMatcher.kt	10
+@@ -1757,7 +1761,6 @@
+ 1	protocol	core/src/main/java/tv/own/owntv/core/epg/EpgMatcher.kt	[._\\-:|/+]
+ 1	protocol	core/src/main/java/tv/own/owntv/core/epg/EpgMatcher.kt	[\\[(\\{][^\\])}]*[\\])}]
+ 1	protocol	core/src/main/java/tv/own/owntv/core/epg/EpgMatcher.kt	[^\\p{L}\\p{N} ]
+-9	empty	core/src/main/java/tv/own/owntv/core/epg/EpgMatcher.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/epg/EpgMatcher.kt	\\p{N}+
+ 1	protocol	core/src/main/java/tv/own/owntv/core/epg/EpgMatcher.kt	\\s+
+ 1	protocol	core/src/main/java/tv/own/owntv/core/epg/EpgMatcher.kt	ae
+@@ -1905,9 +1908,9 @@
+ 1	preference-key	core/src/main/java/tv/own/owntv/core/epg/EpgSourceStore.kt	sources
+ 2	json	core/src/main/java/tv/own/owntv/core/epg/EpgSourceStore.kt	ua
+ 2	json	core/src/main/java/tv/own/owntv/core/epg/EpgSourceStore.kt	url
++2	empty	core/src/main/java/tv/own/owntv/core/epg/GuideCandidates.kt	\0
+ 1	log	core/src/main/java/tv/own/owntv/core/epg/GuideCandidates.kt	Guide candidate limit $limit reached (named=${named.size} withProgrammes=${withProgrammes.size}) — list truncated
+ 1	log	core/src/main/java/tv/own/owntv/core/epg/GuideCandidates.kt	GuideCandidates
+-2	empty	core/src/main/java/tv/own/owntv/core/epg/GuideCandidates.kt	\0
+ 1	log	core/src/main/java/tv/own/owntv/core/epg/GuideCandidates.kt	emptyGuide=${candidates.count { !it.hasProgrammes }}
+ 1	log	core/src/main/java/tv/own/owntv/core/epg/GuideCandidates.kt	guide_candidates named=${named.size} withProgrammes=${withProgrammes.size}
+ 1	log	core/src/main/java/tv/own/owntv/core/epg/GuideCandidates.kt	guide_picker candidates=${all.size} filtered=${filtered.size} ranked=${ranked.size}
+@@ -1930,10 +1933,10 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/home/HomeFeed.kt	live:${channel.id}
+ 1	technical	core/src/main/java/tv/own/owntv/core/home/HomeFeed.kt	movie:${movie.id}
+ 1	empty	core/src/main/java/tv/own/owntv/core/i18n/AppLocale.kt	\0
++1	empty	core/src/main/java/tv/own/owntv/core/i18n/LocaleStore.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/i18n/LocaleStore.kt	Failed to persist application locale
+ 1	assertion	core/src/main/java/tv/own/owntv/core/i18n/LocaleStore.kt	Unsupported application locale: ${tag.trim()}
+ 1	compiler	core/src/main/java/tv/own/owntv/core/i18n/LocaleStore.kt	UseKtx
+-1	empty	core/src/main/java/tv/own/owntv/core/i18n/LocaleStore.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/i18n/LocaleStore.kt	owntv_locale
+ 1	preference-key	core/src/main/java/tv/own/owntv/core/i18n/LocaleStore.kt	ui_language
+ 3	uri	core/src/main/java/tv/own/owntv/core/launcher/LauncherDeepLink.kt	episode
+@@ -2007,10 +2010,10 @@
+ 1	log	core/src/main/java/tv/own/owntv/core/live/ProbeChannelSource.kt	portal offered ${genres.size} genre(s) for source ${source.id}
+ 1	log	core/src/main/java/tv/own/owntv/core/live/ProbeChannelSource.kt	probe could not resolve '${channel.name}': ${it.message}
+ 1	json	core/src/main/java/tv/own/owntv/core/live/ProbeChannelSource.kt	vod
++1	technical	core/src/main/java/tv/own/owntv/core/live/ProviderTags.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/live/ProviderTags.kt	${name.country}| ${name.name}
+ 1	technical	core/src/main/java/tv/own/owntv/core/live/ProviderTags.kt	TV
+ 1	technical	core/src/main/java/tv/own/owntv/core/live/ProviderTags.kt	UK
+-1	technical	core/src/main/java/tv/own/owntv/core/live/ProviderTags.kt	\0
+ 1	regex	core/src/main/java/tv/own/owntv/core/live/ProviderTags.kt	\\s+
+ 1	regex	core/src/main/java/tv/own/owntv/core/live/ProviderTags.kt	^([A-Z]{2,3})\\s*\\|\\s*
+ 1	regex	core/src/main/java/tv/own/owntv/core/live/ProviderTags.kt	^([A-Z]{2}):\\s*
+@@ -2051,8 +2054,8 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/metadata/MetadataOverrideStore.kt	owntv_tmdb_overrides
+ 2	json	core/src/main/java/tv/own/owntv/core/metadata/MetadataOverrideStore.kt	t
+ 2	json	core/src/main/java/tv/own/owntv/core/metadata/MetadataOverrideStore.kt	y
++5	empty	core/src/main/java/tv/own/owntv/core/metadata/MetadataProvider.kt	\0
+ 1	locale	core/src/main/java/tv/own/owntv/core/metadata/MetadataProvider.kt	$lang-${l.country}
+-5	empty	core/src/main/java/tv/own/owntv/core/metadata/MetadataProvider.kt	\0
+ 1	locale	core/src/main/java/tv/own/owntv/core/metadata/MetadataProvider.kt	auto
+ 1	protocol	core/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	$TYPE_MOVIE:$tmdbId
+ 1	protocol	core/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	$TYPE_MOVIE:${movie.sourceId}:${movie.remoteId ?: movie.name}
+@@ -2075,6 +2078,7 @@
+ 1	preference-key	core/src/main/java/tv/own/owntv/core/metadata/OwnTVClientId.kt	client_id
+ 1	preference-key	core/src/main/java/tv/own/owntv/core/metadata/OwnTVClientId.kt	owntv_client_id
+ 1	regex	core/src/main/java/tv/own/owntv/core/metadata/TitleMatchScorer.kt	\\s+
++10	empty	core/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	(?:\\s*(?:e|ep|episode|x)\\s*\\d{1,4})?\\s*$
+ 1	regex	core/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	(?i)[\\s\\-–—:._]*(?:(?:season|saison|temporada|staffel)\\s*\\d{1,2}|s\\d{1,2})
+ 1	regex	core/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	(?i)\\b(4k|uhd|fhd|hd|sd|hevc|h\\.?265|h\\.?264|x265|x264|hdr10?\\+?|dolby|atmos|
+@@ -2082,7 +2086,6 @@
+ 1	regex	core/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	[\\[(]?\\b(19\\d{2}|20\\d{2})\\b[\\])]?
+ 1	regex	core/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	[\\[{(][^\\[\\]{}()]*[\\]})]
+ 1	regex	core/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	[🇦-🇿]
+-10	empty	core/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	\0
+ 1	regex	core/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	\\s+(?:FR|EN|DE|ES|PT|NL|PL|TR|AR|RU|LAT|SUB|DUB|MULTI)$
+ 1	regex	core/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	\\s{2,}
+ 1	regex	core/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	^[\\s\\-–—|:._]+|[\\s\\-–—|:._]+$
+@@ -2091,6 +2094,7 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	imax|extended|uncut|remastered|vip|
+ 1	technical	core/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	multi[- ]?sub|multisub|dual[- ]?audio|remux|web[- ]?dl|webrip|bluray|bdrip|dvdrip|hdrip|
+ 1	technical	core/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	vostfr|vost|vf|subbed|dubbed|dublado|legendado|castellano|truefrench|hdlight|
++3	empty	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	\0
+ 2	uri	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	$base,en,null
+ 4	protocol	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	&api_key=
+ 1	protocol	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	&first_air_date_year=$year
+@@ -2118,7 +2122,6 @@
+ 1	protocol	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	Trailer
+ 3	protocol	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	UTF-8
+ 1	protocol	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	YouTube
+-3	empty	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	\0
+ 1	json	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	adult
+ 1	json	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	air_date
+ 2	json	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	backdrop_path
+@@ -2217,13 +2220,15 @@
+ 1	protocol	core/src/main/java/tv/own/owntv/core/network/ExtraTrustAnchors.kt	X.509
+ 1	log	core/src/main/java/tv/own/owntv/core/network/FirstRead.kt	$name setting not read after ${timeoutMs}ms; going on without it
+ 1	log	core/src/main/java/tv/own/owntv/core/network/FirstRead.kt	OwnTV-Network
++1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	\0
+ 1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	$1***@
+-2	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	$1=***
++1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	$1=***
+ 1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	$1•••/•••/
++1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	$1•••/•••/$2
++1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	(://[^/\\s]+/)[^/\\s?#]+/[^/\\s?#]+/(\\d+(?:\\.[A-Za-z0-9]+)?)(?=$|[?#:\\s"'),;\\]>])
+ 1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	(?i)(://)([^/@:]+)(:[^/@]*)?@
+ 1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	(?i)(://[^/]+/(?:live|movie|series|vod|timeshift)/)([^/]+)/([^/]+)/
+-1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	(?i)(username|password|user|pass|token)=[^&]*
+-1	technical	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	(?i)(username|password|user|pass|token|data|auth|signature|sig|key)=[^&]*
++1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	(?i)(username|password|user|pass|token|data|auth|signature|sig|key|mac)=[^&]*
+ 2	protocol	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	Content-Encoding
+ 1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	GET body done url=$safeUrl totalMs=${SystemClock.elapsedRealtime() - startedAt}
+ 1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	GET body progress url=$label bytes=$bytesRead total=${totalBytes ?: -1}
+@@ -2231,12 +2236,11 @@
+ 1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	GET failed url=$safeUrl attempt=$attempt/$attempts totalMs=${SystemClock.elapsedRealtime() - startedAt}
+ 1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	GET headers url=$safeUrl code=${response.code} contentLength=${totalBytes ?: -1}
+ 1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	GET start url=$safeUrl ua=${ua.take(48)} attempt=$attempt/$attempts
+-1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	HTTP ${response.code} for ${redact(url)}
++1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	HTTP ${response.code} for ${redactUrl(url)}
+ 2	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	HttpClient
+ 1	protocol	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	Transfer-Encoding
+ 1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	User-Agent
+ 1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	VLC/3.0.20 LibVLC/3.0.20
+-1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	\0
+ 1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	contentEncoding=${response.header("Content-Encoding").orEmpty()}
+ 1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	deltaBytes=$bytesDelta deltaMs=$timeDelta kbps=$kbps
+ 1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	elapsedMs=${now - startedAt}
+@@ -2247,13 +2251,14 @@
+ 1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	transferEncoding=${response.header("Transfer-Encoding").orEmpty()}
+ 1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	wireEncoding=${response.networkResponse?.header("Content-Encoding").orEmpty()}
+ 1	log	core/src/main/java/tv/own/owntv/core/network/HttpClient.kt	•••
++4	log	core/src/main/java/tv/own/owntv/core/network/ProxyConfig.kt	\0
+ 1	log	core/src/main/java/tv/own/owntv/core/network/ProxyConfig.kt	$u:$p@
+ 1	url	core/src/main/java/tv/own/owntv/core/network/ProxyConfig.kt	127.0.0.1
+ 2	log	core/src/main/java/tv/own/owntv/core/network/ProxyConfig.kt	Proxy-Authorization
+ 2	log	core/src/main/java/tv/own/owntv/core/network/ProxyConfig.kt	UTF-8
+-4	log	core/src/main/java/tv/own/owntv/core/network/ProxyConfig.kt	\0
+ 1	log	core/src/main/java/tv/own/owntv/core/network/ProxyConfig.kt	http://$auth${c.host}:${c.port}
+ 1	log	core/src/main/java/tv/own/owntv/core/network/ProxyConfig.kt	proxy
++1	empty	core/src/main/java/tv/own/owntv/core/network/StreamHeaders.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/network/StreamHeaders.kt	$name: $value
+ 1	protocol	core/src/main/java/tv/own/owntv/core/network/StreamHeaders.kt	${it.key}: ${it.value}
+ 1	protocol	core/src/main/java/tv/own/owntv/core/network/StreamHeaders.kt	,
+@@ -2263,7 +2268,6 @@
+ 2	protocol	core/src/main/java/tv/own/owntv/core/network/StreamHeaders.kt	Referer
+ 3	protocol	core/src/main/java/tv/own/owntv/core/network/StreamHeaders.kt	User-Agent
+ 1	protocol	core/src/main/java/tv/own/owntv/core/network/StreamHeaders.kt	X-Forwarded-For
+-1	empty	core/src/main/java/tv/own/owntv/core/network/StreamHeaders.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/network/StreamHeaders.kt	authorization
+ 1	protocol	core/src/main/java/tv/own/owntv/core/network/StreamHeaders.kt	connection
+ 1	protocol	core/src/main/java/tv/own/owntv/core/network/StreamHeaders.kt	content-length
+@@ -2276,10 +2280,11 @@
+ 1	protocol	core/src/main/java/tv/own/owntv/core/network/StreamHeaders.kt	transfer-encoding
+ 1	protocol	core/src/main/java/tv/own/owntv/core/network/StreamHeaders.kt	user-agent
+ 1	protocol	core/src/main/java/tv/own/owntv/core/network/StreamHeaders.kt	x-forwarded-for
++4	empty	core/src/main/java/tv/own/owntv/core/parser/EpgText.kt	\0
+ 1	regex	core/src/main/java/tv/own/owntv/core/parser/EpgText.kt	(\\\\r\\\\n|\\\\n|\\\\r)+
+ 1	regex	core/src/main/java/tv/own/owntv/core/parser/EpgText.kt	[ \\t]{2,}
+-4	empty	core/src/main/java/tv/own/owntv/core/parser/EpgText.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/parser/EpgText.kt	\\t
++1	empty	core/src/main/java/tv/own/owntv/core/parser/M3uParser.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/M3uParser.kt	#
+ 1	technical	core/src/main/java/tv/own/owntv/core/parser/M3uParser.kt	#EXTHTTP:
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/M3uParser.kt	#EXTINF
+@@ -2293,7 +2298,6 @@
+ 2	protocol	core/src/main/java/tv/own/owntv/core/parser/M3uParser.kt	="
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/M3uParser.kt	M3uParser
+ 1	technical	core/src/main/java/tv/own/owntv/core/parser/M3uParser.kt	UTF-8
+-1	empty	core/src/main/java/tv/own/owntv/core/parser/M3uParser.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/M3uParser.kt	catchup
+ 2	protocol	core/src/main/java/tv/own/owntv/core/parser/M3uParser.kt	catchup-correction
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/M3uParser.kt	catchup-days
+@@ -2328,10 +2332,10 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/parser/XmltvDetails.kt	onscreen
+ 1	technical	core/src/main/java/tv/own/owntv/core/parser/XmltvDetails.kt	seconds
+ 1	technical	core/src/main/java/tv/own/owntv/core/parser/XmltvDetails.kt	xmltv_ns
++1	protocol	core/src/main/java/tv/own/owntv/core/parser/XmltvParser.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XmltvParser.kt	Skipping malformed <channel> element
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XmltvParser.kt	Skipping malformed <programme> element
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XmltvParser.kt	XmltvParser
+-1	protocol	core/src/main/java/tv/own/owntv/core/parser/XmltvParser.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XmltvParser.kt	callbackMs=${metrics.callbackMs} totalMs=${SystemClock.elapsedRealtime() - startedAt}
+ 1	technical	core/src/main/java/tv/own/owntv/core/parser/XmltvParser.kt	category
+ 3	protocol	core/src/main/java/tv/own/owntv/core/parser/XmltvParser.kt	channel
+@@ -2368,25 +2372,29 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/parser/XmltvParser.kt	xmltv_ns
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XmltvParser.kt	—
+ 2	protocol	core/src/main/java/tv/own/owntv/core/parser/XmltvTime.kt	\0
++7	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	#EXTM3U
+-1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	${base(s)}/live/${s.username}/${s.password}/$streamId.m3u8
+-1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	${base(s)}/live/${s.username}/${s.password}/$streamId.ts
+-1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	${base(s)}/movie/${s.username}/${s.password}/$streamId.${ext ?: "mp4"}
++1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	${base(s)}/live/${credentials(s)}/$streamId.m3u8
++1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	${base(s)}/live/${credentials(s)}/$streamId.ts
++1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	${base(s)}/movie/${credentials(s)}/$streamId.${ext ?: "mp4"}
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	${base(s)}/player_api.php?username=$u&password=$p
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	${base(s)}/player_api.php?username=$u&password=$p&action=$action$extra
+-1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	${base(s)}/series/${s.username}/${s.password}/$episodeId.${ext ?: "mp4"}
++1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	${base(s)}/series/${credentials(s)}/$episodeId.${ext ?: "mp4"}
++1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	${base(s)}/timeshift/${credentials(s)}/$durationMinutes/${fmt.format(java.util.Date(startMs))}/$streamId.$ext
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	${base(s)}/xmltv.php?username=$u&password=$p
++1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	${xtreamPathSegment(s.username)}/${xtreamPathSegment(s.password)}
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	&category_id=$it
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	&series_id=$seriesId
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	&stream_id=$streamId&limit=$limit
++1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	-._~!$&'()*+,;=:@
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	0
++1	technical	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	0123456789ABCDEF
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	1
+ 1	technical	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	GMT$sign${(minutes / 60).toString().padStart(2, '0')}:${(minutes % 60).toString().padStart(2, '0')}
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	Stream truncated after $count items label=$label — partial list kept
+ 2	technical	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	UTC
+ 6	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	UTF-8
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	XtreamClient
+-7	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	\0
+ 1	json	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	active_cons
+ 3	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	added
+ 2	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	air_date
+@@ -2457,12 +2465,12 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	yyyy-MM-dd HH:mm:ss
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	yyyy-MM-dd:HH-mm
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt	—
++1	empty	core/src/main/java/tv/own/owntv/core/parser/XtreamM3uLink.kt	\0
+ 1	url	core/src/main/java/tv/own/owntv/core/parser/XtreamM3uLink.kt	$scheme://$authority${path.dropLast("/get.php".length)}
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamM3uLink.kt	&
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamM3uLink.kt	&amp;
+ 2	url	core/src/main/java/tv/own/owntv/core/parser/XtreamM3uLink.kt	/get.php
+ 1	technical	core/src/main/java/tv/own/owntv/core/parser/XtreamM3uLink.kt	UTF-8
+-1	empty	core/src/main/java/tv/own/owntv/core/parser/XtreamM3uLink.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamM3uLink.kt	hls
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamM3uLink.kt	http
+ 1	protocol	core/src/main/java/tv/own/owntv/core/parser/XtreamM3uLink.kt	https
+@@ -2474,17 +2482,17 @@
+ 1	preference-key	core/src/main/java/tv/own/owntv/core/player/AudioOnlyStore.kt	keys
+ 1	technical	core/src/main/java/tv/own/owntv/core/player/AudioOnlyStore.kt	moved_to_db_v44
+ 1	preference-key	core/src/main/java/tv/own/owntv/core/player/AudioOnlyStore.kt	owntv_audio_only
++1	empty	core/src/main/java/tv/own/owntv/core/player/AudioOutputDelay.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/player/AudioOutputDelay.kt	${it.key.name}=${it.value}
+ 1	technical	core/src/main/java/tv/own/owntv/core/player/AudioOutputDelay.kt	,
+ 1	compiler	core/src/main/java/tv/own/owntv/core/player/AudioOutputDelay.kt	InlinedApi
+-1	empty	core/src/main/java/tv/own/owntv/core/player/AudioOutputDelay.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/player/EnginePinKey.kt	$sourceId:$mediaType:$it
+ 1	preference-key	core/src/main/java/tv/own/owntv/core/player/EnginePinKey.kt	CATCHUP
++2	empty	core/src/main/java/tv/own/owntv/core/player/ExternalPlayerLauncher.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/player/ExternalPlayerLauncher.kt	$title · $subtitle
+ 1	protocol	core/src/main/java/tv/own/owntv/core/player/ExternalPlayerLauncher.kt	.fileprovider
+ 1	protocol	core/src/main/java/tv/own/owntv/core/player/ExternalPlayerLauncher.kt	3gp
+ 3	protocol	core/src/main/java/tv/own/owntv/core/player/ExternalPlayerLauncher.kt	User-Agent
+-2	empty	core/src/main/java/tv/own/owntv/core/player/ExternalPlayerLauncher.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/player/ExternalPlayerLauncher.kt	android.media.intent.extra.HTTP_HEADERS
+ 1	mime	core/src/main/java/tv/own/owntv/core/player/ExternalPlayerLauncher.kt	application/x-mpegURL
+ 1	uri	core/src/main/java/tv/own/owntv/core/player/ExternalPlayerLauncher.kt	content
+@@ -2599,6 +2607,7 @@
+ 1	log	core/src/main/java/tv/own/owntv/core/profile/ProfileAvatarStore.kt	profile $profileId: unable to scale the chosen image
+ 1	log	core/src/main/java/tv/own/owntv/core/profile/ProfileAvatarStore.kt	profile $profileId: unable to write the picture
+ 1	technical	core/src/main/java/tv/own/owntv/core/profile/ProfileAvatarStore.kt	profile_$profileId.jpg
++2	technical	core/src/main/java/tv/own/owntv/core/recording/DashManifest.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/recording/DashManifest.kt	$it/$ref
+ 1	technical	core/src/main/java/tv/own/owntv/core/recording/DashManifest.kt	%$format
+ 1	regex	core/src/main/java/tv/own/owntv/core/recording/DashManifest.kt	-?P(?:(\\d+)Y)?(?:(\\d+)M)?(?:(\\d+)D)?(?:T(?:(\\d+)H)?(?:(\\d+)M)?(?:([\\d.]+)S)?)?
+@@ -2625,7 +2634,6 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/recording/DashManifest.kt	SegmentTimeline
+ 1	technical	core/src/main/java/tv/own/owntv/core/recording/DashManifest.kt	SegmentURL
+ 1	technical	core/src/main/java/tv/own/owntv/core/recording/DashManifest.kt	Time
+-2	technical	core/src/main/java/tv/own/owntv/core/recording/DashManifest.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/recording/DashManifest.kt	ac-3
+ 1	technical	core/src/main/java/tv/own/owntv/core/recording/DashManifest.kt	ac-4
+ 1	technical	core/src/main/java/tv/own/owntv/core/recording/DashManifest.kt	alac
+@@ -2676,6 +2684,7 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/recording/HlsAes.kt	0x
+ 1	technical	core/src/main/java/tv/own/owntv/core/recording/HlsAes.kt	AES
+ 1	technical	core/src/main/java/tv/own/owntv/core/recording/HlsAes.kt	AES/CBC/PKCS5Padding
++1	empty	core/src/main/java/tv/own/owntv/core/recording/HlsMediaPlaylist.kt	\0
+ 2	technical	core/src/main/java/tv/own/owntv/core/recording/HlsMediaPlaylist.kt	#
+ 1	protocol	core/src/main/java/tv/own/owntv/core/recording/HlsMediaPlaylist.kt	#EXT-X-ENDLIST
+ 1	protocol	core/src/main/java/tv/own/owntv/core/recording/HlsMediaPlaylist.kt	#EXT-X-KEY:
+@@ -2690,7 +2699,6 @@
+ 1	protocol	core/src/main/java/tv/own/owntv/core/recording/HlsMediaPlaylist.kt	METHOD
+ 1	protocol	core/src/main/java/tv/own/owntv/core/recording/HlsMediaPlaylist.kt	NONE
+ 1	technical	core/src/main/java/tv/own/owntv/core/recording/HlsMediaPlaylist.kt	URI
+-1	empty	core/src/main/java/tv/own/owntv/core/recording/HlsMediaPlaylist.kt	\0
+ 1	mime	core/src/main/java/tv/own/owntv/core/recording/HlsMediaPlaylist.kt	m3u
+ 1	mime	core/src/main/java/tv/own/owntv/core/recording/HlsMediaPlaylist.kt	mpegurl
+ 1	technical	core/src/main/java/tv/own/owntv/core/recording/RecordingEngine.kt	$TEMP_PREFIX$id$MUXED_SUFFIX
+@@ -2729,10 +2737,10 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/recording/RecordingNotifications.kt	owntv_recordings
+ 1	protocol	core/src/main/java/tv/own/owntv/core/recording/RecordingReceivers.kt	android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED
+ 1	protocol	core/src/main/java/tv/own/owntv/core/recording/RecordingReceivers.kt	tv.own.owntv.core.action.RECORDING_DUE
++5	empty	core/src/main/java/tv/own/owntv/core/recording/RecordingRuleMatcher.kt	\0
+ 1	regex	core/src/main/java/tv/own/owntv/core/recording/RecordingRuleMatcher.kt	['‘’ʼ′]
+ 1	regex	core/src/main/java/tv/own/owntv/core/recording/RecordingRuleMatcher.kt	[\\[(][^\\[\\]()]*[\\])]\\s*$
+ 1	regex	core/src/main/java/tv/own/owntv/core/recording/RecordingRuleMatcher.kt	[^\\p{L}\\p{N}]+
+-5	empty	core/src/main/java/tv/own/owntv/core/recording/RecordingRuleMatcher.kt	\0
+ 1	regex	core/src/main/java/tv/own/owntv/core/recording/RecordingRuleMatcher.kt	\\s*[-–—:]\\s*(?:episode|ep\\.?|part|pt\\.?)\\s*\\d+\\s*$
+ 1	regex	core/src/main/java/tv/own/owntv/core/recording/RecordingRuleMatcher.kt	\\s+
+ 1	file-path	core/src/main/java/tv/own/owntv/core/recording/RecordingRules.kt	$stem - $stamp.ts
+@@ -2814,11 +2822,11 @@
+ 1	protocol	core/src/main/java/tv/own/owntv/core/repository/EpgRepository.kt	stalker://
+ 1	log	core/src/main/java/tv/own/owntv/core/repository/EpgRepository.kt	windowBackH=${WINDOW_BACK_MS / 3_600_000} windowAheadH=${aheadMs / 3_600_000}
+ 1	technical	core/src/main/java/tv/own/owntv/core/repository/EpisodeMerge.kt	s${seasonNumber}e$episodeNumber
++1	technical	core/src/main/java/tv/own/owntv/core/repository/SeriesRepository.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/repository/SeriesRepository.kt	${season.id}:$epNo
+ 1	log	core/src/main/java/tv/own/owntv/core/repository/SeriesRepository.kt	${source.type} episode load failed seriesId=${series.id}
+ 1	technical	core/src/main/java/tv/own/owntv/core/repository/SeriesRepository.kt	HTTP ${e.code}
+ 1	log	core/src/main/java/tv/own/owntv/core/repository/SeriesRepository.kt	SeriesRepository
+-1	technical	core/src/main/java/tv/own/owntv/core/repository/SeriesRepository.kt	\0
+ 1	log	core/src/main/java/tv/own/owntv/core/repository/SeriesRepository.kt	episodes seriesId=$seriesId fetched=${fetched.size} new=${plan.inserts.size}
+ 1	log	core/src/main/java/tv/own/owntv/core/repository/SeriesRepository.kt	stalker episodes seriesId=${series.id} remoteId=$remoteId seasons=${seasons.size} episodes=${episodes.size}
+ 1	log	core/src/main/java/tv/own/owntv/core/repository/SeriesRepository.kt	updated=${plan.updates.size} removed=${plan.deleteIds.size}
+@@ -2854,6 +2862,7 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/settings/SettingsImportRules.kt	live_rewind_step_sec
+ 1	technical	core/src/main/java/tv/own/owntv/core/settings/SettingsImportRules.kt	mini_player_position
+ 1	technical	core/src/main/java/tv/own/owntv/core/settings/SettingsImportRules.kt	seek_step_sec
++36	empty	core/src/main/java/tv/own/owntv/core/settings/SettingsRepository.kt	\0
+ 1	preference-key	core/src/main/java/tv/own/owntv/core/settings/SettingsRepository.kt	$SPORTS_CONFIG_PREFIX$profileId
+ 2	log	core/src/main/java/tv/own/owntv/core/settings/SettingsRepository.kt	${mode.name}$SEPARATOR$manualDays
+ 3	preference-key	core/src/main/java/tv/own/owntv/core/settings/SettingsRepository.kt	,
+@@ -2868,7 +2877,6 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/settings/SettingsRepository.kt	OFF
+ 1	log	core/src/main/java/tv/own/owntv/core/settings/SettingsRepository.kt	OwnTV-Settings
+ 1	technical	core/src/main/java/tv/own/owntv/core/settings/SettingsRepository.kt	UNCHECKED_CAST
+-36	empty	core/src/main/java/tv/own/owntv/core/settings/SettingsRepository.kt	\0
+ 1	regex	core/src/main/java/tv/own/owntv/core/settings/SettingsRepository.kt	^[0-9a-fA-F]{16}:[0-9a-fA-F]{64}$
+ 3	json	core/src/main/java/tv/own/owntv/core/settings/SettingsRepository.kt	a
+ 1	preference-key	core/src/main/java/tv/own/owntv/core/settings/SettingsRepository.kt	accent_color
+@@ -3118,20 +3126,21 @@
+ 1	preference-key	core/src/main/java/tv/own/owntv/core/settings/SettingsRepository.kt	weather_location
+ 2	technical	core/src/main/java/tv/own/owntv/core/settings/SourceOverrides.kt	Referer
+ 1	technical	core/src/main/java/tv/own/owntv/core/settings/SourceOverrides.kt	catchup
++1	empty	core/src/main/java/tv/own/owntv/core/setup/SetupText.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/setup/SetupText.kt	Mozilla/5.0 (QtEmbedded; U; Linux; C) AppleWebKit/533.3 (KHTML, like Gecko) MAG250 stbapp ver: 2 rev: 250 Safari/533.3
+ 1	protocol	core/src/main/java/tv/own/owntv/core/setup/SetupText.kt	Mozilla/5.0 (QtEmbedded; U; Linux; C) AppleWebKit/533.3 (KHTML, like Gecko) MAG254 stbapp ver: 2 rev: 250 Safari/533.3
+ 1	protocol	core/src/main/java/tv/own/owntv/core/setup/SetupText.kt	Mozilla/5.0 (QtEmbedded; U; Linux; C) AppleWebKit/533.3 (KHTML, like Gecko) MAG270 stbapp ver: 2 rev: 250 Safari/533.3
+ 1	protocol	core/src/main/java/tv/own/owntv/core/setup/SetupText.kt	Mozilla/5.0 (QtEmbedded; U; Linux; C) AppleWebKit/601.1 (KHTML, like Gecko) MAG420 stbapp ver: 4 rev: 2721 Safari/601.1
+-1	empty	core/src/main/java/tv/own/owntv/core/setup/SetupText.kt	\0
++13	empty	core/src/main/java/tv/own/owntv/core/setup/SourceImporter.kt	\0
+ 1	file-path	core/src/main/java/tv/own/owntv/core/setup/SourceImporter.kt	/
+ 1	log	core/src/main/java/tv/own/owntv/core/setup/SourceImporter.kt	M3U link is an Xtream account — importing it as Xtream
+ 1	log	core/src/main/java/tv/own/owntv/core/setup/SourceImporter.kt	SourceImporter
+-13	empty	core/src/main/java/tv/own/owntv/core/setup/SourceImporter.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/setup/SourceImporter.kt	add_remainder
+ 1	url	core/src/main/java/tv/own/owntv/core/setup/SourceImporter.kt	content://
+ 1	url	core/src/main/java/tv/own/owntv/core/setup/SourceImporter.kt	file://
+ 1	technical	core/src/main/java/tv/own/owntv/core/setup/SourceImporter.kt	fresh_add
+ 1	technical	core/src/main/java/tv/own/owntv/core/setup/SourceImporter.kt	restore
++6	technical	core/src/main/java/tv/own/owntv/core/sports/EspnParser.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/EspnParser.kt	$id-$i
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/EspnParser.kt	(
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/EspnParser.kt	,
+@@ -3143,7 +3152,6 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/EspnParser.kt	CANCEL
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/EspnParser.kt	POSTPONED
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/EspnParser.kt	STATUS_HALFTIME
+-6	technical	core/src/main/java/tv/own/owntv/core/sports/EspnParser.kt	\0
+ 1	regex	core/src/main/java/tv/own/owntv/core/sports/EspnParser.kt	\\((\\d+(?:\\.\\d)?)(?:/\\d+)? ov
+ 1	regex	core/src/main/java/tv/own/owntv/core/sports/EspnParser.kt	^\\d+
+ 1	json	core/src/main/java/tv/own/owntv/core/sports/EspnParser.kt	abandon
+@@ -3298,20 +3306,20 @@
+ 2	technical	core/src/main/java/tv/own/owntv/core/sports/MatchAlerts.kt	hw
+ 2	technical	core/src/main/java/tv/own/owntv/core/sports/MatchAlerts.kt	r
+ 2	technical	core/src/main/java/tv/own/owntv/core/sports/MatchAlerts.kt	s
++1	technical	core/src/main/java/tv/own/owntv/core/sports/MatchNotifications.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/MatchNotifications.kt	${m.key}#${a.kind}#$score
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/MatchNotifications.kt	${match.key}#reminder
+ 2	technical	core/src/main/java/tv/own/owntv/core/sports/MatchNotifications.kt	0
+-1	technical	core/src/main/java/tv/own/owntv/core/sports/MatchNotifications.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/MatchNotifications.kt	owntv-sports
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/MatchNotifications.kt	owntv_sports_goals
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/MatchNotifications.kt	owntv_sports_live
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/MatchNotifications.kt	owntv_sports_reminders
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/MatchNotifications.kt	tv.own.owntv.extra.SPORTS_MATCH
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/MatchNotifications.kt	·
++3	technical	core/src/main/java/tv/own/owntv/core/sports/SportOnChannels.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/SportOnChannels.kt	$it
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/SportOnChannels.kt	${TeamNames.tokens(text).joinToString(" ")} | ${raw.joinToString(" ")}
+ 1	regex	core/src/main/java/tv/own/owntv/core/sports/SportOnChannels.kt	[^\\p{L}\\p{N}]+
+-3	technical	core/src/main/java/tv/own/owntv/core/sports/SportOnChannels.kt	\0
+ 1	regex	core/src/main/java/tv/own/owntv/core/sports/SportOnChannels.kt	\\S\\s+(?:[-–—:]|v|vs\\.?|gegen|contre|x)\\s+\\S
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/SportOnChannels.kt	alpine skiing
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/SportOnChannels.kt	american football
+@@ -3831,8 +3839,8 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	womens-college-volleyball
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	world-baseball-classic
+ 1	json	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	wta
++2	empty	core/src/main/java/tv/own/owntv/core/sports/SportsConfig.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsConfig.kt	${sport.path}/$id
+-2	empty	core/src/main/java/tv/own/owntv/core/sports/SportsConfig.kt	\0
+ 4	json	core/src/main/java/tv/own/owntv/core/sports/SportsConfig.kt	ab
+ 2	json	core/src/main/java/tv/own/owntv/core/sports/SportsConfig.kt	alerts
+ 2	json	core/src/main/java/tv/own/owntv/core/sports/SportsConfig.kt	allSports
+@@ -3886,6 +3894,7 @@
+ 1	json	core/src/main/java/tv/own/owntv/core/sports/SportsRepository.kt	sports
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/SportsRepository.kt	tennis/atp
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/SportsRepository.kt	tennis/wta
++1	empty	core/src/main/java/tv/own/owntv/core/sports/SportsSource.kt	\0
+ 1	url	core/src/main/java/tv/own/owntv/core/sports/SportsSource.kt	$SITE/apis/site/v2/sports/${league.sport.path}/$slug/teams/$teamId/schedule
+ 1	url	core/src/main/java/tv/own/owntv/core/sports/SportsSource.kt	$SITE/apis/site/v2/sports/${league.sport.path}/${league.slug}/scoreboard
+ 1	url	core/src/main/java/tv/own/owntv/core/sports/SportsSource.kt	$SITE/apis/site/v2/sports/${league.sport.path}/${league.slug}/scoreboard?dates=${month.format(MONTH)}&limit=$MONTH_LIMIT
+@@ -3899,17 +3908,16 @@
+ 1	url	core/src/main/java/tv/own/owntv/core/sports/SportsSource.kt	?dates=$it
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/SportsSource.kt	?fixture=true
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/SportsSource.kt	HTTP $code
+-1	empty	core/src/main/java/tv/own/owntv/core/sports/SportsSource.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/SportsSource.kt	all
+ 1	assertion	core/src/main/java/tv/own/owntv/core/sports/SportsSource.kt	cricket has no month feed
+ 1	url	core/src/main/java/tv/own/owntv/core/sports/SportsSource.kt	https://site.api.espn.com
+ 1	url	core/src/main/java/tv/own/owntv/core/sports/SportsSource.kt	https://site.web.api.espn.com
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/SportsSource.kt	no ranking
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/SportsSource.kt	yyyyMM
++1	technical	core/src/main/java/tv/own/owntv/core/sports/TeamNames.kt	\0
+ 2	technical	core/src/main/java/tv/own/owntv/core/sports/TeamNames.kt	$1
+ 1	regex	core/src/main/java/tv/own/owntv/core/sports/TeamNames.kt	(\\p{L})\\1+
+ 1	regex	core/src/main/java/tv/own/owntv/core/sports/TeamNames.kt	[^\\p{L}\\p{N}]+
+-1	technical	core/src/main/java/tv/own/owntv/core/sports/TeamNames.kt	\0
+ 1	regex	core/src/main/java/tv/own/owntv/core/sports/TeamNames.kt	\\p{M}+
+ 1	regex	core/src/main/java/tv/own/owntv/core/sports/TeamNames.kt	\\p{N}+
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/TeamNames.kt	a
+@@ -4045,6 +4053,7 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/TeamNames.kt	wien
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/TeamNames.kt	women
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/WatchFilter.kt	\0
++1	technical	core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt	\0
+ 1	regex	core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt	#{3,}|={4,}|-{4,}|\\*{4,}
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt	AE
+ 8	technical	core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt	AR
+@@ -4093,21 +4102,20 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt	US
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt	USA
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt	[A-Za-z]{4,}
+-1	technical	core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt	\0
+ 1	regex	core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt	\\s(vs?\\.?|v)\\s
++1	technical	core/src/main/java/tv/own/owntv/core/sports/WatchReader.kt	\0
+ 2	technical	core/src/main/java/tv/own/owntv/core/sports/WatchReader.kt	$it*
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/WatchReader.kt	${it.id}@${it.lastSyncAt}
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/WatchReader.kt	,
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/WatchReader.kt	OR
+ 1	log	core/src/main/java/tv/own/owntv/core/sports/WatchReader.kt	OwnTV-Sports
+ 1	regex	core/src/main/java/tv/own/owntv/core/sports/WatchReader.kt	[^\\p{L}\\p{N}]+
+-1	technical	core/src/main/java/tv/own/owntv/core/sports/WatchReader.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/WatchReader.kt	b:${b.name}
+ 1	log	core/src/main/java/tv/own/owntv/core/sports/WatchReader.kt	channel search failed: ${it.message}
+ 1	log	core/src/main/java/tv/own/owntv/core/sports/WatchReader.kt	slot start=$start matches=${slot.size} programmes=${programmes.size} near=${partial.size}
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/WatchReader.kt	|
++1	empty	core/src/main/java/tv/own/owntv/core/sports/model/Match.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/sports/model/Match.kt	${League.keyOf(sport, leagueSlug)}#$id
+-1	empty	core/src/main/java/tv/own/owntv/core/sports/model/Match.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/model/MatchSummary.kt	FP1
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/model/MatchSummary.kt	FP2
+ 1	technical	core/src/main/java/tv/own/owntv/core/sports/model/MatchSummary.kt	FP3
+@@ -4140,6 +4148,7 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/stalker/StalkerAuthManager.kt	status
+ 1	log	core/src/main/java/tv/own/owntv/core/stalker/StalkerAuthManager.kt	watchdog=${profile["watchdog_timeout"] ?: "?"} ms=${SystemClock.elapsedRealtime() - startedAt}
+ 2	technical	core/src/main/java/tv/own/owntv/core/stalker/StalkerAuthManager.kt	watchdog_timeout
++5	protocol	core/src/main/java/tv/own/owntv/core/stalker/StalkerClient.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/stalker/StalkerClient.kt	$1=***
+ 1	protocol	core/src/main/java/tv/own/owntv/core/stalker/StalkerClient.kt	$apiBase?type=${enc(type)}&action=create_link&cmd=${enc(cmd)}$seriesParam&forced_storage=0&disable_ad=0&JsHttpRequest=1-xml
+ 1	protocol	core/src/main/java/tv/own/owntv/core/stalker/StalkerClient.kt	$apiBase?type=account_info&action=get_main_info&JsHttpRequest=1-xml
+@@ -4219,7 +4228,6 @@
+ 1	protocol	core/src/main/java/tv/own/owntv/core/stalker/StalkerClient.kt	User-Agent
+ 1	protocol	core/src/main/java/tv/own/owntv/core/stalker/StalkerClient.kt	X-User-Agent
+ 1	protocol	core/src/main/java/tv/own/owntv/core/stalker/StalkerClient.kt	[:\\-. ]
+-5	protocol	core/src/main/java/tv/own/owntv/core/stalker/StalkerClient.kt	\0
+ 1	regex	core/src/main/java/tv/own/owntv/core/stalker/StalkerClient.kt	\\bspecials?\\b
+ 1	protocol	core/src/main/java/tv/own/owntv/core/stalker/StalkerClient.kt	\\d{4}
+ 1	protocol	core/src/main/java/tv/own/owntv/core/stalker/StalkerClient.kt	action=
+@@ -4330,10 +4338,10 @@
+ 1	uri	core/src/main/java/tv/own/owntv/core/storage/MediaTarget.kt	content://
+ 1	technical	core/src/main/java/tv/own/owntv/core/storage/MediaTarget.kt	wa
+ 1	technical	core/src/main/java/tv/own/owntv/core/storage/MediaTarget.kt	wt
++3	empty	core/src/main/java/tv/own/owntv/core/storage/StorageAccess.kt	\0
+ 2	file-path	core/src/main/java/tv/own/owntv/core/storage/StorageAccess.kt	OwnTV
+ 1	technical	core/src/main/java/tv/own/owntv/core/storage/StorageAccess.kt	UTF-8
+ 1	regex	core/src/main/java/tv/own/owntv/core/storage/StorageAccess.kt	[\\\\/:*?"<>|]
+-3	empty	core/src/main/java/tv/own/owntv/core/storage/StorageAccess.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/storage/StorageAccess.kt	mp4
+ 1	technical	core/src/main/java/tv/own/owntv/core/storage/StorageAccess.kt	package:${context.packageName}
+ 1	technical	core/src/main/java/tv/own/owntv/core/storage/StorageAccess.kt	untitled
+@@ -4493,6 +4501,7 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/sync/M3uSyncer.kt	r
+ 1	technical	core/src/main/java/tv/own/owntv/core/sync/M3uSyncer.kt	series
+ 1	log	core/src/main/java/tv/own/owntv/core/sync/M3uSyncer.kt	totalShows=$seriesProcessed ms=${SystemClock.elapsedRealtime() - start}
++2	empty	core/src/main/java/tv/own/owntv/core/sync/StalkerSyncer.kt	\0
+ 1	log	core/src/main/java/tv/own/owntv/core/sync/StalkerSyncer.kt	$label backfill cat=${row.categoryRemoteId} page=$p
+ 1	log	core/src/main/java/tv/own/owntv/core/sync/StalkerSyncer.kt	$label backfill cat=${row.categoryRemoteId} page=$p failed (${e.message})
+ 1	log	core/src/main/java/tv/own/owntv/core/sync/StalkerSyncer.kt	$label backfill end sourceId=${s.id} pages=$pagesFetched inserted=$inserted
+@@ -4534,7 +4543,6 @@
+ 4	technical	core/src/main/java/tv/own/owntv/core/sync/StalkerSyncer.kt	*
+ 1	log	core/src/main/java/tv/own/owntv/core/sync/StalkerSyncer.kt	HTTP ${it.code}
+ 1	technical	core/src/main/java/tv/own/owntv/core/sync/StalkerSyncer.kt	Stalker source ${s.id} has no valid MAC address
+-2	empty	core/src/main/java/tv/own/owntv/core/sync/StalkerSyncer.kt	\0
+ 1	log	core/src/main/java/tv/own/owntv/core/sync/StalkerSyncer.kt	adopting portal-advertised XMLTV url for sourceId=${s.id}
+ 1	log	core/src/main/java/tv/own/owntv/core/sync/StalkerSyncer.kt	advertised=$advertised pendingCategories=$stillPending
+ 1	log	core/src/main/java/tv/own/owntv/core/sync/StalkerSyncer.kt	catchupSource=${c.catchupSource.hashCode()} sortOrder=${c.sortOrder}
+@@ -4578,9 +4586,9 @@
+ 1	log	core/src/main/java/tv/own/owntv/core/sync/SyncManager.kt	sync no-op empty effective sourceId=${source.id}
+ 1	log	core/src/main/java/tv/own/owntv/core/sync/SyncManager.kt	sync start sourceId=${source.id} name=${source.name} type=${source.type}
+ 1	log	core/src/main/java/tv/own/owntv/core/sync/SyncManager.kt	── Sync stats for source ${stats.sourceId} ──
++1	technical	core/src/main/java/tv/own/owntv/core/sync/SyncStatus.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/sync/SyncStatus.kt	0
+ 1	technical	core/src/main/java/tv/own/owntv/core/sync/SyncStatus.kt	1
+-1	technical	core/src/main/java/tv/own/owntv/core/sync/SyncStatus.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/sync/SyncStatus.kt	false
+ 1	technical	core/src/main/java/tv/own/owntv/core/sync/SyncStatus.kt	later
+ 1	technical	core/src/main/java/tv/own/owntv/core/sync/SyncStatus.kt	no
+@@ -4678,13 +4686,13 @@
+ 1	protocol	core/src/main/java/tv/own/owntv/core/sync/local/LocalSyncClient.kt	secret
+ 1	json	core/src/main/java/tv/own/owntv/core/sync/local/LocalSyncClient.kt	session
+ 1	protocol	core/src/main/java/tv/own/owntv/core/sync/local/LocalSyncClient.kt	text/plain
++1	empty	core/src/main/java/tv/own/owntv/core/sync/local/LocalSyncDiscovery.kt	\0
+ 1	log	core/src/main/java/tv/own/owntv/core/sync/local/LocalSyncDiscovery.kt	Could not announce this device for local sync (error $errorCode)
+ 1	compiler	core/src/main/java/tv/own/owntv/core/sync/local/LocalSyncDiscovery.kt	DEPRECATION
+ 1	log	core/src/main/java/tv/own/owntv/core/sync/local/LocalSyncDiscovery.kt	Local sync announcement failed
+ 1	log	core/src/main/java/tv/own/owntv/core/sync/local/LocalSyncDiscovery.kt	Local sync discovery could not start (error $errorCode)
+ 1	log	core/src/main/java/tv/own/owntv/core/sync/local/LocalSyncDiscovery.kt	Local sync discovery failed
+ 1	log	core/src/main/java/tv/own/owntv/core/sync/local/LocalSyncDiscovery.kt	LocalSyncDiscovery
+-1	empty	core/src/main/java/tv/own/owntv/core/sync/local/LocalSyncDiscovery.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/sync/local/LocalSyncDiscovery.kt	_owntv._tcp.
+ 1	json	core/src/main/java/tv/own/owntv/core/sync/local/LocalSyncDiscovery.kt	id
+ 1	protocol	core/src/main/java/tv/own/owntv/core/sync/local/LocalSyncManager.kt	${Build.MANUFACTURER} ${Build.MODEL}
+@@ -4699,8 +4707,8 @@
+ 2	file-path	core/src/main/java/tv/own/owntv/core/sync/local/LocalSyncManager.kt	outgoing
+ 1	protocol	core/src/main/java/tv/own/owntv/core/sync/local/LocalSyncManager.kt	payload
+ 1	json	core/src/main/java/tv/own/owntv/core/sync/local/LocalSyncManager.kt	session
++1	empty	core/src/main/java/tv/own/owntv/core/sync/local/PairedDeviceStore.kt	\0
+ 1	json	core/src/main/java/tv/own/owntv/core/sync/local/PairedDeviceStore.kt	%02x
+-1	empty	core/src/main/java/tv/own/owntv/core/sync/local/PairedDeviceStore.kt	\0
+ 2	json	core/src/main/java/tv/own/owntv/core/sync/local/PairedDeviceStore.kt	address
+ 1	json	core/src/main/java/tv/own/owntv/core/sync/local/PairedDeviceStore.kt	devices
+ 2	json	core/src/main/java/tv/own/owntv/core/sync/local/PairedDeviceStore.kt	id
+@@ -4837,6 +4845,7 @@
+ 1	protocol	core/src/main/java/tv/own/owntv/core/sync/work/TrendingRefreshWorker.kt	trending-refresh-source-$sourceId
+ 1	empty	core/src/main/java/tv/own/owntv/core/theme/Background.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/theme/Palette.kt	#
++1	empty	core/src/main/java/tv/own/owntv/core/timeshift/HlsMaster.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/timeshift/HlsMaster.kt	#
+ 1	protocol	core/src/main/java/tv/own/owntv/core/timeshift/HlsMaster.kt	#EXT-X-MAP:
+ 1	protocol	core/src/main/java/tv/own/owntv/core/timeshift/HlsMaster.kt	#EXT-X-MEDIA:
+@@ -4848,7 +4857,6 @@
+ 1	protocol	core/src/main/java/tv/own/owntv/core/timeshift/HlsMaster.kt	RESOLUTION
+ 1	protocol	core/src/main/java/tv/own/owntv/core/timeshift/HlsMaster.kt	TYPE
+ 2	protocol	core/src/main/java/tv/own/owntv/core/timeshift/HlsMaster.kt	URI
+-1	empty	core/src/main/java/tv/own/owntv/core/timeshift/HlsMaster.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/timeshift/TimeshiftDownloader.kt	Content-Type
+ 1	log	core/src/main/java/tv/own/owntv/core/timeshift/TimeshiftDownloader.kt	DASH with separate audio and video
+ 1	log	core/src/main/java/tv/own/owntv/core/timeshift/TimeshiftDownloader.kt	DASH without an init segment
+@@ -4881,9 +4889,9 @@
+ 2	log	core/src/main/java/tv/own/owntv/core/timeshift/TimeshiftDownloader.kt	unreadable init segment address
+ 1	log	core/src/main/java/tv/own/owntv/core/timeshift/TimeshiftDownloader.kt	unschedulable DASH manifest
+ 1	protocol	core/src/main/java/tv/own/owntv/core/timeshift/TimeshiftDownloader.kt	webm
++1	empty	core/src/main/java/tv/own/owntv/core/timeshift/TimeshiftManager.kt	\0
+ 1	file-path	core/src/main/java/tv/own/owntv/core/timeshift/TimeshiftManager.kt	-
+ 1	log	core/src/main/java/tv/own/owntv/core/timeshift/TimeshiftManager.kt	Timeshift
+-1	empty	core/src/main/java/tv/own/owntv/core/timeshift/TimeshiftManager.kt	\0
+ 1	log	core/src/main/java/tv/own/owntv/core/timeshift/TimeshiftManager.kt	buffer parked
+ 1	log	core/src/main/java/tv/own/owntv/core/timeshift/TimeshiftManager.kt	buffer resumed by a returning player
+ 1	log	core/src/main/java/tv/own/owntv/core/timeshift/TimeshiftManager.kt	no data in ${firstPieceTimeoutMs}ms
+@@ -4910,6 +4918,7 @@
+ 1	mime	core/src/main/java/tv/own/owntv/core/timeshift/TimeshiftSession.kt	video/mp4
+ 1	file-path	core/src/main/java/tv/own/owntv/core/timeshift/TimeshiftStorage.kt	timeshift
+ 1	protocol	core/src/main/java/tv/own/owntv/core/trending/TrendingAvailability.kt	no VOD content
++1	empty	core/src/main/java/tv/own/owntv/core/trending/TrendingMatcher.kt	\0
+ 1	sql	core/src/main/java/tv/own/owntv/core/trending/TrendingMatcher.kt	$it*
+ 1	technical	core/src/main/java/tv/own/owntv/core/trending/TrendingMatcher.kt	1080p FHD
+ 1	technical	core/src/main/java/tv/own/owntv/core/trending/TrendingMatcher.kt	4K UHD
+@@ -4917,16 +4926,15 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/trending/TrendingMatcher.kt	8K
+ 1	locale	core/src/main/java/tv/own/owntv/core/trending/TrendingMatcher.kt	EN
+ 1	technical	core/src/main/java/tv/own/owntv/core/trending/TrendingMatcher.kt	SD
+-1	empty	core/src/main/java/tv/own/owntv/core/trending/TrendingMatcher.kt	\0
+ 1	regex	core/src/main/java/tv/own/owntv/core/trending/TrendingMatcher.kt	\\s+
+ 1	locale	core/src/main/java/tv/own/owntv/core/trending/TrendingMatcher.kt	en
+ 2	technical	core/src/main/java/tv/own/owntv/core/trending/TrendingMatcher.kt	•
++1	empty	core/src/main/java/tv/own/owntv/core/trending/TrendingRepository.kt	\0
+ 1	log	core/src/main/java/tv/own/owntv/core/trending/TrendingRepository.kt	${(dueAt - now) / 3_600_000}
+ 2	log	core/src/main/java/tv/own/owntv/core/trending/TrendingRepository.kt	-
+ 1	log	core/src/main/java/tv/own/owntv/core/trending/TrendingRepository.kt	Preserve old snapshot sourceId=$sourceId failedStage=$stage totalMs=${SystemClock.elapsedRealtime() - startedAt}
+ 2	log	core/src/main/java/tv/own/owntv/core/trending/TrendingRepository.kt	TV candidates
+ 1	log	core/src/main/java/tv/own/owntv/core/trending/TrendingRepository.kt	TrendingRepository
+-1	empty	core/src/main/java/tv/own/owntv/core/trending/TrendingRepository.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/trending/TrendingRepository.kt	below-threshold
+ 1	log	core/src/main/java/tv/own/owntv/core/trending/TrendingRepository.kt	dueInHours=${if (dueAt == 0L) "never" else "${(dueAt - now) / 3_600_000}"}
+ 1	log	core/src/main/java/tv/own/owntv/core/trending/TrendingRepository.kt	lang='$language' storedLang='${storedRaw?.language ?: "-"}' snapLang='${state?.metadataLanguage ?: "-"}'
+@@ -4973,6 +4981,7 @@
+ 1	file-path	core/src/main/java/tv/own/owntv/core/tv/LiveLogoArtProvider.kt	.png
+ 1	mime	core/src/main/java/tv/own/owntv/core/tv/LiveLogoArtProvider.kt	image/png
+ 1	technical	core/src/main/java/tv/own/owntv/core/tv/LiveLogoArtProvider.kt	r
++1	empty	core/src/main/java/tv/own/owntv/core/tv/LiveLogoPosterArt.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/tv/LiveLogoPosterArt.kt	$aspectRatio|$source
+ 1	file-path	core/src/main/java/tv/own/owntv/core/tv/LiveLogoPosterArt.kt	${destination.name}.tmp
+ 1	file-path	core/src/main/java/tv/own/owntv/core/tv/LiveLogoPosterArt.kt	${key(source, aspectRatio)}.png
+@@ -4980,16 +4989,15 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/tv/LiveLogoPosterArt.kt	.owntv-live-logo-art
+ 1	file-path	core/src/main/java/tv/own/owntv/core/tv/LiveLogoPosterArt.kt	.png
+ 1	technical	core/src/main/java/tv/own/owntv/core/tv/LiveLogoPosterArt.kt	SHA-256
+-1	empty	core/src/main/java/tv/own/owntv/core/tv/LiveLogoPosterArt.kt	\0
+ 1	uri	core/src/main/java/tv/own/owntv/core/tv/LiveLogoPosterArt.kt	content://${context.packageName}$AUTHORITY_SUFFIX/${file.name}
+ 1	file-path	core/src/main/java/tv/own/owntv/core/tv/LiveLogoPosterArt.kt	tv-live-logo-art
++1	empty	core/src/main/java/tv/own/owntv/core/tv/TvHomeRepository.kt	\0
+ 1	log	core/src/main/java/tv/own/owntv/core/tv/TvHomeRepository.kt	$profileId|${mediaType.name}|$stableKey
+ 1	log	core/src/main/java/tv/own/owntv/core/tv/TvHomeRepository.kt	${surface.name}:${mediaType.name}:$groupId
+ 1	log	core/src/main/java/tv/own/owntv/core/tv/TvHomeRepository.kt	%02x
+ 1	log	core/src/main/java/tv/own/owntv/core/tv/TvHomeRepository.kt	OwnTVHome
+ 1	log	core/src/main/java/tv/own/owntv/core/tv/TvHomeRepository.kt	RestrictedApi
+ 1	log	core/src/main/java/tv/own/owntv/core/tv/TvHomeRepository.kt	SHA-256
+-1	empty	core/src/main/java/tv/own/owntv/core/tv/TvHomeRepository.kt	\0
+ 1	log	core/src/main/java/tv/own/owntv/core/tv/TvHomeRepository.kt	android.resource://${context.packageName}/$resId
+ 1	log	core/src/main/java/tv/own/owntv/core/tv/TvHomeRepository.kt	clearProfile profile=$profileId done
+ 1	log	core/src/main/java/tv/own/owntv/core/tv/TvHomeRepository.kt	clearProfile profile=$profileId rows=${rows.size}
+@@ -5047,10 +5055,10 @@
+ 1	log	core/src/main/java/tv/own/owntv/core/tv/TvHomeRepository.kt	syncMovie profile=$profileId movieId=$movieId groupId=$groupId existing=${existing?.providerProgramId ?: -1}
+ 1	log	core/src/main/java/tv/own/owntv/core/tv/TvHomeRepository.kt	syncMovie skip hidden profile=$profileId movieId=$movieId sourceId=${movie.sourceId}
+ 1	log	core/src/main/java/tv/own/owntv/core/tv/TvHomeRepository.kt	syncMovie skip user-hidden profile=$profileId movieId=$movieId groupId=$groupId
++1	empty	core/src/main/java/tv/own/owntv/core/ui/stage/PlaylistMark.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/ui/stage/PlaylistMark.kt	IPTV
+ 1	technical	core/src/main/java/tv/own/owntv/core/ui/stage/PlaylistMark.kt	TV
+ 1	regex	core/src/main/java/tv/own/owntv/core/ui/stage/PlaylistMark.kt	[^\\p{L}\\p{N}]+
+-1	empty	core/src/main/java/tv/own/owntv/core/ui/stage/PlaylistMark.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/ui/stage/StageGlyph.kt	M11 19 3 12l8-7zM21 19l-8-7 8-7z
+ 1	technical	core/src/main/java/tv/own/owntv/core/ui/stage/StageGlyph.kt	M12 2.8l2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.5l6.3-.9z
+ 1	technical	core/src/main/java/tv/own/owntv/core/ui/stage/StageGlyph.kt	M12 3 2 20h20zM12 10v4M12 17h.01
+@@ -5190,11 +5198,11 @@
+ 1	log	core/src/main/java/tv/own/owntv/core/util/Perf.kt	$label @${SystemClock.elapsedRealtime() - base}ms
+ 1	log	core/src/main/java/tv/own/owntv/core/util/Perf.kt	OwnTVPerf
+ 1	log	core/src/main/java/tv/own/owntv/core/util/Perf.kt	process-begin @0ms
++1	empty	core/src/main/java/tv/own/owntv/core/util/Pin.kt	\0
+ 1	technical	core/src/main/java/tv/own/owntv/core/util/Pin.kt	${salt.toHex()}:${digest(salt, pin)}
+ 1	technical	core/src/main/java/tv/own/owntv/core/util/Pin.kt	%02x
+ 1	technical	core/src/main/java/tv/own/owntv/core/util/Pin.kt	:
+ 1	technical	core/src/main/java/tv/own/owntv/core/util/Pin.kt	SHA-256
+-1	empty	core/src/main/java/tv/own/owntv/core/util/Pin.kt	\0
+ 1	protocol	core/src/main/java/tv/own/owntv/core/weather/WeatherData.kt	clearNight
+ 2	protocol	core/src/main/java/tv/own/owntv/core/weather/WeatherData.kt	cloudy
+ 1	protocol	core/src/main/java/tv/own/owntv/core/weather/WeatherData.kt	drizzle
+@@ -5205,6 +5213,7 @@
+ 1	protocol	core/src/main/java/tv/own/owntv/core/weather/WeatherData.kt	snow
+ 1	protocol	core/src/main/java/tv/own/owntv/core/weather/WeatherData.kt	sunny
+ 1	protocol	core/src/main/java/tv/own/owntv/core/weather/WeatherData.kt	thunder
++3	log	core/src/main/java/tv/own/owntv/core/weather/WeatherRepository.kt	\0
+ 1	log	core/src/main/java/tv/own/owntv/core/weather/WeatherRepository.kt	&current=temperature_2m,weather_code,is_day
+ 1	log	core/src/main/java/tv/own/owntv/core/weather/WeatherRepository.kt	&timezone=auto
+ 1	log	core/src/main/java/tv/own/owntv/core/weather/WeatherRepository.kt	,
+@@ -5213,7 +5222,6 @@
+ 1	log	core/src/main/java/tv/own/owntv/core/weather/WeatherRepository.kt	UTF-8
+ 1	log	core/src/main/java/tv/own/owntv/core/weather/WeatherRepository.kt	User-Agent
+ 1	log	core/src/main/java/tv/own/owntv/core/weather/WeatherRepository.kt	Weather fetch failed: $msg
+-3	log	core/src/main/java/tv/own/owntv/core/weather/WeatherRepository.kt	\0
+ 1	log	core/src/main/java/tv/own/owntv/core/weather/WeatherRepository.kt	city
+ 1	log	core/src/main/java/tv/own/owntv/core/weather/WeatherRepository.kt	current
+ 1	log	core/src/main/java/tv/own/owntv/core/weather/WeatherRepository.kt	geo no match
+@@ -5305,21 +5313,21 @@
+ 1	technical	player-core/src/main/java/tv/own/owntv/core/subtitles/SubtitleController.kt	year
+ 1	locale	player-core/src/main/java/tv/own/owntv/core/subtitles/SubtitleController.kt	zh
+ 1	technical	player-core/src/main/java/tv/own/owntv/core/subtitles/SubtitleController.kt	zho
++1	technical	player-core/src/main/java/tv/own/owntv/player/AudioDynamics.kt	\0
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/AudioDynamics.kt	%.4f
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/AudioDynamics.kt	,
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/AudioDynamics.kt	:attack=${(NIGHT_ATTACK_SECS * 1000).toInt()}:release=${(NIGHT_RELEASE_SECS * 1000).toInt()}
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/AudioDynamics.kt	:makeup=${fmt(NIGHT_MAKEUP.toDouble())}
+-1	technical	player-core/src/main/java/tv/own/owntv/player/AudioDynamics.kt	\0
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/AudioDynamics.kt	acompressor=threshold=${fmt(NIGHT_THRESHOLD.toDouble())}:ratio=${NIGHT_RATIO.toInt()}
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/AudioDynamics.kt	alimiter=limit=$CEILING:level=0
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/AudioDynamics.kt	dynaudnorm=f=250:g=15:p=0.95:m=${fmt(LEVEL_MAX.toDouble())}:r=${fmt(TARGET_RMS)}
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/AudioDynamics.kt	lavfi=[${chain.joinToString(",")}]
++1	empty	player-core/src/main/java/tv/own/owntv/player/AudioOutputPolicy.kt	\0
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/AudioOutputPolicy.kt	${f.channelCount}ch
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/AudioOutputPolicy.kt	${f.sampleRate / 1000}kHz
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/AudioOutputPolicy.kt	?
+ 8	log	player-core/src/main/java/tv/own/owntv/player/AudioOutputPolicy.kt	AudioOutputPolicy
+ 1	compiler	player-core/src/main/java/tv/own/owntv/player/AudioOutputPolicy.kt	DEPRECATION
+-1	empty	player-core/src/main/java/tv/own/owntv/player/AudioOutputPolicy.kt	\0
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/AudioOutputPolicy.kt	audio
+ 1	log	player-core/src/main/java/tv/own/owntv/player/AudioOutputPolicy.kt	audio decoder released: $decoderName
+ 1	log	player-core/src/main/java/tv/own/owntv/player/AudioOutputPolicy.kt	audio decoder: $decoderName (init ${initializationDurationMs}ms, passthrough=$passthrough)
+@@ -5369,6 +5377,7 @@
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/ExoAudioGate.kt	pcm
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/ExoAudioGate.kt	truehd
+ 2	technical	player-core/src/main/java/tv/own/owntv/player/ExoAudioGate.kt	vorbis
++2	empty	player-core/src/main/java/tv/own/owntv/player/ExoSubtitleEngine.kt	\0
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/ExoSubtitleEngine.kt	$path|$offsetMs
+ 1	log	player-core/src/main/java/tv/own/owntv/player/ExoSubtitleEngine.kt	${when (hardware) { true -> "hardware"; false -> "software"; null -> "kind unknown" }}
+ 1	log	player-core/src/main/java/tv/own/owntv/player/ExoSubtitleEngine.kt	(decodedDrops=${currentDroppedFrames(player) - dropsBaseline} format=${player?.videoFormat?.sampleMimeType})
+@@ -5383,7 +5392,6 @@
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/ExoSubtitleEngine.kt	MPEG-4
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/ExoSubtitleEngine.kt	User-Agent
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/ExoSubtitleEngine.kt	VP9
+-2	empty	player-core/src/main/java/tv/own/owntv/player/ExoSubtitleEngine.kt	\0
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/ExoSubtitleEngine.kt	ass
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/ExoSubtitleEngine.kt	audio mode: video track ${if (disabled) "off" else "back on"}
+ 1	log	player-core/src/main/java/tv/own/owntv/player/ExoSubtitleEngine.kt	audio track -> id=$id lang=${f?.language}
+@@ -5428,9 +5436,12 @@
+ 1	log	player-core/src/main/java/tv/own/owntv/player/HeroPreviewEngine.kt	Hero preview produced no frame in ${NO_FRAME_TIMEOUT_MS}ms — falling back to the poster
+ 1	log	player-core/src/main/java/tv/own/owntv/player/HeroPreviewEngine.kt	HeroPreviewEngine
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/HeroPreviewEngine.kt	User-Agent
++5	empty	player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt	\0
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt	#extm3u
++1	protocol	player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt	%2B
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt	(?i)/(?:live|movie|series|vod|timeshift)/([^/]+)/([^/]+)/
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt	***
++1	protocol	player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt	+
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt	.key
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt	.m3u8
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt	.m4s
+@@ -5439,8 +5450,8 @@
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt	<!doctype
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt	<[^>]*>
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt	<html
++1	protocol	player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt	UTF-8
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt	[
+-5	empty	player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt	\0
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt	\\s+
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt	empty
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt	ftyp
+@@ -5458,10 +5469,10 @@
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt	stream
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt	unknown
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/HttpDiagnostics.kt	{
++4	empty	player-core/src/main/java/tv/own/owntv/player/LiveDiagnosticsLog.kt	\0
+ 1	log	player-core/src/main/java/tv/own/owntv/player/LiveDiagnosticsLog.kt	${timeFmt.format(LocalDateTime.now())} $message
+ 1	log	player-core/src/main/java/tv/own/owntv/player/LiveDiagnosticsLog.kt	MM-dd HH:mm:ss.SSS
+ 1	log	player-core/src/main/java/tv/own/owntv/player/LiveDiagnosticsLog.kt	OwnTV-LivePreviewEngine
+-4	empty	player-core/src/main/java/tv/own/owntv/player/LiveDiagnosticsLog.kt	\0
+ 1	file-path	player-core/src/main/java/tv/own/owntv/player/LiveDiagnosticsLog.kt	diagnostics
+ 1	file-path	player-core/src/main/java/tv/own/owntv/player/LiveDiagnosticsLog.kt	live_diagnostics.log
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/LiveDiagnosticsLog.kt	owntv-diag-log
+@@ -5480,6 +5491,7 @@
+ 1	log	player-core/src/main/java/tv/own/owntv/player/LiveLadder.kt	ExoPlayer + TS
+ 1	log	player-core/src/main/java/tv/own/owntv/player/LiveLadder.kt	mpv + HLS
+ 1	log	player-core/src/main/java/tv/own/owntv/player/LiveLadder.kt	mpv + TS
++12	empty	player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt	\0
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt	$idx@${LiveStreamQuirks.hostKey(abs)}${HttpClient.redactUrl(abs.substringAfter("://").substringAfter('/')).takeLast(28)}
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt	$kind codec: ${e.message ?: e.javaClass.simpleName}
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt	$kind codec: ${it.diagnosticInfo}
+@@ -5545,7 +5557,6 @@
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt	VP9
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt	X-Cache
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt	[
+-12	empty	player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt	\0
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt	]
+ 1	log	player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt	age=${response.header("Age").orEmpty()} retryAfter=${response.header("Retry-After").orEmpty()}
+ 1	mime	player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt	application/dash+xml
+@@ -5729,11 +5740,11 @@
+ 1	log	player-core/src/main/java/tv/own/owntv/player/LiveRouting.kt	exoplayer (drm)
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/LiveRouting.kt	mpv
+ 1	log	player-core/src/main/java/tv/own/owntv/player/LiveRouting.kt	mpv (panel refuses segments)
++1	empty	player-core/src/main/java/tv/own/owntv/player/LiveStreamQuirks.kt	\0
+ 1	protocol	player-core/src/main/java/tv/own/owntv/player/LiveStreamQuirks.kt	$rewritten?$query
+ 2	protocol	player-core/src/main/java/tv/own/owntv/player/LiveStreamQuirks.kt	.m3u8
+ 1	protocol	player-core/src/main/java/tv/own/owntv/player/LiveStreamQuirks.kt	.ts
+ 1	protocol	player-core/src/main/java/tv/own/owntv/player/LiveStreamQuirks.kt	://
+-1	empty	player-core/src/main/java/tv/own/owntv/player/LiveStreamQuirks.kt	\0
+ 1	log	player-core/src/main/java/tv/own/owntv/player/LiveTuneController.kt	$reason — gave up after ${armedBudgetMs / 1000}s
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/LiveTuneController.kt	${channel.sourceId}:${channel.id}
+ 1	log	player-core/src/main/java/tv/own/owntv/player/LiveTuneController.kt	'${channel.name}' falling back to $label ($reason)
+@@ -5775,13 +5786,13 @@
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/MpvLoadCommand.kt	absolute
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/MpvLoadCommand.kt	none
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/MpvLoadCommand.kt	seek
++1	empty	player-core/src/main/java/tv/own/owntv/player/MpvLoadOptions.kt	\0
+ 1	protocol	player-core/src/main/java/tv/own/owntv/player/MpvLoadOptions.kt	.m3u8
+ 1	protocol	player-core/src/main/java/tv/own/owntv/player/MpvLoadOptions.kt	/timeshift/
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/MpvLoadOptions.kt	0
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/MpvLoadOptions.kt	1.0
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/MpvLoadOptions.kt	1000000
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/MpvLoadOptions.kt	5000000
+-1	empty	player-core/src/main/java/tv/own/owntv/player/MpvLoadOptions.kt	\0
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/MpvLoadOptions.kt	audio
+ 2	technical	player-core/src/main/java/tv/own/owntv/player/MpvLoadOptions.kt	cache-pause-initial
+ 2	technical	player-core/src/main/java/tv/own/owntv/player/MpvLoadOptions.kt	cache-pause-wait
+@@ -5809,6 +5820,7 @@
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/MpvLoadOptions.kt	video-sync
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/MpvLoadOptions.kt	wait_keyframe=1
+ 2	technical	player-core/src/main/java/tv/own/owntv/player/MpvLoadOptions.kt	yes
++11	empty	player-core/src/main/java/tv/own/owntv/player/OwnTVPlayer.kt	\0
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/OwnTVPlayer.kt	$STREAM_RECONNECT_OPTIONS,$LIVE_TS_RECONNECT_OPTIONS
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/OwnTVPlayer.kt	$reason — archive rescue: reopening mid-GOP catch-up in software decode
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/OwnTVPlayer.kt	$reason — rescue rung 1: hwdec=mediacodec-copy (GL compositing)
+@@ -5887,7 +5899,6 @@
+ 1	log	player-core/src/main/java/tv/own/owntv/player/OwnTVPlayer.kt	VOD terminally failed on ExoPlayer ($exoError) — falling back to mpv
+ 1	log	player-core/src/main/java/tv/own/owntv/player/OwnTVPlayer.kt	VOD terminally failed on mpv ($mpvError) — falling back to ExoPlayer
+ 1	regex	player-core/src/main/java/tv/own/owntv/player/OwnTVPlayer.kt	[a-z0-9_]+
+-11	empty	player-core/src/main/java/tv/own/owntv/player/OwnTVPlayer.kt	\0
+ 4	technical	player-core/src/main/java/tv/own/owntv/player/OwnTVPlayer.kt	af
+ 1	log	player-core/src/main/java/tv/own/owntv/player/OwnTVPlayer.kt	af=${getPropertyString("af").orEmpty().ifEmpty { "none" }}
+ 2	technical	player-core/src/main/java/tv/own/owntv/player/OwnTVPlayer.kt	aid
+@@ -6226,6 +6237,7 @@
+ 1	log	player-core/src/main/java/tv/own/owntv/player/PlaybackEngines.kt	memory poll off
+ 1	log	player-core/src/main/java/tv/own/owntv/player/PlaybackEngines.kt	memory poll on
+ 1	log	player-core/src/main/java/tv/own/owntv/player/PlaybackEngines.kt	memory pressure $pressure avail=${info.availMem shr 20}MiB threshold=${info.threshold shr 20}MiB
++6	empty	player-core/src/main/java/tv/own/owntv/player/PlaybackErrorLog.kt	\0
+ 2	file-path	player-core/src/main/java/tv/own/owntv/player/PlaybackErrorLog.kt	$relativePath$EXPORT_NAME
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/PlaybackErrorLog.kt	${Build.MANUFACTURER} ${Build.MODEL}
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/PlaybackErrorLog.kt	${Build.MANUFACTURER} ${Build.MODEL} · Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})
+@@ -6262,7 +6274,6 @@
+ 1	protocol	player-core/src/main/java/tv/own/owntv/player/PlaybackErrorLog.kt	Stream not found on the provider (HTTP 404)
+ 1	protocol	player-core/src/main/java/tv/own/owntv/player/PlaybackErrorLog.kt	This device's decoder doesn't support this video format/profile (e.g. HEVC 10-bit)
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/PlaybackErrorLog.kt	[${stamp.format(java.util.Date(e.atMs))}] ${e.kind} · ${e.engine} · ${if (e.live) "live" else "vod"}
+-6	empty	player-core/src/main/java/tv/own/owntv/player/PlaybackErrorLog.kt	\0
+ 2	json	player-core/src/main/java/tv/own/owntv/player/PlaybackErrorLog.kt	android
+ 2	json	player-core/src/main/java/tv/own/owntv/player/PlaybackErrorLog.kt	atMs
+ 2	json	player-core/src/main/java/tv/own/owntv/player/PlaybackErrorLog.kt	codec
+@@ -6373,18 +6384,18 @@
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SdrVariants.kt	HLG
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SdrVariants.kt	PQ
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SdrVariants.kt	VIDEO-RANGE="?([A-Za-z]+)
++1	empty	player-core/src/main/java/tv/own/owntv/player/SmartBuffer.kt	\0
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SmartBuffer.kt	${roundUpToMib(bytes) / MIB}MiB
+ 1	regex	player-core/src/main/java/tv/own/owntv/player/SmartBuffer.kt	(\\d+)\\s*([KkMmGg]i[Bb])?
+-1	empty	player-core/src/main/java/tv/own/owntv/player/SmartBuffer.kt	\0
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SmartBuffer.kt	gib
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SmartBuffer.kt	kib
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SmartBuffer.kt	mib
++1	empty	player-core/src/main/java/tv/own/owntv/player/StreamFormatLabels.kt	\0
+ 1	protocol	player-core/src/main/java/tv/own/owntv/player/StreamFormatLabels.kt	DASH
+ 1	protocol	player-core/src/main/java/tv/own/owntv/player/StreamFormatLabels.kt	HLS
+ 1	protocol	player-core/src/main/java/tv/own/owntv/player/StreamFormatLabels.kt	MKV
+ 1	protocol	player-core/src/main/java/tv/own/owntv/player/StreamFormatLabels.kt	MP4
+ 1	protocol	player-core/src/main/java/tv/own/owntv/player/StreamFormatLabels.kt	MPEG-TS
+-1	empty	player-core/src/main/java/tv/own/owntv/player/StreamFormatLabels.kt	\0
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/StreamFormatLabels.kt	dash
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/StreamFormatLabels.kt	hls
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/StreamFormatLabels.kt	m2ts
+@@ -6414,8 +6425,8 @@
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SubtitleFonts.kt	Poppins
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SubtitleFonts.kt	monospace
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SubtitleFonts.kt	sans-serif
++1	technical	player-core/src/main/java/tv/own/owntv/player/SubtitleLanguage.kt	\0
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SubtitleLanguage.kt	,
+-1	technical	player-core/src/main/java/tv/own/owntv/player/SubtitleLanguage.kt	\0
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SubtitleLanguage.kt	alb
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SubtitleLanguage.kt	arm
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SubtitleLanguage.kt	baq
+@@ -6456,13 +6467,13 @@
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SubtitleLanguage.kt	tib
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SubtitleLanguage.kt	wel
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SubtitleLanguage.kt	zho
++2	empty	player-core/src/main/java/tv/own/owntv/player/SubtitleShift.kt	\0
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SubtitleShift.kt	%02d:%02d:%02d%c%03d
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SubtitleShift.kt	%d:%02d:%02d.%02d
+ 1	regex	player-core/src/main/java/tv/own/owntv/player/SubtitleShift.kt	(\\d+):(\\d{2}):(\\d{2})\\.(\\d{2})
+ 1	regex	player-core/src/main/java/tv/own/owntv/player/SubtitleShift.kt	(\\d{2}):(\\d{2}):(\\d{2})[,.](\\d{3})
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SubtitleShift.kt	-->
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SubtitleShift.kt	Dialogue:
+-2	empty	player-core/src/main/java/tv/own/owntv/player/SubtitleShift.kt	\0
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SubtitleShift.kt	ass
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/SubtitleShift.kt	ssa
+ 1	file-path	player-core/src/main/java/tv/own/owntv/player/SubtitleShift.kt	subshift_${(source.path).hashCode()}_${offsetMs}_${source.name}

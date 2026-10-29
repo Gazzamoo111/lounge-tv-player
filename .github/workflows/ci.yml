@@ -9,8 +9,12 @@ permissions:
   contents: read
 env:
   ISOLATED_EVENT_QA: ${{ github.event_name == 'pull_request' }}
+  RELIABILITY_AUDIT_QA: ${{ github.event_name == 'pull_request' }}
 jobs:
+  tests:
+    uses: ./.github/workflows/playback-tests.yml
   test:
+    needs: tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,7 +48,7 @@ jobs:
           set -euo pipefail
           QA_VERSION_CODE=$(python3 scripts/qa_version_code.py "$GITHUB_RUN_NUMBER" "$GITHUB_RUN_ATTEMPT")
           echo "VERSION_CODE=$QA_VERSION_CODE" >> "$GITHUB_ENV"
-          echo "VERSION_NAME=5.2.2.1-ci.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+          echo "VERSION_NAME=5.2.3.1-reliability-ci.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
       # PRs compile with an isolated ephemeral debug signer. Stable QA signing remains
       # mandatory for main/workflow_dispatch and is never supplied to untrusted PR code.
       - name: Decode persistent QA signing key
@@ -67,15 +71,6 @@ jobs:
           [ "$qa_cert" != "$production_cert" ] || { echo "QA and production certificates must be different"; exit 1; }
           printf '%s' "$QA_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/loungetv-qa.keystore"
           echo "QA_KEYSTORE_FILE=$RUNNER_TEMP/loungetv-qa.keystore" >> "$GITHUB_ENV"
-      - name: JVM tests
-        env:
-          QA_KEYSTORE_PASSWORD: ${{ secrets.QA_KEYSTORE_PASSWORD }}
-          QA_KEY_ALIAS: ${{ secrets.QA_KEY_ALIAS }}
-          QA_KEY_PASSWORD: ${{ secrets.QA_KEY_PASSWORD }}
-          QA_SIGNING_REQUIRED: ${{ github.event_name != 'pull_request' }}
-        run: |
-          chmod +x ./gradlew
-          ./gradlew :shared-core:player-core:testDebugUnitTest :app:testStandardDebugUnitTest -Powntv.corePath="$GITHUB_WORKSPACE/shared-core" --stacktrace
       - name: Compile QA APK
         env:
           QA_KEYSTORE_PASSWORD: ${{ secrets.QA_KEYSTORE_PASSWORD }}
@@ -96,8 +91,8 @@ jobs:
             APK_ID=$(printf '%s' "$APK_BADGING" | sed -n '1p')
             echo "Built APK identity: $APK_ID"
             case "$APK_ID" in
-              "package: name='com.loungetv.player.recoveryqa' versionCode='$VERSION_CODE' "*) ;;
-              *) echo "Expected isolated recoveryqa package, got: $APK_ID"; exit 1 ;;
+              "package: name='com.loungetv.player.auditqa' versionCode='$VERSION_CODE' "*) ;;
+              *) echo "Expected isolated auditqa package, got: $APK_ID"; exit 1 ;;
             esac
             "$APKSIGNER" verify "$QA_APK"
           else
@@ -109,6 +104,6 @@ jobs:
       - name: Upload test APK
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event_name == 'pull_request' && 'lounge-tv-recoveryqa-preflight' || 'lounge-tv-qa' }}
+          name: ${{ github.event_name == 'pull_request' && 'lounge-tv-reliability-auditqa' || 'lounge-tv-qa' }}
           path: app/build/outputs/apk/standard/debug/*.apk
           if-no-files-found: error
