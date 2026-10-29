@@ -663,13 +663,16 @@ class MovieViewModel(
     }
     fun setSearchQuery(query: String) { _search.value = query }
 
+    internal val discoveryProfileId: Flow<Long> = ctx.map { it.profileId }.distinctUntilChanged()
+
     /** Revalidate Home's Trending matches against this section's current profile and visibility. */
     fun discoveryMovies(items: List<MovieEntity>): Flow<List<MovieEntity>> =
-        combine(ctx, custom, hiddenCategoryIds) { c, cust, hidden ->
+        combine(ctx, custom, hiddenCategoryIds, _selected) { c, cust, hidden, selected ->
             items.filter { item ->
                 item.sourceId in c.sourceIds && item.categoryId !in hidden &&
                     CustomizeKeys.movie(item) !in cust.hiddenItems &&
-                    LoungeVodCatalogueCleanup.visibleEnglish(item.name, item.providerLanguage)
+                    LoungeVodCatalogueCleanup.visibleEnglish(item.name, item.providerLanguage) &&
+                    (selected !is LiveKey.Folder || cust.movedFromOrigin[CustomizeKeys.movie(item)] != folderContextKeys.value[selected.id])
             }.distinctBy { tv.own.owntv.ui.components.LoungeVodEditorialQuality.duplicateKey(it.canonicalTitle.ifBlank { it.name }, it.year ?: it.parsedYear) }
         }
 

@@ -140,6 +140,9 @@ internal fun LoungeTitlePage(
                         }
                     }
                 }
+                item(key = Long.MIN_VALUE) {
+                    StageButton(stringResource(R.string.common_back), onExit, Modifier.padding(horizontal = 84.mpx))
+                }
             }
         }
     }

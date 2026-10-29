@@ -615,10 +615,14 @@ private fun SeriesGrid(
         vm.onSeriesFocused(show)
         if (rememberSeries) perCategorySeriesIds[selectedKey] = show.id
     }
-    val posterOf: (tv.own.owntv.core.database.entity.SeriesEntity) -> String? = { it.posterUrl?.takeIf { u -> u.isNotBlank() } ?: cachedPosters[it.id] }
+    val trendingPosters = remember(trendingMatches) { trendingMatches.associate { it.series.id to tv.own.owntv.core.metadata.MetadataImages.poster(it.snapshot.posterPath) } }
+    val posterOf: (tv.own.owntv.core.database.entity.SeriesEntity) -> String? = { trendingPosters[it.id] ?: it.posterUrl?.takeIf { u -> u.isNotBlank() } ?: cachedPosters[it.id] }
     var discoveryShow by remember { mutableStateOf<SeriesEntity?>(null) }
     var discoveryOrigin by remember { mutableStateOf<SeriesEntity?>(null) }
     var relatedShows by remember { mutableStateOf(tv.own.owntv.features.shell.components.LoungeRelatedSelection<SeriesEntity>()) }
+    val discoveryProfileId by remember(vm) { vm.discoveryProfileId }.collectAsStateWithLifecycle(initialValue = -1L)
+    LaunchedEffect(discoveryProfileId) { discoveryShow = null; discoveryOrigin = null }
+
     LaunchedEffect(discoveryShow?.id, selectedSeriesMeta, metadataMode) {
         relatedShows = tv.own.owntv.features.shell.components.LoungeRelatedSelection()
         val show = discoveryShow ?: return@LaunchedEffect

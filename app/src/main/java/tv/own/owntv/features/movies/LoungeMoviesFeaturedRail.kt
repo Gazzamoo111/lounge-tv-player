@@ -12,14 +12,11 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.Dp
 import tv.own.owntv.core.database.entity.MovieEntity
-import tv.own.owntv.features.shell.components.VodPosterArt
-import tv.own.owntv.ui.components.OwnTVIcon
 import tv.own.owntv.ui.components.loungeVodTitle
-import tv.own.owntv.ui.stage.StagePoster
 
 /**
  * A standard 2:3 portrait tile within the SINGLE vertical browse grid.
- * Featured, new and full-library cards use identical measured dimensions.
+ * Trending adds a rank beside its 2:3 artwork; unranked cards retain the full grid width.
  * No nested LazyRow, no independent sideways scroll or mismatched focus geometry.
  */
 @Composable

@@ -198,6 +198,9 @@ fun MoviesScreen(
     var discoveryMovie by remember { mutableStateOf<MovieEntity?>(null) }
     var discoveryOrigin by remember { mutableStateOf<MovieEntity?>(null) }
     var relatedMovies by remember { mutableStateOf(tv.own.owntv.features.shell.components.LoungeRelatedSelection<MovieEntity>()) }
+    val discoveryProfileId by remember(vm) { vm.discoveryProfileId }.collectAsStateWithLifecycle(initialValue = -1L)
+    LaunchedEffect(discoveryProfileId) { discoveryMovie = null; discoveryOrigin = null }
+
     var detailsMovie by remember { mutableStateOf<MovieEntity?>(null) }
     // "Set TMDB name" dialog target; null = closed.
     var setTmdbNameMovie by remember { mutableStateOf<MovieEntity?>(null) }
@@ -577,7 +580,8 @@ fun MoviesScreen(
         vm.onMovieFocused(movie)
         if (rememberMovies) perCategoryMovieIds[selectedKey] = movie.id
     }
-    val posterOf: (MovieEntity) -> String? = { it.posterUrl?.takeIf { u -> u.isNotBlank() } ?: cachedPosters[it.id] }
+    val trendingPosters = remember(trendingMatches) { trendingMatches.associate { it.movie.id to tv.own.owntv.core.metadata.MetadataImages.poster(it.snapshot.posterPath) } }
+    val posterOf: (MovieEntity) -> String? = { trendingPosters[it.id] ?: it.posterUrl?.takeIf { u -> u.isNotBlank() } ?: cachedPosters[it.id] }
     val playHint = stringResource(R.string.common_ok) to stringResource(R.string.content_play)
     val optionsHint = stringResource(R.string.content_key_hold_ok) to stringResource(R.string.content_key_options)
 

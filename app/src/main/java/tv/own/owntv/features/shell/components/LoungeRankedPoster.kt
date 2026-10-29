@@ -32,7 +32,7 @@ internal fun LoungeRankedPoster(
                 java.text.NumberFormat.getIntegerInstance().format(rank),
                 style = stageText(if (rank < 10) 176 else 120, 900).copy(color = StageColors.Text.copy(alpha = .9f), drawStyle = Stroke(width = 3f)),
                 modifier = Modifier.align(Alignment.BottomStart).padding(bottom = 38.mpx),
-                maxLines = 1,
+                maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
             )
         }
         val artWidth = if (rank == null) width else width * .82f
