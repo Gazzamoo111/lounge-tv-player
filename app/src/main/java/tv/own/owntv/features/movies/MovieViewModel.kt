@@ -672,7 +672,7 @@ class MovieViewModel(
                 item.sourceId in c.sourceIds && item.categoryId !in hidden &&
                     CustomizeKeys.movie(item) !in cust.hiddenItems &&
                     LoungeVodCatalogueCleanup.visibleEnglish(item.name, item.providerLanguage) &&
-                    (selected !is LiveKey.Folder || cust.movedFromOrigin[CustomizeKeys.movie(item)] != folderContextKeys.value[selected.id])
+                    (selected !is LiveKey.Folder || cust.movedFromOrigin[CustomizeKeys.movie(item)] == null || cust.movedFromOrigin[CustomizeKeys.movie(item)] != folderContextKeys.value[selected.id])
             }.distinctBy { tv.own.owntv.ui.components.LoungeVodEditorialQuality.duplicateKey(it.canonicalTitle.ifBlank { it.name }, it.year ?: it.parsedYear) }
         }
 
