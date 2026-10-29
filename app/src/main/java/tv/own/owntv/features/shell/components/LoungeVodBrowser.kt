@@ -313,10 +313,10 @@ internal fun <T : Any> LoungeVodBrowser(
                         })
                     }
                     items(categories, key = { it.key.toString() }) { item ->
-                        StageTool(text = if (item.key == LiveKey.All) browseAll else ProviderTags.parse(item.title).name,
+                        StageTool(text = if (item.key == LiveKey.All) browseAll else ProviderTags.parse(item.title.orEmpty()).name,
                             icon = OwnTVIcon.LIST, onClick = {
                                 categorySheet = false
-                                openCollection(LoungeCollection("category:${item.key}", if (item.key == LiveKey.All) browseAll else ProviderTags.parse(item.title).name, item.key))
+                                openCollection(LoungeCollection("category:${item.key}", if (item.key == LiveKey.All) browseAll else ProviderTags.parse(item.title.orEmpty()).name, item.key))
                             })
                     }
                 }

@@ -753,7 +753,7 @@ private fun SeriesGrid(
                 // Actual, already-cleaned provider folders. No synthetic genre assignment.
                 val preferred = listOf("action", "comedy", "drama", "thriller", "sci", "horror", "family", "document", "crime", "animation", "adventure", "fantasy")
                 railItems.filter { it.key is LiveKey.Folder }
-                    .map { it to ProviderTags.parse(it.title).name }
+                    .map { it to ProviderTags.parse(it.title.orEmpty()).name }
                     .filter { (_, label) -> preferred.any { label.contains(it, ignoreCase = true) } }
                     .distinctBy { (_, label) -> label.lowercase() }
                     .sortedBy { (_, label) -> preferred.indexOfFirst { label.contains(it, ignoreCase = true) } }
