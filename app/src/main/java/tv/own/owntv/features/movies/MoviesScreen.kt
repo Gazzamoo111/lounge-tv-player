@@ -670,6 +670,7 @@ fun MoviesScreen(
         if (lockedKey == null) {
             val allHighlights by remember(vm) { vm.discoveryHighlights(LiveKey.All) }
                 .collectAsStateWithLifecycle(initialValue = MovieCategoryHighlights())
+            val browseFilter by vm.discoveryFilter.collectAsStateWithLifecycle()
             val curated = allHighlights.featured
             val recent = allHighlights.newReleases
             val recommendedLabel = stringResource(R.string.lounge_browse_featured)
@@ -697,7 +698,7 @@ fun MoviesScreen(
                     .distinctBy { (_, label) -> label.lowercase() }
                     .sortedBy { (_, label) -> preferred.indexOfFirst { label.contains(it, ignoreCase = true) } }
                     .take(12).forEach { (item, label) ->
-                        val preview = remember(vm, item.key) { vm.discoveryHighlights(item.key).map { it.featured } }
+                        val preview = androidx.compose.runtime.key(item.key) { remember(vm, item.key) { vm.discoveryHighlights(item.key).map { it.featured } } }
                         add(LoungeCollection(id = item.key.toString(), label = label, key = item.key, preview = preview))
                     }
             }
@@ -710,11 +711,13 @@ fun MoviesScreen(
                 progressOf = { item -> movieProgress[item.id]?.let { p -> if (p.durationMs > 0) p.positionMs.toFloat() / p.durationMs else null } },
                 hero = heroTitle?.let { movieTitleInfo(it, selectedMovieMeta?.takeIf { meta -> meta.movieId == it.id }?.cache, metadataMode.tmdbWins) },
                 heroItem = heroTitle, query = searchQuery, onQuery = vm::setSearchQuery,
-                sort = sortMode, onSort = vm::setSort,
+                sort = sortMode, yearSort = browseFilter.releaseYearDescending,
+                onSort = { mode -> vm.setDiscoveryFilter(browseFilter.copy(releaseYearDescending = false)); vm.setSort(mode) },
+                onYearSort = { vm.setDiscoveryFilter(browseFilter.copy(releaseYearDescending = true)) },
                 onSelect = { key, filter -> vm.select(key); vm.setDiscoveryFilter(filter) },
                 onFocus = onMovieFocus, onOpen = openDiscoveryMovie, onPlayHero = startMovie, onMenu = openMenu,
                 modalOpen = discoveryMovie != null || contextMovie != null || detailsMovie != null,
-                onEntryHook = onEntryHook,
+                restoreFocus = restoreFocus, onEntryHook = onEntryHook,
             )
         } else if (cinematic) {
             // A pinned, readable hero stays above the scrolling highlight rails.

@@ -4,6 +4,7 @@ package tv.own.owntv.ui.components
 internal data class LoungeBrowseFilter(
     val ids: Set<Long>? = null,
     val releaseYears: IntRange? = null,
+    val releaseYearDescending: Boolean = false,
 ) {
     fun accepts(id: Long, year: Int?): Boolean =
         (ids == null || id in ids) && (releaseYears == null || (year != null && year in releaseYears))

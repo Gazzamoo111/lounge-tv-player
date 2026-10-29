@@ -75,6 +75,8 @@ internal fun <T : Any> LoungeVodBrowser(
     query: String,
     onQuery: (String) -> Unit,
     sort: SortMode,
+    yearSort: Boolean,
+    onYearSort: () -> Unit,
     onSort: (SortMode) -> Unit,
     onSelect: (LiveKey, LoungeBrowseFilter) -> Unit,
     onFocus: (T) -> Unit,
@@ -152,7 +154,9 @@ internal fun <T : Any> LoungeVodBrowser(
                         StageSearchField(query = query, onQueryChange = onQuery,
                             placeholder = stringResource(R.string.content_search_in, collectionLabel ?: categoryLabel),
                             modifier = Modifier.width(500.mpx))
-                        VodSortTool(sort, Modifier.focusRequester(sortFocus)) { sortOpen = true }
+                        if (yearSort) StageTool(text = stringResource(R.string.lounge_browse_year_sort), icon = OwnTVIcon.SORT,
+                            modifier = Modifier.focusRequester(sortFocus), onClick = { sortOpen = true })
+                        else VodSortTool(sort, Modifier.focusRequester(sortFocus)) { sortOpen = true }
                     }
                 }
                 saved.SaveableStateProvider(route) {
@@ -248,11 +252,12 @@ internal fun <T : Any> LoungeVodBrowser(
                         }
                         var previousSort by rememberSaveable { mutableStateOf(sort.name) }
                         var previousQuery by rememberSaveable { mutableStateOf(query) }
-                        LaunchedEffect(sort, query) {
-                            if (previousSort != sort.name || previousQuery != query) {
+                        var previousYearSort by rememberSaveable { mutableStateOf(yearSort) }
+                        LaunchedEffect(sort, query, yearSort) {
+                            if (previousSort != sort.name || previousQuery != query || previousYearSort != yearSort) {
                                 selectedId = null; selectedIndex = 0
                                 grid.scrollToItem(0)
-                                previousSort = sort.name; previousQuery = query
+                                previousSort = sort.name; previousQuery = query; previousYearSort = yearSort
                             }
                         }
                         LazyVerticalGrid(columns = GridCells.Fixed(columns), state = grid,
@@ -324,7 +329,9 @@ internal fun <T : Any> LoungeVodBrowser(
             }
         }
         if (sortOpen) VodSortMenu(series, sort, 800f, 160.mpx,
-            onPick = { onSort(it); focusEpoch++ }, onDismiss = { sortOpen = false; focusEpoch++ })
+            onPick = { onSort(it); focusEpoch++ }, onDismiss = { sortOpen = false; focusEpoch++ },
+            yearSelected = yearSort,
+            onYear = onYearSort.takeIf { category == LiveKey.All || category is LiveKey.Folder })
     }
 }
 

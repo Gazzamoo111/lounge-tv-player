@@ -54,7 +54,7 @@ internal class LoungeCataloguePagingSource<T : Any>(
                 arguments.add(years.first.toLong()); arguments.add(years.last.toLong())
             }
             if (query.isNotBlank()) { where += "instr(lower(name), lower(?)) > 0"; arguments.add(query) }
-            val order = when (sort) {
+            val order = if (filter.releaseYearDescending) "COALESCE(year, parsedYear, 0) DESC, name COLLATE NOCASE ASC, id ASC" else when (sort) {
                 SortMode.ALPHA -> "name COLLATE NOCASE ASC, id ASC"
                 SortMode.RATING -> "rating DESC, name COLLATE NOCASE ASC, id ASC"
                 SortMode.DATE_ADDED -> "addedAt DESC, sortOrder DESC, id DESC"

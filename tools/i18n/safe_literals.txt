@@ -1858,6 +1858,7 @@
 2	sql	app/src/main/java/tv/own/owntv/ui/components/LoungeCataloguePagingSource.kt	?
 1	sql	app/src/main/java/tv/own/owntv/ui/components/LoungeCataloguePagingSource.kt	AND
 1	sql	app/src/main/java/tv/own/owntv/ui/components/LoungeCataloguePagingSource.kt	COALESCE(year, parsedYear, 0) BETWEEN ? AND ?
+1	sql	app/src/main/java/tv/own/owntv/ui/components/LoungeCataloguePagingSource.kt	COALESCE(year, parsedYear, 0) DESC, name COLLATE NOCASE ASC, id ASC
 1	sql	app/src/main/java/tv/own/owntv/ui/components/LoungeCataloguePagingSource.kt	SELECT id FROM $table WHERE ${where.joinToString(" AND ")} ORDER BY $order LIMIT ? OFFSET ?
 1	sql	app/src/main/java/tv/own/owntv/ui/components/LoungeCataloguePagingSource.kt	addedAt DESC, sortOrder DESC, id DESC
 1	sql	app/src/main/java/tv/own/owntv/ui/components/LoungeCataloguePagingSource.kt	categoryId = ?

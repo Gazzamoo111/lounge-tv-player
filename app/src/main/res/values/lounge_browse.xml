@@ -9,4 +9,5 @@
     <string name="lounge_browse_loading">Loading titles…</string>
     <string name="lounge_browse_empty">No titles in this collection</string>
     <string name="lounge_browse_retry">Retry loading</string>
+    <string name="lounge_browse_year_sort">Release year: newest first</string>
 </resources>

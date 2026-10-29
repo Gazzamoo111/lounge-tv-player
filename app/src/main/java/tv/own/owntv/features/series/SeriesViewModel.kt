@@ -633,7 +633,7 @@ class SeriesViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), defaultRail)
 
-    private val discoveryFilter = MutableStateFlow(tv.own.owntv.ui.components.LoungeBrowseFilter())
+    internal val discoveryFilter = MutableStateFlow(tv.own.owntv.ui.components.LoungeBrowseFilter())
     internal fun setDiscoveryFilter(filter: tv.own.owntv.ui.components.LoungeBrowseFilter) {
         discoveryFilter.value = filter
     }
@@ -653,7 +653,7 @@ class SeriesViewModel(
                 val folder = args.key as? LiveKey.Folder
                 // Preserve the established manual/custom/favourites paths. Plain folders and All
                 // use bounded ID queries so curated IDs/release years are filtered before paging.
-                if (args.key == LiveKey.All || (folder != null && folderContextKeys.value[folder.id] !in orderedContexts.value)) {
+                if (args.key == LiveKey.All || (folder != null && (args.filter.releaseYearDescending || args.sort != SettingsRepository.SortMode.PLAYLIST || folderContextKeys.value[folder.id] !in orderedContexts.value))) {
                     tv.own.owntv.ui.components.LoungeCataloguePagingSource(
                         database = highlightDatabase, table = "series", sourceIds = args.ctx.sourceIds,
                         categoryId = folder?.id, query = args.query, sort = args.sort,
