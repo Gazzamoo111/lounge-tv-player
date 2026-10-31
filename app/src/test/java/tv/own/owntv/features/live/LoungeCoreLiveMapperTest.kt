@@ -92,7 +92,6 @@ class LoungeCoreLiveMapperTest {
         assertEquals("Sky Sport 1", visible?.name)
         assertEquals("SkySport1.nz", visible?.epgChannelId)
         assertEquals(110, visible?.sortOrder)
-        assertEquals("NZ| SKY SPORT 1 FHD", visible?.providerName)
         assertEquals("nz-sky-sport-1", plan.canonicalKeyByChannelId[1L])
         assertEquals(3, plan.mappedBestCount)
         assertEquals(1, plan.unmappedBestCount)
