@@ -93,6 +93,12 @@ class LoungeCoreLiveMapperTest {
         assertEquals("SkySport1.nz", visible?.epgChannelId)
         assertEquals(110, visible?.sortOrder)
         assertEquals("nz-sky-sport-1", plan.canonicalKeyByChannelId[1L])
+        assertEquals(1, plan.categories.size)
+        assertEquals("Sky Sport NZ", plan.categories.single().title)
+        assertEquals("lounge-core:sky-sport-nz", plan.categories.single().key)
+        assertEquals(listOf(1L), plan.categories.single().channelIds)
+        assertEquals(1, plan.categoryCount("lounge-core:sky-sport-nz"))
+        assertTrue(LoungeCoreLiveMapper.isCategoryKey("lounge-core:sky-sport-nz"))
         assertEquals(3, plan.mappedBestCount)
         assertEquals(1, plan.unmappedBestCount)
     }
