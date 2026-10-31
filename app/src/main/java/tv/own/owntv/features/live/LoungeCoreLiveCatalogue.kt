@@ -173,7 +173,6 @@ internal object LoungeCoreLiveMapper {
                 name = canonical.name,
                 epgChannelId = canonical.epgId ?: channel.epgChannelId,
                 sortOrder = canonical.order,
-                providerName = channel.providerName ?: channel.name,
             )
         }
 
