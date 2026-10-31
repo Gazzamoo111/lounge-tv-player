@@ -315,6 +315,14 @@ class LiveViewModel(
         val folderKeys: Map<Long, String>,
     )
 
+    private data class CoreCountInputs(
+        val customizations: SectionCustomizations,
+        val duplicates: LoungeLiveDuplicates.Result,
+        val curation: LoungeLiveCatalogueCleanup.Plan,
+        val core: LoungeCoreLiveMapper.Plan,
+        val folderKeys: Map<Long, String>,
+    )
+
     // Observe the active profile's sources REACTIVELY so adding/removing a playlist refreshes Live TV
     // immediately (it used to be read once at startup, so a new playlist showed nothing until restart).
     // Full sources by id — lets the synchronous play() paths tell a Stalker source (needs play-time
@@ -818,6 +826,9 @@ class LiveViewModel(
                             ?.let(categoriesById::get)
                             ?.sourceId
                             ?.let(multiSourceNames::get),
+                        sourceId = e.categoryId
+                            ?.let(categoriesById::get)
+                            ?.sourceId,
                     )
                 }
             }
@@ -830,6 +841,25 @@ class LiveViewModel(
                         item.copy(title = plan.displayNames[folderId] ?: item.title)
                     } else item
                 }
+        }
+        .combine(loungeCorePlan) { items, core ->
+            if (!BuildConfig.LOUNGE_CORE_QA || core.categories.isEmpty()) {
+                items
+            } else {
+                val auditedSourceIds = loungeCuration.value.sourceIds
+                val retained = items.filterNot { item ->
+                    item.key is LiveKey.Folder && item.sourceId in auditedSourceIds
+                }
+                val canonical = core.categories.map { category ->
+                    LiveRailItem(
+                        key = LiveKey.Custom(category.key),
+                        title = category.title,
+                    )
+                }
+                val firstProviderFolder = retained.indexOfFirst { it.key is LiveKey.Folder }
+                if (firstProviderFolder < 0) retained + canonical
+                else retained.take(firstProviderFolder) + canonical + retained.drop(firstProviderFolder)
+            }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), defaultRail)
 
@@ -853,7 +883,7 @@ class LiveViewModel(
             // that the UI already collected must never be re-transformed (Paging forbids re-collection,
             // which is why hiding a channel used to crash). A customization change re-creates the pager.
             Pager(PagingConfig(pageSize = 80, prefetchDistance = 40, initialLoadSize = 120, maxSize = 400)) {
-                pagingSource(key, c, query, sort, nzFolderIds)
+                pagingSource(key, c, query, sort, corePlan, nzFolderIds)
             }.flow.map { paging ->
                 val cust = cs.cust
                 val hiddenCats = cs.hiddenCats
@@ -869,16 +899,25 @@ class LiveViewModel(
                             else corePlan.present(ch) ?: ch
                         }
                 }
-                val customized = if (cust.hiddenItems.isEmpty() && cust.itemNames.isEmpty() && hiddenCats.isEmpty() && movedFrom.isEmpty()) coreMapped
-                else coreMapped
-                    .filter { ch ->
-                        isChannelVisible(ch, cust, hiddenCats, key) &&
-                            // Moved-out items leave ONLY their origin folder (they stay in All/search).
-                            (movedFrom[CustomizeKeys.channel(ch)]?.let { origin ->
-                                key !is LiveKey.Folder || origin != folderContextKeys.value[key.id]
-                            } ?: true)
-                    }
-                    .map { ch -> cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
+                val loungeCoreCategory =
+                    (key as? LiveKey.Custom)?.id?.let(LoungeCoreLiveMapper::isCategoryKey) == true
+                val customized = if (loungeCoreCategory) {
+                    coreMapped
+                        .filter { ch -> CustomizeKeys.channel(ch) !in cust.hiddenItems }
+                        .map { ch -> cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
+                } else if (cust.hiddenItems.isEmpty() && cust.itemNames.isEmpty() && hiddenCats.isEmpty() && movedFrom.isEmpty()) {
+                    coreMapped
+                } else {
+                    coreMapped
+                        .filter { ch ->
+                            isChannelVisible(ch, cust, hiddenCats, key) &&
+                                // Moved-out items leave ONLY their origin folder (they stay in All/search).
+                                (movedFrom[CustomizeKeys.channel(ch)]?.let { origin ->
+                                    key !is LiveKey.Folder || origin != folderContextKeys.value[key.id]
+                                } ?: true)
+                        }
+                        .map { ch -> cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
+                }
 
                 // Keep only BEST NZ Sky Sport RAW and HD in the browsable lists.
                 // Do not delete provider data, favourites or independent M3U feeds.
@@ -958,6 +997,7 @@ class LiveViewModel(
 
     /** Hide a category by its rail key (undo via Settings → Customize). */
     fun hideCategory(key: LiveKey) {
+        if ((key as? LiveKey.Custom)?.id?.let(LoungeCoreLiveMapper::isCategoryKey) == true) return
         viewModelScope.launch {
             categoryEditor.hide(currentProfileId() ?: return@launch, MediaType.LIVE, key)
         }
@@ -966,7 +1006,7 @@ class LiveViewModel(
     /** The content_order / movedFromOrigin context behind a rail key, or null for All / Favorites / History. */
     private fun categoryContextKey(key: LiveKey): String? = when (key) {
         is LiveKey.Folder -> folderContextKeys.value[key.id]
-        is LiveKey.Custom -> key.id
+        is LiveKey.Custom -> key.id.takeUnless(LoungeCoreLiveMapper::isCategoryKey)
         else -> null
     }
 
@@ -993,6 +1033,7 @@ class LiveViewModel(
     }
 
     fun enterCategoryMoveMode(key: LiveKey) {
+        if ((key as? LiveKey.Custom)?.id?.let(LoungeCoreLiveMapper::isCategoryKey) == true) return
         if (key !is LiveKey.Folder && key !is LiveKey.Custom) return
         viewModelScope.launch {
             val c = ctx.first { it.profileId >= 0 }
@@ -1081,7 +1122,11 @@ class LiveViewModel(
             val countInputs = combine(custom, duplicateSelection, loungeCuration, folderContextKeys) { cust, duplicates, plan, folderKeys ->
                 VisibleCountInputs(cust, duplicates, plan, folderKeys)
             }
-            val single = items.filter { it.key !is LiveKey.Folder && it.key != LiveKey.All }.map { item ->
+            val single = items.filter {
+                it.key !is LiveKey.Folder &&
+                    it.key != LiveKey.All &&
+                    !((it.key as? LiveKey.Custom)?.id?.let(LoungeCoreLiveMapper::isCategoryKey) == true)
+            }.map { item ->
                 // Keep the indexed count as the database invalidation signal, then count the same
                 // post-filter rows the screen renders. Customer hides/moves are never rewritten.
                 liveCountFlow(item.key, c.profileId, c.sourceIds, hidden, channelDao, customCategoryDao)
@@ -1147,7 +1192,49 @@ class LiveViewModel(
                     }
                 }
             }
-            combine(single + visibleFolders) { parts ->
+            val coreCounts = combine(
+                custom,
+                duplicateSelection,
+                loungeCuration,
+                loungeCorePlan,
+                folderContextKeys,
+            ) { cust, duplicates, curation, core, folderKeys ->
+                CoreCountInputs(cust, duplicates, curation, core, folderKeys)
+            }.mapLatest { inputs ->
+                if (!BuildConfig.LOUNGE_CORE_QA || inputs.core.categories.isEmpty()) {
+                    emptyMap()
+                } else {
+                    val rows = withContext(Dispatchers.IO) {
+                        channelDao.snapshotAll(c.sourceIds.ifEmpty { listOf(-1L) }, VISIBLE_COUNT_LIMIT)
+                    }
+                    val byId = rows.associateBy { it.id }
+                    val coreVisible = inputs.core.presentationByChannelId.keys.count { channelId ->
+                        byId[channelId]?.let { CustomizeKeys.channel(it) !in inputs.customizations.hiddenItems } == true
+                    }
+                    val independent = rows.filter { it.sourceId !in inputs.curation.sourceIds }
+                    val independentVisible = visibleLiveCounts(
+                        independent,
+                        inputs.customizations,
+                        hidden,
+                        inputs.duplicates.hiddenIds,
+                        inputs.folderKeys,
+                    ) { channel -> showInNzSelection(channel) }
+
+                    buildMap<LiveKey, Int> {
+                        put(LiveKey.All, independentVisible.all + coreVisible)
+                        inputs.core.categories.forEach { category ->
+                            val count = category.channelIds.count { channelId ->
+                                byId[channelId]?.let {
+                                    CustomizeKeys.channel(it) !in inputs.customizations.hiddenItems
+                                } == true
+                            }
+                            put(LiveKey.Custom(category.key), count)
+                        }
+                    }
+                }
+            }
+
+            combine(single + visibleFolders + coreCounts) { parts ->
                 parts.fold(emptyMap<LiveKey, Int>()) { acc, part -> acc + part }
             }.throttleLatest()
         }
@@ -2368,8 +2455,33 @@ class LiveViewModel(
 
     private fun pagingSource(
         key: LiveKey, c: Ctx, query: String, sort: SettingsRepository.SortMode,
+        corePlan: LoungeCoreLiveMapper.Plan = loungeCorePlan.value,
         nzFolderIds: Set<Long> = nzFreeviewFolderIds.value,
     ): PagingSource<Int, ChannelEntity> {
+        val loungeCategory = (key as? LiveKey.Custom)?.id
+            ?.takeIf(LoungeCoreLiveMapper::isCategoryKey)
+            ?.let(corePlan::categoryFor)
+        if (BuildConfig.LOUNGE_CORE_QA && loungeCategory != null) {
+            return LoungeCoreCategoryPagingSource {
+                val wanted = loungeCategory.channelIds.toHashSet()
+                val playlistOrder = loungeCategory.channelIds.withIndex()
+                    .associate { (index, channelId) -> channelId to index }
+                channelDao.snapshotAll(c.sourceIds.ifEmpty { listOf(-1L) }, VISIBLE_COUNT_LIMIT)
+                    .asSequence()
+                    .filter { it.id in wanted }
+                    .mapNotNull(corePlan::present)
+                    .filter { query.isBlank() || it.name.contains(query, ignoreCase = true) }
+                    .let { rows ->
+                        when (sort) {
+                            SettingsRepository.SortMode.ALPHA ->
+                                rows.sortedBy { it.name.lowercase() }
+                            SettingsRepository.SortMode.PLAYLIST ->
+                                rows.sortedBy { playlistOrder[it.id] ?: Int.MAX_VALUE }
+                        }
+                    }
+                    .toList()
+            }
+        }
         // Fixed launch five must lead in BOTH Playlist and A-Z modes. Keep the
         // existing manual order for every other NZ channel and every other folder.
         if (key is LiveKey.Folder && key.id in nzFolderIds && query.isBlank()) {
@@ -2459,6 +2571,7 @@ class LiveViewModel(
     /** Take [channel] out of the custom category [key] only. If it had been moved out of its provider
      *  folder into here, it goes back there — the same as deleting the whole category does. */
     fun removeFromCustomCategory(channel: ChannelEntity, key: LiveKey.Custom) {
+        if (LoungeCoreLiveMapper.isCategoryKey(key.id)) return
         viewModelScope.launch {
             val pid = currentProfileId() ?: return@launch
             userDataWriter.removeCustomCategoryMember(pid, MediaType.LIVE, key.id, channel.id)
