@@ -2,6 +2,7 @@
 
 package tv.own.owntv.features.live
 
+import tv.own.owntv.BuildConfig
 import tv.own.owntv.core.epg.displayLogoUrl
 import android.content.Context
 import android.util.Log
@@ -425,6 +426,58 @@ class LiveViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, LoungeLiveCatalogueCleanup.Plan())
 
+    /**
+     * Lounge Core's canonical live catalogue is intentionally audit-QA only for now.
+     *
+     * Fetch failures fail open: until a valid snapshot arrives the existing provider catalogue remains
+     * untouched. Once present, only the source ids already identified by [loungeCuration] as the audited
+     * BEST catalogue are mapped; independent M3U/Stalker sources never enter the plan.
+     */
+    private val loungeCoreClient = LoungeCoreLiveCatalogueClient()
+
+    private val loungeCoreSnapshot: StateFlow<LoungeCoreLiveSnapshot?> =
+        if (!BuildConfig.LOUNGE_CORE_QA) {
+            MutableStateFlow<LoungeCoreLiveSnapshot?>(null)
+        } else {
+            flow {
+                var lastGood: LoungeCoreLiveSnapshot? = null
+                while (true) {
+                    loungeCoreClient.fetch()?.let { snapshot ->
+                        if (snapshot.schemaVersion == 1) {
+                            lastGood = snapshot
+                            emit(snapshot)
+                        }
+                    }
+                    delay(if (lastGood == null) 15_000L else 60_000L)
+                }
+            }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+        }
+
+    private val loungeCorePlan: StateFlow<LoungeCoreLiveMapper.Plan> = combine(
+        ctx,
+        loungeCuration,
+        loungeCoreSnapshot,
+    ) { c, curation, snapshot -> Triple(c, curation, snapshot) }
+        .debounce(500)
+        .mapLatest { (c, curation, snapshot) ->
+            if (!BuildConfig.LOUNGE_CORE_QA ||
+                c.profileId < 0 ||
+                curation.sourceIds.isEmpty() ||
+                snapshot == null
+            ) {
+                LoungeCoreLiveMapper.Plan()
+            } else {
+                withContext(Dispatchers.IO) {
+                    LoungeCoreLiveMapper.plan(
+                        channels = channelDao.snapshotAll(c.sourceIds, 25_000),
+                        auditedSourceIds = curation.sourceIds,
+                        snapshot = snapshot,
+                    )
+                }
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, LoungeCoreLiveMapper.Plan())
+
     /** Recompute a reversible duplicate presentation map only after catalogue changes. */
     private val duplicateSelection: StateFlow<LoungeLiveDuplicates.Result> = ctx
         .flatMapLatest { c ->
@@ -791,10 +844,11 @@ class LiveViewModel(
         // PagingSource doesn't observe content_order, so the switch must recreate it.
         .combine(orderedContexts) { args, _ -> args }
         .combine(duplicateSelection) { args, duplicate -> args.copy(duplicateIds = duplicate.hiddenIds) }
+        .combine(loungeCorePlan) { args, core -> args.copy(corePlan = core) }
         // Before this, the NZ folder list often loaded *after* the default
         // Pager had been created; its first-five sorting was never activated.
         .combine(nzFreeviewFolderIds) { args, freeviewIds -> args.copy(nzFolderIds = freeviewIds) }
-        .flatMapLatest { (key, c, query, sort, cs, duplicateIds, nzFolderIds) ->
+        .flatMapLatest { (key, c, query, sort, cs, duplicateIds, corePlan, nzFolderIds) ->
             // Customizations are applied to each fresh PagingData inside the pager chain — a PagingData
             // that the UI already collected must never be re-transformed (Paging forbids re-collection,
             // which is why hiding a channel used to crash). A customization change re-creates the pager.
@@ -804,8 +858,19 @@ class LiveViewModel(
                 val cust = cs.cust
                 val hiddenCats = cs.hiddenCats
                 val movedFrom = cust.movedFromOrigin
-                val customized = if (cust.hiddenItems.isEmpty() && cust.itemNames.isEmpty() && hiddenCats.isEmpty() && movedFrom.isEmpty()) paging
-                else paging
+                val coreSourceIds = loungeCuration.value.sourceIds
+                val coreMapped = if (!BuildConfig.LOUNGE_CORE_QA || coreSourceIds.isEmpty()) {
+                    paging
+                } else {
+                    paging
+                        .filter { ch -> ch.sourceId !in coreSourceIds || ch.id !in corePlan.hiddenIds }
+                        .map { ch ->
+                            if (ch.sourceId !in coreSourceIds) ch
+                            else corePlan.present(ch) ?: ch
+                        }
+                }
+                val customized = if (cust.hiddenItems.isEmpty() && cust.itemNames.isEmpty() && hiddenCats.isEmpty() && movedFrom.isEmpty()) coreMapped
+                else coreMapped
                     .filter { ch ->
                         isChannelVisible(ch, cust, hiddenCats, key) &&
                             // Moved-out items leave ONLY their origin folder (they stay in All/search).
@@ -818,19 +883,31 @@ class LiveViewModel(
                 // Keep only BEST NZ Sky Sport RAW and HD in the browsable lists.
                 // Do not delete provider data, favourites or independent M3U feeds.
                 customized
-                    .filter(::showInNzSelection)
                     .filter { ch ->
-                        // User's hand-picked favourites, watch history and custom
-                        // categories can still address backup streams.
-                        key is LiveKey.Favorites || key is LiveKey.History ||
+                        // Lounge Core already owns BEST's visibility/duplicate policy in QA.
+                        // Keep the legacy NZ rule for every independent source and for production.
+                        (BuildConfig.LOUNGE_CORE_QA && ch.sourceId in coreSourceIds) ||
+                            showInNzSelection(ch)
+                    }
+                    .filter { ch ->
+                        // Lounge Core already collapsed its audited BEST rows to one canonical primary.
+                        // Keep the legacy duplicate policy for every other source.
+                        (BuildConfig.LOUNGE_CORE_QA && ch.sourceId in coreSourceIds) ||
+                            key is LiveKey.Favorites || key is LiveKey.History ||
                             key is LiveKey.Custom || ch.id !in duplicateIds
                     }
                     .filter { ch -> ch.sourceId !in loungeCuration.value.sourceIds ||
                         !LoungeLiveCatalogueCleanup.divider(ch.name) }
                     .map { ch ->
                         val override = cust.itemNames[CustomizeKeys.channel(ch)]
-                        if (override != null || ch.sourceId !in loungeCuration.value.sourceIds) ch
-                        else ch.copy(name = LoungeLiveCatalogueCleanup.channelTitle(ch.name))
+                        if (override != null ||
+                            ch.sourceId !in loungeCuration.value.sourceIds ||
+                            (BuildConfig.LOUNGE_CORE_QA && ch.id in corePlan.presentationByChannelId)
+                        ) {
+                            ch
+                        } else {
+                            ch.copy(name = LoungeLiveCatalogueCleanup.channelTitle(ch.name))
+                        }
                     }
             }
         }
@@ -843,6 +920,7 @@ class LiveViewModel(
         val sort: SettingsRepository.SortMode,
         val cs: CustState,
         val duplicateIds: Set<Long> = emptySet(),
+        val corePlan: LoungeCoreLiveMapper.Plan = LoungeCoreLiveMapper.Plan(),
         val nzFolderIds: Set<Long> = emptySet(),
     )
 
