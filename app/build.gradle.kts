@@ -68,6 +68,18 @@ android {
             (providers.gradleProperty("diagnosticBuild").orNull == "true").toString(),
         )
 
+        // Lounge Core is deliberately QA-only until its canonical catalogue has been proven on-device.
+        // The PR audit build sets RELIABILITY_AUDIT_QA=true; normal local, release and production builds
+        // compile this path out unless a maintainer explicitly opts in with -PloungeCoreQa=true.
+        buildConfigField(
+            "boolean",
+            "LOUNGE_CORE_QA",
+            (
+                System.getenv("RELIABILITY_AUDIT_QA") == "true" ||
+                    providers.gradleProperty("loungeCoreQa").orNull == "true"
+                ).toString(),
+        )
+
         // Maintainer-only tools (today: the "Rebuild Now Trending" button in Home settings, which
         // bypasses the multi-day Trending fetch timer so a reported problem can be reproduced on the
         // spot). Off unless `owntv.devTools=true` is set as a Gradle property or in the out-of-repo
