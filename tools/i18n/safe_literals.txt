@@ -1985,3 +1985,8 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	whakaata māori
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	whakaata maori
 2	empty	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	\0
+1	uri	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	?username=
+1	uri	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	&password=
+1	json	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	categories
+1	json	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	name
+1	json	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	provider_item_ids
