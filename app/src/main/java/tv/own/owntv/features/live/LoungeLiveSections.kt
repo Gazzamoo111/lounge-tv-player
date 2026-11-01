@@ -6,18 +6,18 @@ import java.util.Locale
 /** Editorial sections for the original provider folder; no stream/database mutation. */
 enum class LoungeLiveSection(val titleRes: Int) {
     MY_CATEGORIES(R.string.lounge_section_custom),
-    NEW_ZEALAND(R.string.lounge_section_nz),
+    SEASONAL(R.string.lounge_section_seasonal),
     AUSTRALIA(R.string.lounge_section_aus),
+    DOCUMENTARIES(R.string.lounge_section_documentaries),
+    ENTERTAINMENT(R.string.lounge_section_entertainment),
+    KIDS(R.string.lounge_section_kids),
+    MOVIES(R.string.lounge_section_movies),
+    NEW_ZEALAND(R.string.lounge_section_nz),
     SPORTS(R.string.lounge_section_sports),
     PPV(R.string.lounge_section_ppv),
-    ENTERTAINMENT(R.string.lounge_section_entertainment),
     STREAMING(R.string.lounge_section_streaming),
     US_UK(R.string.lounge_section_us_uk),
-    MOVIES(R.string.lounge_section_movies),
-    DOCUMENTARIES(R.string.lounge_section_documentaries),
-    KIDS(R.string.lounge_section_kids),
     MUSIC(R.string.lounge_section_music),
-    SEASONAL(R.string.lounge_section_seasonal),
     INTERNATIONAL(R.string.lounge_section_other),
 }
 
@@ -27,7 +27,16 @@ internal fun loungeLiveSectionOf(providerCategory: String): LoungeLiveSection {
         .replace(Regex("\\s+"), " ")
         .replace(Regex("\\s*\\|\\s*"), "| ")
     fun any(vararg clues: String) = clues.any { n.contains(it) }
+    val parent = n.substringBefore('•').trim()
     return when {
+        parent == "24/7" -> LoungeLiveSection.SEASONAL
+        parent == "australia" -> LoungeLiveSection.AUSTRALIA
+        parent == "documentaries & lifestyle" -> LoungeLiveSection.DOCUMENTARIES
+        parent == "entertainment" -> LoungeLiveSection.ENTERTAINMENT
+        parent == "kids & family" -> LoungeLiveSection.KIDS
+        parent == "movies" -> LoungeLiveSection.MOVIES
+        parent == "new zealand" -> LoungeLiveSection.NEW_ZEALAND
+        parent == "sports" -> LoungeLiveSection.SPORTS
         n.startsWith("nz|") || n == "nz" || n.startsWith("nz freeview") -> LoungeLiveSection.NEW_ZEALAND
         n.startsWith("au| 9now") || n.startsWith("au| australia") -> LoungeLiveSection.AUSTRALIA
         // User-curated category moves from OTHER.
@@ -71,4 +80,11 @@ internal fun loungeLiveSectionOf(providerCategory: String): LoungeLiveSection {
         // appear as part of their region's general/mixed channel lineup.
         else -> LoungeLiveSection.INTERNATIONAL
     }
+}
+
+
+/** In Lounge Core QA, the parent before • is the accordion heading; show only the clean leaf below it. */
+internal fun loungeLiveLeafTitle(displayName: String): String {
+    val parts = displayName.split('•', limit = 2)
+    return if (parts.size == 2) parts[1].trim() else displayName.trim()
 }
