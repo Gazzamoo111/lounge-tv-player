@@ -25,6 +25,7 @@ export default {
 
     const upstream = new URL(UPSTREAM + (incoming.pathname === "/" ? "/player_api.php" : incoming.pathname));
     upstream.search = incoming.search;
+    upstream.searchParams.set("_lounge_host", incoming.hostname);
 
     const headers = new Headers(request.headers);
     headers.set("X-Forwarded-Host", incoming.hostname);
