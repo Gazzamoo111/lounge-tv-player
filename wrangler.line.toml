@@ -5,3 +5,7 @@ workers_dev = true
 
 # Bind this Worker to line.loungetv.nz in Cloudflare once account credentials are connected.
 # The Worker itself is intentionally stateless. Customer authentication remains in Lounge Core.
+
+[[routes]]
+pattern = "line.loungetv.nz"
+custom_domain = true
