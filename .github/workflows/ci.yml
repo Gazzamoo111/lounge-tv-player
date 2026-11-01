@@ -97,8 +97,8 @@ jobs:
             echo "Built APK identity: $APK_ID"
             if [ "$LOUNGE_CORE_QA" = "true" ]; then
               case "$APK_ID" in
-                "package: name='com.loungetv.player.coreqa' versionCode='$VERSION_CODE' "*) ;;
-                *) echo "Expected isolated coreqa package, got: $APK_ID"; exit 1 ;;
+                "package: name='com.loungetv.player.catalogueqa' versionCode='$VERSION_CODE' "*) ;;
+                *) echo "Expected isolated catalogueqa package, got: $APK_ID"; exit 1 ;;
               esac
             else
               case "$APK_ID" in
