@@ -84,6 +84,7 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
     val defaultPlaylistName = stringResource(R.string.setup_name_default_playlist)
     val defaultPortalName = stringResource(R.string.setup_default_portal)
     val loungeSourceName = stringResource(R.string.lounge_core_qa_source_name)
+    val loungeManaged = BuildConfig.APPLICATION_ID.startsWith("com.loungetv.player")
     var step by rememberSaveable(firstRun) { mutableStateOf(if (firstRun) Step.WELCOME else Step.CREATE_PROFILE) }
     val importState by vm.state.collectAsStateWithLifecycle()
     val progress by vm.progress.collectAsStateWithLifecycle()
@@ -150,7 +151,7 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
                 onBack = { step = Step.SETUP_CHOICE },
             )
             Step.CREATE_PROFILE -> ProfileStep(
-                onCreate = { name, avatar, kids, pin, picture -> vm.createProfile(name.ifBlank { defaultProfileName }, avatar, kids, pin, picture) { step = if (BuildConfig.LOUNGE_CORE_QA) Step.ADD_SOURCE else Step.ADD_CONTENT } },
+                onCreate = { name, avatar, kids, pin, picture -> vm.createProfile(name.ifBlank { defaultProfileName }, avatar, kids, pin, picture) { step = if (loungeManaged) Step.ADD_SOURCE else Step.ADD_CONTENT } },
                 onBack = { if (firstRun) step = Step.SETUP_CHOICE else onCancel() },
             )
             Step.ADD_CONTENT -> AddContentStep(
@@ -170,7 +171,7 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
                 onPayloadReceived = { step = Step.ADD_SOURCE },
                 onBack = { vm.stopRemoteListener(); step = Step.ADD_CONTENT },
             )
-            Step.ADD_SOURCE -> if (BuildConfig.LOUNGE_CORE_QA) {
+            Step.ADD_SOURCE -> if (loungeManaged) {
                 LoungeCredentialsStep(
                     onSubmit = { user, pass ->
                         importName = loungeSourceName
