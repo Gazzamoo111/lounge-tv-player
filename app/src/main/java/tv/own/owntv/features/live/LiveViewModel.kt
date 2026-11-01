@@ -2475,7 +2475,9 @@ class LiveViewModel(
                         when (sort) {
                             SettingsRepository.SortMode.ALPHA ->
                                 rows.sortedBy { it.name.lowercase() }
-                            SettingsRepository.SortMode.PLAYLIST ->
+                            SettingsRepository.SortMode.PLAYLIST,
+                            SettingsRepository.SortMode.RATING,
+                            SettingsRepository.SortMode.DATE_ADDED ->
                                 rows.sortedBy { playlistOrder[it.id] ?: Int.MAX_VALUE }
                         }
                     }
