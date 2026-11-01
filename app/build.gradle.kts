@@ -100,7 +100,7 @@ android {
         buildConfigField(
             "String",
             "LOUNGE_CORE_XTREAM_URL",
-            "\"https://line.loungetv.nz\"",
+            "\"https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-xtream\"",
         )
         buildConfigField(
             "String",
