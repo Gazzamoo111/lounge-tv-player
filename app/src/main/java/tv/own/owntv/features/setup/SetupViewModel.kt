@@ -276,13 +276,6 @@ class SetupViewModel(
     fun finish(onDone: (Long?) -> Unit = {}) {
         viewModelScope.launch {
             val profileId = importer.finish()
-            if (BuildConfig.LOUNGE_CORE_QA && profileId != null) {
-                val xtreamSource = sourceRepository.observeSources(profileId).first()
-                    .firstOrNull { it.type == SourceType.XTREAM && it.url == BuildConfig.LOUNGE_CORE_XTREAM_URL }
-                if (xtreamSource != null) {
-                    // The unified Lounge Xtream gateway now owns Live, Movies and Series taxonomy.
-                }
-            }
             onDone(profileId)
         }
     }
