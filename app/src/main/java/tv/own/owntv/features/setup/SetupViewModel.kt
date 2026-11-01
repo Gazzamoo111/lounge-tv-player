@@ -143,7 +143,7 @@ class SetupViewModel(
     ) = runImport {
         val effectiveName = if (BuildConfig.LOUNGE_CORE_QA) context.getString(R.string.lounge_core_qa_source_name) else name
         val effectiveServer = if (BuildConfig.LOUNGE_CORE_QA) BuildConfig.LOUNGE_CORE_XTREAM_URL else server
-        val effectiveLive = if (BuildConfig.LOUNGE_CORE_QA) SyncScopeChoice.Off else live
+        val effectiveLive = if (BuildConfig.LOUNGE_CORE_QA) SyncScopeChoice.Now else live
         importer.xtream(
             effectiveName,
             effectiveServer,
@@ -281,42 +281,11 @@ class SetupViewModel(
                 val xtreamSource = sourceRepository.observeSources(profileId).first()
                     .firstOrNull { it.type == SourceType.XTREAM && it.url == BuildConfig.LOUNGE_CORE_XTREAM_URL }
                 if (xtreamSource != null) {
-                    runCatching { ensureCoreQaLiveSource(profileId, xtreamSource) }
                     runCatching { ensureCoreQaMovieTaxonomy(profileId, xtreamSource) }
                 }
             }
             onDone(profileId)
         }
-    }
-
-    private suspend fun ensureCoreQaLiveSource(profileId: Long, xtreamSource: SourceEntity) {
-        val username = xtreamSource.username.orEmpty()
-        val password = xtreamSource.password.orEmpty()
-        if (username.isBlank() || password.isBlank()) return
-
-        val encodedUser = URLEncoder.encode(username, StandardCharsets.UTF_8.toString())
-        val encodedPass = URLEncoder.encode(password, StandardCharsets.UTF_8.toString())
-        val liveUrl = BuildConfig.LOUNGE_CORE_LIVE_M3U_URL +
-            "?username=" + encodedUser + "&password=" + encodedPass
-
-        val existing = sourceRepository.observeSources(profileId).first()
-        val source = existing.firstOrNull {
-            it.type == SourceType.M3U && it.url.startsWith(BuildConfig.LOUNGE_CORE_LIVE_M3U_URL)
-        } ?: sourceRepository.addM3uSource(
-            profileId = profileId,
-            name = context.getString(R.string.lounge_core_qa_live_source_name),
-            url = liveUrl,
-            epgUrl = BuildConfig.LOUNGE_CORE_LIVE_EPG_URL,
-        )
-
-        // Always retry the Live import. A source row can exist even when its first network sync
-        // failed or timed out, which otherwise leaves Core QA permanently stuck at zero channels.
-        sourceRepository.sync(
-            source = source,
-            contentTypes = SyncContentTypes(live = true, movies = false, series = false),
-            forcePrune = true,
-            onProgress = {},
-        )
     }
 
     private suspend fun ensureCoreQaMovieTaxonomy(profileId: Long, xtreamSource: SourceEntity) {
