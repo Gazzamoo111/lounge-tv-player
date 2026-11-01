@@ -39,7 +39,7 @@
     <string name="catalogue_nbc_peacock">NBC / Peacock</string>
     <string name="catalogue_cbs_paramount_plus">CBS / Paramount+</string>
     <string name="catalogue_hulu_fx_fox_abc">Hulu / FX / FOX / ABC</string>
-    <string name="lounge_core_qa_source_name">Lounge Core QA</string>
+    <string name="lounge_core_qa_source_name">LTV</string>
     <string name="lounge_core_qa_nz_source_name">NZ Freeview Core QA</string>
-    <string name="lounge_core_qa_live_source_name">Lounge Live QA</string>
+    <string name="lounge_core_qa_live_source_name">LTV</string>
 </resources>
