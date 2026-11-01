@@ -95,14 +95,17 @@ jobs:
             APK_BADGING=$("$AAPT" dump badging "$QA_APK")
             APK_ID=$(printf '%s' "$APK_BADGING" | sed -n '1p')
             echo "Built APK identity: $APK_ID"
-            EXPECTED_PR_PACKAGE="com.loungetv.player.auditqa"
             if [ "$LOUNGE_CORE_QA" = "true" ]; then
-              EXPECTED_PR_PACKAGE="com.loungetv.player.coreqa"
+              case "$APK_ID" in
+                "package: name='com.loungetv.player.coreqa' versionCode='$VERSION_CODE' "*) ;;
+                *) echo "Expected isolated coreqa package, got: $APK_ID"; exit 1 ;;
+              esac
+            else
+              case "$APK_ID" in
+                "package: name='com.loungetv.player.auditqa' versionCode='$VERSION_CODE' "*) ;;
+                *) echo "Expected isolated auditqa package, got: $APK_ID"; exit 1 ;;
+              esac
             fi
-            case "$APK_ID" in
-              "package: name='$EXPECTED_PR_PACKAGE' versionCode='$VERSION_CODE' "*) ;;
-              *) echo "Expected isolated package $EXPECTED_PR_PACKAGE, got: $APK_ID"; exit 1 ;;
-            esac
             "$APKSIGNER" verify "$QA_APK"
           else
             python3 scripts/verify_update_compatibility.py "$QA_APK" \
