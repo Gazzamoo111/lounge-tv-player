@@ -37,6 +37,7 @@ internal fun loungeLiveSectionOf(providerCategory: String): LoungeLiveSection {
         parent == "movies" -> LoungeLiveSection.MOVIES
         parent == "new zealand" -> LoungeLiveSection.NEW_ZEALAND
         parent == "sports" -> LoungeLiveSection.SPORTS
+        parent == "pay-per-view" || parent == "ppv" -> LoungeLiveSection.PPV
         n.startsWith("nz|") || n == "nz" || n.startsWith("nz freeview") -> LoungeLiveSection.NEW_ZEALAND
         n.startsWith("au| 9now") || n.startsWith("au| australia") -> LoungeLiveSection.AUSTRALIA
         // User-curated category moves from OTHER.
