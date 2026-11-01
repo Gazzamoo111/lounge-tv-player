@@ -120,6 +120,7 @@ fun AddSourceScreen(
     ) -> Unit)? = null,
 ) {
     val editing = initial != null
+    val coreQaSourceName = stringResource(R.string.lounge_core_qa_source_name)
     var kind by remember {
         mutableStateOf(
             when (initial?.type) {
@@ -130,12 +131,12 @@ fun AddSourceScreen(
         )
     }
     var name by remember(initial) {
-        mutableStateOf(initial?.name ?: if (BuildConfig.LOUNGE_CORE_QA) "Lounge Core QA" else "")
+        mutableStateOf(initial?.name ?: if (BuildConfig.LOUNGE_CORE_QA) coreQaSourceName else "")
     }
     var server by remember(initial) {
         mutableStateOf(
             if (initial != null && initial.type == SourceType.XTREAM) initial.url
-            else if (BuildConfig.LOUNGE_CORE_QA) LOUNGE_CORE_XTREAM_URL
+            else if (BuildConfig.LOUNGE_CORE_QA) BuildConfig.LOUNGE_CORE_XTREAM_URL
             else "",
         )
     }
