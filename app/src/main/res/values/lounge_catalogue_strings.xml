@@ -41,4 +41,5 @@
     <string name="catalogue_hulu_fx_fox_abc">Hulu / FX / FOX / ABC</string>
     <string name="lounge_core_qa_source_name">Lounge Core QA</string>
     <string name="lounge_core_qa_nz_source_name">NZ Freeview Core QA</string>
+    <string name="lounge_core_qa_live_source_name">Lounge Live QA</string>
 </resources>
