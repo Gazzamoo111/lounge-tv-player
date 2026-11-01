@@ -24,6 +24,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import tv.own.owntv.core.nav.MainSection
 import tv.own.owntv.core.nav.NavVisibility
 import tv.own.owntv.core.network.ConnectivityObserver
@@ -176,6 +178,47 @@ class ShellViewModel(
                     }
                 }
         }
+        // Keep Lounge Live fresher than the full VOD catalogue without re-importing Movies/Series hourly.
+        // Starts only after legacy managed M3Us are gone, waits for the initial import to settle, and
+        // uses the normal auto-refresh reason so playback is never interrupted.
+        viewModelScope.launch {
+            settings.activeProfileId
+                .flatMapLatest { pid ->
+                    if (pid < 0) flowOf(-1L)
+                    else sourceRepository.observeSources(pid).map { sources ->
+                        val hasLegacyManagedLive = sources.any { source ->
+                            source.type == SourceType.M3U && (
+                                source.url.startsWith(BuildConfig.LOUNGE_CORE_LIVE_M3U_URL) ||
+                                    alreadyHasNzSource(listOf(source))
+                                )
+                        }
+                        if (hasLegacyManagedLive) -1L else sources.firstOrNull { source ->
+                            source.type == SourceType.XTREAM &&
+                                source.url == BuildConfig.LOUNGE_CORE_XTREAM_URL &&
+                                source.syncLive
+                        }?.id ?: -1L
+                    }
+                }
+                .distinctUntilChanged()
+                .collectLatest { sourceId ->
+                    if (sourceId < 0) return@collectLatest
+                    delay(5 * 60_000L)
+                    while (true) {
+                        catalogSyncScheduler.enqueueSync(
+                            sourceId = sourceId,
+                            reason = tv.own.owntv.core.sync.AutoRefresh.REASON,
+                            contentTypes = SyncContentTypes(
+                                live = true,
+                                movies = false,
+                                series = false,
+                            ),
+                            policy = ExistingWorkPolicy.KEEP,
+                        )
+                        delay(60 * 60_000L)
+                    }
+                }
+        }
+
         // Migrate first, then automatically add BOTH guides for each saved/new Xtream source.
         // This observes sign-in and upgraded installations without asking the customer to add EPGs.
         viewModelScope.launch {
