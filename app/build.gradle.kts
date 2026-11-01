@@ -104,13 +104,18 @@ android {
         )
         buildConfigField(
             "String",
-            "LOUNGE_CORE_NZ_M3U_URL",
-            "\"https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-nz-freeview\"",
+            "LOUNGE_CORE_LIVE_M3U_URL",
+            "\"https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-live-m3u\"",
         )
         buildConfigField(
             "String",
-            "LOUNGE_CORE_NZ_EPG_URL",
-            "\"https://i.mjh.nz/nz/epg.xml.gz\"",
+            "LOUNGE_CORE_LIVE_EPG_URL",
+            "\"https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-live-xmltv\"",
+        )
+        buildConfigField(
+            "String",
+            "LOUNGE_CORE_VOD_TAXONOMY_URL",
+            "\"https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-vod-taxonomy\"",
         )
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
