@@ -1974,9 +1974,12 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/settings/LoungeNzSkyFhdGuide.kt	skysport
 1	protocol	app/src/main/java/tv/own/owntv/features/settings/LoungeNzSkyFhdGuide.kt	.nz
 1	json	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	src
-1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Unified Lounge Live migration deferred profile=$pid result=$result
-1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Unified Lounge migration complete profile=$pid legacySources=${legacy.size}
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Unified Lounge migration deferred; existing sources preserved
+1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	LTV
+1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	line.bestnz.vip
+1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	line.loungeconnect247.xyz
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Unified Lounge migration deferred profile=$pid result=$result
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Unified Lounge migration complete profile=$pid providerMigrated=$providerMigration legacySources=
 1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	NZ| SKY SPORT
 1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	NZ | SKY SPORT
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Sky Sport FHD cache fill unavailable
