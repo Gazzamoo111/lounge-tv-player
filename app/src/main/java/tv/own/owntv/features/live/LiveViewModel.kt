@@ -753,7 +753,10 @@ class LiveViewModel(
                                 ?.let(::loungeLiveSectionOf)?.ordinal ?: Int.MAX_VALUE },
                         { if (it.value.key in orderIndex) ""
                             else if (it.value.categoryId?.let(categoriesById::get)?.name
-                                    ?.let(::loungeLiveSectionOf) == LoungeLiveSection.KIDS)
+                                    ?.let(::loungeLiveSectionOf) in setOf(
+                                        LoungeLiveSection.KIDS,
+                                        LoungeLiveSection.SEASONAL,
+                                    ))
                                 loungeLiveLeafTitle(it.value.displayName).lowercase()
                             else "" },
                         { it.index },
