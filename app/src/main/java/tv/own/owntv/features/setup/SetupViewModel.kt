@@ -5,17 +5,21 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import tv.own.owntv.BuildConfig
 import tv.own.owntv.core.database.entity.SourceEntity
 import tv.own.owntv.core.model.SourceType
+import tv.own.owntv.core.repository.SourceRepository
 import tv.own.owntv.core.backup.BackupManager
 import tv.own.owntv.core.setup.SourceImporter
 import tv.own.owntv.core.settings.PlaylistRefresh
 import tv.own.owntv.core.settings.PlaylistAutoRefresh
 import tv.own.owntv.core.settings.SettingsRepository
+import tv.own.owntv.core.sync.SyncContentTypes
 import tv.own.owntv.core.sync.SyncScopeChoice
 import java.io.File
 
@@ -30,6 +34,7 @@ import java.io.File
  */
 class SetupViewModel(
     private val importer: SourceImporter,
+    private val sourceRepository: SourceRepository,
     private val epgRepository: tv.own.owntv.core.repository.EpgRepository,
     private val epgSourceStore: tv.own.owntv.core.epg.EpgSourceStore,
     private val settings: SettingsRepository,
@@ -119,7 +124,22 @@ class SetupViewModel(
         preferHls: Boolean = false,
         httpReferer: String = "",
     ) = runImport {
-        importer.xtream(name, server, username, password, userAgent, epgUrl, autoRefresh, live, movies, series, preferHls, httpReferer = httpReferer)
+        val effectiveName = if (BuildConfig.LOUNGE_CORE_QA) "Lounge Core QA" else name
+        val effectiveServer = if (BuildConfig.LOUNGE_CORE_QA) LOUNGE_CORE_XTREAM_URL else server
+        importer.xtream(
+            effectiveName,
+            effectiveServer,
+            username,
+            password,
+            userAgent,
+            epgUrl,
+            autoRefresh,
+            live,
+            movies,
+            series,
+            preferHls,
+            httpReferer = httpReferer,
+        )
     }
 
     fun startStalker(
@@ -237,6 +257,37 @@ class SetupViewModel(
 
     /** Completes onboarding → makes the new profile active, routing the app into the shell. */
     fun finish(onDone: (Long?) -> Unit = {}) {
-        viewModelScope.launch { onDone(importer.finish()) }
+        viewModelScope.launch {
+            val profileId = importer.finish()
+            if (BuildConfig.LOUNGE_CORE_QA && profileId != null) {
+                runCatching { ensureCoreQaNzSource(profileId) }
+                    .onFailure { android.util.Log.w("LoungeCoreQA", "NZ Freeview bootstrap failed", it) }
+            }
+            onDone(profileId)
+        }
+    }
+
+    private suspend fun ensureCoreQaNzSource(profileId: Long) {
+        val existing = sourceRepository.observeSources(profileId).first()
+        if (existing.any { it.url == LOUNGE_CORE_NZ_M3U_URL }) return
+
+        val source = sourceRepository.addM3uSource(
+            profileId = profileId,
+            name = "NZ Freeview Core QA",
+            url = LOUNGE_CORE_NZ_M3U_URL,
+            epgUrl = LOUNGE_CORE_NZ_EPG_URL,
+        )
+        sourceRepository.sync(
+            source = source,
+            contentTypes = SyncContentTypes(live = true, movies = false, series = false),
+            forcePrune = true,
+            onProgress = {},
+        )
     }
 }
+
+internal const val LOUNGE_CORE_XTREAM_URL =
+    "https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-xtream"
+internal const val LOUNGE_CORE_NZ_M3U_URL =
+    "https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-nz-freeview"
+internal const val LOUNGE_CORE_NZ_EPG_URL = "https://i.mjh.nz/nz/epg.xml.gz"
