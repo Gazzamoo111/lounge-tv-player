@@ -104,12 +104,27 @@ class ShellViewModel(
         sources.any { it.type == SourceType.M3U &&
             it.url.contains("i.mjh.nz/nz/", ignoreCase = true) }
 
+    private fun isManagedLoungeXtream(source: tv.own.owntv.core.database.entity.SourceEntity): Boolean =
+        source.type == SourceType.XTREAM &&
+            source.url.trimEnd('/').equals(
+                BuildConfig.LOUNGE_CORE_XTREAM_URL.trimEnd('/'),
+                ignoreCase = true,
+            )
+
+    /** Legacy Lounge installs used BEST directly. Never migrate an unrelated customer-added server. */
+    private fun isLegacyLoungeXtream(source: tv.own.owntv.core.database.entity.SourceEntity): Boolean {
+        if (source.type != SourceType.XTREAM) return false
+        val host = runCatching { java.net.URI(source.url).host?.lowercase() }.getOrNull()
+            ?: return false
+        return host == "line.bestnz.vip" || host == "line.loungeconnect247.xyz"
+    }
+
     init {
-        // Unified Lounge migration: old QA builds stored Live in one or two M3U sources while
-        // Movies/Series lived in Xtream. Upgrade those profiles in place: reuse their saved Xtream
-        // credentials, import Live through the unified Lounge gateway, move stable user data by
-        // channel name, then remove only the two Lounge-managed legacy M3Us.
-        if (BuildConfig.LOUNGE_CORE_QA) viewModelScope.launch(Dispatchers.IO) {
+        // Unified Lounge migration for both QA and production. New installs already use Lounge Core.
+        // Existing Lounge installs may still point directly at BEST and may also carry the separate
+        // NZ Freeview M3U. Reuse the saved source id and credentials, sync the curated catalogue,
+        // relink user data, then remove only the Lounge-managed legacy M3Us.
+        if (BuildConfig.APPLICATION_ID.startsWith("com.loungetv.player")) viewModelScope.launch(Dispatchers.IO) {
             settings.activeProfileId
                 .flatMapLatest { pid ->
                     if (pid < 0) flowOf(-1L to emptyList<tv.own.owntv.core.database.entity.SourceEntity>())
@@ -117,18 +132,19 @@ class ShellViewModel(
                 }
                 .collect { (pid, sources) ->
                     if (pid < 0 || pid in unifiedMigrationProfiles) return@collect
-                    val xtream = sources.firstOrNull {
-                        it.type == SourceType.XTREAM &&
-                            it.url == BuildConfig.LOUNGE_CORE_XTREAM_URL
-                    } ?: return@collect
 
-                    val legacy = sources.filter { source ->
+                    val exact = sources.firstOrNull(::isManagedLoungeXtream)
+                    val legacyCandidates = sources.filter(::isLegacyLoungeXtream)
+                    val xtream = exact ?: legacyCandidates.singleOrNull() ?: return@collect
+                    val providerMigration = !isManagedLoungeXtream(xtream)
+
+                    val legacyM3u = sources.filter { source ->
                         source.type == SourceType.M3U && (
                             source.url.startsWith(BuildConfig.LOUNGE_CORE_LIVE_M3U_URL) ||
                                 alreadyHasNzSource(listOf(source))
                             )
                     }
-                    if (xtream.syncLive && legacy.isEmpty()) {
+                    if (!providerMigration && xtream.syncLive && xtream.syncMovies && xtream.syncSeries && legacyM3u.isEmpty()) {
                         settings.setPlaylistAutoRefresh(
                             xtream.id, PlaylistRefresh(PlaylistAutoRefresh.HOURS_6),
                         )
@@ -137,43 +153,66 @@ class ShellViewModel(
                     }
 
                     unifiedMigrationProfiles += pid
+                    var switchedProvider = false
+                    var syncSucceeded = false
                     try {
-                        val snapshots = legacy.associateWith { old ->
+                        val originalSnapshot = if (providerMigration) {
+                            userData.exportForSource(xtream.id)
+                        } else null
+                        val legacySnapshots = legacyM3u.associateWith { old ->
                             userData.exportForSource(old.id).also { rows ->
                                 for (i in 0 until rows.length()) {
                                     rows.getJSONObject(i).put("src", xtream.id)
                                 }
                             }
                         }
+
                         val unified = xtream.copy(
+                            name = "LTV",
+                            url = BuildConfig.LOUNGE_CORE_XTREAM_URL,
                             syncLive = true,
                             syncMovies = true,
                             syncSeries = true,
                         )
                         sourceRepository.updateSource(unified)
+                        switchedProvider = providerMigration
                         settings.setPlaylistAutoRefresh(
                             unified.id, PlaylistRefresh(PlaylistAutoRefresh.HOURS_6),
                         )
 
+                        val scope = if (providerMigration) {
+                            SyncContentTypes(live = true, movies = true, series = true)
+                        } else {
+                            SyncContentTypes(live = true, movies = false, series = false)
+                        }
                         val result = sourceRepository.sync(
                             source = unified,
-                            contentTypes = SyncContentTypes(live = true, movies = false, series = false),
+                            contentTypes = scope,
                             forcePrune = true,
                         ) { }
                         if (result !is SyncResult.Success) {
-                            Log.w(TAG, "Unified Lounge Live migration deferred profile=$pid result=$result")
+                            if (providerMigration) sourceRepository.updateSource(xtream)
+                            Log.w(TAG, "Unified Lounge migration deferred profile=$pid result=$result")
                             return@collect
                         }
+                        syncSucceeded = true
 
-                        for ((old, snapshot) in snapshots) {
+                        originalSnapshot?.let { userData.relinkAfterSync(it, purge = true) }
+                        for ((old, snapshot) in legacySnapshots) {
                             userData.relinkAfterSync(snapshot, purge = false)
                             sourceRepository.deleteSource(old)
                             userData.relinkAfterSync(snapshot, purge = true)
                         }
-                        Log.i(TAG, "Unified Lounge migration complete profile=$pid legacySources=${legacy.size}")
+                        Log.i(
+                            TAG,
+                            "Unified Lounge migration complete profile=$pid providerMigrated=$providerMigration legacySources=" + legacyM3u.size,
+                        )
                     } catch (e: CancellationException) {
                         throw e
                     } catch (e: Exception) {
+                        if (switchedProvider && !syncSucceeded) {
+                            runCatching { sourceRepository.updateSource(xtream) }
+                        }
                         Log.w(TAG, "Unified Lounge migration deferred; existing sources preserved", e)
                     }
                 }
@@ -266,6 +305,7 @@ class ShellViewModel(
                 }
                 .collect { (pid, sources) ->
                     if (BuildConfig.LOUNGE_CORE_QA) return@collect
+                    if (sources.any(::isManagedLoungeXtream)) return@collect
                     if (pid < 0 || pid in nzAutoAddedProfiles ||
                         sources.none { it.type == SourceType.XTREAM } ||
                         alreadyHasNzSource(sources)
