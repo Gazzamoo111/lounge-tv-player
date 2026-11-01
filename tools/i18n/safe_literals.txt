@@ -323,7 +323,7 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	VIC
 1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	\\s+
 1	empty	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	\0
-1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	24/7
+2	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	24/7
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	afl
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	amazon prime
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	apple tv+
@@ -347,7 +347,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	documentaries
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	documentary
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	drama
-1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	entertainment
+2	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	entertainment
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	espn
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	f1
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	fa player
@@ -379,7 +379,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	mlb
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	motorsport
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	movie
-1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	movies
+2	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	movies
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	mtv
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	music
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	nat geo
@@ -1990,12 +1990,9 @@
 1	json	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	categories
 1	json	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	name
 1	json	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	provider_item_ids
-2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	24/7
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	australia
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	documentaries & lifestyle
-2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	entertainment
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	kids & family
-2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	movies
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	new zealand
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	sports
 1	protocol	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	Studios •
