@@ -1,21 +1,35 @@
 package tv.own.owntv.features.setup
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
+import tv.own.owntv.BuildConfig
+import tv.own.owntv.R
+import tv.own.owntv.core.customize.CustomizationStore
+import tv.own.owntv.core.database.dao.CustomCategoryDao
+import tv.own.owntv.core.database.dao.MovieDao
+import tv.own.owntv.core.database.entity.CustomCategoryMemberEntity
 import tv.own.owntv.core.database.entity.SourceEntity
+import tv.own.owntv.core.model.MediaType
 import tv.own.owntv.core.model.SourceType
+import tv.own.owntv.core.repository.SourceRepository
 import tv.own.owntv.core.backup.BackupManager
 import tv.own.owntv.core.setup.SourceImporter
 import tv.own.owntv.core.settings.PlaylistRefresh
 import tv.own.owntv.core.settings.PlaylistAutoRefresh
 import tv.own.owntv.core.settings.SettingsRepository
+import tv.own.owntv.core.sync.SyncContentTypes
 import tv.own.owntv.core.sync.SyncScopeChoice
 import java.io.File
 
@@ -29,7 +43,13 @@ import java.io.File
  * and the job whose lifetime "Run in background" depends on.
  */
 class SetupViewModel(
+    private val context: Context,
     private val importer: SourceImporter,
+    private val sourceRepository: SourceRepository,
+    private val movieDao: MovieDao,
+    private val customCategoryDao: CustomCategoryDao,
+    private val customize: CustomizationStore,
+    private val okHttpClient: OkHttpClient,
     private val epgRepository: tv.own.owntv.core.repository.EpgRepository,
     private val epgSourceStore: tv.own.owntv.core.epg.EpgSourceStore,
     private val settings: SettingsRepository,
@@ -119,7 +139,28 @@ class SetupViewModel(
         preferHls: Boolean = false,
         httpReferer: String = "",
     ) = runImport {
-        importer.xtream(name, server, username, password, userAgent, epgUrl, autoRefresh, live, movies, series, preferHls, httpReferer = httpReferer)
+        val managedLounge = server.trimEnd('/').equals(
+            BuildConfig.LOUNGE_CORE_XTREAM_URL.trimEnd('/'),
+            ignoreCase = true,
+        )
+        val effectiveName = if (managedLounge) context.getString(R.string.lounge_core_qa_source_name) else name
+        val effectiveServer = if (managedLounge) BuildConfig.LOUNGE_CORE_XTREAM_URL else server
+        val effectiveLive = if (managedLounge) SyncScopeChoice.Now else live
+        val effectiveRefresh = if (managedLounge) PlaylistRefresh(PlaylistAutoRefresh.HOURS_6) else autoRefresh
+        importer.xtream(
+            effectiveName,
+            effectiveServer,
+            username,
+            password,
+            userAgent,
+            epgUrl,
+            effectiveRefresh,
+            effectiveLive,
+            movies,
+            series,
+            preferHls,
+            httpReferer = httpReferer,
+        )
     }
 
     fun startStalker(
@@ -237,6 +278,11 @@ class SetupViewModel(
 
     /** Completes onboarding → makes the new profile active, routing the app into the shell. */
     fun finish(onDone: (Long?) -> Unit = {}) {
-        viewModelScope.launch { onDone(importer.finish()) }
+        viewModelScope.launch {
+            val profileId = importer.finish()
+            onDone(profileId)
+        }
     }
+
+
 }

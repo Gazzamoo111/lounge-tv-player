@@ -1,6 +1,7 @@
 package tv.own.owntv.features.shell
 
 import android.util.Log
+import tv.own.owntv.BuildConfig
 import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -23,6 +24,8 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import tv.own.owntv.core.nav.MainSection
 import tv.own.owntv.core.nav.NavVisibility
 import tv.own.owntv.core.network.ConnectivityObserver
@@ -30,6 +33,7 @@ import tv.own.owntv.core.weather.WeatherInfo
 import tv.own.owntv.core.weather.WeatherRepository
 import tv.own.owntv.core.database.dao.resolveExistingProfileId
 import tv.own.owntv.core.repository.SourceRepository
+import tv.own.owntv.core.backup.UserDataResolver
 import tv.own.owntv.core.database.dao.CategoryDao
 import tv.own.owntv.core.database.dao.ChannelDao
 import tv.own.owntv.core.customize.CustomizationStore
@@ -39,6 +43,8 @@ import tv.own.owntv.features.settings.LoungeNzSkyFhdGuide
 import tv.own.owntv.core.repository.EpgRepository
 import tv.own.owntv.core.epg.EpgSourceStore
 import tv.own.owntv.core.model.SourceType
+import tv.own.owntv.core.sync.SyncContentTypes
+import tv.own.owntv.core.sync.SyncResult
 import tv.own.owntv.core.sync.work.EpgSyncScheduler
 import tv.own.owntv.core.sync.work.CatalogSyncScheduler
 import tv.own.owntv.core.settings.PlaylistAutoRefresh
@@ -59,6 +65,7 @@ import tv.own.owntv.core.theme.UiZoom
 class ShellViewModel(
     private val settings: SettingsRepository,
     private val sourceRepository: SourceRepository,
+    private val userData: UserDataResolver,
     private val categoryDao: CategoryDao,
     private val channelDao: ChannelDao,
     private val customize: CustomizationStore,
@@ -90,13 +97,167 @@ class ShellViewModel(
     var startupUpdateCheckDone = false
 
     private val nzAutoAddedProfiles = mutableSetOf<Long>()
+    private val unifiedMigrationProfiles = mutableSetOf<Long>()
 
     /** Only the audited NZ playlist; customer-managed M3U playlists are never replaced. */
     private fun alreadyHasNzSource(sources: List<tv.own.owntv.core.database.entity.SourceEntity>): Boolean =
         sources.any { it.type == SourceType.M3U &&
             it.url.contains("i.mjh.nz/nz/", ignoreCase = true) }
 
+    private fun isManagedLoungeXtream(source: tv.own.owntv.core.database.entity.SourceEntity): Boolean =
+        source.type == SourceType.XTREAM &&
+            source.url.trimEnd('/').equals(
+                BuildConfig.LOUNGE_CORE_XTREAM_URL.trimEnd('/'),
+                ignoreCase = true,
+            )
+
+    /** Legacy Lounge installs used BEST directly. Never migrate an unrelated customer-added server. */
+    private fun isLegacyLoungeXtream(source: tv.own.owntv.core.database.entity.SourceEntity): Boolean {
+        if (source.type != SourceType.XTREAM) return false
+        val host = runCatching { java.net.URI(source.url).host?.lowercase() }.getOrNull()
+            ?: return false
+        return host == "line.bestnz.vip" || host == "line.loungeconnect247.xyz"
+    }
+
     init {
+        // Unified Lounge migration for both QA and production. New installs already use Lounge Core.
+        // Existing Lounge installs may still point directly at BEST and may also carry the separate
+        // NZ Freeview M3U. Reuse the saved source id and credentials, sync the curated catalogue,
+        // relink user data, then remove only the Lounge-managed legacy M3Us.
+        if (BuildConfig.LOUNGE_MANAGED) viewModelScope.launch(Dispatchers.IO) {
+            settings.activeProfileId
+                .flatMapLatest { pid ->
+                    if (pid < 0) flowOf(-1L to emptyList<tv.own.owntv.core.database.entity.SourceEntity>())
+                    else sourceRepository.observeSources(pid).map { pid to it }
+                }
+                .collect { (pid, sources) ->
+                    if (pid < 0 || pid in unifiedMigrationProfiles) return@collect
+
+                    val exact = sources.firstOrNull(::isManagedLoungeXtream)
+                    val legacyCandidates = sources.filter(::isLegacyLoungeXtream)
+                    val xtream = exact ?: legacyCandidates.singleOrNull() ?: return@collect
+                    val providerMigration = !isManagedLoungeXtream(xtream)
+
+                    val legacyM3u = sources.filter { source ->
+                        source.type == SourceType.M3U && (
+                            source.url.startsWith(BuildConfig.LOUNGE_CORE_LIVE_M3U_URL) ||
+                                alreadyHasNzSource(listOf(source))
+                            )
+                    }
+                    if (!providerMigration && xtream.syncLive && xtream.syncMovies && xtream.syncSeries && legacyM3u.isEmpty()) {
+                        settings.setPlaylistAutoRefresh(
+                            xtream.id, PlaylistRefresh(PlaylistAutoRefresh.HOURS_6),
+                        )
+                        unifiedMigrationProfiles += pid
+                        return@collect
+                    }
+
+                    unifiedMigrationProfiles += pid
+                    var switchedProvider = false
+                    var syncSucceeded = false
+                    try {
+                        val originalSnapshot = if (providerMigration) {
+                            userData.exportForSource(xtream.id)
+                        } else null
+                        val legacySnapshots = legacyM3u.associateWith { old ->
+                            userData.exportForSource(old.id).also { rows ->
+                                for (i in 0 until rows.length()) {
+                                    rows.getJSONObject(i).put("src", xtream.id)
+                                }
+                            }
+                        }
+
+                        val unified = xtream.copy(
+                            name = "LTV",
+                            url = BuildConfig.LOUNGE_CORE_XTREAM_URL,
+                            syncLive = true,
+                            syncMovies = true,
+                            syncSeries = true,
+                        )
+                        sourceRepository.updateSource(unified)
+                        switchedProvider = providerMigration
+                        settings.setPlaylistAutoRefresh(
+                            unified.id, PlaylistRefresh(PlaylistAutoRefresh.HOURS_6),
+                        )
+
+                        val scope = if (providerMigration) {
+                            SyncContentTypes(live = true, movies = true, series = true)
+                        } else {
+                            SyncContentTypes(live = true, movies = false, series = false)
+                        }
+                        val result = sourceRepository.sync(
+                            source = unified,
+                            contentTypes = scope,
+                            forcePrune = true,
+                        ) { }
+                        if (result !is SyncResult.Success) {
+                            if (providerMigration) sourceRepository.updateSource(xtream)
+                            Log.w(TAG, "Unified Lounge migration deferred profile=$pid result=$result")
+                            return@collect
+                        }
+                        syncSucceeded = true
+
+                        originalSnapshot?.let { userData.relinkAfterSync(it, purge = true) }
+                        for ((old, snapshot) in legacySnapshots) {
+                            userData.relinkAfterSync(snapshot, purge = false)
+                            sourceRepository.deleteSource(old)
+                            userData.relinkAfterSync(snapshot, purge = true)
+                        }
+                        Log.i(
+                            TAG,
+                            "Unified Lounge migration complete profile=$pid providerMigrated=$providerMigration legacySources=" + legacyM3u.size,
+                        )
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        if (switchedProvider && !syncSucceeded) {
+                            runCatching { sourceRepository.updateSource(xtream) }
+                        }
+                        Log.w(TAG, "Unified Lounge migration deferred; existing sources preserved", e)
+                    }
+                }
+        }
+        // Keep Lounge Live fresher than the full VOD catalogue without re-importing Movies/Series hourly.
+        // Starts only after legacy managed M3Us are gone, waits for the initial import to settle, and
+        // uses the normal auto-refresh reason so playback is never interrupted.
+        viewModelScope.launch {
+            settings.activeProfileId
+                .flatMapLatest { pid ->
+                    if (pid < 0) flowOf(-1L)
+                    else sourceRepository.observeSources(pid).map { sources ->
+                        val hasLegacyManagedLive = sources.any { source ->
+                            source.type == SourceType.M3U && (
+                                source.url.startsWith(BuildConfig.LOUNGE_CORE_LIVE_M3U_URL) ||
+                                    alreadyHasNzSource(listOf(source))
+                                )
+                        }
+                        if (hasLegacyManagedLive) -1L else sources.firstOrNull { source ->
+                            source.type == SourceType.XTREAM &&
+                                source.url == BuildConfig.LOUNGE_CORE_XTREAM_URL &&
+                                source.syncLive
+                        }?.id ?: -1L
+                    }
+                }
+                .distinctUntilChanged()
+                .collectLatest { sourceId ->
+                    if (sourceId < 0) return@collectLatest
+                    delay(5 * 60_000L)
+                    while (true) {
+                        catalogSyncScheduler.enqueueSync(
+                            sourceId = sourceId,
+                            reason = tv.own.owntv.core.sync.AutoRefresh.REASON,
+                            contentTypes = SyncContentTypes(
+                                live = true,
+                                movies = false,
+                                series = false,
+                            ),
+                            policy = ExistingWorkPolicy.KEEP,
+                        )
+                        delay(60 * 60_000L)
+                    }
+                }
+        }
+
         // Migrate first, then automatically add BOTH guides for each saved/new Xtream source.
         // This observes sign-in and upgraded installations without asking the customer to add EPGs.
         viewModelScope.launch {
@@ -143,6 +304,8 @@ class ShellViewModel(
                     else sourceRepository.observeSources(pid).map { pid to it }
                 }
                 .collect { (pid, sources) ->
+                    if (BuildConfig.LOUNGE_CORE_QA) return@collect
+                    if (sources.any(::isManagedLoungeXtream)) return@collect
                     if (pid < 0 || pid in nzAutoAddedProfiles ||
                         sources.none { it.type == SourceType.XTREAM } ||
                         alreadyHasNzSource(sources)

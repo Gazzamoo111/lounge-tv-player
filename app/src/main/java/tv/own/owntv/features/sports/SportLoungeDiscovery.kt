@@ -117,18 +117,37 @@ class SportLoungeDiscovery(private val source: SportsSource, private val cache: 
         const val MAX_PARALLEL = 3
         val DISCOVERY_FEEDS = listOf(
             "football/nfl",
+            "football/college-football",
             "rugby-league/3",
+            "rugby/180659",
+            "rugby/164205",
+            "rugby/244293",
+            "rugby/271937",
+            "rugby/267979",
+            "rugby/270559",
+            "rugby/270557",
+            "rugby/242041",
+            "rugby/17567",
             "rugby/289234",
+            "rugby/272073",
+            "rugby/268565",
+            "rugby/289237",
             "cricket/all",
             "basketball/nbl",
             "basketball/nba",
+            "basketball/wnba",
+            "basketball/mens-college-basketball",
+            "hockey/nhl",
+            "baseball/mlb",
             "soccer/aus.1",
             "soccer/eng.1",
             "soccer/uefa.champions",
             "racing/f1",
             "mma/ufc",
+            "golf/pga",
+            "tennis/atp",
+            "tennis/wta",
         )
-
         fun discoveryLeague(key: String): League? = SportsCatalog.league(key) ?: when (key) {
             "basketball/nbl" -> League(Sport.BASKETBALL, "nbl", "National Basketball League", "NBL", "AU")
             "soccer/aus.1" -> League(Sport.SOCCER, "aus.1", "Australian A-League Men", "A-League", "AU")

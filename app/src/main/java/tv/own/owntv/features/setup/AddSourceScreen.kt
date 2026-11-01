@@ -22,6 +22,7 @@ import androidx.tv.material3.Text
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+import tv.own.owntv.BuildConfig
 import tv.own.owntv.R
 import tv.own.owntv.core.companion.CompanionPayload
 import tv.own.owntv.core.database.dao.ChannelDao
@@ -119,6 +120,7 @@ fun AddSourceScreen(
     ) -> Unit)? = null,
 ) {
     val editing = initial != null
+    val coreQaSourceName = stringResource(R.string.lounge_core_qa_source_name)
     var kind by remember {
         mutableStateOf(
             when (initial?.type) {
@@ -128,8 +130,16 @@ fun AddSourceScreen(
             },
         )
     }
-    var name by remember(initial) { mutableStateOf(initial?.name ?: "") }
-    var server by remember(initial) { mutableStateOf(if (initial != null && initial.type == SourceType.XTREAM) initial.url else "") }
+    var name by remember(initial) {
+        mutableStateOf(initial?.name ?: if (BuildConfig.LOUNGE_CORE_QA) coreQaSourceName else "")
+    }
+    var server by remember(initial) {
+        mutableStateOf(
+            if (initial != null && initial.type == SourceType.XTREAM) initial.url
+            else if (BuildConfig.LOUNGE_CORE_QA) BuildConfig.LOUNGE_CORE_XTREAM_URL
+            else "",
+        )
+    }
     var username by remember(initial) { mutableStateOf(initial?.username ?: "") }
     var password by remember(initial) { mutableStateOf(initial?.password ?: "") }
     var m3uUrl by remember(initial) { mutableStateOf(if (initial != null && initial.type == SourceType.M3U) initial.url else "") }

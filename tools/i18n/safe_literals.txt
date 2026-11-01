@@ -134,7 +134,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveStage.kt	tnum
 3	regex	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	[^a-z0-9]+
 1	regex	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	\\s+
-9	empty	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	\0
+11	empty	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	#$it
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	catch-up '${ch.name}' prog='${programme.title}' -> ${tv.own.owntv.core.network.HttpClient.redactUrl(url)}
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	catch-up external '${ch.name}' prog='${programme.title}'
@@ -323,7 +323,7 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	VIC
 1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	\\s+
 1	empty	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	\0
-1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	24/7
+2	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	24/7
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	afl
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	amazon prime
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	apple tv+
@@ -347,7 +347,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	documentaries
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	documentary
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	drama
-1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	entertainment
+2	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	entertainment
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	espn
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	f1
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	fa player
@@ -379,7 +379,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	mlb
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	motorsport
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	movie
-1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	movies
+2	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	movies
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	mtv
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	music
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	nat geo
@@ -402,7 +402,7 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	pay per view
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	peacock
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	pluto
-1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	ppv
+2	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	ppv
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	premium
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	preschool
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	prime +
@@ -931,7 +931,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/setup/RemoteSetupScreen.kt	…
 2	empty	app/src/main/java/tv/own/owntv/features/setup/RemoteSetupScreen.kt	\0
 12	empty	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	\0
-5	empty	app/src/main/java/tv/own/owntv/features/setup/SetupWizard.kt	\0
+7	empty	app/src/main/java/tv/own/owntv/features/setup/SetupWizard.kt	\0
 2	technical	app/src/main/java/tv/own/owntv/features/setup/SetupWizard.kt	+
 1	technical	app/src/main/java/tv/own/owntv/features/shell/components/AvatarPickerDialog.kt	\0
 2	technical	app/src/main/java/tv/own/owntv/features/shell/components/ChannelListOverlay.kt	·
@@ -1973,6 +1973,13 @@
 1	regex	app/src/main/java/tv/own/owntv/features/settings/LoungeNzSkyFhdGuide.kt	^\\s*NZ\\s*[|:\\-]\\s*SKY\\s*SPORT
 1	protocol	app/src/main/java/tv/own/owntv/features/settings/LoungeNzSkyFhdGuide.kt	skysport
 1	protocol	app/src/main/java/tv/own/owntv/features/settings/LoungeNzSkyFhdGuide.kt	.nz
+1	json	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	src
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Unified Lounge migration deferred; existing sources preserved
+1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	LTV
+1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	line.bestnz.vip
+1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	line.loungeconnect247.xyz
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Unified Lounge migration deferred profile=$pid result=$result
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Unified Lounge migration complete profile=$pid providerMigrated=$providerMigration legacySources=
 1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	NZ| SKY SPORT
 1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	NZ | SKY SPORT
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Sky Sport FHD cache fill unavailable
@@ -1985,3 +1992,32 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	whakaata māori
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	whakaata maori
 2	empty	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	\0
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	australia
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	documentaries & lifestyle
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	kids & family
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	new zealand
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	sports
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	football/college-football
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/180659
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/164205
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/244293
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/271937
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/267979
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/270559
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/270557
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/242041
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/17567
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/272073
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/268565
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/289237
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	basketball/wnba
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	basketball/mens-college-basketball
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	hockey/nhl
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	baseball/mlb
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	golf/pga
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	tennis/atp
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	tennis/wta
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	pay-per-view
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	nz
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	world
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	new zealand

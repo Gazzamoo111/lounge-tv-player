@@ -92,6 +92,32 @@ android {
             ?: localSigningProps.getProperty("owntv.edgeKey")
             ?: ""
         buildConfigField("String", "TMDB_EDGE_KEY", "\"${edgeKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
+        buildConfigField(
+            "boolean",
+            "LOUNGE_CORE_QA",
+            (System.getenv("LOUNGE_CORE_QA") == "true").toString(),
+        )
+        buildConfigField("boolean", "LOUNGE_MANAGED", "true")
+        buildConfigField(
+            "String",
+            "LOUNGE_CORE_XTREAM_URL",
+            "\"https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-xtream\"",
+        )
+        buildConfigField(
+            "String",
+            "LOUNGE_CORE_LIVE_M3U_URL",
+            "\"https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-live-m3u\"",
+        )
+        buildConfigField(
+            "String",
+            "LOUNGE_CORE_LIVE_EPG_URL",
+            "\"https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-live-xmltv\"",
+        )
+        buildConfigField(
+            "String",
+            "LOUNGE_CORE_VOD_TAXONOMY_URL",
+            "\"https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-vod-taxonomy\"",
+        )
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -222,6 +248,7 @@ android {
             // Keep debug builds isolated from production (different signing keys and data).
             // Draft PR builds install alongside production and stable QA, never over either.
             applicationIdSuffix = when {
+                System.getenv("LOUNGE_CORE_QA") == "true" -> ".catalogueqa"
                 System.getenv("RELIABILITY_AUDIT_QA") == "true" -> ".auditqa"
                 System.getenv("PLAYBACK_HOTFIX_QA") == "true" -> ".playbackqa"
                 System.getenv("ISOLATED_EVENT_QA") == "true" -> ".recoveryqa"

@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.Text
 import org.koin.androidx.compose.koinViewModel
 import tv.own.owntv.R
+import tv.own.owntv.BuildConfig
 import tv.own.owntv.core.brand.AppIcon
 import tv.own.owntv.core.database.entity.SourceEntity
 import tv.own.owntv.core.setup.SourceImporter
@@ -82,6 +83,8 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
     val defaultIptvName = stringResource(R.string.setup_default_iptv)
     val defaultPlaylistName = stringResource(R.string.setup_name_default_playlist)
     val defaultPortalName = stringResource(R.string.setup_default_portal)
+    val loungeSourceName = stringResource(R.string.lounge_core_qa_source_name)
+    val loungeManaged = BuildConfig.LOUNGE_MANAGED
     var step by rememberSaveable(firstRun) { mutableStateOf(if (firstRun) Step.WELCOME else Step.CREATE_PROFILE) }
     val importState by vm.state.collectAsStateWithLifecycle()
     val progress by vm.progress.collectAsStateWithLifecycle()
@@ -148,7 +151,7 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
                 onBack = { step = Step.SETUP_CHOICE },
             )
             Step.CREATE_PROFILE -> ProfileStep(
-                onCreate = { name, avatar, kids, pin, picture -> vm.createProfile(name.ifBlank { defaultProfileName }, avatar, kids, pin, picture) { step = Step.ADD_CONTENT } },
+                onCreate = { name, avatar, kids, pin, picture -> vm.createProfile(name.ifBlank { defaultProfileName }, avatar, kids, pin, picture) { step = if (loungeManaged) Step.ADD_SOURCE else Step.ADD_CONTENT } },
                 onBack = { if (firstRun) step = Step.SETUP_CHOICE else onCancel() },
             )
             Step.ADD_CONTENT -> AddContentStep(
@@ -168,7 +171,22 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
                 onPayloadReceived = { step = Step.ADD_SOURCE },
                 onBack = { vm.stopRemoteListener(); step = Step.ADD_CONTENT },
             )
-            Step.ADD_SOURCE -> AddSourceScreen(
+            Step.ADD_SOURCE -> if (loungeManaged) {
+                LoungeCredentialsStep(
+                    onSubmit = { user, pass ->
+                        importName = loungeSourceName
+                        vm.startXtream(
+                            name = loungeSourceName,
+                            server = BuildConfig.LOUNGE_CORE_XTREAM_URL,
+                            username = user,
+                            password = pass,
+                        )
+                        importOrigin = Step.ADD_SOURCE
+                        step = Step.IMPORTING
+                    },
+                    onBack = { step = Step.CREATE_PROFILE },
+                )
+            } else AddSourceScreen(
                 onStartXtream = { name, server, user, pass, ua, ref, epg, refresh, live, movies, series, _, preferHls ->
                     importName = name.ifBlank { defaultIptvName }
                     vm.startXtream(importName!!, server, user, pass, ua, epg, refresh, live, movies, series, preferHls, httpReferer = ref)
@@ -190,11 +208,10 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
                     importOrigin = Step.ADD_SOURCE
                     step = Step.IMPORTING
                 },
-                // Submissions from the phone page land here pre-filled (type + fields).
                 remotePayload = vm.remotePayload,
                 onRemotePayloadConsumed = { vm.consumeRemotePayload() },
                 onBack = { step = Step.ADD_CONTENT },
-                showDefaultToggle = false, // first playlist in setup: nothing to be "default" over yet
+                showDefaultToggle = false,
             )
             Step.IMPORTING -> ImportProgressStep(
                 state = importState,
@@ -527,6 +544,49 @@ private fun AvatarStrip(ids: List<Int>, chosen: Int) {
             ) { OwnTVAvatar(avatarId = id, modifier = Modifier.size(30.mpx)) }
         }
         if (ids.size > shown.size) Text("+" + localizedInteger(ids.size - shown.size, grouping = false), style = stageText(17, 700), color = StageColors.Muted)
+    }
+}
+
+@Composable
+private fun LoungeCredentialsStep(
+    onSubmit: (username: String, password: String) -> Unit,
+    onBack: () -> Unit,
+) {
+    var username by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
+    val first = rememberFirstFocus()
+    val valid = username.isNotBlank() && password.isNotBlank()
+    val userLabel = stringResource(R.string.setup_username)
+    val passLabel = stringResource(R.string.setup_password)
+    val fieldHelp = stringResource(R.string.settings_form_field_help)
+
+    WizardFrame(
+        step = WizardStep.PLAYLIST,
+        title = stringResource(R.string.lounge_login_title),
+        sub = stringResource(R.string.lounge_login_sub),
+        back = WizardAction(stringResource(R.string.common_back), onBack),
+        next = WizardAction(
+            stringResource(R.string.lounge_login_action),
+            { if (valid) onSubmit(username.trim(), password) },
+            enabled = valid,
+        ),
+    ) {
+        StageFieldRow(
+            OwnTVIcon.PERSON,
+            userLabel,
+            username,
+            { username = it },
+            SettingHelp(userLabel, fieldHelp),
+            modifier = Modifier.focusRequester(first),
+        )
+        StageFieldRow(
+            OwnTVIcon.PENCIL,
+            passLabel,
+            password,
+            { password = it },
+            SettingHelp(passLabel, fieldHelp),
+            password = true,
+        )
     }
 }
 

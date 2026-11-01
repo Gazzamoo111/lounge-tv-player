@@ -1,0 +1,41 @@
+name: Deploy Lounge line gateway
+
+on:
+  push:
+    branches:
+      - 'core-qa/catalogue-20261101'
+    paths:
+      - 'cloudflare/lounge-tv-line-worker.js'
+      - 'wrangler.line.toml'
+      - '.github/workflows/deploy-line-gateway.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+    steps:
+      - name: Check out Lounge TV
+        uses: actions/checkout@v4
+
+      - name: Check Cloudflare credentials
+        id: cloudflare
+        shell: bash
+        run: |
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] || [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Cloudflare credentials are not configured in this repository."
+            exit 0
+          fi
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy LoungeTVOnline gateway
+        if: steps.cloudflare.outputs.ready == 'true'
+        run: npx --yes wrangler@4.156.0 deploy --config wrangler.line.toml

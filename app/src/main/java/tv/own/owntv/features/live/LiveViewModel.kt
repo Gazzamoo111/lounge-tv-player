@@ -751,13 +751,31 @@ class LiveViewModel(
                             else if (it.value.key in orderIndex) orderIndex.getValue(it.value.key)
                             else it.value.categoryId?.let(categoriesById::get)?.name
                                 ?.let(::loungeLiveSectionOf)?.ordinal ?: Int.MAX_VALUE },
+                        { if (it.value.key in orderIndex) ""
+                            else if (it.value.categoryId?.let(categoriesById::get)?.name
+                                    ?.let(::loungeLiveSectionOf) in setOf(
+                                        LoungeLiveSection.KIDS,
+                                        LoungeLiveSection.SEASONAL,
+                                    ))
+                                loungeLiveLeafTitle(it.value.displayName).lowercase()
+                            else "" },
                         { it.index },
                     ),
                 ).map { it.value }
+                    .filterNot { e ->
+                        if (e.customId != null) false
+                        else {
+                            val section = e.categoryId?.let(categoriesById::get)?.name?.let(::loungeLiveSectionOf)
+                            val leaf = loungeLiveLeafTitle(e.displayName).trim().lowercase()
+                            leaf == "world" ||
+                                (section == LoungeLiveSection.NEW_ZEALAND &&
+                                    leaf in setOf("nz", "new zealand"))
+                        }
+                    }
                 railWithCatchup(catchupCount > 0) + orderedFolders.map { e ->
                     LiveRailItem(
                         key = e.categoryId?.let { LiveKey.Folder(it) } ?: LiveKey.Custom(e.customId!!),
-                        title = e.displayName,
+                        title = if (e.customId != null) e.displayName else loungeLiveLeafTitle(e.displayName),
                         section = if (e.customId != null) LoungeLiveSection.MY_CATEGORIES
                             else if (e.categoryId in nzIds) LoungeLiveSection.NEW_ZEALAND
                             else e.categoryId?.let(categoriesById::get)?.name?.let(::loungeLiveSectionOf),
