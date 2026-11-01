@@ -83,6 +83,7 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
     val defaultIptvName = stringResource(R.string.setup_default_iptv)
     val defaultPlaylistName = stringResource(R.string.setup_name_default_playlist)
     val defaultPortalName = stringResource(R.string.setup_default_portal)
+    val loungeSourceName = stringResource(R.string.lounge_core_qa_source_name)
     var step by rememberSaveable(firstRun) { mutableStateOf(if (firstRun) Step.WELCOME else Step.CREATE_PROFILE) }
     val importState by vm.state.collectAsStateWithLifecycle()
     val progress by vm.progress.collectAsStateWithLifecycle()
@@ -172,9 +173,9 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
             Step.ADD_SOURCE -> if (BuildConfig.LOUNGE_CORE_QA) {
                 LoungeCredentialsStep(
                     onSubmit = { user, pass ->
-                        importName = "LTV"
+                        importName = loungeSourceName
                         vm.startXtream(
-                            name = "LTV",
+                            name = loungeSourceName,
                             server = BuildConfig.LOUNGE_CORE_XTREAM_URL,
                             username = user,
                             password = pass,
