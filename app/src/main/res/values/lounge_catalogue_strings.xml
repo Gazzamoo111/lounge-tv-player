@@ -42,4 +42,7 @@
     <string name="lounge_core_qa_source_name">LTV</string>
     <string name="lounge_core_qa_nz_source_name">NZ Freeview Core QA</string>
     <string name="lounge_core_qa_live_source_name">LTV</string>
+    <string name="lounge_login_title">Sign in to Lounge TV</string>
+    <string name="lounge_login_sub">Enter the username and password from your Lounge TV welcome message.</string>
+    <string name="lounge_login_action">Continue</string>
 </resources>
