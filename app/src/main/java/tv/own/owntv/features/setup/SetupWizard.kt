@@ -578,7 +578,7 @@ private fun LoungeCredentialsStep(
             modifier = Modifier.focusRequester(first),
         )
         StageFieldRow(
-            OwnTVIcon.LOCK,
+            OwnTVIcon.PENCIL,
             passLabel,
             password,
             { password = it },
