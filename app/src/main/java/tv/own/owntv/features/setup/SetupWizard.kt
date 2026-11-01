@@ -84,7 +84,7 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
     val defaultPlaylistName = stringResource(R.string.setup_name_default_playlist)
     val defaultPortalName = stringResource(R.string.setup_default_portal)
     val loungeSourceName = stringResource(R.string.lounge_core_qa_source_name)
-    val loungeManaged = BuildConfig.APPLICATION_ID.startsWith("com.loungetv.player")
+    val loungeManaged = BuildConfig.LOUNGE_MANAGED
     var step by rememberSaveable(firstRun) { mutableStateOf(if (firstRun) Step.WELCOME else Step.CREATE_PROFILE) }
     val importState by vm.state.collectAsStateWithLifecycle()
     val progress by vm.progress.collectAsStateWithLifecycle()
