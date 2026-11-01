@@ -1985,16 +1985,11 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	whakaata māori
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	whakaata maori
 2	empty	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	\0
-1	json	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	categories
-1	json	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	name
-1	json	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	provider_item_ids
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	australia
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	documentaries & lifestyle
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	kids & family
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	new zealand
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	sports
-1	protocol	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	Studios •
-1	protocol	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	Collections •
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	football/college-football
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/180659
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/164205
