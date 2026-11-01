@@ -32,8 +32,6 @@ import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.core.sync.SyncContentTypes
 import tv.own.owntv.core.sync.SyncScopeChoice
 import java.io.File
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 
 /**
  * Drives onboarding for a profile (first-run and "add profile"): create the profile, then add content
@@ -144,6 +142,7 @@ class SetupViewModel(
         val effectiveName = if (BuildConfig.LOUNGE_CORE_QA) context.getString(R.string.lounge_core_qa_source_name) else name
         val effectiveServer = if (BuildConfig.LOUNGE_CORE_QA) BuildConfig.LOUNGE_CORE_XTREAM_URL else server
         val effectiveLive = if (BuildConfig.LOUNGE_CORE_QA) SyncScopeChoice.Now else live
+        val effectiveRefresh = if (BuildConfig.LOUNGE_CORE_QA) PlaylistRefresh(PlaylistAutoRefresh.HOURS_6) else autoRefresh
         importer.xtream(
             effectiveName,
             effectiveServer,
@@ -151,7 +150,7 @@ class SetupViewModel(
             password,
             userAgent,
             epgUrl,
-            autoRefresh,
+            effectiveRefresh,
             effectiveLive,
             movies,
             series,
