@@ -400,7 +400,7 @@ private fun SourceRow(
             SourceType.STALKER -> R.string.settings_sources_type_stalker
             SourceType.LOCAL_BACKUP -> R.string.settings_sources_backup
         },
-        source.url,
+        if (source.name.equals("LTV", ignoreCase = true)) "LoungeTVOnline" else source.url,
     )
     val visibleCounts = if (activeSync == null) counts?.breakdownText() else activeCounts?.displayText()
     val sep = stringResource(R.string.settings_sources_details_separator)
