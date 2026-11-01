@@ -754,6 +754,15 @@ class LiveViewModel(
                         { it.index },
                     ),
                 ).map { it.value }
+                    .filterNot { e ->
+                        if (e.customId != null) false
+                        else {
+                            val section = e.categoryId?.let(categoriesById::get)?.name?.let(::loungeLiveSectionOf)
+                            val leaf = loungeLiveLeafTitle(e.displayName).trim().lowercase()
+                            section == LoungeLiveSection.NEW_ZEALAND &&
+                                leaf in setOf("nz", "world", "new zealand")
+                        }
+                    }
                 railWithCatchup(catchupCount > 0) + orderedFolders.map { e ->
                     LiveRailItem(
                         key = e.categoryId?.let { LiveKey.Folder(it) } ?: LiveKey.Custom(e.customId!!),
