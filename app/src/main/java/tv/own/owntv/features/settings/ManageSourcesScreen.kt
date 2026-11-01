@@ -426,7 +426,7 @@ private fun SourceRow(
                 stringResource(R.string.lounge_enable_channel_updates),
                 onEnableChannelUpdates,
             ) else null,
-        StageAction(OwnTVIcon.PENCIL, stringResource(R.string.settings_sources_edit), onEdit),
+        if (!source.name.equals("LTV", ignoreCase = true)) StageAction(OwnTVIcon.PENCIL, stringResource(R.string.settings_sources_edit), onEdit) else null,
         // "Info", not "Test": the expensive measurement lives behind Re-test inside the popup.
         StageAction(OwnTVIcon.INFO, stringResource(R.string.settings_sources_info), onTest),
         StageAction(
