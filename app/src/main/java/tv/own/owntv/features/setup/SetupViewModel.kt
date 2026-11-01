@@ -280,78 +280,12 @@ class SetupViewModel(
                 val xtreamSource = sourceRepository.observeSources(profileId).first()
                     .firstOrNull { it.type == SourceType.XTREAM && it.url == BuildConfig.LOUNGE_CORE_XTREAM_URL }
                 if (xtreamSource != null) {
-                    runCatching { ensureCoreQaMovieTaxonomy(profileId, xtreamSource) }
+                    // The unified Lounge Xtream gateway now owns Live, Movies and Series taxonomy.
                 }
             }
             onDone(profileId)
         }
     }
 
-    private suspend fun ensureCoreQaMovieTaxonomy(profileId: Long, xtreamSource: SourceEntity) {
-        val body = withContext(Dispatchers.IO) {
-            val request = Request.Builder()
-                .url(BuildConfig.LOUNGE_CORE_VOD_TAXONOMY_URL)
-                .get()
-                .build()
-            okHttpClient.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) return@withContext null
-                response.body?.string()
-            }
-        } ?: return
 
-        val root = JSONObject(body)
-        val categories = root.optJSONArray("categories") ?: return
-        val current = customize.observe(profileId, MediaType.MOVIE).first()
-        current.customCategories
-            .filter { it.name.startsWith("Studios •") || it.name.startsWith("Collections •") }
-            .forEach { old ->
-                customCategoryDao.clearContext(profileId, MediaType.MOVIE, old.id)
-                customize.deleteCustomCategory(profileId, MediaType.MOVIE, old.id)
-            }
-        val refreshed = customize.observe(profileId, MediaType.MOVIE).first()
-        val existingByName = refreshed.customCategories.associateBy { it.name }
-        val orderedKeys = mutableListOf<String>()
-
-        for (i in 0 until categories.length()) {
-            val categoryJson = categories.optJSONObject(i) ?: continue
-            val name = categoryJson.optString("name").trim()
-            if (name.isBlank()) continue
-
-            val category = existingByName[name]
-                ?: customize.createCustomCategory(profileId, MediaType.MOVIE, name)
-            orderedKeys += category.id
-
-            val providerIdsJson = categoryJson.optJSONArray("provider_item_ids") ?: continue
-            val providerIds = buildList {
-                for (j in 0 until providerIdsJson.length()) {
-                    providerIdsJson.optString(j).takeIf { it.isNotBlank() }?.let(::add)
-                }
-            }
-            if (providerIds.isEmpty()) {
-                customCategoryDao.clearContext(profileId, MediaType.MOVIE, category.id)
-                continue
-            }
-
-            val localMovies = providerIds.chunked(400)
-                .flatMap { movieDao.findByRemoteIds(xtreamSource.id, it) }
-            val byRemote = localMovies.mapNotNull { movie ->
-                movie.remoteId?.let { it to movie }
-            }.toMap()
-
-            val rows = providerIds.mapNotNull { byRemote[it] }
-                .distinctBy { it.id }
-                .mapIndexed { position, movie ->
-                    CustomCategoryMemberEntity(
-                        profileId = profileId,
-                        mediaType = MediaType.MOVIE,
-                        contextKey = category.id,
-                        itemId = movie.id,
-                        position = position,
-                    )
-                }
-            customCategoryDao.replaceContext(profileId, MediaType.MOVIE, category.id, rows)
-        }
-
-        customize.setCategoryOrder(profileId, MediaType.MOVIE, orderedKeys)
-    }
 }
