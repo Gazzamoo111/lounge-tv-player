@@ -14,6 +14,7 @@ export default {
     const allowed =
       incoming.pathname === "/" ||
       incoming.pathname === "/player_api.php" ||
+      incoming.pathname === "/get.php" ||
       incoming.pathname === "/xmltv.php" ||
       incoming.pathname.startsWith("/live/") ||
       incoming.pathname.startsWith("/movie/") ||
