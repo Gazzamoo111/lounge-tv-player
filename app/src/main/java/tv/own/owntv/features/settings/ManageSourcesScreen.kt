@@ -400,7 +400,7 @@ private fun SourceRow(
             SourceType.STALKER -> R.string.settings_sources_type_stalker
             SourceType.LOCAL_BACKUP -> R.string.settings_sources_backup
         },
-        if (source.name.equals("LTV", ignoreCase = true)) "LoungeTVOnline" else source.url,
+        if (source.name.equals(stringResource(R.string.lounge_core_qa_source_name), ignoreCase = true)) stringResource(R.string.lounge_source_display_address) else source.url,
     )
     val visibleCounts = if (activeSync == null) counts?.breakdownText() else activeCounts?.displayText()
     val sep = stringResource(R.string.settings_sources_details_separator)
@@ -426,7 +426,7 @@ private fun SourceRow(
                 stringResource(R.string.lounge_enable_channel_updates),
                 onEnableChannelUpdates,
             ) else null,
-        if (!source.name.equals("LTV", ignoreCase = true)) StageAction(OwnTVIcon.PENCIL, stringResource(R.string.settings_sources_edit), onEdit) else null,
+        if (!source.name.equals(stringResource(R.string.lounge_core_qa_source_name), ignoreCase = true)) StageAction(OwnTVIcon.PENCIL, stringResource(R.string.settings_sources_edit), onEdit) else null,
         // "Info", not "Test": the expensive measurement lives behind Re-test inside the popup.
         StageAction(OwnTVIcon.INFO, stringResource(R.string.settings_sources_info), onTest),
         StageAction(
