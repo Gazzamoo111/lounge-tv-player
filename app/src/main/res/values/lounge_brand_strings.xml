@@ -84,7 +84,7 @@
     <string name="lounge_section_streaming">STREAMING CHANNELS</string>
     <string name="lounge_section_us_uk">US &amp; UK CHANNELS</string>
     <string name="lounge_section_music">MUSIC</string>
-    <string name="lounge_section_seasonal">24/7 &amp; SEASONAL</string>
+    <string name="lounge_section_seasonal">24/7</string>
     <string name="lounge_section_other">OTHER CHANNELS</string>
     <string name="lounge_nz_sky_raw_group">NZ RAW</string>
     <string name="lounge_nz_sky_hd_group">Sky Sport HD</string>
