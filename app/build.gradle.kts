@@ -97,6 +97,21 @@ android {
             "LOUNGE_CORE_QA",
             (System.getenv("LOUNGE_CORE_QA") == "true").toString(),
         )
+        buildConfigField(
+            "String",
+            "LOUNGE_CORE_XTREAM_URL",
+            "\"https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-xtream\"",
+        )
+        buildConfigField(
+            "String",
+            "LOUNGE_CORE_NZ_M3U_URL",
+            "\"https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-nz-freeview\"",
+        )
+        buildConfigField(
+            "String",
+            "LOUNGE_CORE_NZ_EPG_URL",
+            "\"https://i.mjh.nz/nz/epg.xml.gz\"",
+        )
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
