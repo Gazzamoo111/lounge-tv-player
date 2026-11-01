@@ -331,7 +331,14 @@ class SetupViewModel(
         val root = JSONObject(body)
         val categories = root.optJSONArray("categories") ?: return
         val current = customize.observe(profileId, MediaType.MOVIE).first()
-        val existingByName = current.customCategories.associateBy { it.name }
+        current.customCategories
+            .filter { it.name.startsWith("Studios •") || it.name.startsWith("Collections •") }
+            .forEach { old ->
+                customCategoryDao.clearContext(profileId, MediaType.MOVIE, old.id)
+                customize.deleteCustomCategory(profileId, MediaType.MOVIE, old.id)
+            }
+        val refreshed = customize.observe(profileId, MediaType.MOVIE).first()
+        val existingByName = refreshed.customCategories.associateBy { it.name }
         val orderedKeys = mutableListOf<String>()
 
         for (i in 0 until categories.length()) {
