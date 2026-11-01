@@ -757,7 +757,7 @@ class LiveViewModel(
                 railWithCatchup(catchupCount > 0) + orderedFolders.map { e ->
                     LiveRailItem(
                         key = e.categoryId?.let { LiveKey.Folder(it) } ?: LiveKey.Custom(e.customId!!),
-                        title = e.displayName,
+                        title = if (e.customId != null) e.displayName else loungeLiveLeafTitle(e.displayName),
                         section = if (e.customId != null) LoungeLiveSection.MY_CATEGORIES
                             else if (e.categoryId in nzIds) LoungeLiveSection.NEW_ZEALAND
                             else e.categoryId?.let(categoriesById::get)?.name?.let(::loungeLiveSectionOf),
