@@ -97,6 +97,7 @@ android {
             "LOUNGE_CORE_QA",
             (System.getenv("LOUNGE_CORE_QA") == "true").toString(),
         )
+        buildConfigField("boolean", "LOUNGE_MANAGED", "true")
         buildConfigField(
             "String",
             "LOUNGE_CORE_XTREAM_URL",
