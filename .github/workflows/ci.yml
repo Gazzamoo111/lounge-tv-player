@@ -7,9 +7,13 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: lounge-tv-qa-${{ github.ref }}
+  cancel-in-progress: true
 env:
-  ISOLATED_EVENT_QA: ${{ github.event_name == 'pull_request' }}
-  RELIABILITY_AUDIT_QA: ${{ github.event_name == 'pull_request' }}
+  ISOLATED_EVENT_QA: ${{ github.event_name != 'workflow_dispatch' }}
+  RELIABILITY_AUDIT_QA: ${{ github.event_name != 'workflow_dispatch' }}
+  LOUNGE_CORE_QA: ${{ startsWith(github.head_ref, 'core-qa/') || startsWith(github.ref_name, 'core-qa/') }}
 jobs:
   tests:
     uses: ./.github/workflows/playback-tests.yml
@@ -52,7 +56,7 @@ jobs:
       # PRs compile with an isolated ephemeral debug signer. Stable QA signing remains
       # mandatory for main/workflow_dispatch and is never supplied to untrusted PR code.
       - name: Decode persistent QA signing key
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'workflow_dispatch'
         env:
           QA_KEYSTORE_BASE64: ${{ secrets.QA_KEYSTORE_BASE64 }}
           QA_KEYSTORE_PASSWORD: ${{ secrets.QA_KEYSTORE_PASSWORD }}
@@ -76,24 +80,31 @@ jobs:
           QA_KEYSTORE_PASSWORD: ${{ secrets.QA_KEYSTORE_PASSWORD }}
           QA_KEY_ALIAS: ${{ secrets.QA_KEY_ALIAS }}
           QA_KEY_PASSWORD: ${{ secrets.QA_KEY_PASSWORD }}
-          QA_SIGNING_REQUIRED: ${{ github.event_name != 'pull_request' }}
+          QA_SIGNING_REQUIRED: ${{ github.event_name == 'workflow_dispatch' }}
           EXPECTED_QA_CERT_SHA256: ${{ vars.QA_CERT_SHA256 }}
         run: |
           set -euo pipefail
           ./gradlew :app:assembleStandardDebug -Powntv.corePath="$GITHUB_WORKSPACE/shared-core" --stacktrace
           QA_APK=$(find app/build/outputs/apk/standard/debug -maxdepth 1 -name '*.apk' -print -quit)
           [ -n "$QA_APK" ] || { echo "QA APK was not produced"; exit 1; }
-          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-            # Debug-signed preflight can never be installed as a stable QA update.
+          if [ "$GITHUB_EVENT_NAME" != "workflow_dispatch" ]; then
+            # Automated checks use an isolated ephemeral debug signer and never require QA secrets.
             AAPT=$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)
             APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)
             APK_BADGING=$("$AAPT" dump badging "$QA_APK")
             APK_ID=$(printf '%s' "$APK_BADGING" | sed -n '1p')
             echo "Built APK identity: $APK_ID"
-            case "$APK_ID" in
-              "package: name='com.loungetv.player.auditqa' versionCode='$VERSION_CODE' "*) ;;
-              *) echo "Expected isolated auditqa package, got: $APK_ID"; exit 1 ;;
-            esac
+            if [ "$LOUNGE_CORE_QA" = "true" ]; then
+              case "$APK_ID" in
+                "package: name='com.loungetv.player.catalogueqa' versionCode='$VERSION_CODE' "*) ;;
+                *) echo "Expected isolated catalogueqa package, got: $APK_ID"; exit 1 ;;
+              esac
+            else
+              case "$APK_ID" in
+                "package: name='com.loungetv.player.auditqa' versionCode='$VERSION_CODE' "*) ;;
+                *) echo "Expected isolated auditqa package, got: $APK_ID"; exit 1 ;;
+              esac
+            fi
             "$APKSIGNER" verify "$QA_APK"
           else
             python3 scripts/verify_update_compatibility.py "$QA_APK" \
@@ -104,6 +115,6 @@ jobs:
       - name: Upload test APK
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event_name == 'pull_request' && 'lounge-tv-reliability-auditqa' || 'lounge-tv-qa' }}
+          name: ${{ env.LOUNGE_CORE_QA == 'true' && 'lounge-tv-catalogue-qa' || (github.event_name != 'workflow_dispatch' && 'lounge-tv-reliability-auditqa' || 'lounge-tv-qa') }}
           path: app/build/outputs/apk/standard/debug/*.apk
           if-no-files-found: error
