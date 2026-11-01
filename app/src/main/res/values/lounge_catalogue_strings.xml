@@ -45,4 +45,5 @@
     <string name="lounge_login_title">Sign in to Lounge TV</string>
     <string name="lounge_login_sub">Enter the username and password from your Lounge TV welcome message.</string>
     <string name="lounge_login_action">Continue</string>
+    <string name="lounge_source_display_address">LoungeTVOnline</string>
 </resources>
