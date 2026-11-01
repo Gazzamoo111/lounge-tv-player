@@ -1990,13 +1990,13 @@
 1	json	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	categories
 1	json	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	name
 1	json	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	provider_item_ids
-2	taxonomy	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	24/7
-1	taxonomy	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	australia
-1	taxonomy	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	documentaries & lifestyle
-2	taxonomy	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	entertainment
-1	taxonomy	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	kids & family
-2	taxonomy	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	movies
-1	taxonomy	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	new zealand
-1	taxonomy	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	sports
-1	taxonomy	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	Studios •
-1	taxonomy	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	Collections •
+2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	24/7
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	australia
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	documentaries & lifestyle
+2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	entertainment
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	kids & family
+2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	movies
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	new zealand
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	sports
+1	protocol	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	Studios •
+1	protocol	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	Collections •
