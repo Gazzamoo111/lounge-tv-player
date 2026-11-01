@@ -1,5 +1,6 @@
 package tv.own.owntv.features.setup
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import tv.own.owntv.BuildConfig
+import tv.own.owntv.R
 import tv.own.owntv.core.database.entity.SourceEntity
 import tv.own.owntv.core.model.SourceType
 import tv.own.owntv.core.repository.SourceRepository
@@ -33,6 +35,7 @@ import java.io.File
  * and the job whose lifetime "Run in background" depends on.
  */
 class SetupViewModel(
+    private val context: Context,
     private val importer: SourceImporter,
     private val sourceRepository: SourceRepository,
     private val epgRepository: tv.own.owntv.core.repository.EpgRepository,
@@ -124,8 +127,8 @@ class SetupViewModel(
         preferHls: Boolean = false,
         httpReferer: String = "",
     ) = runImport {
-        val effectiveName = if (BuildConfig.LOUNGE_CORE_QA) "Lounge Core QA" else name
-        val effectiveServer = if (BuildConfig.LOUNGE_CORE_QA) LOUNGE_CORE_XTREAM_URL else server
+        val effectiveName = if (BuildConfig.LOUNGE_CORE_QA) context.getString(R.string.lounge_core_qa_source_name) else name
+        val effectiveServer = if (BuildConfig.LOUNGE_CORE_QA) BuildConfig.LOUNGE_CORE_XTREAM_URL else server
         importer.xtream(
             effectiveName,
             effectiveServer,
@@ -261,7 +264,6 @@ class SetupViewModel(
             val profileId = importer.finish()
             if (BuildConfig.LOUNGE_CORE_QA && profileId != null) {
                 runCatching { ensureCoreQaNzSource(profileId) }
-                    .onFailure { android.util.Log.w("LoungeCoreQA", "NZ Freeview bootstrap failed", it) }
             }
             onDone(profileId)
         }
@@ -269,13 +271,13 @@ class SetupViewModel(
 
     private suspend fun ensureCoreQaNzSource(profileId: Long) {
         val existing = sourceRepository.observeSources(profileId).first()
-        if (existing.any { it.url == LOUNGE_CORE_NZ_M3U_URL }) return
+        if (existing.any { it.url == BuildConfig.LOUNGE_CORE_NZ_M3U_URL }) return
 
         val source = sourceRepository.addM3uSource(
             profileId = profileId,
-            name = "NZ Freeview Core QA",
-            url = LOUNGE_CORE_NZ_M3U_URL,
-            epgUrl = LOUNGE_CORE_NZ_EPG_URL,
+            name = context.getString(R.string.lounge_core_qa_nz_source_name),
+            url = BuildConfig.LOUNGE_CORE_NZ_M3U_URL,
+            epgUrl = BuildConfig.LOUNGE_CORE_NZ_EPG_URL,
         )
         sourceRepository.sync(
             source = source,
@@ -285,9 +287,3 @@ class SetupViewModel(
         )
     }
 }
-
-internal const val LOUNGE_CORE_XTREAM_URL =
-    "https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-xtream"
-internal const val LOUNGE_CORE_NZ_M3U_URL =
-    "https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-nz-freeview"
-internal const val LOUNGE_CORE_NZ_EPG_URL = "https://i.mjh.nz/nz/epg.xml.gz"
