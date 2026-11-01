@@ -92,6 +92,11 @@ android {
             ?: localSigningProps.getProperty("owntv.edgeKey")
             ?: ""
         buildConfigField("String", "TMDB_EDGE_KEY", "\"${edgeKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
+        buildConfigField(
+            "boolean",
+            "LOUNGE_CORE_QA",
+            (System.getenv("LOUNGE_CORE_QA") == "true").toString(),
+        )
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -222,6 +227,7 @@ android {
             // Keep debug builds isolated from production (different signing keys and data).
             // Draft PR builds install alongside production and stable QA, never over either.
             applicationIdSuffix = when {
+                System.getenv("LOUNGE_CORE_QA") == "true" -> ".coreqa"
                 System.getenv("RELIABILITY_AUDIT_QA") == "true" -> ".auditqa"
                 System.getenv("PLAYBACK_HOTFIX_QA") == "true" -> ".playbackqa"
                 System.getenv("ISOLATED_EVENT_QA") == "true" -> ".recoveryqa"
