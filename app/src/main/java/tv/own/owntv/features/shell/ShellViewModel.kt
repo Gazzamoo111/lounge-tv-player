@@ -123,7 +123,7 @@ class ShellViewModel(
                     val legacy = sources.filter { source ->
                         source.type == SourceType.M3U && (
                             source.url.startsWith(BuildConfig.LOUNGE_CORE_LIVE_M3U_URL) ||
-                                source.name.equals("NZ Freeview", ignoreCase = true)
+                                alreadyHasNzSource(listOf(source))
                             )
                     }
                     if (xtream.syncLive && legacy.isEmpty()) {
