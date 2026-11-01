@@ -124,7 +124,7 @@ class ShellViewModel(
         // Existing Lounge installs may still point directly at BEST and may also carry the separate
         // NZ Freeview M3U. Reuse the saved source id and credentials, sync the curated catalogue,
         // relink user data, then remove only the Lounge-managed legacy M3Us.
-        if (BuildConfig.APPLICATION_ID.startsWith("com.loungetv.player")) viewModelScope.launch(Dispatchers.IO) {
+        if (BuildConfig.LOUNGE_MANAGED) viewModelScope.launch(Dispatchers.IO) {
             settings.activeProfileId
                 .flatMapLatest { pid ->
                     if (pid < 0) flowOf(-1L to emptyList<tv.own.owntv.core.database.entity.SourceEntity>())
