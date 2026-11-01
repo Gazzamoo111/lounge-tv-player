@@ -764,8 +764,9 @@ class LiveViewModel(
                         else {
                             val section = e.categoryId?.let(categoriesById::get)?.name?.let(::loungeLiveSectionOf)
                             val leaf = loungeLiveLeafTitle(e.displayName).trim().lowercase()
-                            section == LoungeLiveSection.NEW_ZEALAND &&
-                                leaf in setOf("nz", "world", "new zealand")
+                            leaf == "world" ||
+                                (section == LoungeLiveSection.NEW_ZEALAND &&
+                                    leaf in setOf("nz", "new zealand"))
                         }
                     }
                 railWithCatchup(catchupCount > 0) + orderedFolders.map { e ->
