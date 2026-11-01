@@ -11,9 +11,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
 import tv.own.owntv.BuildConfig
 import tv.own.owntv.R
+import tv.own.owntv.core.customize.CustomizationStore
+import tv.own.owntv.core.database.dao.CustomCategoryDao
+import tv.own.owntv.core.database.dao.MovieDao
+import tv.own.owntv.core.database.entity.CustomCategoryMemberEntity
 import tv.own.owntv.core.database.entity.SourceEntity
+import tv.own.owntv.core.model.MediaType
 import tv.own.owntv.core.model.SourceType
 import tv.own.owntv.core.repository.SourceRepository
 import tv.own.owntv.core.backup.BackupManager
@@ -24,6 +32,8 @@ import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.core.sync.SyncContentTypes
 import tv.own.owntv.core.sync.SyncScopeChoice
 import java.io.File
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 /**
  * Drives onboarding for a profile (first-run and "add profile"): create the profile, then add content
@@ -38,6 +48,10 @@ class SetupViewModel(
     private val context: Context,
     private val importer: SourceImporter,
     private val sourceRepository: SourceRepository,
+    private val movieDao: MovieDao,
+    private val customCategoryDao: CustomCategoryDao,
+    private val customize: CustomizationStore,
+    private val okHttpClient: OkHttpClient,
     private val epgRepository: tv.own.owntv.core.repository.EpgRepository,
     private val epgSourceStore: tv.own.owntv.core.epg.EpgSourceStore,
     private val settings: SettingsRepository,
@@ -129,6 +143,7 @@ class SetupViewModel(
     ) = runImport {
         val effectiveName = if (BuildConfig.LOUNGE_CORE_QA) context.getString(R.string.lounge_core_qa_source_name) else name
         val effectiveServer = if (BuildConfig.LOUNGE_CORE_QA) BuildConfig.LOUNGE_CORE_XTREAM_URL else server
+        val effectiveLive = if (BuildConfig.LOUNGE_CORE_QA) SyncScopeChoice.Off else live
         importer.xtream(
             effectiveName,
             effectiveServer,
@@ -137,7 +152,7 @@ class SetupViewModel(
             userAgent,
             epgUrl,
             autoRefresh,
-            live,
+            effectiveLive,
             movies,
             series,
             preferHls,
@@ -263,21 +278,35 @@ class SetupViewModel(
         viewModelScope.launch {
             val profileId = importer.finish()
             if (BuildConfig.LOUNGE_CORE_QA && profileId != null) {
-                runCatching { ensureCoreQaNzSource(profileId) }
+                val xtreamSource = sourceRepository.observeSources(profileId).first()
+                    .firstOrNull { it.type == SourceType.XTREAM && it.url == BuildConfig.LOUNGE_CORE_XTREAM_URL }
+                if (xtreamSource != null) {
+                    runCatching { ensureCoreQaLiveSource(profileId, xtreamSource) }
+                    runCatching { ensureCoreQaMovieTaxonomy(profileId, xtreamSource) }
+                }
             }
             onDone(profileId)
         }
     }
 
-    private suspend fun ensureCoreQaNzSource(profileId: Long) {
+    private suspend fun ensureCoreQaLiveSource(profileId: Long, xtreamSource: SourceEntity) {
+        val username = xtreamSource.username.orEmpty()
+        val password = xtreamSource.password.orEmpty()
+        if (username.isBlank() || password.isBlank()) return
+
+        val encodedUser = URLEncoder.encode(username, StandardCharsets.UTF_8.toString())
+        val encodedPass = URLEncoder.encode(password, StandardCharsets.UTF_8.toString())
+        val liveUrl = BuildConfig.LOUNGE_CORE_LIVE_M3U_URL +
+            "?username=" + encodedUser + "&password=" + encodedPass
+
         val existing = sourceRepository.observeSources(profileId).first()
-        if (existing.any { it.url == BuildConfig.LOUNGE_CORE_NZ_M3U_URL }) return
+        if (existing.any { it.type == SourceType.M3U && it.url.startsWith(BuildConfig.LOUNGE_CORE_LIVE_M3U_URL) }) return
 
         val source = sourceRepository.addM3uSource(
             profileId = profileId,
-            name = context.getString(R.string.lounge_core_qa_nz_source_name),
-            url = BuildConfig.LOUNGE_CORE_NZ_M3U_URL,
-            epgUrl = BuildConfig.LOUNGE_CORE_NZ_EPG_URL,
+            name = context.getString(R.string.lounge_core_qa_live_source_name),
+            url = liveUrl,
+            epgUrl = BuildConfig.LOUNGE_CORE_LIVE_EPG_URL,
         )
         sourceRepository.sync(
             source = source,
@@ -285,5 +314,66 @@ class SetupViewModel(
             forcePrune = true,
             onProgress = {},
         )
+    }
+
+    private suspend fun ensureCoreQaMovieTaxonomy(profileId: Long, xtreamSource: SourceEntity) {
+        val body = withContext(Dispatchers.IO) {
+            val request = Request.Builder()
+                .url(BuildConfig.LOUNGE_CORE_VOD_TAXONOMY_URL)
+                .get()
+                .build()
+            okHttpClient.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) return@withContext null
+                response.body?.string()
+            }
+        } ?: return
+
+        val root = JSONObject(body)
+        val categories = root.optJSONArray("categories") ?: return
+        val current = customize.observe(profileId, MediaType.MOVIE).first()
+        val existingByName = current.customCategories.associateBy { it.name }
+        val orderedKeys = mutableListOf<String>()
+
+        for (i in 0 until categories.length()) {
+            val categoryJson = categories.optJSONObject(i) ?: continue
+            val name = categoryJson.optString("name").trim()
+            if (name.isBlank()) continue
+
+            val category = existingByName[name]
+                ?: customize.createCustomCategory(profileId, MediaType.MOVIE, name)
+            orderedKeys += category.id
+
+            val providerIdsJson = categoryJson.optJSONArray("provider_item_ids") ?: continue
+            val providerIds = buildList {
+                for (j in 0 until providerIdsJson.length()) {
+                    providerIdsJson.optString(j).takeIf { it.isNotBlank() }?.let(::add)
+                }
+            }
+            if (providerIds.isEmpty()) {
+                customCategoryDao.clearContext(profileId, MediaType.MOVIE, category.id)
+                continue
+            }
+
+            val localMovies = providerIds.chunked(400)
+                .flatMap { movieDao.findByRemoteIds(xtreamSource.id, it) }
+            val byRemote = localMovies.mapNotNull { movie ->
+                movie.remoteId?.let { it to movie }
+            }.toMap()
+
+            val rows = providerIds.mapNotNull { byRemote[it] }
+                .distinctBy { it.id }
+                .mapIndexed { position, movie ->
+                    CustomCategoryMemberEntity(
+                        profileId = profileId,
+                        mediaType = MediaType.MOVIE,
+                        contextKey = category.id,
+                        itemId = movie.id,
+                        position = position,
+                    )
+                }
+            customCategoryDao.replaceContext(profileId, MediaType.MOVIE, category.id, rows)
+        }
+
+        customize.setCategoryOrder(profileId, MediaType.MOVIE, orderedKeys)
     }
 }
