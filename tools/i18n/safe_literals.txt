@@ -402,7 +402,7 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	pay per view
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	peacock
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	pluto
-1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	ppv
+2	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	ppv
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	premium
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	preschool
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	prime +
