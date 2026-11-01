@@ -751,6 +751,11 @@ class LiveViewModel(
                             else if (it.value.key in orderIndex) orderIndex.getValue(it.value.key)
                             else it.value.categoryId?.let(categoriesById::get)?.name
                                 ?.let(::loungeLiveSectionOf)?.ordinal ?: Int.MAX_VALUE },
+                        { if (it.value.key in orderIndex) ""
+                            else if (it.value.categoryId?.let(categoriesById::get)?.name
+                                    ?.let(::loungeLiveSectionOf) == LoungeLiveSection.KIDS)
+                                loungeLiveLeafTitle(it.value.displayName).lowercase()
+                            else "" },
                         { it.index },
                     ),
                 ).map { it.value }
