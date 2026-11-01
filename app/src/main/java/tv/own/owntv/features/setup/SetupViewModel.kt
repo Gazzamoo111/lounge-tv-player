@@ -139,10 +139,14 @@ class SetupViewModel(
         preferHls: Boolean = false,
         httpReferer: String = "",
     ) = runImport {
-        val effectiveName = if (BuildConfig.LOUNGE_CORE_QA) context.getString(R.string.lounge_core_qa_source_name) else name
-        val effectiveServer = if (BuildConfig.LOUNGE_CORE_QA) BuildConfig.LOUNGE_CORE_XTREAM_URL else server
-        val effectiveLive = if (BuildConfig.LOUNGE_CORE_QA) SyncScopeChoice.Now else live
-        val effectiveRefresh = if (BuildConfig.LOUNGE_CORE_QA) PlaylistRefresh(PlaylistAutoRefresh.HOURS_6) else autoRefresh
+        val managedLounge = server.trimEnd('/').equals(
+            BuildConfig.LOUNGE_CORE_XTREAM_URL.trimEnd('/'),
+            ignoreCase = true,
+        )
+        val effectiveName = if (managedLounge) context.getString(R.string.lounge_core_qa_source_name) else name
+        val effectiveServer = if (managedLounge) BuildConfig.LOUNGE_CORE_XTREAM_URL else server
+        val effectiveLive = if (managedLounge) SyncScopeChoice.Now else live
+        val effectiveRefresh = if (managedLounge) PlaylistRefresh(PlaylistAutoRefresh.HOURS_6) else autoRefresh
         importer.xtream(
             effectiveName,
             effectiveServer,
