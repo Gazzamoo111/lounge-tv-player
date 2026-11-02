@@ -49,6 +49,8 @@ jobs:
           assert coverage["targets"] == 503, coverage
           assert coverage["matched"] > 0, coverage
           assert coverage["programmes"] > 0, coverage
+          assert coverage["short_epg_channels"] > 0, coverage
+          assert coverage["short_epg_listings"] > 0, coverage
           print(json.dumps(coverage, indent=2))
           PY
 
@@ -58,13 +60,14 @@ jobs:
           cp backend/epg/generated/guide.xml /tmp/lounge-epg-publish/epg/guide.xml
           cp backend/epg/generated/guide.xml.gz /tmp/lounge-epg-publish/epg/guide.xml.gz
           cp backend/epg/generated/coverage.json /tmp/lounge-epg-publish/epg/coverage.json
+          cp -R backend/epg/generated/short /tmp/lounge-epg-publish/epg/short
 
           git config user.name "Lounge TV EPG Bot"
           git config user.email "actions@users.noreply.github.com"
           git checkout --orphan epg-publish
           git rm -rf .
           mkdir -p epg
-          cp /tmp/lounge-epg-publish/epg/* epg/
+          cp -R /tmp/lounge-epg-publish/epg/. epg/
           git add epg
           git commit -m "Update Lounge TV canonical EPG"
           git push --force origin HEAD:epg-data
