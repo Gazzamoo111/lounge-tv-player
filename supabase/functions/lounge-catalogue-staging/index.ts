@@ -213,7 +213,7 @@ async function shortEpg(releaseId: string, externalId: number, limit: number) {
     select p.start_at,p.end_at,p.title,p.description
     from lounge_delivery.item_ids i
     join lounge_delivery.live_release_items l on l.live_channel_id=i.canonical_id and l.release_id=${releaseId}::uuid and l.admission='keep'
-    join lounge_core.live_epg_programmes p on p.live_channel_id=l.live_channel_id
+    join lounge_core.live_epg_programmes p on p.live_channel_id=l.core_live_channel_id
     where i.item_kind='live' and i.external_id=${externalId} and p.end_at>now()-interval '1 hour'
     order by p.start_at
     limit ${limit}
@@ -238,7 +238,7 @@ async function xmltv(releaseId: string) {
     select i.external_id,p.start_at,p.end_at,p.title,p.description
     from lounge_delivery.live_release_items l
     join lounge_delivery.item_ids i on i.item_kind='live' and i.canonical_id=l.live_channel_id
-    join lounge_core.live_epg_programmes p on p.live_channel_id=l.live_channel_id
+    join lounge_core.live_epg_programmes p on p.live_channel_id=l.core_live_channel_id
     where l.release_id=${releaseId}::uuid and l.admission='keep'
       and p.end_at>now()-interval '1 hour' and p.start_at<now()+interval '7 days'
     order by i.external_id,p.start_at
