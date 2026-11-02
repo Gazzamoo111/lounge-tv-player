@@ -194,7 +194,7 @@ async function nativeItems(releaseId: string, categoryId: number, page: number, 
            coalesce(l.display_name,v.display_name,t.canonical_title) display_name,
            coalesce(l.logo_url,v.poster_url,t.poster_url) poster_url,
            coalesce(v.backdrop_url,t.backdrop_url) backdrop_url,
-           t.release_year,t.release_date,t.overview,t.content_rating,t.metadata
+           t.release_year,t.release_date,t.content_rating
     from lounge_delivery.category_members m
     join lounge_delivery.categories c on c.id=m.category_id and c.release_id=m.release_id and c.enabled
     join lounge_delivery.item_ids i on i.item_kind=m.item_kind and i.canonical_id=m.canonical_id
