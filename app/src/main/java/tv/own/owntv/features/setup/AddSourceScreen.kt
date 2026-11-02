@@ -60,7 +60,8 @@ import tv.own.owntv.ui.components.StorageBrowser
 
 private enum class SourceKind { XTREAM, M3U, STALKER }
 
-private const val LOUNGE_XTREAM_GATEWAY = "https://connect.loungetv.nz"\nprivate const val LOUNGE_XTREAM_USER_AGENT = "LoungeTV/Android"
+private const val LOUNGE_XTREAM_GATEWAY = "https://connect.loungetv.nz"
+private const val LOUNGE_XTREAM_USER_AGENT = "LoungeTV/Android"
 
 /** UI state of the Xtream "Test HLS support" probe. Local to this screen — the probe is one short
  *  request and saves nothing unless the source already exists. */
