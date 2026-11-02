@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import base64
 import copy
 import datetime as dt
 import gzip
@@ -22,6 +23,7 @@ OUT_DIR = ROOT / "backend" / "epg" / "generated"
 GUIDE_XML = OUT_DIR / "guide.xml"
 GUIDE_GZ = OUT_DIR / "guide.xml.gz"
 COVERAGE_JSON = OUT_DIR / "coverage.json"
+SHORT_DIR = OUT_DIR / "short"
 
 EPGSHARE = "https://epgshare01.online/epgshare01"
 SOURCES = [
@@ -295,6 +297,76 @@ def extract_freeview(gz_path: Path):
     return channels, programmes
 
 
+
+def short_file_key(epg_id: str) -> str:
+    h = 2166136261
+    for byte in epg_id.encode("utf-8"):
+        h ^= byte
+        h = (h * 16777619) & 0xFFFFFFFF
+    return f"{h:08x}"
+
+
+def child_text(elem: ET.Element, wanted: str) -> str:
+    for child in elem:
+        if local(child.tag) == wanted:
+            return " ".join("".join(child.itertext()).split())
+    return ""
+
+
+def b64(value: str) -> str:
+    return base64.b64encode(value.encode("utf-8")).decode("ascii")
+
+
+def build_short_epg_files(guide_xml: Path) -> tuple[int, int]:
+    if SHORT_DIR.exists():
+        shutil.rmtree(SHORT_DIR)
+    SHORT_DIR.mkdir(parents=True, exist_ok=True)
+
+    programmes: dict[str, list[dict]] = defaultdict(list)
+    for _, elem in ET.iterparse(guide_xml, events=("end",)):
+        if local(elem.tag) != "programme":
+            elem.clear()
+            continue
+
+        epg_id = elem.attrib.get("channel", "")
+        start = parse_xmltv_time(elem.attrib.get("start", ""))
+        stop = parse_xmltv_time(elem.attrib.get("stop", ""))
+        if not epg_id or start is None or stop is None:
+            elem.clear()
+            continue
+
+        title = child_text(elem, "title")
+        description = child_text(elem, "desc")
+        start_ts = int(start.timestamp())
+        stop_ts = int(stop.timestamp())
+        programmes[epg_id].append({
+            "id": f"{epg_id}:{start_ts}",
+            "epg_id": epg_id,
+            "title": b64(title),
+            "lang": "",
+            "start": start.strftime("%Y-%m-%d %H:%M:%S"),
+            "end": stop.strftime("%Y-%m-%d %H:%M:%S"),
+            "description": b64(description),
+            "channel_id": epg_id,
+            "start_timestamp": start_ts,
+            "stop_timestamp": stop_ts,
+            "now_playing": 0,
+            "has_archive": 0,
+        })
+        elem.clear()
+
+    listing_count = 0
+    for epg_id, rows in programmes.items():
+        rows.sort(key=lambda row: row["start_timestamp"])
+        listing_count += len(rows)
+        payload = {"epg_id": epg_id, "epg_listings": rows}
+        (SHORT_DIR / f"{short_file_key(epg_id)}.json").write_text(
+            json.dumps(payload, separators=(",", ":"), ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+    return len(programmes), listing_count
+
+
 def main() -> None:
     cfg = json.loads(TARGETS_FILE.read_text())
     targets: list[dict] = cfg["targets"]
@@ -355,6 +427,8 @@ def main() -> None:
         with GUIDE_XML.open("rb") as src, gzip.open(GUIDE_GZ, "wb", compresslevel=9) as dst:
             shutil.copyfileobj(src, dst)
 
+        short_epg_channels, short_epg_listings = build_short_epg_files(GUIDE_XML)
+
         unmatched = [t for t in targets if t["id"] not in matched]
         by_region: dict[str, dict[str, int]] = {}
         for region in ["NZ", "AU", "UK", "US", "OTHER"]:
@@ -371,6 +445,8 @@ def main() -> None:
             "matched": len(matched),
             "unmatched": len(unmatched),
             "programmes": programme_count,
+            "short_epg_channels": short_epg_channels,
+            "short_epg_listings": short_epg_listings,
             "freeview_channels": len(freeview_channels),
             "by_region": by_region,
             "unmatched_ids": [t["id"] for t in unmatched],
