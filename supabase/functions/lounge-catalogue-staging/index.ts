@@ -69,6 +69,57 @@ async function auth(username: string, password: string) {
   return rows[0] || null;
 }
 
+async function providerAccess(serviceAssignmentId: string, providerId: string) {
+  const rows = await sql`
+    select server_url,provider_username,provider_password
+    from lounge_delivery.provider_access(${serviceAssignmentId}::uuid,${providerId}::uuid)
+  `;
+  return rows[0] || null;
+}
+
+async function livePrimarySource(releaseId: string, externalId: number) {
+  const rows = await sql`
+    select b.provider_id,b.provider_stream_id,b.epg_id
+    from lounge_delivery.item_ids i
+    join lounge_delivery.live_release_items l
+      on l.live_channel_id=i.canonical_id and l.release_id=${releaseId}::uuid and l.admission='keep'
+    join lounge_delivery.live_source_bindings b
+      on b.release_id=l.release_id and b.live_channel_id=l.live_channel_id and b.source_role='primary'
+    where i.item_kind='live' and i.external_id=${externalId}
+    limit 1
+  `;
+  return rows[0] || null;
+}
+
+async function providerShortEpg(serviceAssignmentId: string, releaseId: string, externalId: number, limit: number) {
+  const source = await livePrimarySource(releaseId, externalId);
+  if (!source) return [];
+  const access = await providerAccess(serviceAssignmentId, String(source.provider_id));
+  if (!access?.server_url || !access?.provider_username || !access?.provider_password) return [];
+
+  const u = new URL(String(access.server_url).replace(/\/+$/, "") + "/player_api.php");
+  u.searchParams.set("username", String(access.provider_username));
+  u.searchParams.set("password", String(access.provider_password));
+  u.searchParams.set("action", "get_short_epg");
+  u.searchParams.set("stream_id", String(source.provider_stream_id));
+  u.searchParams.set("limit", String(limit));
+
+  try {
+    const r = await fetch(u, {
+      headers: { Accept: "application/json", "User-Agent": "LoungeTV-EPG-Staging/1.0" },
+      signal: AbortSignal.timeout(12000),
+    });
+    if (!r.ok) return [];
+    const payload = await r.json();
+    const listings = Array.isArray(payload?.epg_listings) ? payload.epg_listings : [];
+    return listings.map((x: any) => ({ ...x, channel_id: `ltv-${externalId}`, epg_id: externalId }));
+  } catch {
+    return [];
+  }
+}
+
+let providerXmlCache: { key: string; until: number; body: string } | null = null;
+
 function customerBase(url: URL) {
   const explicitBase = url.searchParams.get("_lounge_base") || Deno.env.get("LOUNGE_PUBLIC_BASE") || "";
   if (explicitBase) return explicitBase.endsWith("/") ? explicitBase.slice(0, -1) : explicitBase;
@@ -228,32 +279,105 @@ function xmltvTime(v: unknown) {
   return `${d.getUTCFullYear()}${pad(d.getUTCMonth()+1)}${pad(d.getUTCDate())}${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())} +0000`;
 }
 
-async function xmltv(releaseId: string) {
+async function xmltv(releaseId: string, serviceAssignmentId: string) {
+  const cacheKey = `${releaseId}:${serviceAssignmentId}`;
+  if (providerXmlCache && providerXmlCache.key === cacheKey && providerXmlCache.until > Date.now()) {
+    return new Response(providerXmlCache.body, {
+      headers: { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "private, max-age=600" },
+    });
+  }
+
   const channels = await sql`
-    select i.external_id,l.live_channel_id,l.display_name,l.logo_url
+    select
+      i.external_id,l.display_name,l.logo_url,l.provider_id,
+      coalesce(
+        nullif((select b.epg_id from lounge_delivery.live_source_bindings b
+          where b.release_id=l.release_id and b.live_channel_id=l.live_channel_id
+            and b.source_role='primary' and nullif(b.epg_id,'') is not null
+          limit 1),''),
+        nullif((select b.epg_id from lounge_delivery.live_source_bindings b
+          where b.release_id=l.release_id and b.live_channel_id=l.live_channel_id
+            and nullif(b.epg_id,'') is not null
+          order by b.source_rank limit 1),'')
+      ) epg_id
     from lounge_delivery.live_release_items l
     join lounge_delivery.item_ids i on i.item_kind='live' and i.canonical_id=l.live_channel_id
     where l.release_id=${releaseId}::uuid and l.admission='keep'
     order by l.sort_order,i.external_id
   `;
-  const programmes = await sql`
-    select i.external_id,p.start_at,p.end_at,p.title,p.description
-    from lounge_delivery.live_release_items l
-    join lounge_delivery.item_ids i on i.item_kind='live' and i.canonical_id=l.live_channel_id
-    join lounge_core.live_epg_programmes p on p.live_channel_id=l.core_live_channel_id
-    where l.release_id=${releaseId}::uuid and l.admission='keep'
-      and p.end_at>now()-interval '1 hour' and p.start_at<now()+interval '7 days'
-    order by i.external_id,p.start_at
-  `;
+
   const out = ['<?xml version="1.0" encoding="UTF-8"?>','<tv generator-info-name="Lounge TV">'];
   for (const c of channels) {
     out.push(`<channel id="ltv-${c.external_id}"><display-name>${xmlEsc(c.display_name)}</display-name>${c.logo_url ? `<icon src="${xmlEsc(c.logo_url)}"/>` : ''}</channel>`);
   }
-  for (const p of programmes) {
-    out.push(`<programme start="${xmltvTime(p.start_at)}" stop="${xmltvTime(p.end_at)}" channel="ltv-${p.external_id}"><title lang="en">${xmlEsc(p.title)}</title>${p.description ? `<desc lang="en">${xmlEsc(p.description)}</desc>` : ''}</programme>`);
+
+  const epgMap = new Map<string, number[]>();
+  for (const c of channels) {
+    if (!c.epg_id) continue;
+    const key = String(c.epg_id);
+    const ids = epgMap.get(key) || [];
+    ids.push(Number(c.external_id));
+    epgMap.set(key, ids);
   }
+
+  let providerProgrammes = 0;
+  const providerId = channels.find((c: any) => c.provider_id)?.provider_id;
+  if (providerId && epgMap.size) {
+    const access = await providerAccess(serviceAssignmentId, String(providerId));
+    if (access?.server_url && access?.provider_username && access?.provider_password) {
+      try {
+        const u = new URL(String(access.server_url).replace(/\/+$/, "") + "/xmltv.php");
+        u.searchParams.set("username", String(access.provider_username));
+        u.searchParams.set("password", String(access.provider_password));
+        const r = await fetch(u, {
+          headers: { Accept: "application/xml,text/xml,*/*", "User-Agent": "LoungeTV-XMLTV-Staging/1.0" },
+          signal: AbortSignal.timeout(30000),
+        });
+        if (r.ok) {
+          const providerXml = await r.text();
+          const rx = /<programme\b[^>]*\bchannel=(["'])([^"']+)\1[^>]*>[\s\S]*?<\/programme>/gi;
+          let m: RegExpExecArray | null;
+          while ((m = rx.exec(providerXml)) !== null) {
+            const ids = epgMap.get(m[2]);
+            if (!ids?.length) continue;
+            for (const externalId of ids) {
+              out.push(m[0].replace(/\bchannel=(["'])[^"']+\1/i, `channel="ltv-${externalId}"`));
+              providerProgrammes++;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("LOUNGE_XMLTV_PROVIDER", String(err));
+      }
+    }
+  }
+
+  if (providerProgrammes === 0) {
+    const programmes = await sql`
+      select i.external_id,p.start_at,p.end_at,p.title,p.description
+      from lounge_delivery.live_release_items l
+      join lounge_delivery.item_ids i on i.item_kind='live' and i.canonical_id=l.live_channel_id
+      join lounge_core.live_epg_programmes p on p.live_channel_id=l.core_live_channel_id
+      where l.release_id=${releaseId}::uuid and l.admission='keep'
+        and p.end_at>now()-interval '1 hour' and p.start_at<now()+interval '7 days'
+      order by i.external_id,p.start_at
+    `;
+    for (const p of programmes) {
+      out.push(`<programme start="${xmltvTime(p.start_at)}" stop="${xmltvTime(p.end_at)}" channel="ltv-${p.external_id}"><title lang="en">${xmlEsc(p.title)}</title>${p.description ? `<desc lang="en">${xmlEsc(p.description)}</desc>` : ''}</programme>`);
+    }
+  }
+
   out.push('</tv>');
-  return new Response(out.join(''), { headers: { 'Content-Type':'application/xml; charset=utf-8','Cache-Control':'private, max-age=600' } });
+  const body = out.join('');
+  providerXmlCache = { key: cacheKey, until: Date.now() + 600000, body };
+  return new Response(body, {
+    headers: {
+      "Content-Type": "application/xml; charset=utf-8",
+      "Cache-Control": "private, max-age=600",
+      "X-Lounge-EPG-Mapped-Channels": String(epgMap.size),
+      "X-Lounge-EPG-Programmes": String(providerProgrammes),
+    },
+  });
 }
 
 async function m3u(url: URL, releaseId: string, username: string, password: string) {
@@ -352,7 +476,7 @@ Deno.serve(async (req: Request) => {
     const categoryId = Number.isFinite(categoryRaw) && categoryRaw > 0 ? categoryRaw : null;
 
     if (url.pathname.endsWith("/get.php")) return await m3u(url, rel.id, username, password);
-    if (url.pathname.endsWith("/xmltv.php")) return await xmltv(rel.id);
+    if (url.pathname.endsWith("/xmltv.php")) return await xmltv(rel.id, String(account.service_assignment_id));
 
     if (!action) {
       return json({
@@ -463,18 +587,21 @@ Deno.serve(async (req: Request) => {
       const id = Number(url.searchParams.get("stream_id") || 0);
       const n = clamp(url.searchParams.get("limit"), 6, 1, 20);
       const rows = await shortEpg(rel.id, id, n);
-      return json({ epg_listings: rows.map((r: any) => ({
-        id: null,
-        epg_id: id,
-        title: btoa(unescape(encodeURIComponent(String(r.title || "")))),
-        lang: "en",
-        start: r.start_at,
-        end: r.end_at,
-        description: btoa(unescape(encodeURIComponent(String(r.description || "")))),
-        channel_id: `ltv-${id}`,
-        start_timestamp: epoch(r.start_at),
-        stop_timestamp: epoch(r.end_at),
-      })) });
+      if (rows.length) {
+        return json({ epg_listings: rows.map((r: any) => ({
+          id: null,
+          epg_id: id,
+          title: btoa(unescape(encodeURIComponent(String(r.title || "")))),
+          lang: "en",
+          start: r.start_at,
+          end: r.end_at,
+          description: btoa(unescape(encodeURIComponent(String(r.description || "")))),
+          channel_id: `ltv-${id}`,
+          start_timestamp: epoch(r.start_at),
+          stop_timestamp: epoch(r.end_at),
+        })) });
+      }
+      return json({ epg_listings: await providerShortEpg(String(account.service_assignment_id), rel.id, id, n) });
     }
 
     return json({ error: "unsupported_action", action }, 400);
