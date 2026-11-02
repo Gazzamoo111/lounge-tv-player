@@ -416,7 +416,7 @@ fun AddSourceScreen(
                     .substringBefore('/')
                     .substringBefore(':')
                 val effectiveUserAgent =
-                    if (serverHost == "connect.loungetv.nz" && userAgent.isBlank()) LOUNGE_XTREAM_USER_AGENT
+                    if (serverHost == "connect.loungetv.nz") LOUNGE_XTREAM_USER_AGENT
                     else userAgent
                 onStartXtream(name, server, username, password, effectiveUserAgent, referer, epgUrl, autoRefresh, syncLive, syncMovies, syncSeries, isDefault, preferHls)
             }
