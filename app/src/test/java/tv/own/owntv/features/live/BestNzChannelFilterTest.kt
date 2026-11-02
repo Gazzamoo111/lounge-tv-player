@@ -27,6 +27,8 @@ class BestNzChannelFilterTest {
         assertFalse(shouldHideBestNzChannel(SourceType.XTREAM, "NZ", "NZ Sky Sport 5 HD"))
         assertTrue(shouldHideBestNzChannel(SourceType.XTREAM, "NZ | Sports", "NZ Sky Sport 1"))
         assertTrue(shouldHideBestNzChannel(SourceType.XTREAM, "NZ", "NZ Sky Sport Select"))
+        assertFalse(shouldHideBestNzChannel(SourceType.XTREAM, "New Zealand · Sports", "SKY SPORT 1"))
+        assertFalse(shouldHideBestNzChannel(SourceType.XTREAM, "New Zealand · Sports", "SKY SPORTS NZ 1"))
     }
 
     @Test fun removesOtherBestNzCategoriesFromRail() {
@@ -39,7 +41,9 @@ class BestNzChannelFilterTest {
         assertFalse(shouldHideBestNzCategory(SourceType.XTREAM, "NZ|Sky Sports NZ RAW"))
         assertTrue(shouldHideBestNzCategory(SourceType.XTREAM, "NZ | Sky Sports SD"))
         assertTrue(isAllowedBestNzSportsCategory(SourceType.XTREAM, "NZ|Sky Sports NZ HD"))
+        assertTrue(isAllowedBestNzSportsCategory(SourceType.XTREAM, "New Zealand · Sports"))
         assertFalse(isAllowedBestNzSportsCategory(SourceType.M3U, "NZ|Sky Sports NZ HD"))
+        assertFalse(isAllowedBestNzSportsCategory(SourceType.M3U, "New Zealand · Sports"))
         assertFalse(shouldHideBestNzCategory(SourceType.XTREAM, "UK | Movies"))
     }
 
@@ -63,6 +67,8 @@ class BestNzChannelFilterTest {
 
         assertTrue(isUnwantedNzRailCategory("NZ New Zealand"))
         assertTrue(isUnwantedNzRailCategory("NZ | New Zealand"))
+        assertTrue(isUnwantedNzFreeviewRailCategory("World"))
+        assertFalse(isUnwantedNzFreeviewRailCategory("TV"))
         assertFalse(isUnwantedNzRailCategory("NZ RAW"))
         assertFalse(isUnwantedNzRailCategory("Sky Sport HD"))
         assertFalse(isUnwantedNzRailCategory("NZ | Sky Sport HD"))
