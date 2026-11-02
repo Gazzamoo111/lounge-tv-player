@@ -33,6 +33,15 @@ class LoungeLiveSectionsTest {
         assertTrue(LoungeLiveSection.AUSTRALIA.ordinal < LoungeLiveSection.SPORTS.ordinal)
     }
 
+    @Test fun canonicalGatewayFoldersPreserveDesignedHierarchy() {
+        assertEquals(LoungeLiveSection.NEW_ZEALAND, loungeLiveSectionOf("New Zealand · Sports"))
+        assertEquals(LoungeLiveSection.AUSTRALIA, loungeLiveSectionOf("Australia · TV"))
+        assertEquals(LoungeLiveSection.SPORTS, loungeLiveSectionOf("Sports · Combat Sports"))
+        assertEquals(LoungeLiveSection.PPV, loungeLiveSectionOf("PPV · UK Live Events"))
+        assertEquals("Sports", loungeLiveFolderTitle("New Zealand · Sports"))
+        assertEquals("Combat Sports", loungeLiveFolderTitle("Sports · Combat Sports"))
+    }
+
     @Test fun namedOtherFoldersRouteToEditorialSections() {
         val expected = mapOf(
             "UK| SKYMIX SERIES" to LoungeLiveSection.ENTERTAINMENT,
