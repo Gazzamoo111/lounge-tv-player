@@ -9,15 +9,15 @@ enum class LoungeLiveSection(val titleRes: Int) {
     NEW_ZEALAND(R.string.lounge_section_nz),
     AUSTRALIA(R.string.lounge_section_aus),
     SPORTS(R.string.lounge_section_sports),
-    PPV(R.string.lounge_section_ppv),
     ENTERTAINMENT(R.string.lounge_section_entertainment),
-    STREAMING(R.string.lounge_section_streaming),
-    US_UK(R.string.lounge_section_us_uk),
     MOVIES(R.string.lounge_section_movies),
-    DOCUMENTARIES(R.string.lounge_section_documentaries),
     KIDS(R.string.lounge_section_kids),
-    MUSIC(R.string.lounge_section_music),
+    DOCUMENTARIES(R.string.lounge_section_documentaries),
+    STREAMING(R.string.lounge_section_streaming),
     SEASONAL(R.string.lounge_section_seasonal),
+    PPV(R.string.lounge_section_ppv),
+    US_UK(R.string.lounge_section_us_uk),
+    MUSIC(R.string.lounge_section_music),
     INTERNATIONAL(R.string.lounge_section_other),
 }
 
@@ -28,8 +28,12 @@ internal fun loungeLiveSectionOf(providerCategory: String): LoungeLiveSection {
         .replace(Regex("\\s*\\|\\s*"), "| ")
     fun any(vararg clues: String) = clues.any { n.contains(it) }
     return when {
-        n.startsWith("nz|") || n == "nz" || n.startsWith("nz freeview") -> LoungeLiveSection.NEW_ZEALAND
-        n.startsWith("au| 9now") || n.startsWith("au| australia") -> LoungeLiveSection.AUSTRALIA
+        n.startsWith("new zealand ·") || n == "new zealand" ||
+            n.startsWith("nz|") || n == "nz" || n.startsWith("nz freeview") ->
+            LoungeLiveSection.NEW_ZEALAND
+        n.startsWith("australia ·") || n == "australia" ||
+            n.startsWith("au| 9now") || n.startsWith("au| australia") ->
+            LoungeLiveSection.AUSTRALIA
         // User-curated category moves from OTHER.
         n == "uk| skymix series" || n == "uk| bbciplayer series" ||
             n.startsWith("uk| prime ᴿᴬᵂ") || n == "uk| prime video series" ||
@@ -71,4 +75,12 @@ internal fun loungeLiveSectionOf(providerCategory: String): LoungeLiveSection {
         // appear as part of their region's general/mixed channel lineup.
         else -> LoungeLiveSection.INTERNATIONAL
     }
+}
+
+
+/** Canonical gateway categories are "Top level · Subcategory". The section header
+ * already renders the top level, so the rail itself only needs the subcategory. */
+internal fun loungeLiveFolderTitle(providerCategory: String): String {
+    val parts = providerCategory.split(" · ", limit = 2)
+    return if (parts.size == 2 && parts[1].isNotBlank()) parts[1].trim() else providerCategory
 }
