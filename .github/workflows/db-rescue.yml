@@ -41,7 +41,8 @@ jobs:
           rescue = """        create("rescue") {
               initWith(getByName("release"))
               isDebuggable = true
-              // Keep release package name and signing cert; never install as QA.
+              matchingFallbacks += listOf("release")
+              // Keep release package name and signing cert; use release variants from pinned core libraries.
           }
           """
           p.write_text(code.replace(anchor, rescue + "    }\n\n    buildFeatures {", 1))
