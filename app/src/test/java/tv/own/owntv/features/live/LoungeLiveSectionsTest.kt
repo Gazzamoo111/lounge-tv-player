@@ -64,4 +64,16 @@ class LoungeLiveSectionsTest {
         }
     }
 
+    @Test fun canonicalGatewayCategoriesKeepDesignedTopLevelSections() {
+        assertEquals(LoungeLiveSection.NEW_ZEALAND, loungeLiveSectionOf("New Zealand · Sports"))
+        assertEquals(LoungeLiveSection.AUSTRALIA, loungeLiveSectionOf("Australia · TV"))
+        assertEquals(LoungeLiveSection.PPV, loungeLiveSectionOf("PPV · UK Live Events"))
+        assertEquals(LoungeLiveSection.SPORTS, loungeLiveSectionOf("Sports · NFL"))
+        assertEquals(LoungeLiveSection.STREAMING, loungeLiveSectionOf("Streaming · Netflix"))
+        assertEquals(LoungeLiveSection.MOVIES, loungeLiveSectionOf("Movies · Sky Store"))
+        assertEquals(LoungeLiveSection.DOCUMENTARIES, loungeLiveSectionOf("Documentaries & Lifestyle · Documentaries"))
+        assertEquals(LoungeLiveSection.KIDS, loungeLiveSectionOf("Kids & Family · TV"))
+        assertEquals(LoungeLiveSection.ENTERTAINMENT, loungeLiveSectionOf("Entertainment · UK TV"))
+    }
+
 }
