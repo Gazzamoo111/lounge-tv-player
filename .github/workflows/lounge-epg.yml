@@ -51,6 +51,16 @@ jobs:
           assert coverage["programmes"] > 0, coverage
           assert coverage["short_epg_channels"] > 0, coverage
           assert coverage["short_epg_listings"] > 0, coverage
+
+          short_files = list((root / "short").glob("*.json"))
+          assert short_files, "no short EPG files were generated"
+          has_title = False
+          for path in short_files[:40]:
+              payload = json.loads(path.read_text())
+              if any(row.get("title") for row in payload.get("epg_listings", [])):
+                  has_title = True
+                  break
+          assert has_title, "short EPG listings have no encoded programme titles"
           print(json.dumps(coverage, indent=2))
           PY
 
