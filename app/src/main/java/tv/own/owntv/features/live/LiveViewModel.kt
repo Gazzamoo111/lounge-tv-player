@@ -727,7 +727,8 @@ class LiveViewModel(
                 }.mapTo(hashSetOf()) { it.id }
                 val allowedFolders = (normalFolders + missingSky).filterNot { entry ->
                     entry.categoryId?.let(byId::get)?.let { category ->
-                        isUnwantedNzRailCategory(category.name)
+                        isUnwantedNzRailCategory(category.name) ||
+                            (entry.categoryId in nzIds && isUnwantedNzFreeviewRailCategory(category.name))
                     } == true
                 }
                 // The public NZ Freeview source must lead the NZ region on every
@@ -2488,10 +2489,16 @@ internal fun isUnwantedNzRailCategory(name: String): Boolean {
     return compact == "nznewzealand"
 }
 
-internal fun isAllowedBestNzSportsCategory(sourceType: SourceType?, name: String): Boolean =
-    bestNzSkyGroup(sourceType, name) != null ||
-        (sourceType == SourceType.XTREAM &&
-            name.trim().replace(Regex("\\s+"), " ").equals("NZ| SKY SPORTS NZ", ignoreCase = true))
+internal fun isUnwantedNzFreeviewRailCategory(name: String): Boolean =
+    name.lowercase().filter { it.isLetterOrDigit() } == "world"
+
+internal fun isAllowedBestNzSportsCategory(sourceType: SourceType?, name: String): Boolean {
+    if (sourceType != SourceType.XTREAM) return false
+    val compact = name.lowercase().filter { it.isLetterOrDigit() }
+    return bestNzSkyGroup(sourceType, name) != null ||
+        compact == "nzskysportsnz" ||
+        compact == "newzealandsports"
+}
 
 internal fun shouldHideBestNzCategory(sourceType: SourceType?, name: String): Boolean =
     sourceType == SourceType.XTREAM && isBestNzLabel(name) &&
