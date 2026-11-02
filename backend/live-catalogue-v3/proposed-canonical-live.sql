@@ -9,7 +9,9 @@
 
 with
 params as (
-  select current_date as as_of_date, current_date + 14 as through_date
+  -- PPV is an event surface, not an archive. Keep only the current seven-day
+  -- window so dead/stale provider slots cannot accumulate in the customer list.
+  select current_date as as_of_date, current_date + 7 as through_date
 ),
 category_routes(category_id, top_category, subcategory, policy) as (
   values
@@ -85,15 +87,16 @@ category_routes(category_id, top_category, subcategory, policy) as (
     ('615','24/7','Movies & Series','full'),
     ('2287','24/7','Movies & Series','wwe_247_only'),
 
-    -- PPV groups. Only dated current/upcoming events with an approved identity
-    -- can enter the customer proposal; every other source remains backend-only.
+    -- PPV is intentionally narrow: named, dated current/upcoming event feeds plus
+    -- permanent UK box-office channels. Generic numbered PPV banks stay backend-only.
     ('1523','PPV','UK Live Events','current_ppv'),
-    ('2489','PPV','UK Live Events','current_ppv'),
-    ('1528','PPV','UK Live Events','current_ppv'),
     ('614','PPV','UK Live Events','current_ppv'),
     ('1592','PPV','UFC / MMA','current_ppv'),
-    ('1568','PPV','US Live Events','current_ppv'),
-    ('2219','PPV','AU Live Events','current_ppv'),
+    ('1621','PPV','Rugby','current_ppv'),
+    ('2224','PPV','US Paramount+','current_ppv'),
+    ('1631','PPV','US Peacock','current_ppv'),
+    ('2222','PPV','US MLS','current_ppv'),
+    ('2219','PPV','AU / NZ Live Events','current_ppv'),
 
     -- High-value channels hidden inside large raw banks.
     ('667','Entertainment','Business & Finance','business_only'),
@@ -219,11 +222,11 @@ cleaned as (
       regexp_replace(
         regexp_replace(
           regexp_replace(b.source_name,
-            '^(AU|NZ|UK|US|TV|IR|NA|EN|PRIME|UK-NOWTV)([[:space:]]*\([^)]*\))?[[:space:]]*(\||:)[[:space:]]*',
+            '^(AU|NZ|UK|US|TV|IR|NA|EN|PRIME|UK-NOWTV|NEXT)([[:space:]]*\([^)]*\))?[[:space:]]*(\||:)[[:space:]]*',
             '', 'i'),
           '[[:space:]]+(UHD|4K|FHD|HD|HEVC|RAW|SD|VIP|H\.?265|60FPS|ᴿᴬᵂ|⁶⁰ᶠᵖˢ|◉)([[:space:]]+(UHD|4K|FHD|HD|HEVC|RAW|SD|VIP|H\.?265|60FPS|ᴿᴬᵂ|⁶⁰ᶠᵖˢ|◉))*[[:space:]]*$',
           '', 'i'),
-        '[[:space:]]+\((S|ALT)\)[[:space:]]*$', '', 'i')
+        '([[:space:]]+\((S|ALT)\)[[:space:]]*$|[[:space:]]*\|[[:space:]]*8K[[:space:]]+EXCLUSIVE.*$)', '', 'i')
     ) display_name,
     case
       when b.source_name ~* '(4K|UHD|2160)' then 60
@@ -242,23 +245,15 @@ routed as (
     case
       when c.source_name ~* '(YAHOO FINANCE|BLOOMBERG|CNBC|FOX BUSINESS|CHEDDAR (BUSINESS|NEWS))' then 'Entertainment'
       when c.category_id in ('384','2231') and c.source_name ~* '(SPORT|ESPN|RACING|RUGBY|AFL|NRL|CRICKET|GOLF|TENNIS)' then 'Australia'
-      when c.route_policy='current_ppv' and c.source_name ~* '(SKY SPORTS BOX OFFICE|TNT BOX OFFICE|ITV BOX OFFICE)' then 'Sports'
+      when c.route_policy='current_ppv' and c.source_name ~* '(SKY SPORTS BOX OFFICE|TNT BOX OFFICE|ITV BOX OFFICE)' then 'PPV'
       when c.category_id='2540' and c.source_name ~* '(ESPN|SPORT|NFL|NBA|MLB|NHL|GOLF|TENNIS|RACING|FORMULA|MOTOGP|(^|[^A-Z])F1([^A-Z]|$)|UFC|WWE|FIGHT)' then 'Sports'
       when c.category_id in ('2183','2186') and c.source_name ~* '(RUGBYPASS TV|CBS SPORTS GOLAZO|SPORTSGRID|STADIUM|TENNIS CHANNEL|NFL NETWORK|NBA TV|UFC|PREMIER SPORTS|TNT SPORTS)' then 'Sports'
       else c.route_top
     end proposed_top,
     case
       when c.category_id in ('384','2231') and c.source_name ~* '(SPORT|ESPN|RACING|RUGBY|AFL|NRL|CRICKET|GOLF|TENNIS)' then 'Sports'
-      when c.source_name ~* '(SKY SPORTS BOX OFFICE|TNT BOX OFFICE|ITV BOX OFFICE)' then 'Combat Sports'
-      when c.route_policy='current_ppv' and c.source_name ~* '(UFC|MMA)' then 'UFC / MMA'
-      when c.route_policy='current_ppv' and c.source_name ~* '(BOX(ING)?|BARE[[:space:]]+KNUCKLE|BKFC)' then 'Boxing & Bare Knuckle'
-      when c.route_policy='current_ppv' and c.source_name ~* 'WWE' then 'WWE'
-      when c.route_policy='current_ppv' and c.source_name ~* 'NBA' then 'NBA'
-      when c.route_policy='current_ppv' and c.source_name ~* '(RUGBY|NRL|NATIONS[[:space:]]+(CUP|CHAMPIONSHIP))' then 'Rugby'
-      when c.route_policy='current_ppv' and c.source_name ~* '(^|[^A-Z])NZ([^A-Z]|$)|NEW ZEALAND' then 'NZ Live Events'
-      when c.route_policy='current_ppv' and c.category_id='2219' then 'AU Live Events'
-      when c.route_policy='current_ppv' and c.category_id='1568' then 'US Live Events'
-      when c.route_policy='current_ppv' then 'UK Live Events'
+      when c.route_policy='current_ppv' and c.source_name ~* '(SKY SPORTS BOX OFFICE|TNT BOX OFFICE|ITV BOX OFFICE)' then 'UK Box Office'
+      when c.route_policy='current_ppv' then c.route_sub
       when c.source_name ~* '(YAHOO FINANCE|BLOOMBERG|CNBC|FOX BUSINESS|CHEDDAR (BUSINESS|NEWS))' then 'Business & Finance'
       when c.category_id in ('2183','2186') and c.source_name ~* '(RUGBYPASS TV|CBS SPORTS GOLAZO|SPORTSGRID|STADIUM|TENNIS CHANNEL|NFL NETWORK|NBA TV|UFC|PREMIER SPORTS|TNT SPORTS)' then 'Networks & Talk'
       when (c.route_top='Sports' or c.category_id in ('384','2231','2540','2183','2186')) and c.source_name ~* '(NFL NETWORK|NFL REDZONE)' then 'NFL'
@@ -288,14 +283,8 @@ routed as (
       when c.route_policy='current_ppv' and c.source_name ~* '(SKY SPORTS BOX OFFICE|TNT BOX OFFICE|ITV BOX OFFICE)' then true
       when c.route_policy='current_ppv'
         and c.event_date between p.as_of_date - 1 and p.through_date
-        and c.source_name !~* '(NO EVENT|NO STREAM|OFFLINE|BLANK)'
-        and (
-          c.category_id='2219'
-          or
-          c.source_name ~* '(UFC|MMA|BOX(ING)?|BARE[[:space:]]+KNUCKLE|BKFC|WWE|NBA|RUGBY|NRL|AFL|NFL|MLB|NHL)'
-          or (c.category_id='2219' and c.source_name ~* '(PREMIER LEAGUE MATCH|WSL|CRICKET|TENNIS)')
-          or (c.category_id in ('1523','1528','614','2489') and c.source_name ~* '(PREMIER LEAGUE MATCH|WSL|FA CUP|EFL|CHAMPIONSHIP)')
-        ) then true
+        and c.source_name !~* '(NO EVENT|NO STREAM|OFFLINE|BLANK|PLACEHOLDER)'
+        then true
       else false
     end is_visible_candidate
   from cleaned c
