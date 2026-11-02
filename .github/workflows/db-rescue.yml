@@ -1,4 +1,4 @@
-name: Lounge TV one-time DB rescue APK
+name: Lounge TV one-time INERT DB rescue APK
 on:
   workflow_dispatch:
 permissions:
@@ -6,47 +6,91 @@ permissions:
 jobs:
   rescue:
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-      - name: Checkout pinned OwnTV core
-        uses: actions/checkout@v4
-        with:
-          repository: ahXN00/OwnTV_Core
-          ref: 1de78b1e2690c22b50c060e986bce221454bf880
-          path: shared-core
-          persist-credentials: false
-      - name: Apply existing Lounge playback patches
-        run: python3 scripts/patch_lounge_playback_core.py shared-core
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
+
       - uses: android-actions/setup-android@v4
         with:
           packages: 'platform-tools'
+
       - uses: gradle/actions/setup-gradle@v4
-      - name: Generate required brand assets
+
+      - name: Create isolated inert rescue module in CI workspace
         run: |
-          python3 -m pip install --disable-pip-version-check Pillow
-          python3 scripts/generate_loungetv_brand_assets.py
-      - name: Add rescue-only production-signed debuggable build type in CI workspace
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p = Path("app/build.gradle.kts")
-          code = p.read_text()
-          anchor = "    }\n\n    buildFeatures {"
-          assert code.count(anchor) == 1, "Unexpected Gradle structure; refusing to patch"
-          rescue = """        create("rescue") {
-              initWith(getByName("release"))
-              isDebuggable = true
-              matchingFallbacks += listOf("release")
-              // Keep release package name and signing cert; use release variants from pinned core libraries.
+          set -euo pipefail
+          mkdir -p rescue/src/main
+
+          cat > rescue/build.gradle.kts <<'KTS'
+          import java.util.Properties
+
+          plugins {
+              alias(libs.plugins.android.application)
           }
-          """
-          p.write_text(code.replace(anchor, rescue + "    }\n\n    buildFeatures {", 1))
-          PY
+
+          android {
+              namespace = "com.loungetv.rescue"
+
+              compileSdk {
+                  version = release(37) { minorApiLevel = 2 }
+              }
+
+              defaultConfig {
+                  applicationId = "com.loungetv.player"
+                  minSdk = 26
+                  targetSdk = 36
+                  versionCode = 5020303
+                  versionName = "5.2.3.3-db-rescue-inert"
+              }
+
+              val keyFile = System.getenv("KEYSTORE_FILE")
+                  ?: throw GradleException("Missing KEYSTORE_FILE")
+              val keyStorePassword = System.getenv("KEYSTORE_PASSWORD")
+                  ?: throw GradleException("Missing KEYSTORE_PASSWORD")
+              val keyAliasValue = System.getenv("KEY_ALIAS")
+                  ?: throw GradleException("Missing KEY_ALIAS")
+              val keyPasswordValue = System.getenv("KEY_PASSWORD")
+                  ?: throw GradleException("Missing KEY_PASSWORD")
+
+              signingConfigs {
+                  create("production") {
+                      storeFile = file(keyFile)
+                      storePassword = keyStorePassword
+                      keyAlias = keyAliasValue
+                      keyPassword = keyPasswordValue
+                  }
+              }
+
+              buildTypes {
+                  release {
+                      isDebuggable = true
+                      isMinifyEnabled = false
+                      isShrinkResources = false
+                      signingConfig = signingConfigs.getByName("production")
+                  }
+              }
+          }
+          KTS
+
+          cat > rescue/src/main/AndroidManifest.xml <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+              <application
+                  android:allowBackup="false"
+                  android:debuggable="true"
+                  android:hasCode="false"
+                  android:label="Lounge TV DB Rescue"
+                  android:supportsRtl="true" />
+          </manifest>
+          XML
+
+          printf '\ninclude(":rescue")\n' >> settings.gradle.kts
+
       - name: Load production signing material
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
@@ -60,46 +104,66 @@ jobs:
           done
           printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/loungetv.keystore"
           echo "KEYSTORE_FILE=$RUNNER_TEMP/loungetv.keystore" >> "$GITHUB_ENV"
-      - name: Compile one rescue APK, do not publish or install
+
+      - name: Build inert production-signed rescue APK
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          PRODUCTION_SIGNING_REQUIRED: 'true'
-          VERSION_CODE: '5020303'
-          VERSION_NAME: '5.2.3.3-rescue'
         run: |
           set -euo pipefail
           chmod +x ./gradlew
-          ./gradlew :app:assembleStandardRescue -Powntv.corePath="$GITHUB_WORKSPACE/shared-core" --stacktrace
+          ./gradlew :rescue:assembleRelease --stacktrace
           mkdir -p dist
-          cp app/build/outputs/apk/standard/rescue/*.apk dist/LoungeTV-DB-Rescue-5020303.apk
-      - name: Verify identity, signing and debuggable flag before artifact upload
+          cp rescue/build/outputs/apk/release/*.apk dist/LoungeTV-DB-Rescue-INERT-5020303.apk
+
+      - name: Verify package, certificate, version, debuggable and inert manifest
         run: |
           set -euo pipefail
-          APK=dist/LoungeTV-DB-Rescue-5020303.apk
+          APK=dist/LoungeTV-DB-Rescue-INERT-5020303.apk
           AAPT=$(find "$ANDROID_HOME/build-tools" -name aapt -type f | sort -V | tail -1)
           SIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -1)
+
           "$SIGNER" verify --print-certs "$APK" > "$RUNNER_TEMP/signature.txt"
           "$AAPT" dump badging "$APK" > "$RUNNER_TEMP/badging.txt"
           "$AAPT" dump xmltree "$APK" AndroidManifest.xml > "$RUNNER_TEMP/manifest.txt"
+
           python3 - <<'PY'
           from pathlib import Path
-          import re
-          cert = Path(__import__("os").environ["RUNNER_TEMP"], "signature.txt").read_text()
-          badge = Path(__import__("os").environ["RUNNER_TEMP"], "badging.txt").read_text()
-          manifest = Path(__import__("os").environ["RUNNER_TEMP"], "manifest.txt").read_text()
-          wanted = "7541bd80e141e48650e952cec62de1daa6491adcc4fab522613f1954fce8b6f9"
-          assert wanted in cert.lower().replace(":", ""), "Wrong signing certificate"
+          import os, re
+
+          t = Path(os.environ["RUNNER_TEMP"])
+          cert = (t / "signature.txt").read_text()
+          badge = (t / "badging.txt").read_text()
+          manifest = (t / "manifest.txt").read_text()
+
+          expected_cert = "7541bd80e141e48650e952cec62de1daa6491adcc4fab522613f1954fce8b6f9"
+          assert expected_cert in cert.lower().replace(":", ""), "Wrong production certificate"
           assert "name='com.loungetv.player'" in badge, "Wrong package"
           assert "versionCode='5020303'" in badge, "Wrong version code"
-          assert re.search(r'android:debuggable.*0xffffffff', manifest, re.I), "Not debuggable"
-          print("PASS: production package, production certificate, upgrade version, debuggable.")
+          assert re.search(r'android:debuggable.*0xffffffff', manifest, re.I), "APK is not debuggable"
+
+          forbidden = [
+              "E: receiver",
+              "E: service",
+              "E: provider",
+              "E: activity",
+              "android.permission.INTERNET",
+              "android.intent.action.MY_PACKAGE_REPLACED",
+              "android.intent.action.BOOT_COMPLETED",
+              "androidx.work",
+          ]
+          found = [x for x in forbidden if x in manifest]
+          assert not found, f"Rescue APK is not inert; found: {found}"
+
+          print("PASS: correct production package/cert/version, debuggable, zero app components, zero sync/network hooks.")
           PY
+
           sha256sum "$APK" > dist/SHA256SUMS.txt
+
       - uses: actions/upload-artifact@v4
         with:
-          name: LoungeTV-DB-Rescue-5020303
+          name: LoungeTV-DB-Rescue-INERT-5020303
           path: dist/*
           if-no-files-found: error
           retention-days: 3
