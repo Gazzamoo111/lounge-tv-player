@@ -1,6 +1,9 @@
 name: Lounge TV one-time INERT DB rescue APK
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/db-rescue.yml'
 permissions:
   contents: read
 jobs:
@@ -110,6 +113,9 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          VERSION_CODE: '5020303'
+          VERSION_NAME: '5.2.3.3-db-rescue-inert'
+          PRODUCTION_SIGNING_REQUIRED: 'true'
         run: |
           set -euo pipefail
           chmod +x ./gradlew
