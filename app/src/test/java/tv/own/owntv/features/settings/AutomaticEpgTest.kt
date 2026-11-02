@@ -1,5 +1,6 @@
 package tv.own.owntv.features.settings
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -25,4 +26,22 @@ class AutomaticEpgTest {
         )
         assertFalse(shouldPrimeGuide(source))
     }
+    @Test fun `canonical gateway does not duplicate Lounge guide`() {
+        val urls = guideUrlsWithLounge(
+            tv.own.owntv.core.model.SourceType.XTREAM,
+            listOf("https://connect.loungetv.nz/xmltv.php?username=u&password=p"),
+        )
+        assertEquals(1, urls.size)
+        assertTrue(urls.single().startsWith("https://connect.loungetv.nz/xmltv.php"))
+    }
+
+    @Test fun `legacy Xtream source receives canonical Lounge supplement`() {
+        val urls = guideUrlsWithLounge(
+            tv.own.owntv.core.model.SourceType.XTREAM,
+            listOf("http://provider.example/xmltv.php?username=u&password=p"),
+        )
+        assertEquals(2, urls.size)
+        assertTrue(LOUNGE_EPG_URL in urls)
+    }
+
 }
