@@ -60,9 +60,6 @@ import tv.own.owntv.ui.components.StorageBrowser
 
 private enum class SourceKind { XTREAM, M3U, STALKER }
 
-private const val LOUNGE_XTREAM_GATEWAY = "https://connect.loungetv.nz"
-private const val LOUNGE_XTREAM_USER_AGENT = "LoungeTV/Android"
-
 /** UI state of the Xtream "Test HLS support" probe. Local to this screen — the probe is one short
  *  request and saves nothing unless the source already exists. */
 private sealed interface HlsTestUi {
@@ -122,6 +119,7 @@ fun AddSourceScreen(
     ) -> Unit)? = null,
 ) {
     val editing = initial != null
+    val loungeSourceName = stringResource(R.string.app_name)
     var kind by remember {
         mutableStateOf(
             when (initial?.type) {
@@ -131,7 +129,7 @@ fun AddSourceScreen(
             },
         )
     }
-    var name by remember(initial) { mutableStateOf(initial?.name ?: "Lounge TV") }
+    var name by remember(initial, loungeSourceName) { mutableStateOf(initial?.name ?: loungeSourceName) }
     var server by remember(initial) {
         mutableStateOf(
             if (initial != null && initial.type == SourceType.XTREAM) initial.url
@@ -411,14 +409,7 @@ fun AddSourceScreen(
     val submit = {
         when (kind) {
             SourceKind.XTREAM -> {
-                val serverHost = server.trim().lowercase()
-                    .removePrefix("https://")
-                    .removePrefix("http://")
-                    .substringBefore('/')
-                    .substringBefore(':')
-                val effectiveUserAgent =
-                    if (serverHost == "connect.loungetv.nz") LOUNGE_XTREAM_USER_AGENT
-                    else userAgent
+                val effectiveUserAgent = loungeXtreamUserAgent(server, userAgent)
                 onStartXtream(name, server, username, password, effectiveUserAgent, referer, epgUrl, autoRefresh, syncLive, syncMovies, syncSeries, isDefault, preferHls)
             }
             SourceKind.M3U -> onStartM3u(name, m3uUrl, userAgent, referer, epgUrl, autoRefresh, isDefault)

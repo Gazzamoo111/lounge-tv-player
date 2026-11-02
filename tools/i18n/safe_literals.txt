@@ -923,7 +923,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/settings/WeatherSettingsScreen.kt	#%06X
 1	empty	app/src/main/java/tv/own/owntv/features/setup/AddSourceChooserScreen.kt	\0
 2	file-path	app/src/main/java/tv/own/owntv/features/setup/AddSourceScreen.kt	/
-17	empty	app/src/main/java/tv/own/owntv/features/setup/AddSourceScreen.kt	\0
+15	empty	app/src/main/java/tv/own/owntv/features/setup/AddSourceScreen.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/setup/AddSourceScreen.kt	▶
 1	technical	app/src/main/java/tv/own/owntv/features/setup/AddSourceScreen.kt	◀ ▶
 1	technical	app/src/main/java/tv/own/owntv/features/setup/AddSourceScreen.kt	m3u
@@ -1991,4 +1991,34 @@
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	new zealand
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	sports
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	streaming
+1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	·
+1	protocol	app/src/main/java/tv/own/owntv/features/setup/LoungeGateway.kt	LoungeTV/Android
+1	protocol	app/src/main/java/tv/own/owntv/features/setup/LoungeGateway.kt	http://
+1	protocol	app/src/main/java/tv/own/owntv/features/setup/LoungeGateway.kt	https://
+1	url	app/src/main/java/tv/own/owntv/features/setup/LoungeGateway.kt	https://connect.loungetv.nz
+1	protocol	app/src/main/java/tv/own/owntv/features/setup/LoungeGateway.kt	line.bestnz.vip
+1	protocol	app/src/main/java/tv/own/owntv/features/setup/LoungeGateway.kt	line.loungeconnect247.xyz
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Migrated Lounge Xtream source=
+1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	lounge_gateway_migration
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	to canonical gateway
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	baseball/mlb
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	basketball/mens-college-basketball
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	basketball/wnba
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	football/college-football
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	golf/pga
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	hockey/nhl
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/164205
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/17567
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/180659
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/242041
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/244293
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/267979
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/268565
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/270557
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/270559
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/271937
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/272073
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	rugby/289237
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	tennis/atp
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	tennis/wta
 1	protocol	app/src/main/java/tv/own/owntv/features/settings/EpgSemiAutoSync.kt	connect.loungetv.nz

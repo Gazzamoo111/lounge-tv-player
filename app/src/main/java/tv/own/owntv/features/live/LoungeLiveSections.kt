@@ -84,3 +84,10 @@ internal fun loungeLiveSectionOf(providerCategory: String): LoungeLiveSection {
         else -> LoungeLiveSection.INTERNATIONAL
     }
 }
+
+/** Canonical gateway folders are "Top level · Subcategory". The section heading already
+ * renders the top level, so the rail only needs the customer-facing subcategory. */
+internal fun loungeLiveFolderTitle(providerCategory: String): String {
+    val parts = providerCategory.split(" · ", limit = 2)
+    return if (parts.size == 2 && parts[1].isNotBlank()) parts[1].trim() else providerCategory
+}

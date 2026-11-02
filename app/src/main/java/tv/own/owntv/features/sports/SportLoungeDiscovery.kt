@@ -26,6 +26,21 @@ data class SportLoungeDiscoverySnapshot(
     val failedFeeds: Int = 0,
 )
 
+/** Locked, previously validated feed coverage for the seven-day Sport Lounge window. */
+internal val SPORT_LOUNGE_DISCOVERY_FEEDS = listOf(
+    "football/nfl",
+    "football/college-football",
+    "rugby-league/3",
+    "rugby/180659", "rugby/164205", "rugby/244293", "rugby/271937",
+    "rugby/267979", "rugby/270559", "rugby/270557", "rugby/242041",
+    "rugby/17567", "rugby/289234", "rugby/272073", "rugby/268565", "rugby/289237",
+    "cricket/all",
+    "basketball/nbl", "basketball/nba", "basketball/wnba", "basketball/mens-college-basketball",
+    "hockey/nhl", "baseball/mlb",
+    "soccer/aus.1", "soccer/eng.1", "soccer/uefa.champions",
+    "racing/f1", "mma/ufc", "golf/pga", "tennis/atp", "tennis/wta",
+)
+
 /**
  * Small, profile-independent discovery set for a new TV. It uses the already configured fixture
  * source and verified catalogue entries; it neither touches BEST nor invents sample fixtures.
@@ -63,7 +78,7 @@ class SportLoungeDiscovery(private val source: SportsSource, private val cache: 
     ): SportLoungeDiscoverySnapshot = coroutineScope {
         val days = sportLoungeDays(nowMs, zoneId)
         val months = days.map(YearMonth::from).distinct()
-        val leagues = DISCOVERY_FEEDS.mapNotNull(::discoveryLeague)
+        val leagues = SPORT_LOUNGE_DISCOVERY_FEEDS.mapNotNull(::discoveryLeague)
         val gate = Semaphore(MAX_PARALLEL)
 
         suspend fun readFeed(key: String, request: suspend () -> List<Match>): Triple<String, List<Match>, Boolean> =
@@ -115,39 +130,6 @@ class SportLoungeDiscovery(private val source: SportsSource, private val cache: 
         const val TAG = "LoungeTV-SportLounge"
         const val SOURCE_ESPN = "espn"
         const val MAX_PARALLEL = 3
-        val DISCOVERY_FEEDS = listOf(
-            "football/nfl",
-            "football/college-football",
-            "rugby-league/3",
-            "rugby/180659",
-            "rugby/164205",
-            "rugby/244293",
-            "rugby/271937",
-            "rugby/267979",
-            "rugby/270559",
-            "rugby/270557",
-            "rugby/242041",
-            "rugby/17567",
-            "rugby/289234",
-            "rugby/272073",
-            "rugby/268565",
-            "rugby/289237",
-            "cricket/all",
-            "basketball/nbl",
-            "basketball/nba",
-            "basketball/wnba",
-            "basketball/mens-college-basketball",
-            "hockey/nhl",
-            "baseball/mlb",
-            "soccer/aus.1",
-            "soccer/eng.1",
-            "soccer/uefa.champions",
-            "racing/f1",
-            "mma/ufc",
-            "golf/pga",
-            "tennis/atp",
-            "tennis/wta",
-        )
         fun discoveryLeague(key: String): League? = SportsCatalog.league(key) ?: when (key) {
             "basketball/nbl" -> League(Sport.BASKETBALL, "nbl", "National Basketball League", "NBL", "AU")
             "soccer/aus.1" -> League(Sport.SOCCER, "aus.1", "Australian A-League Men", "A-League", "AU")

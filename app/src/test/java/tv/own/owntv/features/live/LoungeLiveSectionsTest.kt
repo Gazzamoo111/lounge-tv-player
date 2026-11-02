@@ -76,4 +76,10 @@ class LoungeLiveSectionsTest {
         assertEquals(LoungeLiveSection.ENTERTAINMENT, loungeLiveSectionOf("Entertainment · UK TV"))
     }
 
+    @Test fun canonicalGatewayFoldersDoNotRepeatTheirSectionHeading() {
+        assertEquals("Sports", loungeLiveFolderTitle("New Zealand · Sports"))
+        assertEquals("Combat Sports", loungeLiveFolderTitle("Sports · Combat Sports"))
+        assertEquals("Legacy folder", loungeLiveFolderTitle("Legacy folder"))
+    }
+
 }
