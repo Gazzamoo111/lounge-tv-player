@@ -60,6 +60,8 @@ import tv.own.owntv.ui.components.StorageBrowser
 
 private enum class SourceKind { XTREAM, M3U, STALKER }
 
+private const val LOUNGE_XTREAM_GATEWAY = "https://connect.loungetv.nz"
+
 /** UI state of the Xtream "Test HLS support" probe. Local to this screen — the probe is one short
  *  request and saves nothing unless the source already exists. */
 private sealed interface HlsTestUi {
@@ -128,8 +130,13 @@ fun AddSourceScreen(
             },
         )
     }
-    var name by remember(initial) { mutableStateOf(initial?.name ?: "") }
-    var server by remember(initial) { mutableStateOf(if (initial != null && initial.type == SourceType.XTREAM) initial.url else "") }
+    var name by remember(initial) { mutableStateOf(initial?.name ?: "Lounge TV") }
+    var server by remember(initial) {
+        mutableStateOf(
+            if (initial != null && initial.type == SourceType.XTREAM) initial.url
+            else LOUNGE_XTREAM_GATEWAY,
+        )
+    }
     var username by remember(initial) { mutableStateOf(initial?.username ?: "") }
     var password by remember(initial) { mutableStateOf(initial?.password ?: "") }
     var m3uUrl by remember(initial) { mutableStateOf(if (initial != null && initial.type == SourceType.M3U) initial.url else "") }
