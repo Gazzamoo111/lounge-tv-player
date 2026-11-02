@@ -78,7 +78,7 @@ class ShellViewModel(
 
     companion object {
         private const val TAG = "OwnTVHome"
-        private const val LOUNGE_GATEWAY_URL = "https://connect.loungetv.nz"
+        private const val LOUNGE_GATEWAY_URL = "https://connect.loungetv.nz"\n        private const val LOUNGE_XTREAM_USER_AGENT = "LoungeTV/Android"
         private val LEGACY_LOUNGE_HOSTS = setOf(
             "line.bestnz.vip",
             "line.loungeconnect247.xyz",
@@ -143,6 +143,8 @@ class ShellViewModel(
                             val oldGuide = source.epgUrl
                             val updated = source.copy(
                                 url = LOUNGE_GATEWAY_URL,
+                                userAgent = source.userAgent?.takeIf { it.isNotBlank() }
+                                    ?: LOUNGE_XTREAM_USER_AGENT,
                                 epgUrl = oldGuide?.takeUnless {
                                     loungeHost(it) in LEGACY_LOUNGE_HOSTS
                                 },
