@@ -331,8 +331,13 @@ def build_short_epg_files(guide_xml: Path) -> tuple[int, int]:
 
     programmes: dict[str, list[dict]] = defaultdict(list)
     for _, elem in ET.iterparse(guide_xml, events=("end",)):
-        if local(elem.tag) != "programme":
+        tag = local(elem.tag)
+        if tag == "channel":
             elem.clear()
+            continue
+        if tag != "programme":
+            # Do not clear title/desc children here. Their text is still needed when
+            # the closing programme element is reached.
             continue
 
         epg_id = elem.attrib.get("channel", "")
