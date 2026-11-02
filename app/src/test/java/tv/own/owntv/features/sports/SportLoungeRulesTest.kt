@@ -42,6 +42,17 @@ class SportLoungeRulesTest {
         assertEquals("2026-11-01", days.last().toString())
     }
 
+    @Test fun `validated discovery coverage keeps US NZ and rugby priorities`() {
+        assertEquals(SPORT_LOUNGE_DISCOVERY_FEEDS.size, SPORT_LOUNGE_DISCOVERY_FEEDS.distinct().size)
+        assertTrue("football/nfl" in SPORT_LOUNGE_DISCOVERY_FEEDS)
+        assertTrue("football/college-football" in SPORT_LOUNGE_DISCOVERY_FEEDS)
+        assertTrue("basketball/nbl" in SPORT_LOUNGE_DISCOVERY_FEEDS)
+        assertTrue("basketball/wnba" in SPORT_LOUNGE_DISCOVERY_FEEDS)
+        assertTrue("hockey/nhl" in SPORT_LOUNGE_DISCOVERY_FEEDS)
+        assertTrue("baseball/mlb" in SPORT_LOUNGE_DISCOVERY_FEEDS)
+        assertTrue(SPORT_LOUNGE_DISCOVERY_FEEDS.count { it.startsWith("rugby/") } >= 10)
+    }
+
     @Test fun `upcoming includes later today but excludes day eight`() {
         val today = match("today", Sport.RUGBY, "2026-10-26T05:00:00Z")
         val daySeven = match("day7", Sport.RUGBY_LEAGUE, "2026-11-01T04:00:00Z")

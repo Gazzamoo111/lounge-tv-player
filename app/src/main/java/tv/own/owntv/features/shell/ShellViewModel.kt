@@ -54,6 +54,10 @@ import tv.own.owntv.core.theme.FontCustomization
 import tv.own.owntv.core.theme.ThemeMode
 import tv.own.owntv.core.theme.UiFontScale
 import tv.own.owntv.core.theme.UiZoom
+import tv.own.owntv.features.setup.LOUNGE_XTREAM_GATEWAY
+import tv.own.owntv.features.setup.LOUNGE_XTREAM_USER_AGENT
+import tv.own.owntv.features.setup.isLegacyLoungeXtream
+import tv.own.owntv.features.setup.loungeGuideAfterGatewayMigration
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class ShellViewModel(
@@ -119,8 +123,28 @@ class ShellViewModel(
                 }
                 .collect { playlists ->
                     try {
+                        // Existing Lounge customers keep the same personalised username/password.
+                        // Only the server host changes: move known Lounge/BEST endpoints onto the
+                        // canonical customer gateway, then resync once so Live/VOD/Series all use
+                        // the active Lounge release. Independent Xtream playlists are untouched.
+                        val canonicalPlaylists = playlists.map { source ->
+                            if (!isLegacyLoungeXtream(source.type, source.url)) return@map source
+                            val updated = source.copy(
+                                url = LOUNGE_XTREAM_GATEWAY,
+                                userAgent = LOUNGE_XTREAM_USER_AGENT,
+                                epgUrl = loungeGuideAfterGatewayMigration(source.epgUrl),
+                            )
+                            sourceRepository.updateSource(updated)
+                            catalogSyncScheduler.enqueueSync(
+                                sourceId = updated.id,
+                                reason = "lounge_gateway_migration",
+                                policy = ExistingWorkPolicy.KEEP,
+                            )
+                            Log.i(TAG, "Migrated Lounge Xtream source=" + updated.id + " to canonical gateway")
+                            updated
+                        }
                         ensureAutomaticXtreamGuides(
-                            playlists = playlists,
+                            playlists = canonicalPlaylists,
                             repository = epgRepository,
                             store = epgSourceStore,
                             settings = settings,

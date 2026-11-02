@@ -119,6 +119,7 @@ fun AddSourceScreen(
     ) -> Unit)? = null,
 ) {
     val editing = initial != null
+    val loungeSourceName = stringResource(R.string.app_name)
     var kind by remember {
         mutableStateOf(
             when (initial?.type) {
@@ -128,8 +129,13 @@ fun AddSourceScreen(
             },
         )
     }
-    var name by remember(initial) { mutableStateOf(initial?.name ?: "") }
-    var server by remember(initial) { mutableStateOf(if (initial != null && initial.type == SourceType.XTREAM) initial.url else "") }
+    var name by remember(initial, loungeSourceName) { mutableStateOf(initial?.name ?: loungeSourceName) }
+    var server by remember(initial) {
+        mutableStateOf(
+            if (initial != null && initial.type == SourceType.XTREAM) initial.url
+            else LOUNGE_XTREAM_GATEWAY,
+        )
+    }
     var username by remember(initial) { mutableStateOf(initial?.username ?: "") }
     var password by remember(initial) { mutableStateOf(initial?.password ?: "") }
     var m3uUrl by remember(initial) { mutableStateOf(if (initial != null && initial.type == SourceType.M3U) initial.url else "") }
@@ -402,7 +408,10 @@ fun AddSourceScreen(
     // panel, reached with ▶ from any row.
     val submit = {
         when (kind) {
-            SourceKind.XTREAM -> onStartXtream(name, server, username, password, userAgent, referer, epgUrl, autoRefresh, syncLive, syncMovies, syncSeries, isDefault, preferHls)
+            SourceKind.XTREAM -> {
+                val effectiveUserAgent = loungeXtreamUserAgent(server, userAgent)
+                onStartXtream(name, server, username, password, effectiveUserAgent, referer, epgUrl, autoRefresh, syncLive, syncMovies, syncSeries, isDefault, preferHls)
+            }
             SourceKind.M3U -> onStartM3u(name, m3uUrl, userAgent, referer, epgUrl, autoRefresh, isDefault)
             SourceKind.STALKER -> onStartStalker?.invoke(
                 name, portalUrl, mac, stalkerSerialNumber, stalkerDeviceId, stalkerDeviceId2,
