@@ -17,8 +17,16 @@ import tv.own.owntv.core.util.classifySyncFailure
 internal const val LOUNGE_EPG_URL =
     "https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-live-xmltv"
 
-internal fun guideUrlsWithLounge(sourceType: SourceType, providerUrls: List<String>): List<String> =
-    (providerUrls + if (sourceType == SourceType.XTREAM) listOf(LOUNGE_EPG_URL) else emptyList()).distinct()
+internal fun guideUrlsWithLounge(sourceType: SourceType, providerUrls: List<String>): List<String> {
+    if (sourceType != SourceType.XTREAM) return providerUrls.distinct()
+    // connect.loungetv.nz already serves the canonical Lounge XMLTV at xmltv.php.
+    // Do not register the same guide twice for canonical-gateway accounts.
+    val canonicalGateway = providerUrls.any { url ->
+        runCatching { java.net.URI(url).host?.equals("connect.loungetv.nz", ignoreCase = true) == true }
+            .getOrDefault(false)
+    }
+    return (providerUrls + if (canonicalGateway) emptyList() else listOf(LOUNGE_EPG_URL)).distinct()
+}
 
 /**
  * Shared semi-auto EPG sync used by both onboarding and Settings → Playlists. Registers the playlist's own
