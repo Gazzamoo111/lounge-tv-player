@@ -343,7 +343,9 @@ Deno.serve(async (req: Request) => {
 
     const action = url.searchParams.get("action") || "";
     const page = clamp(url.searchParams.get("page"), 1, 1, 100000);
-    const limit = clamp(url.searchParams.get("limit"), 250, 1, 500);
+    const limit = url.searchParams.has("limit")
+      ? clamp(url.searchParams.get("limit"), 250, 1, 10000)
+      : 10000;
     const categoryRaw = Number(url.searchParams.get("category_id") || 0);
     const categoryId = Number.isFinite(categoryRaw) && categoryRaw > 0 ? categoryRaw : null;
 
