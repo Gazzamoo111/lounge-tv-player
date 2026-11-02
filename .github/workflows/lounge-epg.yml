@@ -1,0 +1,70 @@
+name: Build Lounge EPG
+
+on:
+  push:
+    branches:
+      - qa/canonical-app-integration-20261102
+    paths:
+      - backend/epg/canonical-targets.json
+      - scripts/epg/build_lounge_epg.py
+      - .github/workflows/lounge-epg.yml
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lounge-epg-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build canonical guide
+        run: |
+          python3 -m py_compile scripts/epg/build_lounge_epg.py
+          python3 scripts/epg/build_lounge_epg.py
+
+      - name: Validate generated files
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path("backend/epg/generated")
+          guide = root / "guide.xml"
+          gz = root / "guide.xml.gz"
+          coverage = json.loads((root / "coverage.json").read_text())
+
+          assert guide.stat().st_size > 10_000, "guide.xml is unexpectedly small"
+          assert gz.stat().st_size > 1_000, "guide.xml.gz is unexpectedly small"
+          assert coverage["targets"] == 503, coverage
+          assert coverage["matched"] > 0, coverage
+          assert coverage["programmes"] > 0, coverage
+          print(json.dumps(coverage, indent=2))
+          PY
+
+      - name: Publish static guide branch
+        run: |
+          mkdir -p /tmp/lounge-epg-publish/epg
+          cp backend/epg/generated/guide.xml /tmp/lounge-epg-publish/epg/guide.xml
+          cp backend/epg/generated/guide.xml.gz /tmp/lounge-epg-publish/epg/guide.xml.gz
+          cp backend/epg/generated/coverage.json /tmp/lounge-epg-publish/epg/coverage.json
+
+          git config user.name "Lounge TV EPG Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout --orphan epg-publish
+          git rm -rf .
+          mkdir -p epg
+          cp /tmp/lounge-epg-publish/epg/* epg/
+          git add epg
+          git commit -m "Update Lounge TV canonical EPG"
+          git push --force origin HEAD:epg-data
