@@ -1,0 +1,26 @@
+{
+  "catalogue": "Lounge VOD v1",
+  "source_commit": "29a6b78",
+  "state": "locked-local-contract",
+  "raw_movies": 24343,
+  "raw_series": 8565,
+  "canonical_movies": 16703,
+  "canonical_series": 6853,
+  "keep_movies": 5142,
+  "keep_series": 3395,
+  "hold_movies": 6830,
+  "hold_series": 2636,
+  "drop_movies": 4731,
+  "drop_series": 822,
+  "duplicate_sources_consolidated": 2839,
+  "explicit_drops": 5,
+  "unresolved_reviews": 7,
+  "streaming_platform_views": 11,
+  "kids_family_titles": 1549,
+  "proposal_sql_sha256": "c2239f8195c56fe93d94b265ebf7862c8b7e2b3377af6dbe8645c98b05587d18",
+  "notes": [
+    "HOLD and DROP are never customer-visible.",
+    "Streaming is a view over canonical Movies and Series, not duplicate title records.",
+    "The original proposed-canonical-vod.sql from local commit 29a6b78 must be recovered and hash-verified before release activation."
+  ]
+}

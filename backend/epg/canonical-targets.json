@@ -1,0 +1,3024 @@
+{
+  "release": "universal-v1-staging",
+  "target_count": 503,
+  "targets": [
+    {
+      "id": "10Bold.au",
+      "name": "10 BOLD",
+      "category": "Australia",
+      "subcategory": "TV"
+    },
+    {
+      "id": "10Peach.au",
+      "name": "10 Peach",
+      "category": "Australia",
+      "subcategory": "TV"
+    },
+    {
+      "id": "5Action.uk",
+      "name": "5ACTION",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "5Select.uk",
+      "name": "5 SELECT",
+      "category": "Documentaries & Lifestyle",
+      "subcategory": "Documentaries"
+    },
+    {
+      "id": "5star.uk",
+      "name": "5 STAR",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "7Flix.au",
+      "name": "7flix",
+      "category": "Australia",
+      "subcategory": "TV"
+    },
+    {
+      "id": "7Mate.au",
+      "name": "7mate",
+      "category": "Australia",
+      "subcategory": "TV"
+    },
+    {
+      "id": "7TWO.au",
+      "name": "7two",
+      "category": "Australia",
+      "subcategory": "TV"
+    },
+    {
+      "id": "AandE.us",
+      "name": "A&E",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "ABC Kids",
+      "name": "ABC Kids",
+      "category": "Australia",
+      "subcategory": "TV"
+    },
+    {
+      "id": "ABC.au",
+      "name": "ABC",
+      "category": "Australia",
+      "subcategory": "TV"
+    },
+    {
+      "id": "ABCComedy.au",
+      "name": "ABC Comedy",
+      "category": "Australia",
+      "subcategory": "TV"
+    },
+    {
+      "id": "ABCME.au",
+      "name": "ABC ME",
+      "category": "Australia",
+      "subcategory": "TV"
+    },
+    {
+      "id": "ACCNetwork.us",
+      "name": "ACC NETWORK",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "Accuweather.us",
+      "name": "ACCUWEATHER",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "ACMAXHD ActionMAX HD",
+      "name": "CINEMAX ACTION EAST",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "ActionMax.us",
+      "name": "ACTION MAX",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "AdultSwim.us",
+      "name": "ADULT SWIM",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "AFNSports.us",
+      "name": "AFN SPORT",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "AltitudeSports.us",
+      "name": "ALTITUDE SPORTS",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "AMC.uk",
+      "name": "AMC",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "AMCPlus.us",
+      "name": "AMC PLUS",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "AmericasVoiceNews.us",
+      "name": "REAL AMERICAN VOICE",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "AnimalPlanet.uk",
+      "name": "D+| ANIMAL PLANET",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "AntennaTV.us",
+      "name": "ANTENNA TV",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "AspireTV.us",
+      "name": "ASPIRE",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "ATTSportsNetHouston.us",
+      "name": "AT&T SPORTSNET SOUTHWEST",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "ATTSportsNetPittsburgh.us",
+      "name": "SPORTSNET PITTSBURGH",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "AWealthofEntertainment.us",
+      "name": "AWE",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "AXSTV.us",
+      "name": "AXS TV",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "BabyFirstTV.us",
+      "name": "BABY FIRST",
+      "category": "Kids & Family",
+      "subcategory": "TV"
+    },
+    {
+      "id": "BABYUS Baby TV US",
+      "name": "BABY TV",
+      "category": "Kids & Family",
+      "subcategory": "TV"
+    },
+    {
+      "id": "BBC2NI.uk",
+      "name": "BBC TWO NORTHERN IRELAND",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "BBCAmerica.us",
+      "name": "BBC AMERICA",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "BBCOneNorthWest.uk",
+      "name": "BBC ONE NORTH WEST",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "BBCOneScotland.uk",
+      "name": "BBC ONE SCOTLAND",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "BBCOneSouthEast.uk",
+      "name": "BBC ONE SOUTH EAST",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "BBCOneWales.uk",
+      "name": "BBC ONE WALES",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "BBCTwoWales.uk",
+      "name": "BBC TWO WALES",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "beINSports.us",
+      "name": "BEIN SPORTS",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "beINSports1.au",
+      "name": "BEIN SPORTS 1",
+      "category": "Australia",
+      "subcategory": "Sports"
+    },
+    {
+      "id": "beINSports3.au",
+      "name": "BEIN SPORTS 3",
+      "category": "Australia",
+      "subcategory": "Sports"
+    },
+    {
+      "id": "beINSports4.us",
+      "name": "BEIN SPORTS 4",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "beINSports5.us",
+      "name": "BEIN SPORTS 5",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "beINSports6.us",
+      "name": "BEIN SPORTS 6",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "beINSports7.us",
+      "name": "BEIN SPORTS 7",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "beINSports8.us",
+      "name": "BEIN SPORTS 8",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "BestDirect.uk",
+      "name": "BEST DIRECT",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "BET.us",
+      "name": "BET",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "BETGospel.us",
+      "name": "BET GOSPEL",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "BETjams.us",
+      "name": "BET JAMS",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "BETSoul.us",
+      "name": "BET SOUL",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "BigTenNetwork.us",
+      "name": "BIG TEN NETWORK",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "BilliardsTV.kr",
+      "name": "BILLIARD TV",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "BlackCinema.us",
+      "name": "BLACK CINEMA",
+      "category": "Streaming",
+      "subcategory": "Pluto TV"
+    },
+    {
+      "id": "Blaze.uk",
+      "name": "BLAZE",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "BlazeTV.us",
+      "name": "BLAZE TV",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "BloombergTV.uk",
+      "name": "BLOOMBERG",
+      "category": "Entertainment",
+      "subcategory": "Business & Finance"
+    },
+    {
+      "id": "Boomerang.uk",
+      "name": "BOOMERANG",
+      "category": "Kids & Family",
+      "subcategory": "TV"
+    },
+    {
+      "id": "BounceTV.us",
+      "name": "BOUNCE TV",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "Bravo.us",
+      "name": "BRAVO",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "BTSport4ESPN.uk",
+      "name": "TNT SPORTS ESPN",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "BTSportUltimate.uk",
+      "name": "TNT ULTIMATE 4K+ [LIVE-EVENT]",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "BuzzrTV.us",
+      "name": "BUZZR",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "Cartoonito.uk",
+      "name": "CARTOONITO",
+      "category": "Kids & Family",
+      "subcategory": "TV"
+    },
+    {
+      "id": "CatchyComedy.us",
+      "name": "CATCHY COMEDY",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "CBSSportsGolazo.us",
+      "name": "CBS Sports Golazo Network",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "Challenge.uk",
+      "name": "CHALLENGE",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "Channel4.uk",
+      "name": "CHANNEL 4",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "Channel5.uk",
+      "name": "CHANNEL 5",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "Channel9.au",
+      "name": "Nine",
+      "category": "Australia",
+      "subcategory": "TV"
+    },
+    {
+      "id": "ChargeTV.us",
+      "name": "CHARGE!",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "CheddarBusiness.us",
+      "name": "CHEDDAR BUSINESS",
+      "category": "Entertainment",
+      "subcategory": "Business & Finance"
+    },
+    {
+      "id": "CheddarNews.us",
+      "name": "CHEDDAR NEWS",
+      "category": "Entertainment",
+      "subcategory": "Business & Finance"
+    },
+    {
+      "id": "CleoTV.us",
+      "name": "CLEO TV",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "CMDTVHD Comedy.TV HD",
+      "name": "COMEDY TV",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "CMT.us",
+      "name": "CMT",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "CNBCWorld.us",
+      "name": "CNBC WORLD",
+      "category": "Entertainment",
+      "subcategory": "Business & Finance"
+    },
+    {
+      "id": "ComedyCentral.uk",
+      "name": "COMEDY CENTRAL",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "ComedyCentral.us",
+      "name": "COMEDY CENTRAL WEST",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "ComedyCentralExtra.uk",
+      "name": "COMEDY CENT XTRA+1",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "Comet.us",
+      "name": "COMET",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "CookingChannel.us",
+      "name": "COOKING CHANNEL",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "CourtTV.uk",
+      "name": "COURT TV",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "CoziTV.us",
+      "name": "COZI",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "CrimeAndInvestigationNetwork.uk",
+      "name": "CRIME INVESTIGATION",
+      "category": "Documentaries & Lifestyle",
+      "subcategory": "Documentaries"
+    },
+    {
+      "id": "DaveJaVu.uk",
+      "name": "DAVE JA VU",
+      "category": "Movies",
+      "subcategory": "UK Movies"
+    },
+    {
+      "id": "DestinationAmerica.us",
+      "name": "DESTINATION AMERICA",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "DiscoveryChannel.uk",
+      "name": "DISCOVERY",
+      "category": "Documentaries & Lifestyle",
+      "subcategory": "Documentaries"
+    },
+    {
+      "id": "DiscoveryChannel.us",
+      "name": "DISCOVERY CHANNEL EAST",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "DiscoveryDMAX.uk",
+      "name": "D+| DMAX",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "DiscoveryFamily.us",
+      "name": "DISCOVERY FAMILY",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "DiscoveryHistory.uk",
+      "name": "D+| DISCOVERY HISTORY",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "DiscoveryLife.us",
+      "name": "DISCOVERY LIFE",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "DiscoveryScience.uk",
+      "name": "D+| DISCOVERY SCIENCE",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "DiscoveryTurbo.uk",
+      "name": "D+| DISCOVERY TURBO",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "DisneyJunior.us",
+      "name": "DISNEY JR",
+      "category": "Kids & Family",
+      "subcategory": "TV"
+    },
+    {
+      "id": "DisneyXD.us",
+      "name": "DISNEY XD",
+      "category": "Kids & Family",
+      "subcategory": "TV"
+    },
+    {
+      "id": "DogTV.us",
+      "name": "DOG TV",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "Drama.uk",
+      "name": "DRAMA",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "EarthX.uk",
+      "name": "EARTHX TV",
+      "category": "Documentaries & Lifestyle",
+      "subcategory": "Documentaries"
+    },
+    {
+      "id": "Eden.uk",
+      "name": "EDEN",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "EEntertainment.uk",
+      "name": "E! ENTERTAINMENT",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "ElevenSports.us",
+      "name": "NEXT LEVEL SPORTS",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "ESPN.us",
+      "name": "ESPN",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "ESPN2.us",
+      "name": "ESPN 2",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "ESPNNews.us",
+      "name": "ESPNEWS",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "EWTN.us",
+      "name": "EWTN CATHOLIC",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "FamilyEntertainment.us",
+      "name": "FETV",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "Fanduel.us",
+      "name": "FANDUEL TV",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "Film4.uk",
+      "name": "FILM 4",
+      "category": "Movies",
+      "subcategory": "UK Movies"
+    },
+    {
+      "id": "FiveUSA.uk",
+      "name": "5 USA",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "FoodNetwork.uk",
+      "name": "D+| FOOD NETWORK",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "FoodNetwork.us",
+      "name": "FOOD NETWORK",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "FOXCricket.au",
+      "name": "FOX CRICKET",
+      "category": "Australia",
+      "subcategory": "Sports"
+    },
+    {
+      "id": "FoxSports1.us",
+      "name": "FOX SPORTS 1",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "FoxSports2.us",
+      "name": "FOX SPORTS 2",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "FoxSports3.au",
+      "name": "FOX SPORTS 503",
+      "category": "Australia",
+      "subcategory": "Sports"
+    },
+    {
+      "id": "FoxSports5.au",
+      "name": "FOX SPORTS 505",
+      "category": "Australia",
+      "subcategory": "Sports"
+    },
+    {
+      "id": "FoxSports6.au",
+      "name": "FOX SPORTS 506",
+      "category": "Australia",
+      "subcategory": "Sports"
+    },
+    {
+      "id": "FoxSportsNews.au",
+      "name": "Fox Sports News Australia",
+      "category": "Australia",
+      "subcategory": "Sports"
+    },
+    {
+      "id": "FoxSportsSun.us",
+      "name": "FOX SPORTS SUN",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "Freeform.us",
+      "name": "FREEFORM",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "FuboSportsNetwork.us",
+      "name": "FUBO SPORTS NETWORK",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "FuseTV.us",
+      "name": "FUSE",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "FX.us",
+      "name": "FX",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "FXX.us",
+      "name": "FXX",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "FYI.us",
+      "name": "FYI",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "GACFamily.us",
+      "name": "GREAT AMERICAN FAMILY",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "GameShowNetwork.us",
+      "name": "GSN",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "GemsTV.uk",
+      "name": "GEMS TV",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "GetTV.us",
+      "name": "GET TV",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "GOLD.uk",
+      "name": "GOLD",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "GolfChannel.us",
+      "name": "GOLF CHANNEL",
+      "category": "Sports",
+      "subcategory": "Golf & Tennis"
+    },
+    {
+      "id": "GreatAction.uk",
+      "name": "GREAT! ACTION",
+      "category": "Movies",
+      "subcategory": "UK Movies"
+    },
+    {
+      "id": "GreatMovies.uk",
+      "name": "GREAT! MOVIES",
+      "category": "Movies",
+      "subcategory": "UK Movies"
+    },
+    {
+      "id": "GreatRomance.uk",
+      "name": "GREAT! ROMANCE",
+      "category": "Movies",
+      "subcategory": "UK Movies"
+    },
+    {
+      "id": "GreatTV.uk",
+      "name": "GREAT! TV",
+      "category": "Movies",
+      "subcategory": "UK Movies"
+    },
+    {
+      "id": "Grit.us",
+      "name": "GRIT",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "Hallmark.us",
+      "name": "HALLMARK",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "HallmarkFamily.us",
+      "name": "HALLMARK FAMILY",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "HallmarkMoviesMysteries.us",
+      "name": "HALLMARK MYSTERY",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "HBO.us",
+      "name": "HBO",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "HBO2.us",
+      "name": "HBO 2",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "HBOComedy.us",
+      "name": "HBO COMEDY",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "HBOFamily.us",
+      "name": "HBO FAMILY",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "HBOSignature.us",
+      "name": "HBO SIGNATURE",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "HBOZone.us",
+      "name": "HBO ZONE",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "HeroesAndIconsTV.us",
+      "name": "HEROES & ICONS",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "HGTV.uk",
+      "name": "D+| HGTV",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "HGTV.us",
+      "name": "HGTV",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "HighStreet1.uk",
+      "name": "HIGH STREET TV 1",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "HighStreet2.uk",
+      "name": "HIGH STREET TV 2",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "HighStreet3.uk",
+      "name": "HIGH STREET TV 3",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "HighStreet4.uk",
+      "name": "HIGH STREET TV 4",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "HighStreet5.uk",
+      "name": "HIGH STREET TV 5",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "History2.uk",
+      "name": "HISTORY 2",
+      "category": "Documentaries & Lifestyle",
+      "subcategory": "Documentaries"
+    },
+    {
+      "id": "HistoryChannel.uk",
+      "name": "SKY HISTORY",
+      "category": "Documentaries & Lifestyle",
+      "subcategory": "Documentaries"
+    },
+    {
+      "id": "HistoryChannel.us",
+      "name": "HISTORY",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "HLN.us",
+      "name": "HLN",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "HopeChannel.us",
+      "name": "HOPE CHANNEL",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "HorrorChannel.uk",
+      "name": "HORROR CHANNEL",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "IdealWorld.uk",
+      "name": "IDEAL WORLD",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "IndependentFilmChannel.us",
+      "name": "IFC",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "INDIEplex.us",
+      "name": "INDIEPLEX",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "INSP.us",
+      "name": "INSP",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "InvestigationDiscovery.uk",
+      "name": "D+| ID",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "InvestigationDiscovery.us",
+      "name": "ID",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "ION.us",
+      "name": "ION",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "IonMystery.us",
+      "name": "ION MYSTERY",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "IONPlus.us",
+      "name": "ION PLUS",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "ITV1.uk",
+      "name": "ITV 1",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "ITVGranada.uk",
+      "name": "ITV 1 Granada",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "JohnnyCarsonTV.us",
+      "name": "JOHNNY CARSON TV",
+      "category": "Streaming",
+      "subcategory": "Pluto TV"
+    },
+    {
+      "id": "JusticeCentral.us",
+      "name": "JUSTICE CENTRAL",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "Laff.us",
+      "name": "LAFF TV",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "LaLiga.uk",
+      "name": "PREMIER SPORT LALIGA TV",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "LawAndCrime.us",
+      "name": "LAW AND CRIME",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "Legend.uk",
+      "name": "LEGEND",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "liga",
+      "name": "BEIN SPORTS 2",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "LiverpoolFCTV.uk",
+      "name": "LFC TV",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "LocalTVTyneAndWear.uk",
+      "name": "ITV 1 TYNE TEES",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "Logo.us",
+      "name": "LOGO",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "LoveWorld.us",
+      "name": "LOVE WORLD",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "LRW.us",
+      "name": "LIFETIME REAL WOMEN",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "MadisonSquareGarden.us",
+      "name": "MSG",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "MadisonSquareGardenPlus.us",
+      "name": "MSG PLUS",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "MadisonSquareGardenPlus2.us",
+      "name": "MSG 2 PLUS",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "MagnoliaNetwork.us",
+      "name": "MAGNOLIA NETWORK",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "MAVTV.us",
+      "name": "MAV TV",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "MeTV.Toons.us2",
+      "name": "METV TOONS",
+      "category": "Kids & Family",
+      "subcategory": "TV"
+    },
+    {
+      "id": "MeTvToons.us",
+      "name": "ME TV",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "MGMPlusDriveIn.us",
+      "name": "MGM+ DRIVE",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "MGMPlusHits.us",
+      "name": "MGM+ HITS",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "MGMPlusMarquee.us",
+      "name": "MGM+ MARQUEE",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "MilitaryHistory.us",
+      "name": "MILITARY HISTORY",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "MLB Strike Zone - MLBSZ1",
+      "name": "MLB STRIKE ZONE",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "MLBNetwork.us",
+      "name": "MLB NETWORK",
+      "category": "Sports",
+      "subcategory": "MLB"
+    },
+    {
+      "id": "More4.uk",
+      "name": "MORE 4",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "MoreMax.us",
+      "name": "MOREMAX",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "MOVIEplex.us",
+      "name": "MOVIEPLEX",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "Movies24.uk",
+      "name": "MOVIES 24",
+      "category": "Movies",
+      "subcategory": "UK Movies"
+    },
+    {
+      "id": "MTV2.us",
+      "name": "MTV 2",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "MTVClassic.us",
+      "name": "MTV CLASSIC",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "MTVLive.us",
+      "name": "MTV LIVE",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "MUTV.uk",
+      "name": "MUTV",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "NASATV.us",
+      "name": "SPACE CITY",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "NatGeo.uk",
+      "name": "NAT GEO",
+      "category": "Documentaries & Lifestyle",
+      "subcategory": "Documentaries"
+    },
+    {
+      "id": "NatGeoWild.uk",
+      "name": "NAT GEO WILD",
+      "category": "Documentaries & Lifestyle",
+      "subcategory": "Documentaries"
+    },
+    {
+      "id": "NBATV.us",
+      "name": "NBA TV",
+      "category": "Sports",
+      "subcategory": "NBA & WNBA"
+    },
+    {
+      "id": "NBCSNWashington.us",
+      "name": "CSN WASHINGTON",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "NBCSportsBayArea.us",
+      "name": "NBC SPORTS BAY AREA",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "NBCSportsBoston.us",
+      "name": "NBC SPORTS WASHINGTON",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "NBCSportsCalifornia.us",
+      "name": "NBC SPORTS CALIFORNIA",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "NBCSportsChicago.us",
+      "name": "NBC SPORTS CHICAGO",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "NBCSportsNetwork.us",
+      "name": "NBC SPORTS NETWORK",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "NBCSportsPhiladelphia.us",
+      "name": "NBC SPORTS PHILADELFIA",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "NFLChannel.us",
+      "name": "NFL CHANNEL",
+      "category": "Streaming",
+      "subcategory": "Pluto TV"
+    },
+    {
+      "id": "NFLRedZone.us",
+      "name": "NFL REDZONE (LOWER) (F)",
+      "category": "Sports",
+      "subcategory": "NFL"
+    },
+    {
+      "id": "NHLNetwork.us",
+      "name": "NHL NETWORK",
+      "category": "Sports",
+      "subcategory": "NHL"
+    },
+    {
+      "id": "Nickelodeon.uk",
+      "name": "NICKELODEON",
+      "category": "Entertainment",
+      "subcategory": "UK Now TV"
+    },
+    {
+      "id": "NickJrToo.uk",
+      "name": "NICK JUNIOR TOO",
+      "category": "Kids & Family",
+      "subcategory": "TV"
+    },
+    {
+      "id": "NickJunior.uk",
+      "name": "NICK",
+      "category": "Kids & Family",
+      "subcategory": "TV"
+    },
+    {
+      "id": "Nicktoons.uk",
+      "name": "NICKTOONS",
+      "category": "Entertainment",
+      "subcategory": "UK Now TV"
+    },
+    {
+      "id": "Nicktoons.us",
+      "name": "NICK TOONS",
+      "category": "Kids & Family",
+      "subcategory": "TV"
+    },
+    {
+      "id": "OutdoorChannel.us",
+      "name": "OUTDOOR CHANNEL",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "OutsideTV.us",
+      "name": "OUTSIDE TV",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "Ovation.us",
+      "name": "OVATION",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "Oxygen.us",
+      "name": "OXYGEN",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "PBSAmerica.uk",
+      "name": "PBS AMERICA",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "PickTV.uk",
+      "name": "SKY MIX",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "PixLTV.us",
+      "name": "PIXL",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "PokerGo.us",
+      "name": "POKERGO",
+      "category": "Streaming",
+      "subcategory": "Pluto TV"
+    },
+    {
+      "id": "Pop.uk",
+      "name": "POP",
+      "category": "Kids & Family",
+      "subcategory": "TV"
+    },
+    {
+      "id": "PursuitChannel.us",
+      "name": "PURSUIT CHANNEL",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "Quest.uk",
+      "name": "D+| QUEST",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "QuestRed.uk",
+      "name": "D+| QUEST RED",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "QVC.uk",
+      "name": "QVC UK.",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "QVC.us",
+      "name": "QVC",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "QVCPlus.us",
+      "name": "QVC 2",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "Really.uk",
+      "name": "D+| REALLY",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "recipetv-hd",
+      "name": "RECIPE TV",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "RedBullTV.us",
+      "name": "RED BULL TV",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "RETROplex.us",
+      "name": "RETROPLEX",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "RetroTV.us",
+      "name": "RETRO TV",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "Revolt.us",
+      "name": "REVOLT",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "RFDTV.us",
+      "name": "RFD TV",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "S4C.uk",
+      "name": "S4C",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "SBS.au",
+      "name": "SBS",
+      "category": "Australia",
+      "subcategory": "TV"
+    },
+    {
+      "id": "SBSFood.au",
+      "name": "SBS Food",
+      "category": "Australia",
+      "subcategory": "TV"
+    },
+    {
+      "id": "SBSViceland.au",
+      "name": "SBS Viceland",
+      "category": "Australia",
+      "subcategory": "TV"
+    },
+    {
+      "id": "SBSWorldMovies.au",
+      "name": "SBS World Movies",
+      "category": "Australia",
+      "subcategory": "TV"
+    },
+    {
+      "id": "ScreenPix.us",
+      "name": "SCREENPIX",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "ScreenPixAction.us",
+      "name": "SCREENPIX ACTION",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "ScreenPixVoices.us",
+      "name": "SCREENPIX VOICES",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "ScreenPixWestern.us",
+      "name": "SCREENPIX WESTERNS",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "SECNetwork.us",
+      "name": "SEC NETWORK",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "Showtime.us",
+      "name": "SHOWTIME BET",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "Showtime2.us",
+      "name": "SHOWTIME 2",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "ShowtimeExtreme.us",
+      "name": "SHOWTIME EXTREME",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "ShowtimeFamilyZone.us",
+      "name": "SHOWTIME FAMILY ZONE",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "ShowtimeNext.us",
+      "name": "SHOWTIME NEXT",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "ShowtimeShowcase.us",
+      "name": "SHOWTIME SHOWCASE",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "ShowtimeWomen.us",
+      "name": "SHOWTIME WOMEN",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "ShowtimeXBet.us",
+      "name": "SHOXBET (EAST)",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "Sky.Drama.HD.uk",
+      "name": "SKY DRAMA",
+      "category": "Entertainment",
+      "subcategory": "UK Now TV"
+    },
+    {
+      "id": "SkyAction.uk",
+      "name": "SKY ACTION",
+      "category": "Entertainment",
+      "subcategory": "UK Now TV"
+    },
+    {
+      "id": "SkyArts.uk",
+      "name": "SKY ARTS 1",
+      "category": "Entertainment",
+      "subcategory": "UK Now TV"
+    },
+    {
+      "id": "SkyAtlantic.uk",
+      "name": "SKY ATLANTIC",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "SkyCinemaAnimation.uk",
+      "name": "SKY CINEMA ANIMATION",
+      "category": "Movies",
+      "subcategory": "UK Movies"
+    },
+    {
+      "id": "SkyCinemaComedy.uk",
+      "name": "SKY CINEMA COMEDY",
+      "category": "Movies",
+      "subcategory": "UK Movies"
+    },
+    {
+      "id": "SkyCinemaDrama.uk",
+      "name": "SKY CINEMA DRAMA",
+      "category": "Movies",
+      "subcategory": "UK Movies"
+    },
+    {
+      "id": "SkyCinemaGreats.uk",
+      "name": "SKY CINEMA GREATS",
+      "category": "Movies",
+      "subcategory": "UK Movies"
+    },
+    {
+      "id": "SkyCinemaHits.uk",
+      "name": "SKY CINEMA HITS",
+      "category": "Movies",
+      "subcategory": "UK Movies"
+    },
+    {
+      "id": "SkyCinemaSciFiHorror.uk",
+      "name": "SKY CINEMA SCIFI",
+      "category": "Movies",
+      "subcategory": "UK Movies"
+    },
+    {
+      "id": "SkyComedy.uk",
+      "name": "SKY COMEDY",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "SkyCrime.uk",
+      "name": "SKY CRIME",
+      "category": "Documentaries & Lifestyle",
+      "subcategory": "Documentaries"
+    },
+    {
+      "id": "SkyDocumentaries.uk",
+      "name": "SKY DOCUMENTARIES",
+      "category": "Documentaries & Lifestyle",
+      "subcategory": "Documentaries"
+    },
+    {
+      "id": "SkyMax.uk",
+      "name": "SKY MAX",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "SkyNature.uk",
+      "name": "SKY NATURE",
+      "category": "Documentaries & Lifestyle",
+      "subcategory": "Documentaries"
+    },
+    {
+      "id": "SKYNewsLive.au",
+      "name": "SKY NEWS",
+      "category": "Australia",
+      "subcategory": "TV"
+    },
+    {
+      "id": "SkyPremiere.uk",
+      "name": "SKY CINEMA PREMIERE",
+      "category": "Entertainment",
+      "subcategory": "UK Now TV"
+    },
+    {
+      "id": "SkyShowcase.uk",
+      "name": "SKY SHOWCASE",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "SkySport1.nz",
+      "name": "SKY SPORT 1",
+      "category": "New Zealand",
+      "subcategory": "Sports"
+    },
+    {
+      "id": "SkySport2.nz",
+      "name": "SKY SPORTS NZ 2",
+      "category": "New Zealand",
+      "subcategory": "Sports"
+    },
+    {
+      "id": "SkySport3.nz",
+      "name": "SKY SPORTS NZ 3",
+      "category": "New Zealand",
+      "subcategory": "Sports"
+    },
+    {
+      "id": "SkySport4.nz",
+      "name": "SKY SPORTS NZ 4",
+      "category": "New Zealand",
+      "subcategory": "Sports"
+    },
+    {
+      "id": "SkySport5.nz",
+      "name": "SKY SPORTS NZ 5",
+      "category": "New Zealand",
+      "subcategory": "Sports"
+    },
+    {
+      "id": "SkySport6.nz",
+      "name": "SKY SPORTS NZ 6",
+      "category": "New Zealand",
+      "subcategory": "Sports"
+    },
+    {
+      "id": "SkySport7.nz",
+      "name": "SKY SPORTS NZ 7",
+      "category": "New Zealand",
+      "subcategory": "Sports"
+    },
+    {
+      "id": "SkySport8.nz",
+      "name": "SKY SPORTS NZ PL",
+      "category": "New Zealand",
+      "subcategory": "Sports"
+    },
+    {
+      "id": "SkySport9.nz",
+      "name": "SKY SPORTS NZ 9",
+      "category": "New Zealand",
+      "subcategory": "Sports"
+    },
+    {
+      "id": "SkySportsAction.uk",
+      "name": "SKY SPORTS ACTION",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "SkySportsArena.uk",
+      "name": "SKY SPORTS +",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "SkySportsCricket.uk",
+      "name": "SKY SPORTS CRICKET",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "SkySportSelect.nz",
+      "name": "SKY SPORTS NZ SELECT",
+      "category": "New Zealand",
+      "subcategory": "Sports"
+    },
+    {
+      "id": "SkySportsF1.uk",
+      "name": "SKY SPORTS F1",
+      "category": "Sports",
+      "subcategory": "Motorsport"
+    },
+    {
+      "id": "SkySportsFootball.uk",
+      "name": "SKY SPORTS FOOTBALL",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "SkySportsGolf.uk",
+      "name": "SKY SPORTS GOLF",
+      "category": "Sports",
+      "subcategory": "Golf & Tennis"
+    },
+    {
+      "id": "SkySportsMainEvent.uk",
+      "name": "SKY SPORTS MAIN EVENT",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "SkySportsMix.uk",
+      "name": "SKY SPORTS MIX",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "SkySportsNews.uk",
+      "name": "SKY SPORTS NEWS",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "SkySportsPremiereLeague.uk",
+      "name": "SKY SPORTS PL",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "SkyThriller.uk",
+      "name": "SKY CINEMA THRILLER",
+      "category": "Movies",
+      "subcategory": "UK Movies"
+    },
+    {
+      "id": "SkyWitness.uk",
+      "name": "SKY WITNESS",
+      "category": "Entertainment",
+      "subcategory": "UK Now TV"
+    },
+    {
+      "id": "SmithsonianChannel.us",
+      "name": "SMITHSONIAN CHANNEL",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "SonyMovieChannel.us",
+      "name": "SONY MOVIE CHANNEL",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "SonyMovies.uk",
+      "name": "SONY CHANNEL",
+      "category": "Movies",
+      "subcategory": "UK Movies"
+    },
+    {
+      "id": "SonyMoviesAction.uk",
+      "name": "SONY MOVIES ACTION",
+      "category": "Movies",
+      "subcategory": "UK Movies"
+    },
+    {
+      "id": "SoYummy.us",
+      "name": "SO YUMMY!",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "SPECSN Spectrum SportsNet HD",
+      "name": "SPORTSNET LA LAKERS",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "SpectrumSportsNet.us",
+      "name": "SPECTRUM SPORTSNET",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "SportsBoston.us",
+      "name": "NBC SPORTS BOSTON",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "SportsmanChannel.ca",
+      "name": "HUNT CHANNEL",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "Stadium.us",
+      "name": "STADIUM",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "StartTV.us",
+      "name": "START TV",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "Starz.us",
+      "name": "STARZ",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "StarzCinema.us",
+      "name": "STARZ CINEMA",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "StarzComedy.us",
+      "name": "STARZ COMEDY",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "StarzEdge.us",
+      "name": "STARZ EDGE",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "StarzEncore.us",
+      "name": "STARZ ENCORE",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "StarzEncoreAction.us",
+      "name": "STARZ ENCORE ACTION",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "StarzEncoreBlack.us",
+      "name": "STARZ ENCORE BLACK",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "StarzEncoreClassics.us",
+      "name": "STARZ ENCORE CLASSIC",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "StarzEncoreFamily.us",
+      "name": "STARZ ENCORE FAMILY",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "StarzEncoreSuspense.us",
+      "name": "STARZ ENCORE SUSPENSE",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "StarzEncoreWesterns.us",
+      "name": "STARZ ENCORE WESTERNS",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "StarzInBlack.us",
+      "name": "STARZ BLACK",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "StarzKidsFamily.us",
+      "name": "STARZ KIDS & FAMILY",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "STV.uk",
+      "name": "STV",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "SundanceTV.us",
+      "name": "SUNDANCE",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "Syfy.us",
+      "name": "SYFY",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "TalkingPictures.uk",
+      "name": "TALKING PICTURES",
+      "category": "Movies",
+      "subcategory": "UK Movies"
+    },
+    {
+      "id": "Tastemade.us",
+      "name": "TASTEMADE",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "TBN.us",
+      "name": "TBN",
+      "category": "Streaming",
+      "subcategory": "Pluto TV"
+    },
+    {
+      "id": "TennisChannel.us",
+      "name": "TENNIS CHANNEL",
+      "category": "Sports",
+      "subcategory": "Golf & Tennis"
+    },
+    {
+      "id": "TeReo.nz",
+      "name": "TE REO (NZ)",
+      "category": "Australia",
+      "subcategory": "TV"
+    },
+    {
+      "id": "TFD.us",
+      "name": "THE FILM DETECTIVE",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "The Blaze TV",
+      "name": "THE BLAZE",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "TheCowboyChannel.us",
+      "name": "COWBOY CHANNEL",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "TheJewelryChannel.uk",
+      "name": "TJC",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "TLC.uk",
+      "name": "D+| TLC",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "TMC The Movie Channel",
+      "name": "THE MOVIE CHANNEL",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "tmc-us-pacific",
+      "name": "TCM WEST",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "TNT.Sport.BoxOffice.HD.uk",
+      "name": "TNT BOX OFFICE",
+      "category": "Sports",
+      "subcategory": "Combat Sports"
+    },
+    {
+      "id": "TNT.Sports.1.HD.uk",
+      "name": "TNT SPORTS 1",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "TNT.Sports.2.HD.uk",
+      "name": "TNT SPORTS 2",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "TNT.Sports.3.HD.uk",
+      "name": "TNT SPORTS 3",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "TNT.Sports.4.HD.uk",
+      "name": "TNT SPORTS 4",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "TNT.Sports.5.HD.uk",
+      "name": "TNT SPORTS 5",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "TNT.us",
+      "name": "TNT",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "TNTSports1.uk",
+      "name": "TNT SPORT (UHD/4K)",
+      "category": "Entertainment",
+      "subcategory": "UK Now TV"
+    },
+    {
+      "id": "TNTSports2.uk",
+      "name": "TNT SPORT 2",
+      "category": "Entertainment",
+      "subcategory": "UK Now TV"
+    },
+    {
+      "id": "TNTSports3.uk",
+      "name": "TNT SPORT 3",
+      "category": "Entertainment",
+      "subcategory": "UK Now TV"
+    },
+    {
+      "id": "TogetherTV.uk",
+      "name": "TOGETHER",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "TravelChannel.us",
+      "name": "TRAVEL CHANNEL",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "TrueCrime.uk",
+      "name": "TRUE CRIME",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "truTV.us",
+      "name": "TRUTV",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "TVG.us",
+      "name": "TVG NETWORK",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "TVLand.us",
+      "name": "TV LAND",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "TVOne.us",
+      "name": "TV ONE",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "TVSN.nz",
+      "name": "TVSN SHOPPING (NZ)",
+      "category": "Australia",
+      "subcategory": "TV"
+    },
+    {
+      "id": "TVWarehouse.uk",
+      "name": "TV WAREHOUSE",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "U.and.YESTERDAY.uk",
+      "name": "YESTERDAY",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "UandDave.uk",
+      "name": "DAVE",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "uk.412 Premier 1 HD",
+      "name": "PREMIER SPORTS 1 IRELAND",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "uk.425 LFCTV HD",
+      "name": "LFC",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "uk.5 USA +1",
+      "name": "5 USA +1",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "uk.5STAR +1",
+      "name": "5 STAR+1",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "uk.Alibi HD",
+      "name": "ALIBI",
+      "category": "Entertainment",
+      "subcategory": "UK Now TV"
+    },
+    {
+      "id": "uk.BBC1 London",
+      "name": "BBC ONE LONDON",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "uk.BBC1 West",
+      "name": "BBC ONE WEST",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "uk.BBC2 N Ireland",
+      "name": "BBC TWO",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "uk.BBC2 Scotland",
+      "name": "BBC TWO SCOTLAND",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "uk.Boomerang +1",
+      "name": "BOOMERANG +1",
+      "category": "Kids & Family",
+      "subcategory": "TV"
+    },
+    {
+      "id": "uk.Cartoon Network",
+      "name": "CARTOON NETWORK",
+      "category": "Entertainment",
+      "subcategory": "UK Now TV"
+    },
+    {
+      "id": "uk.CBS Reality+1",
+      "name": "CBS REALITY +1",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "uk.Channel 5+1",
+      "name": "CHANNEL 5 +1",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "uk.Disc.Turbo",
+      "name": "DISCOVERY TURBO +1",
+      "category": "Documentaries & Lifestyle",
+      "subcategory": "Documentaries"
+    },
+    {
+      "id": "uk.Disney Chnl",
+      "name": "DISNEY CHANNEL",
+      "category": "Kids & Family",
+      "subcategory": "TV"
+    },
+    {
+      "id": "uk.E4+1",
+      "name": "E4 +1",
+      "category": "Movies",
+      "subcategory": "UK Movies"
+    },
+    {
+      "id": "uk.Eurosport 1",
+      "name": "EUROSPORT 1",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "uk.Eurosport 2",
+      "name": "EUROSPORTS 2",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "uk.Eurosport 2 HD",
+      "name": "EUROSPORT 2",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "uk.horror ch+1",
+      "name": "HORROR CHANNEL +1",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "uk.MTV HD",
+      "name": "MTV",
+      "category": "Entertainment",
+      "subcategory": "UK Now TV"
+    },
+    {
+      "id": "uk.QVC Beauty",
+      "name": "QVC BEAUTY",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "uk.QVC Extra",
+      "name": "QVC EXTRA",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "uk.QVC Style",
+      "name": "QVC STYLE",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "uk.Sky Cinema Family",
+      "name": "SKY CINEMA FAMILY",
+      "category": "Movies",
+      "subcategory": "UK Movies"
+    },
+    {
+      "id": "uk.Sky Cinema Sci Fi & Horror",
+      "name": "SKY CINEMA SCI-FI",
+      "category": "Movies",
+      "subcategory": "UK Movies"
+    },
+    {
+      "id": "uk.Sky Sports Premier League",
+      "name": "SKY SPORTS PREMIER LEAGUE",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "uk.W",
+      "name": "W! - WATCH",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "UK| ITV 1",
+      "name": "ITV 1 +1",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "ukBBC1 East Midlands",
+      "name": "BBC ONE EAST MIDLANDS",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "UpliftingEntertainment.us",
+      "name": "UP TV",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US-ABC HD Boston",
+      "name": "ABC",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US-American Heroes Channel",
+      "name": "AMERICA HEROES",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US-BET Her",
+      "name": "BET HER",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US-Bounce TV",
+      "name": "BOUNCE XL",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US-Cartoon Network USA - Eastern Feed",
+      "name": "CARTOON NETWORK EAST",
+      "category": "Kids & Family",
+      "subcategory": "TV"
+    },
+    {
+      "id": "US-Cartoon Network USA - Pacific Feed",
+      "name": "CARTOON NETWORK WEST",
+      "category": "Kids & Family",
+      "subcategory": "TV"
+    },
+    {
+      "id": "US-CBS Sports Network USA",
+      "name": "CBS SPORTS NETWORK",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "US-Cinemax - Pacific Feed",
+      "name": "CINEMAX WEST",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "US-CNBC USA",
+      "name": "CNBC",
+      "category": "Entertainment",
+      "subcategory": "Business & Finance"
+    },
+    {
+      "id": "US-Disney - Pacific Feed",
+      "name": "DISNEY CHANNEL WEST",
+      "category": "Kids & Family",
+      "subcategory": "TV"
+    },
+    {
+      "id": "US-El Rey Network",
+      "name": "EL REY REBEL",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US-Fox Business",
+      "name": "FOX BUSINESS NETWORK",
+      "category": "Entertainment",
+      "subcategory": "Business & Finance"
+    },
+    {
+      "id": "US-FOX HD Philadelphia",
+      "name": "BLOOMBERG QUICKTAKE",
+      "category": "Entertainment",
+      "subcategory": "Business & Finance"
+    },
+    {
+      "id": "US-Fox Sports Detroit",
+      "name": "FOX SPORTS DETROIT",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "US-Fox Sports Midwest",
+      "name": "FOX SPORTS MIDWEST",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "US-Fox Sports North",
+      "name": "FOX SPORTS NORTH",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "US-Fox Sports Ohio",
+      "name": "FOX SPORTS OHIO",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "US-Fox Sports San Diego",
+      "name": "FOX SPORTS SAN DIEGO",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "US-Fox Sports South",
+      "name": "FOX SPORTS SOUTH",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "US-Fox Sports Wisconsin",
+      "name": "FOX SPORTS WISCONSIN",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "US-FX Movie Channel",
+      "name": "FXM",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US-GAC - Great American Country",
+      "name": "GREAT AMERICAN COUNTRY",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US-HBO - Pacific Feed",
+      "name": "HBO WEST",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "US-HDNet Movies",
+      "name": "HD NET MOVIES",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US-Lifetime Movies - East",
+      "name": "LIFETIME MOVIE NETWORK",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US-Lifetime Network US - Eastern Feed",
+      "name": "LIFETIME",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US-MGM HD (USA)",
+      "name": "MGM+",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "US-Motor Trend",
+      "name": "MOTORTREND",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US-NBC Sports Bay Area",
+      "name": "NBC BAY AREA",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "US-NBC Sports Boston",
+      "name": "CSN BOSTON",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "US-NBC Sports California",
+      "name": "CSN CALIFORNIA",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "US-NBC Sports Chicago",
+      "name": "CHICAGO SPORTS NETWORK",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "US-NBC Sports Philadelphia",
+      "name": "CSN PHILADELPHIA",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "US-New England Sports Network",
+      "name": "NESN HD (bk)",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "US-New England Sports Network Plus",
+      "name": "NESN PLUS",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "US-NFL Red Zone",
+      "name": "NFL REDZONE",
+      "category": "Sports",
+      "subcategory": "NFL"
+    },
+    {
+      "id": "US-Oprah Winfrey Network USA Eastern",
+      "name": "OWN",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US-Paramount Network USA - Eastern Feed",
+      "name": "PARAMOUNT",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US-PBS (KCTS) Seattle, WA",
+      "name": "PBS",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US-PBS Kids (KCTS-TV2) Seattle, WA",
+      "name": "PBS KIDS",
+      "category": "Kids & Family",
+      "subcategory": "TV"
+    },
+    {
+      "id": "US-ReelzChannel",
+      "name": "REELZ",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US-Showtime West",
+      "name": "SHOWTIME WEST",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "US-Starz - Pacific",
+      "name": "STARZ WEST",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "US-Starz Encore - Pacific",
+      "name": "STARZ ENCORE WEST",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "US-TBS - East",
+      "name": "TBS",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US-TeenNick - Eastern",
+      "name": "TEEN NICK",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US-The Tennis Channel",
+      "name": "TENNIS",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "US-Turner Classic Movies USA",
+      "name": "TCM",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US-TVG 2 - Horse Racing",
+      "name": "TVG NETWORK 2",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US-Viceland USA",
+      "name": "VICELAND",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US-WFN-World Fishing Network HD",
+      "name": "WORLD FISHING NETWORK",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "us.FM",
+      "name": "FUSE MUSIC",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "us.Game TV",
+      "name": "GAME TV",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "us.Ginx eSports TV Canada",
+      "name": "GINX ESPORTS",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "us.Local Programming",
+      "name": "LOCAL NOW",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "us.MSG 2",
+      "name": "MSG 2",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "us.Nautical Channel (US)",
+      "name": "NAUTICAL CHANNEL",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "us.NBC Sports Chicago Plus HD",
+      "name": "NBC SPORTS CHICAGO PLUS",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "us.NBC Sports Philadelphia+",
+      "name": "CSN PHILADELPHIA PLUS",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "us.Nickelodeon USA - Pacific Feed",
+      "name": "NICKELODEON WEST",
+      "category": "Kids & Family",
+      "subcategory": "TV"
+    },
+    {
+      "id": "us.SHOXBET - Pacific",
+      "name": "SHOXBET (WEST)",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "us.SNY Sportsnet NY",
+      "name": "SPORTSNET NEW YORK",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "us.The Fight Network (United States) SDTV",
+      "name": "FIGHT NETWORK",
+      "category": "Sports",
+      "subcategory": "Combat Sports"
+    },
+    {
+      "id": "us.VSIN",
+      "name": "VSIN",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "US| ANIMAL PLANET WEST HD",
+      "name": "ANIMAL PLANET WEST",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US| BRAVO WEST HD",
+      "name": "BRAVO WEST",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US| CINEMAX EAST HD",
+      "name": "CINEMAX EAST",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "US| CINEMAX MOREMAX HD",
+      "name": "CINEMAX MOREMAX",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "US| DISCOVERY WEST HD",
+      "name": "DISCOVERY WEST",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US| DISNEY JR WEST HD",
+      "name": "DISNEY JR WEST",
+      "category": "Kids & Family",
+      "subcategory": "TV"
+    },
+    {
+      "id": "US| DISNEY XD WEST HD",
+      "name": "DISNEY XD WEST",
+      "category": "Kids & Family",
+      "subcategory": "TV"
+    },
+    {
+      "id": "US| E! ENTERTAINMENT WEST HD",
+      "name": "E! ENTERTAINMENT WEST",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US| FOOD NETWORK WEST HD",
+      "name": "FOOD NETWORK WEST",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US| FREEFORM WEST HD",
+      "name": "FREEFORM WEST",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US| FX WEST HD",
+      "name": "FX WEST",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US| FXX WEST HD",
+      "name": "FXX WEST",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US| HGTV WEST HD",
+      "name": "HGTV WEST",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US| ID WEST HD",
+      "name": "ID WEST",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US| NBC GOLF",
+      "name": "NBC GOLF",
+      "category": "Sports",
+      "subcategory": "Golf & Tennis"
+    },
+    {
+      "id": "US| OXYGEN WEST HD",
+      "name": "OXYGEN WEST",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US| SMITHSONIAN CHANNEL WEST HD",
+      "name": "SMITHSONIAN CHANNEL WEST",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US| SYFY WEST HD",
+      "name": "SYFY WEST",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US| TBS WEST HD",
+      "name": "TBS WEST",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US| TLC WEST",
+      "name": "TLC WEST",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US| TNT WEST HD",
+      "name": "TNT WEST",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US| TRAVEL CHANNEL WEST HD",
+      "name": "TRAVEL CHANNEL WEST",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US| TRUTV WEST HD",
+      "name": "TRUTV WEST",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "US| USA NETWORK WEST HD",
+      "name": "USA NETWORK WEST",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "USANetwork.us",
+      "name": "USA NETWORK",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "UTV.uk",
+      "name": "UTV",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "VH1.us",
+      "name": "VH1",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "ViaplaySports1.uk",
+      "name": "PREMIER SPORT 1",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "ViaplaySports2.uk",
+      "name": "PREMIER SPORT 2",
+      "category": "Sports",
+      "subcategory": "UK Sports"
+    },
+    {
+      "id": "ViceOnTV.us",
+      "name": "VICE",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "W.uk",
+      "name": "W",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    },
+    {
+      "id": "WeatherChannel.us",
+      "name": "THE WEATHER CHANNEL",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "WesternTV.us",
+      "name": "WESTERN TV",
+      "category": "Streaming",
+      "subcategory": "Pluto TV"
+    },
+    {
+      "id": "WeTV.us",
+      "name": "WE TV",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "WGN9Chicago.us",
+      "name": "WGN9",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "WillowCricket.us",
+      "name": "WILLOW CRICKET",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "WKMGDT2.us",
+      "name": "DABL TV",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "WMEU4.us",
+      "name": "MeTV",
+      "category": "Movies",
+      "subcategory": "US Movies"
+    },
+    {
+      "id": "WorldPokerTour.us",
+      "name": "WORLD POKER TOUR",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "WVTVDT2.us",
+      "name": "MY24 MILWAUKEE",
+      "category": "Entertainment",
+      "subcategory": "US TV"
+    },
+    {
+      "id": "WWE.us",
+      "name": "WWE",
+      "category": "Sports",
+      "subcategory": "Combat Sports"
+    },
+    {
+      "id": "YESNetwork.us",
+      "name": "YES NETWORK",
+      "category": "Sports",
+      "subcategory": "Networks & Talk"
+    },
+    {
+      "id": "Yesterday.uk",
+      "name": "BBC BRIT",
+      "category": "Entertainment",
+      "subcategory": "UK TV"
+    }
+  ]
+}

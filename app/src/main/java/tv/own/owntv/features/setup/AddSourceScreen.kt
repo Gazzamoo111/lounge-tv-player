@@ -60,6 +60,9 @@ import tv.own.owntv.ui.components.StorageBrowser
 
 private enum class SourceKind { XTREAM, M3U, STALKER }
 
+private const val LOUNGE_XTREAM_GATEWAY = "https://connect.loungetv.nz"
+private const val LOUNGE_XTREAM_USER_AGENT = "LoungeTV/Android"
+
 /** UI state of the Xtream "Test HLS support" probe. Local to this screen — the probe is one short
  *  request and saves nothing unless the source already exists. */
 private sealed interface HlsTestUi {
@@ -128,8 +131,13 @@ fun AddSourceScreen(
             },
         )
     }
-    var name by remember(initial) { mutableStateOf(initial?.name ?: "") }
-    var server by remember(initial) { mutableStateOf(if (initial != null && initial.type == SourceType.XTREAM) initial.url else "") }
+    var name by remember(initial) { mutableStateOf(initial?.name ?: "Lounge TV") }
+    var server by remember(initial) {
+        mutableStateOf(
+            if (initial != null && initial.type == SourceType.XTREAM) initial.url
+            else LOUNGE_XTREAM_GATEWAY,
+        )
+    }
     var username by remember(initial) { mutableStateOf(initial?.username ?: "") }
     var password by remember(initial) { mutableStateOf(initial?.password ?: "") }
     var m3uUrl by remember(initial) { mutableStateOf(if (initial != null && initial.type == SourceType.M3U) initial.url else "") }
@@ -402,7 +410,17 @@ fun AddSourceScreen(
     // panel, reached with ▶ from any row.
     val submit = {
         when (kind) {
-            SourceKind.XTREAM -> onStartXtream(name, server, username, password, userAgent, referer, epgUrl, autoRefresh, syncLive, syncMovies, syncSeries, isDefault, preferHls)
+            SourceKind.XTREAM -> {
+                val serverHost = server.trim().lowercase()
+                    .removePrefix("https://")
+                    .removePrefix("http://")
+                    .substringBefore('/')
+                    .substringBefore(':')
+                val effectiveUserAgent =
+                    if (serverHost == "connect.loungetv.nz") LOUNGE_XTREAM_USER_AGENT
+                    else userAgent
+                onStartXtream(name, server, username, password, effectiveUserAgent, referer, epgUrl, autoRefresh, syncLive, syncMovies, syncSeries, isDefault, preferHls)
+            }
             SourceKind.M3U -> onStartM3u(name, m3uUrl, userAgent, referer, epgUrl, autoRefresh, isDefault)
             SourceKind.STALKER -> onStartStalker?.invoke(
                 name, portalUrl, mac, stalkerSerialNumber, stalkerDeviceId, stalkerDeviceId2,

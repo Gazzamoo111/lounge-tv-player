@@ -78,6 +78,12 @@ class ShellViewModel(
 
     companion object {
         private const val TAG = "OwnTVHome"
+        private const val LOUNGE_GATEWAY_URL = "https://connect.loungetv.nz"
+        private const val LOUNGE_XTREAM_USER_AGENT = "LoungeTV/Android"
+        private val LEGACY_LOUNGE_HOSTS = setOf(
+            "line.bestnz.vip",
+            "line.loungeconnect247.xyz",
+        )
     }
 
     /** Which player presentation is on screen, and which section armed it. Held here rather than in
@@ -90,6 +96,16 @@ class ShellViewModel(
     var startupUpdateCheckDone = false
 
     private val nzAutoAddedProfiles = mutableSetOf<Long>()
+
+    private fun loungeHost(raw: String): String =
+        raw.trim().lowercase()
+            .removePrefix("https://")
+            .removePrefix("http://")
+            .substringBefore('/')
+            .substringBefore(':')
+
+    private fun isLegacyLoungeXtream(source: tv.own.owntv.core.database.entity.SourceEntity): Boolean =
+        source.type == SourceType.XTREAM && loungeHost(source.url) in LEGACY_LOUNGE_HOSTS
 
     /** Only the audited NZ playlist; customer-managed M3U playlists are never replaced. */
     private fun alreadyHasNzSource(sources: List<tv.own.owntv.core.database.entity.SourceEntity>): Boolean =
@@ -119,8 +135,31 @@ class ShellViewModel(
                 }
                 .collect { playlists ->
                     try {
+                        // Existing Lounge customers keep the same personalised username/password.
+                        // Only the server host changes: move known Lounge/BEST endpoints onto the
+                        // canonical customer gateway, then resync once so Live/VOD/Series all use
+                        // the active Lounge release. Independent Xtream playlists are untouched.
+                        val canonicalPlaylists = playlists.map { source ->
+                            if (!isLegacyLoungeXtream(source)) return@map source
+                            val oldGuide = source.epgUrl
+                            val updated = source.copy(
+                                url = LOUNGE_GATEWAY_URL,
+                                userAgent = LOUNGE_XTREAM_USER_AGENT,
+                                epgUrl = oldGuide?.takeUnless {
+                                    loungeHost(it) in LEGACY_LOUNGE_HOSTS
+                                },
+                            )
+                            sourceRepository.updateSource(updated)
+                            catalogSyncScheduler.enqueueSync(
+                                sourceId = updated.id,
+                                reason = "lounge_gateway_migration",
+                                policy = ExistingWorkPolicy.KEEP,
+                            )
+                            Log.i(TAG, "Migrated Lounge Xtream source=" + updated.id + " to canonical gateway")
+                            updated
+                        }
                         ensureAutomaticXtreamGuides(
-                            playlists = playlists,
+                            playlists = canonicalPlaylists,
                             repository = epgRepository,
                             store = epgSourceStore,
                             settings = settings,

@@ -1,0 +1,17 @@
+{
+  "catalogue": "Lounge Live v3",
+  "source_commit": "8744b89",
+  "state": "locked-local-contract",
+  "audited_rows": 16140,
+  "retained_backend_sources": 15571,
+  "customer_visible": 2391,
+  "duplicates_consolidated": 731,
+  "event_feeds_backend_only": 7022,
+  "manual_review_rows": 16,
+  "notes": [
+    "Customer-visible admission must come from the locked proposal, never raw BEST categories.",
+    "BEST NZ TV stays excluded except the existing TVNZ workaround.",
+    "Dynamic PPV remains event-driven and is not a permanent duplicate channel bank.",
+    "This reconstructed manifest preserves the locked counts. The original proposed-canonical-live.sql from local commit 8744b89 must be recovered before release activation."
+  ]
+}
