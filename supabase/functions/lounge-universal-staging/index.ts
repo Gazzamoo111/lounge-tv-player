@@ -42,7 +42,7 @@ Deno.serve(async (req: Request) => {
   const target = new URL(`${PROJECT_FUNCTIONS}/${targetSlug}${suffix}`);
   target.search = incoming.search;
 
-  const publicBase = `${incoming.origin}${basePath}`;
+  const publicBase = `${PROJECT_FUNCTIONS}${SLUG}`;
   if (!playback) target.searchParams.set("_lounge_base", publicBase);
 
   const headers = new Headers(req.headers);
