@@ -1,0 +1,8 @@
+<resources>
+    <string name="lounge_discovery_play">Play</string>
+    <string name="lounge_discovery_add_list">Add to List</string>
+    <string name="lounge_discovery_in_list">In My List</string>
+    <string name="lounge_discovery_more_like_this">More Like This</string>
+    <string name="lounge_discovery_same_category">More from this category</string>
+    <string name="lounge_discovery_trending">Trending Now</string>
+</resources>

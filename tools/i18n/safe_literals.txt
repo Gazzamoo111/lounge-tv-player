@@ -500,7 +500,7 @@
 2	technical	app/src/main/java/tv/own/owntv/features/movies/MoviesScreen.kt	remove_history
 1	preference-key	app/src/main/java/tv/own/owntv/features/movies/MoviesScreen.kt	set_tmdb_name
 2	technical	app/src/main/java/tv/own/owntv/features/movies/MoviesScreen.kt	tmdb_details
-1	url	app/src/main/java/tv/own/owntv/features/movies/MoviesScreen.kt	w1280
+2	technical	app/src/main/java/tv/own/owntv/features/movies/MoviesScreen.kt	w1280
 5	empty	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	${StorageAccess.sanitize(movie.name)}.${movie.containerExt ?: StorageAccess.extOf(movie.streamUrl)}
 1	log	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	Category highlights unavailable
@@ -578,7 +578,7 @@
 3	technical	app/src/main/java/tv/own/owntv/features/series/SeriesScreen.kt	series
 2	preference-key	app/src/main/java/tv/own/owntv/features/series/SeriesScreen.kt	set_tmdb_name
 6	preference-key	app/src/main/java/tv/own/owntv/features/series/SeriesScreen.kt	tmdb_details
-1	url	app/src/main/java/tv/own/owntv/features/series/SeriesScreen.kt	w1280
+2	technical	app/src/main/java/tv/own/owntv/features/series/SeriesScreen.kt	w1280
 2	url	app/src/main/java/tv/own/owntv/features/series/SeriesScreen.kt	w300
 1	url	app/src/main/java/tv/own/owntv/features/series/SeriesScreen.kt	w780
 3	empty	app/src/main/java/tv/own/owntv/features/series/SeriesViewModel.kt	\0
@@ -1985,3 +1985,10 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	whakaata māori
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	whakaata maori
 2	empty	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	\0
+1	preference-key	app/src/main/java/tv/own/owntv/features/shell/components/LoungeRelatedMetadata.kt	:kids
+1	json	app/src/main/java/tv/own/owntv/features/shell/components/LoungeRelatedMetadata.kt	[]
+1	empty	app/src/main/java/tv/own/owntv/features/shell/components/LoungeRelatedMetadata.kt	\0
+1	empty	app/src/main/java/tv/own/owntv/features/shell/components/LoungeTitlePage.kt	\0
+1	technical	app/src/main/java/tv/own/owntv/features/shell/components/LoungeTitlePage.kt	cast
+1	technical	app/src/main/java/tv/own/owntv/features/shell/components/LoungeTitlePage.kt	related
+1	technical	app/src/main/java/tv/own/owntv/features/shell/components/LoungeTitlePage.kt	title

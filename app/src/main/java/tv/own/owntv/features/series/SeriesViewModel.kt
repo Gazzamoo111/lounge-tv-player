@@ -825,6 +825,58 @@ class SeriesViewModel(
         }
     }
     fun setSearchQuery(query: String) { _search.value = query }
+
+    internal val discoveryProfileId: Flow<Long> = ctx.map { it.profileId }.distinctUntilChanged()
+
+    /** Revalidate Home's Trending matches against this section's current profile and visibility. */
+    fun discoverySeries(items: List<SeriesEntity>): Flow<List<SeriesEntity>> =
+        combine(ctx, custom, hiddenCategoryIds, _selected) { c, cust, hidden, selected ->
+            items.filter { item ->
+                item.sourceId in c.sourceIds && item.categoryId !in hidden &&
+                    CustomizeKeys.series(item) !in cust.hiddenItems &&
+                    LoungeVodCatalogueCleanup.visibleEnglish(item.name, item.providerLanguage) &&
+                    (selected !is LiveKey.Folder || cust.movedFromOrigin[CustomizeKeys.series(item)] == null || cust.movedFromOrigin[CustomizeKeys.series(item)] != folderContextKeys.value[selected.id])
+            }.distinctBy { tv.own.owntv.ui.components.LoungeVodEditorialQuality.duplicateKey(it.canonicalTitle.ifBlank { it.name }, it.year ?: it.parsedYear) }
+        }
+
+    /** Runs only after explicitly opening a title. Reads local, bounded pools; never starts playback. */
+    internal suspend fun relatedSeries(
+        target: SeriesEntity,
+        targetMeta: tv.own.owntv.core.database.entity.MetadataCacheEntity?,
+    ): tv.own.owntv.features.shell.components.LoungeRelatedSelection<SeriesEntity> {
+        val c = ctx.value
+        if (c.profileId < 0 || target.sourceId !in c.sourceIds) return tv.own.owntv.features.shell.components.LoungeRelatedSelection()
+        val cust = customize.observe(c.profileId, MediaType.SERIES).first()
+        val cats = categoryDao.observe(c.sourceIds, MediaType.SERIES).first()
+        val counts = seriesDao.observeCountsByCategory(c.sourceIds).first().associate { it.categoryId to it.itemCount }
+        val kids = profileDao.getById(c.profileId)?.isKids == true
+        val plan = LoungeVodCatalogueCleanup.plan(
+            LoungeVodCatalogueCleanup.Kind.SERIES,
+            cats.map { cat -> LoungeVodCatalogueCleanup.Folder(cat.id, cat.sourceId, CustomizeKeys.category(cat), cat.name, counts[cat.id]) },
+            { appContext.getString(it) },
+        )
+        val hidden = tv.own.owntv.core.content.AdultCategoryClassifier.hiddenCategoryIds(cats, cust.hiddenCategories, kids) + plan.hiddenIds
+        if (target.categoryId in hidden || CustomizeKeys.series(target) in cust.hiddenItems) return tv.own.owntv.features.shell.components.LoungeRelatedSelection()
+        val reader = SeriesCategoryHighlightsReader(highlightDatabase, seriesDao)
+        suspend fun pool(key: LiveKey): List<SeriesEntity> {
+            val result = reader.load(key, c.profileId, c.sourceIds, hidden, cust, null, 0L)
+            return (result.featured + result.newReleases).distinctBy { it.id }.take(20)
+        }
+        val nearby = target.categoryId?.let { pool(LiveKey.Folder(it)) }.orEmpty()
+        val candidates = (nearby + pool(LiveKey.All)).distinctBy { it.id }.take(40)
+        val cfg = settings.metadataConfig()
+        fun signal(item: SeriesEntity) = tv.own.owntv.ui.components.LoungeDiscoveryRules.Candidate(
+            item.id, item.canonicalTitle.ifBlank { item.name }, item.year ?: item.parsedYear, item.categoryId, rating = item.rating,
+        )
+        val result = tv.own.owntv.features.shell.components.cachedRelatedTitles(
+            highlightDatabase,
+            signal(target).copy(genres = if (cfg.enabled) tv.own.owntv.features.shell.components.genreNames(targetMeta) else emptySet()),
+            candidates, ::signal, { tv.own.owntv.core.metadata.MetadataRepository.seriesLocalKey(it) },
+            true, cfg.resolvedLanguage, kids, cfg.enabled,
+        )
+        return if (ctx.value.profileId == c.profileId) result else tv.own.owntv.features.shell.components.LoungeRelatedSelection()
+    }
+
     fun onSeriesFocused(s: SeriesEntity) { _selectedSeries.value = s }
 
     /**
