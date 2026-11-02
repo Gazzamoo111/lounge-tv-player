@@ -11,11 +11,11 @@ import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.core.util.classifySyncFailure
 
 /**
- * Our own XMLTV complement to the authenticated BEST Xtream guide.
+ * Our canonical Lounge XMLTV complement to the authenticated Xtream guide.
  * It is published as programme listings only: the provider remains BEST.
  */
 internal const val LOUNGE_EPG_URL =
-    "https://raw.githubusercontent.com/Gazzamoo111/lounge-tv-feed/main/docs/epg6-live.xml"
+    "https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-live-xmltv"
 
 internal fun guideUrlsWithLounge(sourceType: SourceType, providerUrls: List<String>): List<String> =
     (providerUrls + if (sourceType == SourceType.XTREAM) listOf(LOUNGE_EPG_URL) else emptyList()).distinct()
