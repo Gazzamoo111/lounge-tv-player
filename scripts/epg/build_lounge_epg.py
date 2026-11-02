@@ -56,6 +56,13 @@ SOURCE_ID_ALIASES = {
     "TNT.Sports.Ultimate.HD.uk": "BTSportUltimate.uk",
 }
 
+# These ids are derived by the Xtream gateway for canonical raw NZ sports feeds
+# whose release rows intentionally share playback sources but do not carry epg_id.
+SUPPLEMENTAL_TARGETS = [
+    {"id": "ESPN.nz", "name": "SKY NZ ESPN", "category": "New Zealand", "subcategory": "Sports"},
+    {"id": "ESPN2.nz", "name": "SKY NZ ESPN 2", "category": "New Zealand", "subcategory": "Sports"},
+]
+
 COUNTRY_SUFFIX = re.compile(r"\.(?:us2|us|uk|au|nz)$", re.I)
 NOISE = {
     "hd", "fhd", "uhd", "sd", "4k", "raw", "feed", "channel", "network",
@@ -369,7 +376,9 @@ def build_short_epg_files(guide_xml: Path) -> tuple[int, int]:
 
 def main() -> None:
     cfg = json.loads(TARGETS_FILE.read_text())
-    targets: list[dict] = cfg["targets"]
+    targets: list[dict] = list(cfg["targets"])
+    existing_ids = {target["id"] for target in targets}
+    targets.extend(target for target in SUPPLEMENTAL_TARGETS if target["id"] not in existing_ids)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
     matched: set[str] = set()
