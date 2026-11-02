@@ -70,8 +70,10 @@ async function auth(username: string, password: string) {
 }
 
 function customerBase(url: URL) {
-  const host = url.searchParams.get("_lounge_host") || Deno.env.get("LOUNGE_PUBLIC_HOST") || "line.loungetvonline";
-  return `https://${host}`;
+  const explicitBase = url.searchParams.get("_lounge_base") || Deno.env.get("LOUNGE_PUBLIC_BASE") || "";
+  if (explicitBase) return explicitBase.endsWith("/") ? explicitBase.slice(0, -1) : explicitBase;
+  const host = url.searchParams.get("_lounge_host") || Deno.env.get("LOUNGE_PUBLIC_HOST") || url.host;
+  return `${url.protocol}//${host}`;
 }
 
 function pageHeaders(page: number, limit: number, count: number) {
