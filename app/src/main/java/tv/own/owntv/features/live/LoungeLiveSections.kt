@@ -28,6 +28,18 @@ internal fun loungeLiveSectionOf(providerCategory: String): LoungeLiveSection {
         .replace(Regex("\\s*\\|\\s*"), "| ")
     fun any(vararg clues: String) = clues.any { n.contains(it) }
     return when {
+        // Canonical Lounge gateway categories arrive as "Category · Subcategory". Keep the
+        // top-level editorial section stable while the gateway folder remains the subcategory.
+        n.startsWith("new zealand") -> LoungeLiveSection.NEW_ZEALAND
+        n.startsWith("australia") -> LoungeLiveSection.AUSTRALIA
+        n.startsWith("ppv") -> LoungeLiveSection.PPV
+        n.startsWith("sports") -> LoungeLiveSection.SPORTS
+        n.startsWith("streaming") -> LoungeLiveSection.STREAMING
+        n.startsWith("movies") -> LoungeLiveSection.MOVIES
+        n.startsWith("documentaries & lifestyle") -> LoungeLiveSection.DOCUMENTARIES
+        n.startsWith("kids & family") -> LoungeLiveSection.KIDS
+        n.startsWith("entertainment") -> LoungeLiveSection.ENTERTAINMENT
+        n.startsWith("24/7") -> LoungeLiveSection.SEASONAL
         n.startsWith("nz|") || n == "nz" || n.startsWith("nz freeview") -> LoungeLiveSection.NEW_ZEALAND
         n.startsWith("au| 9now") || n.startsWith("au| australia") -> LoungeLiveSection.AUSTRALIA
         // User-curated category moves from OTHER.
