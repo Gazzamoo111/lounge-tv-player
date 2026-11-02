@@ -40,6 +40,20 @@ FREEVIEW_IDS = {
     "mjh-te-reo",
 }
 
+# Explicit aliases are intentionally small and evidence-backed. They cover provider
+# renames that cannot be resolved safely by fuzzy matching alone.
+SOURCE_ID_ALIASES = {
+    "FS1.Fox.Sports.1.HD.us2": "FoxSports1.us",
+    "FS2.Fox.Sports.2.HD.us2": "FoxSports2.us",
+    "beIN.Sports.USA.HD.us2": "beINSports.us",
+    "SportsNet.Pittsburgh.HD.us2": "ATTSportsNetPittsburgh.us",
+    "CHSN.Chicago.Sports.Network.us2": "US-NBC Sports Chicago",
+    "Spectrum.SportsNet.Lakers.HD.us2": "SpectrumSportsNet.us",
+    "TNT.Sports.2.HD.uk": "TNT.Sports.2.HD.uk",
+    "TNT.Sports.3.HD.uk": "TNT.Sports.3.HD.uk",
+    "TNT.Sports.Ultimate.HD.uk": "BTSportUltimate.uk",
+}
+
 COUNTRY_SUFFIX = re.compile(r"\.(?:us2|us|uk|au|nz)$", re.I)
 NOISE = {
     "hd", "fhd", "uhd", "sd", "4k", "raw", "feed", "channel", "network",
@@ -190,7 +204,16 @@ def choose_mappings(gz_path: Path, targets: list[dict], already: set[str]) -> di
         for _, elem in ET.iterparse(source, events=("end",)):
             if local(elem.tag) == "channel":
                 source_id = elem.attrib.get("id", "")
-                found = match_channel(source_id, source_names(elem), wanted)
+                explicit_target_id = SOURCE_ID_ALIASES.get(source_id)
+                explicit_target = next(
+                    (t for t in wanted if t["id"] == explicit_target_id),
+                    None,
+                ) if explicit_target_id else None
+                found = (explicit_target, 1000) if explicit_target else match_channel(
+                    source_id,
+                    source_names(elem),
+                    wanted,
+                )
                 if found:
                     target, score = found
                     current = best.get(target["id"])
