@@ -60,7 +60,7 @@ import tv.own.owntv.ui.components.StorageBrowser
 
 private enum class SourceKind { XTREAM, M3U, STALKER }
 
-private const val LOUNGE_XTREAM_GATEWAY = "https://connect.loungetv.nz"
+private const val LOUNGE_XTREAM_GATEWAY = "https://connect.loungetv.nz"\nprivate const val LOUNGE_XTREAM_USER_AGENT = "LoungeTV/Android"
 
 /** UI state of the Xtream "Test HLS support" probe. Local to this screen — the probe is one short
  *  request and saves nothing unless the source already exists. */
@@ -409,7 +409,17 @@ fun AddSourceScreen(
     // panel, reached with ▶ from any row.
     val submit = {
         when (kind) {
-            SourceKind.XTREAM -> onStartXtream(name, server, username, password, userAgent, referer, epgUrl, autoRefresh, syncLive, syncMovies, syncSeries, isDefault, preferHls)
+            SourceKind.XTREAM -> {
+                val serverHost = server.trim().lowercase()
+                    .removePrefix("https://")
+                    .removePrefix("http://")
+                    .substringBefore('/')
+                    .substringBefore(':')
+                val effectiveUserAgent =
+                    if (serverHost == "connect.loungetv.nz" && userAgent.isBlank()) LOUNGE_XTREAM_USER_AGENT
+                    else userAgent
+                onStartXtream(name, server, username, password, effectiveUserAgent, referer, epgUrl, autoRefresh, syncLive, syncMovies, syncSeries, isDefault, preferHls)
+            }
             SourceKind.M3U -> onStartM3u(name, m3uUrl, userAgent, referer, epgUrl, autoRefresh, isDefault)
             SourceKind.STALKER -> onStartStalker?.invoke(
                 name, portalUrl, mac, stalkerSerialNumber, stalkerDeviceId, stalkerDeviceId2,
