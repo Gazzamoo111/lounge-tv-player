@@ -143,8 +143,7 @@ class ShellViewModel(
                             val oldGuide = source.epgUrl
                             val updated = source.copy(
                                 url = LOUNGE_GATEWAY_URL,
-                                userAgent = source.userAgent?.takeIf { it.isNotBlank() }
-                                    ?: LOUNGE_XTREAM_USER_AGENT,
+                                userAgent = LOUNGE_XTREAM_USER_AGENT,
                                 epgUrl = oldGuide?.takeUnless {
                                     loungeHost(it) in LEGACY_LOUNGE_HOSTS
                                 },
