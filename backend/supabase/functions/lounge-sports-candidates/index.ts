@@ -24,7 +24,7 @@ const SPORT_CATEGORY_IDS=[
 ];
 
 const PLACEHOLDER=/NO EVENT|NO STREAM|NOT STREAMING|OFFLINE|PLACEHOLDER|####|^#+|ENDED|REPLAY|HIGHLIGHTS/i;
-const FIXTURE=/\b(vs?\.?|@| at )\b/i;
+const FIXTURE=/(?:\bvs?\.?\b|\bversus\b|\s@\s|\s+at\s+)/i;
 function norm(v:any){return String(v??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z0-9]+/g," ").trim();}
 function words(v:any){return norm(v).split(/\s+/).filter(Boolean);}
 function hasPhrase(hay:string,needle:string){if(!needle)return false;return (" "+norm(hay)+" ").includes(" "+norm(needle)+" ");}
