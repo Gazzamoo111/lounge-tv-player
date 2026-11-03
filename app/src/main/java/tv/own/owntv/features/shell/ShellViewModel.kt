@@ -41,10 +41,6 @@ import tv.own.owntv.core.epg.EpgSourceStore
 import tv.own.owntv.core.model.SourceType
 import tv.own.owntv.core.sync.work.EpgSyncScheduler
 import tv.own.owntv.core.sync.work.CatalogSyncScheduler
-import tv.own.owntv.core.settings.PlaylistAutoRefresh
-import tv.own.owntv.core.settings.PlaylistRefresh
-import tv.own.owntv.core.settings.EpgRefresh
-import tv.own.owntv.core.settings.EpgAutoRefresh
 import androidx.work.ExistingWorkPolicy
 import tv.own.owntv.features.settings.ensureAutomaticXtreamGuides
 import tv.own.owntv.core.launcher.LauncherIntegrationRepository
@@ -93,12 +89,10 @@ class ShellViewModel(
     /** The startup update check runs once per launch, not once per shell composition. */
     var startupUpdateCheckDone = false
 
-    private val nzAutoAddedProfiles = mutableSetOf<Long>()
-
-    /** Only the audited NZ playlist; customer-managed M3U playlists are never replaced. */
-    private fun alreadyHasNzSource(sources: List<tv.own.owntv.core.database.entity.SourceEntity>): Boolean =
-        sources.any { it.type == SourceType.M3U &&
-            it.url.contains("i.mjh.nz/nz/", ignoreCase = true) }
+    /** The legacy Lounge-added NZ playlist. User-created playlists are never touched. */
+    private fun isLegacyNzFreeviewSource(source: tv.own.owntv.core.database.entity.SourceEntity): Boolean =
+        source.type == SourceType.M3U &&
+            source.url.contains("i.mjh.nz/nz/kodi-tv.m3u8", ignoreCase = true)
 
     init {
         // Migrate first, then automatically add BOTH guides for each saved/new Xtream source.
@@ -157,9 +151,9 @@ class ShellViewModel(
                     }
                 }
         }
-        // Recovery QA: offer the five essential NZ FTA stations without asking each
-        // customer to type an extra M3U. The upstream source also includes bonus
-        // Freeview channels. Never touch the Xtream provider or an existing NZ M3U.
+        // The five essential NZ channels now live inside the Lounge Xtream catalogue.
+        // Remove only the old Lounge-managed standalone Freeview playlist and guide from upgraded
+        // installs. Customer-created M3U sources are left alone.
         viewModelScope.launch {
             settings.activeProfileId
                 .flatMapLatest { pid ->
@@ -167,45 +161,32 @@ class ShellViewModel(
                     else sourceRepository.observeSources(pid).map { pid to it }
                 }
                 .collect { (pid, sources) ->
-                    if (pid < 0 || pid in nzAutoAddedProfiles ||
-                        sources.none { it.type == SourceType.XTREAM } ||
-                        alreadyHasNzSource(sources)
-                    ) return@collect
-                    nzAutoAddedProfiles += pid
+                    if (pid < 0) return@collect
+                    val legacy = sources.filter(::isLegacyNzFreeviewSource)
+                    if (legacy.isEmpty()) return@collect
                     try {
-                        // Re-read to avoid a duplicate if another screen added NZ Freeview.
-                        val latest = sourceRepository.observeSources(pid).first()
-                        if (alreadyHasNzSource(latest)) return@collect
-                        val source = sourceRepository.addM3uSource(
-                            profileId = pid,
-                            name = "NZ Freeview",
-                            url = "https://i.mjh.nz/nz/kodi-tv.m3u8",
-                            epgUrl = "https://i.mjh.nz/nz/epg.xml.gz",
-                        )
-                        settings.setPlaylistAutoRefresh(
-                            source.id, PlaylistRefresh(PlaylistAutoRefresh.MANUAL, 1),
-                        )
-                        catalogSyncScheduler.enqueueSync(
-                            sourceId = source.id,
-                            reason = "lounge_nz_freeview",
-                            policy = ExistingWorkPolicy.KEEP,
-                        )
-                        val epgUrl = "https://i.mjh.nz/nz/epg.xml.gz"
-                        val prior = epgSourceStore.getAll().firstOrNull { it.url == epgUrl }
-                        val guide = prior ?: epgSourceStore.ensure(name = "NZ Freeview", url = epgUrl)
-                        if (prior == null) settings.setEpgAutoRefresh(
-                            guide.id, EpgRefresh(EpgAutoRefresh.HOURS_6),
-                        )
-                        if (guide.lastSyncAt == null) epgSyncScheduler.enqueueSync(
-                            sourceId = guide.id,
-                            reason = "lounge_nz_freeview",
-                            policy = ExistingWorkPolicy.KEEP,
-                        )
-                        Log.i(TAG, "NZ Freeview added to existing profile=$pid, sync queued")
+                        val removedIds = legacy.mapTo(hashSetOf()) { it.id }
+                        val defaultId = settings.defaultSourceId.first()
+                        legacy.forEach { source ->
+                            sourceRepository.deleteSource(source)
+                            Log.i(TAG, "Removed legacy NZ Freeview source=" + source.id + " profile=" + pid)
+                        }
+                        if (defaultId in removedIds) {
+                            val lounge = sources.firstOrNull {
+                                it.type == SourceType.XTREAM && isLegacyLoungeXtream(it.type, it.url)
+                            } ?: sources.firstOrNull { it.type == SourceType.XTREAM }
+                            settings.setDefaultSource(lounge?.id ?: -1L)
+                        }
+                        epgSourceStore.getAll()
+                            .filter { it.url.equals("https://i.mjh.nz/nz/epg.xml.gz", ignoreCase = true) }
+                            .forEach {
+                                epgSourceStore.remove(it.id)
+                                Log.i(TAG, "Removed legacy NZ Freeview EPG source=" + it.id)
+                            }
                     } catch (e: CancellationException) {
                         throw e
                     } catch (e: Exception) {
-                        Log.w(TAG, "NZ Freeview auto-setup failed; existing sources unaffected", e)
+                        Log.w(TAG, "Legacy NZ Freeview cleanup deferred", e)
                     }
                 }
         }
