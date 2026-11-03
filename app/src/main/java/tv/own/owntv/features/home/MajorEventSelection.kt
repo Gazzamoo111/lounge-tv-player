@@ -13,9 +13,10 @@ import tv.own.owntv.features.sports.SportLoungeRules
 internal object MajorEventSelection {
     private const val WINDOW_MS = 14L * 24 * 60 * 60 * 1000
 
-    fun select(fixtures: List<Match>, nowMs: Long, limit: Int = 6): List<Match> {
+    fun select(fixtures: List<Match>, nowMs: Long, limit: Int = 12): List<Match> {
         if (limit <= 0) return emptyList()
         val candidates = SportLoungeRules.dedupe(fixtures).asSequence()
+            .filter(::isHeadlineFixture)
             .filter { event ->
                 event.state == MatchState.IN ||
                     (event.state == MatchState.PRE && event.startMs in nowMs..(nowMs + WINDOW_MS))
@@ -36,12 +37,36 @@ internal object MajorEventSelection {
             }
         }
         for (event in candidates) {
-            if (event.key !in selected.map { it.key } && selected.count { it.sport == event.sport } < 2) {
+            if (event.key !in selected.map { it.key } && selected.count { it.sport == event.sport } < 4) {
                 selected.add(event)
                 if (selected.size == limit) return selected
             }
         }
         return selected
+    }
+
+    /**
+     * Only nationally/internationally relevant competitions belong on Home.
+     * Regional and lower-tier feeds remain searchable in Sport Lounge but never displace
+     * main events, even if a low-tier game is currently live.
+     */
+    private fun isHeadlineFixture(m: Match): Boolean {
+        val label = (m.leagueName + " " + m.title + " " + m.feed).lowercase()
+        fun any(vararg terms: String) = terms.any(label::contains)
+        return when (m.sport) {
+            Sport.MMA -> any("ufc", "boxing", "title fight", "gallen", "wwe", "one championship")
+            Sport.RUGBY_LEAGUE -> any("world cup", "nrl", "super league", "state of origin", "kiwis", "rugby league")
+            Sport.RUGBY -> any("rugby", "all blacks", "international", "six nations", "bunnings npc", "test match")
+            Sport.CRICKET -> any("world cup", "international", "ashes", "ipl", "big bash", "black caps", "t20i", "test match", "champions trophy")
+            Sport.BASKETBALL -> any("nba", "wnba", "nbl", "march madness", "ncaa division i")
+            Sport.FOOTBALL -> any("nfl", "super bowl")
+            Sport.SOCCER -> any("world cup", "premier league", "champions league", "a-league", "fifa", "europa league") &&
+                (any("world cup", "final", "semi-final", "semifinal", "playoff", "a-league") ||
+                    any("arsenal", "chelsea", "liverpool", "manchester", "tottenham", "barcelona", "real madrid",
+                        "bayern", "inter milan", "ac milan", "psg", "paris saint", "newcastle", "atletico"))
+            Sport.RACING -> any("formula 1", "formula one", "f1", "motogp")
+            else -> false
+        }
     }
 
     private fun priority(m: Match, nowMs: Long): Int {
