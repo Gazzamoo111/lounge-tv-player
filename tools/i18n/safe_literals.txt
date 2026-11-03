@@ -141,8 +141,17 @@
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	ensurePlaying history record failed channelId=${channel.id} profile=$pid
 2	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	fhd
 2	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	hd
+3	protocol	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	hls
+1	url	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	https://i.mjh.nz/.r/maori-tv.m3u8
+1	url	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	https://i.mjh.nz/.r/te-reo.m3u8
+1	url	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	https://i.mjh.nz/.r/three.m3u8
+1	url	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	https://i.mjh.nz/.r/tvnz-1.mpd
+1	url	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	https://i.mjh.nz/.r/tvnz-2.mpd
 1	url	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	i.mjh.nz/nz/kodi-tv.m3u8
+1	json	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	{"scheme":"widevine","license":"https://c.mjh.nz/tvnz-1-wv"}
+1	json	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	{"scheme":"widevine","license":"https://c.mjh.nz/tvnz-2-wv"}
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	LiveEngine
+2	protocol	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	mpd
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	New Zealand
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	NZ
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	nz raw
@@ -150,17 +159,23 @@
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	nznewzealand
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	newzealandsports
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	nzskysportsnz
-1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	world
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	OwnTVHome
 2	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	raw
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	sky sport hd
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	sky sports hd
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	skysport
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	stalker resolve failed channelId=${channel.id}
+1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	TEREO
+1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	THREE
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	tuneByNumber($number) failed
+1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	TVNZ1
+1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	TVNZ2
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	tvnz1
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	tvnz2
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	tvnzduke
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	User-Agent: otg/1.5.1 (AppleTv Apple TV 4; tvOS16.0; appletv.client) libcurl/7.58.0 OpenSSL/1.0.2o zlib/1.2.11 clib/1.8.56
+1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	WHAKAATAMAORI
+1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	world
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	zap: tune wait ${delayMs}ms — ${zapWaitReason(lastZapPressMs, now, singleConnection)}
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveZapList.kt	direct tune: zap rebuild failed
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveZapList.kt	LiveZapList
@@ -1090,15 +1105,22 @@
 8	technical	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	\0
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	activeProfileChanged profile=$pid androidTvHomeEnabled=${settings.androidTvHomeEnabled.first()}
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	EPG migration failed; attempting to register guides
-2	url	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	https://i.mjh.nz/nz/epg.xml.gz
-1	url	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	https://i.mjh.nz/nz/kodi-tv.m3u8
-1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	i.mjh.nz/nz/
-2	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	lounge_nz_freeview
-2	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	NZ Freeview
-1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	NZ Freeview added to existing profile=$pid, sync queued
-1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	NZ Freeview auto-setup failed; existing sources unaffected
+1	url	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	https://i.mjh.nz/nz/epg.xml.gz
+1	url	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	i.mjh.nz/nz/kodi-tv.m3u8
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Legacy NZ Freeview cleanup deferred
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Migrated Lounge Xtream source=
+1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	lounge_gateway_migration
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	OwnTVHome
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	profile=
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Removed legacy NZ Freeview EPG source=
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Removed legacy NZ Freeview source=
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Sky Sport FHD cache fill unavailable
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Sky Sport FHD guide matches added=
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Sky Sport FHD guide matching deferred
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	to canonical gateway
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Unable to register automatic EPG sources
+1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	NZ | SKY SPORT
+1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	NZ| SKY SPORT
 1	json	app/src/main/java/tv/own/owntv/features/sports/data/FixtureReminderScheduler.kt	[]
 1	preference-key	app/src/main/java/tv/own/owntv/features/sports/data/FixtureReminderScheduler.kt	$profile|$fixture
 4	json	app/src/main/java/tv/own/owntv/features/sports/data/FixtureReminderScheduler.kt	delivered
@@ -1974,11 +1996,6 @@
 1	regex	app/src/main/java/tv/own/owntv/features/settings/LoungeNzSkyFhdGuide.kt	^\\s*NZ\\s*[|:\\-]\\s*SKY\\s*SPORT
 1	protocol	app/src/main/java/tv/own/owntv/features/settings/LoungeNzSkyFhdGuide.kt	skysport
 1	protocol	app/src/main/java/tv/own/owntv/features/settings/LoungeNzSkyFhdGuide.kt	.nz
-1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	NZ| SKY SPORT
-1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	NZ | SKY SPORT
-1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Sky Sport FHD cache fill unavailable
-1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Sky Sport FHD guide matches added=
-1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Sky Sport FHD guide matching deferred
 1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	^nz\\s*[|:]\\s*
 1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	\\s+(?:fhd|hd|sd|1080p|720p)(?:\\s*\\(nz\\))?$
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeNzPriorityPagingSource.kt	tvnz1
@@ -1999,9 +2016,6 @@
 1	url	app/src/main/java/tv/own/owntv/features/setup/LoungeGateway.kt	https://connect.loungetv.nz
 1	protocol	app/src/main/java/tv/own/owntv/features/setup/LoungeGateway.kt	line.bestnz.vip
 1	protocol	app/src/main/java/tv/own/owntv/features/setup/LoungeGateway.kt	line.loungeconnect247.xyz
-1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Migrated Lounge Xtream source=
-1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	lounge_gateway_migration
-1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	to canonical gateway
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	baseball/mlb
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	basketball/mens-college-basketball
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportLoungeDiscovery.kt	basketball/wnba
