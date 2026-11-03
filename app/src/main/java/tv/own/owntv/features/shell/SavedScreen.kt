@@ -103,7 +103,7 @@ internal fun SavedScreen(
                 modifier = Modifier.focusRequester(firstTab),
             )
             StageButton(
-                text = stringResource(R.string.lounge_saved_reminders) + " (${reminders.size})",
+                text = stringResource(R.string.lounge_saved_reminders_count, reminders.size),
                 onClick = { tab = 1 },
             )
         }
