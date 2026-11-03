@@ -1432,6 +1432,11 @@ fun OwnTVShell(
                 selected = selectedSection,
                 visibleSections = visibleSections,
                 onSelect = selectFromNav,
+                savedSelected = savedOpen,
+                onOpenSaved = {
+                    savedOpen = true
+                    onSelectSection(MainSection.DOWNLOADS)
+                },
                 count = { section -> railCounts[section]?.takeIf { it > 0 } },
                 detail = { section -> railDetail(section, railDetails) },
                 profileName = profileName.ifBlank { stringResource(R.string.common_own_tv_user) },
@@ -1446,7 +1451,7 @@ fun OwnTVShell(
                     MainSection.HOME -> homeEntry
                     MainSection.EPG, MainSection.LIVE_TV -> guideEntry
                     MainSection.MOVIES, MainSection.SERIES -> vodEntry
-                    MainSection.DOWNLOADS -> downloadsEntry
+                    MainSection.DOWNLOADS -> if (savedOpen) savedEntry else downloadsEntry
                     MainSection.MORE -> moreEntry
                     MainSection.SPORTS -> sportsEntry
                     else -> null
