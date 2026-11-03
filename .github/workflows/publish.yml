@@ -6,6 +6,9 @@ on:
         description: 'Four numbers, e.g. 5.2.1.0 (must increase each release)'
         required: true
         type: string
+  push:
+    branches:
+      - release/nz-tv-5.2.3.3
 permissions:
   contents: write
 concurrency:
@@ -45,7 +48,7 @@ jobs:
       - name: Check branding and release version
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION_NAME: ${{ inputs.version_name }}
+          VERSION_NAME: ${{ inputs.version_name || '5.2.3.3' }}
         run: |
           set -euo pipefail
           VERSION_CODE=$(python3 scripts/version_code.py "$VERSION_NAME")
@@ -75,7 +78,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          VERSION_NAME: ${{ inputs.version_name }}
+          VERSION_NAME: ${{ inputs.version_name || '5.2.3.3' }}
           PRODUCTION_SIGNING_REQUIRED: 'true'
           EXPECTED_PRODUCTION_CERT_SHA256: 7541bd80e141e48650e952cec62de1daa6491adcc4fab522613f1954fce8b6f9
           GH_TOKEN: ${{ github.token }}
@@ -107,7 +110,7 @@ jobs:
           path: dist/*
           if-no-files-found: error
   publish:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release/nz-tv-5.2.3.3'
     needs: candidate
     runs-on: ubuntu-latest
     environment: production
@@ -120,7 +123,7 @@ jobs:
       - name: Publish exact candidate after human approval
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION_NAME: ${{ inputs.version_name }}
+          VERSION_NAME: ${{ inputs.version_name || '5.2.3.3' }}
         run: |
           set -euo pipefail
           VERSION_CODE=$(python3 -c 'import sys; s=list(map(int,sys.argv[1].split("."))); print(s[0]*1000000+s[1]*10000+s[2]*100+s[3])' "$VERSION_NAME")
