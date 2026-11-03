@@ -326,14 +326,13 @@ class LiveViewModel(
             if (pid < 0) flowOf(emptyList<SourceEntity>())
             else sourceDao.observeForProfile(pid)
         },
-    ) { aps, linked ->
-        // An NZ free-to-air fallback should show beside BEST Live even if the
-        // customer's default IPTV provider remains selected. Do not change
-        // that selection (which also governs Movies and Series).
-        val nzFreeview = linked.filter {
+    ) { aps, _ ->
+        // NZ free-to-air now comes through the main Lounge catalogue. Keep the old auto-added
+        // Freeview M3U out of Live TV even during the short upgrade window before ShellViewModel
+        // deletes it from local storage.
+        val visible = aps.sources.filterNot {
             it.type == SourceType.M3U && it.url.contains(NZ_FREEVIEW_PATH, ignoreCase = true)
         }
-        val visible = (aps.sources + nzFreeview).distinctBy { it.id }
         sourceById = visible.associateBy { it.id }
         val liveIds = visible.filter { it.syncLive }.map { it.id }
         Ctx(
@@ -1254,7 +1253,7 @@ class LiveViewModel(
         if (!showInNzSelection(channel) || channel.categoryId != null && channel.categoryId in hiddenCategoryIds.value) return
         // Core keeps the preview off a promoted full-screen stream, re-mutes on a re-focus instead of
         // reloading, mints a Stalker link, and holds back on a one-session panel while mpv plays.
-        live.preview(channel, muted = !livePreviewAudio.value)
+        live.preview(loungeNzPlaybackChannel(channel), muted = !livePreviewAudio.value)
     }
 
     // --- Multiview: channels kept from the browse screen ------------------------------------------
@@ -1278,6 +1277,59 @@ class LiveViewModel(
     /** The playlist a channel came from, so a caller can ask what it allows (Multiview's tile budget). */
     fun sourceOf(channel: ChannelEntity): SourceEntity? = sourceById[channel.sourceId]
 
+    /**
+     * The five NZ free-to-air rows are delivered by the Lounge Xtream catalogue, but TVNZ 1/2 need
+     * Widevine metadata that Xtream has no standard field for. Apply the audited direct source only
+     * to Lounge's own Xtream source. This keeps one customer playlist while preserving DRM in-app.
+     */
+    private fun loungeNzPlaybackChannel(channel: ChannelEntity): ChannelEntity {
+        val source = sourceById[channel.sourceId] ?: return channel
+        if (source.type != SourceType.XTREAM ||
+            !tv.own.owntv.features.setup.isLegacyLoungeXtream(source.type, source.url)
+        ) return channel
+
+        val key = channel.name.uppercase().filter { it.isLetterOrDigit() }
+        val userAgent = "User-Agent: otg/1.5.1 (AppleTv Apple TV 4; tvOS16.0; appletv.client) libcurl/7.58.0 OpenSSL/1.0.2o zlib/1.2.11 clib/1.8.56"
+        return when (key) {
+            "TVNZ1" -> channel.copy(
+                streamUrl = "https://i.mjh.nz/.r/tvnz-1.mpd",
+                httpHeaders = userAgent,
+                drmConfig = """{"scheme":"widevine","license":"https://c.mjh.nz/tvnz-1-wv"}""",
+                manifestType = "mpd",
+                directSource = null,
+            )
+            "TVNZ2" -> channel.copy(
+                streamUrl = "https://i.mjh.nz/.r/tvnz-2.mpd",
+                httpHeaders = userAgent,
+                drmConfig = """{"scheme":"widevine","license":"https://c.mjh.nz/tvnz-2-wv"}""",
+                manifestType = "mpd",
+                directSource = null,
+            )
+            "THREE" -> channel.copy(
+                streamUrl = "https://i.mjh.nz/.r/three.m3u8",
+                httpHeaders = userAgent,
+                drmConfig = null,
+                manifestType = "hls",
+                directSource = null,
+            )
+            "WHAKAATAMAORI" -> channel.copy(
+                streamUrl = "https://i.mjh.nz/.r/maori-tv.m3u8",
+                httpHeaders = userAgent,
+                drmConfig = null,
+                manifestType = "hls",
+                directSource = null,
+            )
+            "TEREO" -> channel.copy(
+                streamUrl = "https://i.mjh.nz/.r/te-reo.m3u8",
+                httpHeaders = userAgent,
+                drmConfig = null,
+                manifestType = "hls",
+                directSource = null,
+            )
+            else -> channel
+        }
+    }
+
     /** The channel's own headers plus its playlist's Referer, unless the channel names one itself. */
     private fun headersFor(channel: ChannelEntity): String? =
         SourceOverrides.headersWithReferer(channel.httpHeaders, sourceById[channel.sourceId])
@@ -1292,7 +1344,7 @@ class LiveViewModel(
      * grid would drift the first time one of them changed.
      */
     fun tuneTile(engine: tv.own.owntv.player.LivePreviewEngine, channel: ChannelEntity, muted: Boolean) {
-        viewModelScope.launch { live.playTile(engine, channel, muted) }
+        viewModelScope.launch { live.playTile(engine, loungeNzPlaybackChannel(channel), muted) }
     }
 
     // The ordered channel list the player zaps within (CH+/CH-, D-pad up/down) and shows in the
@@ -1747,21 +1799,26 @@ class LiveViewModel(
         viewModelScope.launch {
             val pid = currentProfileId() ?: return@launch
             if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, channel.categoryId, profileDao, categoryDao)) return@launch
-            val source = withContext(Dispatchers.IO) { sourceDao.getById(channel.sourceId) }
+            val playback = loungeNzPlaybackChannel(channel)
+            if (playback.drmConfig != null) {
+                ensurePlaying(playback)
+                return@launch
+            }
+            val source = withContext(Dispatchers.IO) { sourceDao.getById(playback.sourceId) }
             val url = if (streamUrlResolver.needsResolve(source)) {
                 withContext(Dispatchers.IO) {
-                    runCatching { streamUrlResolver.resolve(source!!, channel.streamUrl) }
+                    runCatching { streamUrlResolver.resolve(source!!, playback.streamUrl) }
                         .onFailure { Log.w(TAG, "stalker resolve failed channelId=${channel.id}", it) }
                         .getOrNull()
                 } ?: return@launch
             } else {
-                channel.streamUrl
+                playback.streamUrl
             }
             externalPlayerLauncher.launch(
                 url = url,
-                title = channel.name,
+                title = playback.name,
                 userAgent = source?.userAgent,
-                httpHeaders = SourceOverrides.headersWithReferer(channel.httpHeaders, source),
+                httpHeaders = SourceOverrides.headersWithReferer(playback.httpHeaders, source),
             )
             recordLiveHistory(channel, immediate = true)
         }
@@ -1789,7 +1846,7 @@ class LiveViewModel(
         pendingZapTuneJob = null
         // Before the full-screen player is first drawn: a channel ExoPlayer is already previewing opens on
         // ExoPlayer's surface straight away, instead of on mpv's until the tune below gets there.
-        live.expectPromotion(channel)
+        live.expectPromotion(loungeNzPlaybackChannel(channel))
         // The controller's one tune job: a quicker second pick cancels the first wherever it has
         // got to, so two picks can no longer finish in the wrong order.
         live.launch { playChannel(channel) }
@@ -1804,17 +1861,18 @@ class LiveViewModel(
     private suspend fun playChannel(channel: ChannelEntity) {
         val pid = currentProfileId() ?: return
         if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, channel.categoryId, profileDao, categoryDao)) return
+        val playback = loungeNzPlaybackChannel(channel)
         // Live TV set to play externally: hand the channel over instead of tuning an in-app engine.
         // History is still recorded, so the channel shows up in History/Recently watched either way.
         // A protected channel stays in-app whatever this setting says: no standard intent extra
         // carries a licence URL, so the external player would open it and fail immediately.
-        if (externalPlayerOn.value && channel.drmConfig == null) { playExternal(channel); return }
-        _previewChannel.value = channel
+        if (externalPlayerOn.value && playback.drmConfig == null) { playExternal(playback); return }
+        _previewChannel.value = playback
         clearTimeshift() // normal live = not timeshifted
         _catchupActive.value = false // tuning live ends any archive playback the HUD was showing
         // Core routes it (DRM, the pin, a learned panel refusal, the playlist, the setting), arms the
         // ladder and starts the engine — the same code the phone runs.
-        live.start(channel, getSource(channel.sourceId))
+        live.start(playback, getSource(playback.sourceId))
         recordLiveHistory(channel)
     }
 
