@@ -119,18 +119,6 @@ internal fun MajorEventsHero(
                 Text(stringResource(R.string.lounge_major_events_empty), style = stageText(20, 500), color = StageColors.Body)
             }
         } else {
-        // Render event shell immediately. The existing Coil loader caches imagery to
-        // disk/memory; no metadata lookup, blocking fetch or extra image framework.
-        val artworkUrl = editorialCopy?.artworkUrl
-        var artworkReady by remember(event.key, artworkUrl) { mutableStateOf(false) }
-        val context = LocalContext.current
-        val artworkRequest = remember(context, artworkUrl) {
-            artworkUrl?.let {
-                ImageRequest.Builder(context).data(it).size(1280, 720)
-                    .memoryCachePolicy(CachePolicy.ENABLED)
-                    .diskCachePolicy(CachePolicy.ENABLED).build()
-            }
-        }
         // Full-bleed artwork, with a sport-specific photographic fallback for every
         // fixture. These are illustrative sport photos, never another event's promo.
         // Exact match posters take priority when supplied and image loading is async.
