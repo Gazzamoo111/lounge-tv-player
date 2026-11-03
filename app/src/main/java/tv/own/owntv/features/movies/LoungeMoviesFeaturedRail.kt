@@ -30,9 +30,9 @@ internal fun loungeMovieBadges(item: MovieEntity, max: Int = 3): List<String> = 
     item.advertisedCapabilities
         ?.split("•")
         ?.map(String::trim)
-        ?.filter(String::isNotEmpty)
+        ?.filter { it.isNotEmpty() && !it.equals("AAC", ignoreCase = true) }
         ?.forEach(::add)
-}.distinct().take(max)
+}.distinct().take(minOf(max, 2))
 
 /**
  * A standard 2:3 portrait tile within the SINGLE vertical browse grid.
