@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -39,6 +40,7 @@ import kotlinx.coroutines.delay
 import tv.own.owntv.R
 import tv.own.owntv.core.sports.model.Match
 import tv.own.owntv.core.sports.model.MatchState
+import tv.own.owntv.core.sports.model.Sport
 import tv.own.owntv.ui.components.OwnTVIcon
 import tv.own.owntv.ui.stage.StageButton
 import tv.own.owntv.ui.stage.StageTag
@@ -111,33 +113,79 @@ internal fun MajorEventsHero(
                 Text(stringResource(R.string.lounge_major_events_empty), style = stageText(20, 500), color = StageColors.Body)
             }
         } else {
-        // Team crests come from the provider's actual fixture, not fuzzy name matching.
-        // No artwork or metadata request is needed to render the event or enable navigation.
-        Row(
-            Modifier.align(Alignment.CenterEnd).padding(end = 42.mpx),
-            horizontalArrangement = Arrangement.spacedBy(14.mpx),
-            verticalAlignment = Alignment.CenterVertically
+        // Lightweight cinematic event artwork built entirely from cached fixture data and team art.
+        // No new metadata request sits on the Home path.
+        Box(
+            Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 34.mpx)
+                .size(650.mpx, 390.mpx)
+                .clip(RoundedCornerShape(28.mpx))
+                .background(eventArtworkBrush(event)),
         ) {
-            event.competitors.take(2).forEach { side ->
-                Box(
-                    Modifier.size(190.mpx)
-                        .clip(RoundedCornerShape(22.mpx))
-                        .background(Brush.verticalGradient(listOf(Color(0x553DCDF5), Color(0x15102649)))),
-                    contentAlignment = Alignment.Center
-                ) {
-                    val logo = side.team.logoUrl?.takeIf { it.startsWith("https://") }
-                    if (logo != null) {
-                        AsyncImage(
-                            model = logo,
-                            contentDescription = side.team.name,
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier.size(165.mpx)
-                        )
-                    } else {
+            event.competitors.firstOrNull()?.team?.logoUrl
+                ?.takeIf { it.startsWith("https://") }
+                ?.let { logo ->
+                    AsyncImage(
+                        model = logo,
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.align(Alignment.CenterEnd).size(360.mpx).alpha(0.12f),
+                    )
+                }
+
+            Text(
+                event.leagueName.uppercase(),
+                style = stageText(18, 800),
+                color = StageColors.Muted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.align(Alignment.TopStart).padding(start = 26.mpx, top = 22.mpx, end = 24.mpx),
+            )
+
+            Row(
+                Modifier.align(Alignment.Center).padding(horizontal = 26.mpx),
+                horizontalArrangement = Arrangement.spacedBy(18.mpx),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                event.competitors.take(2).forEachIndexed { index, side ->
+                    Box(
+                        Modifier
+                            .size(190.mpx)
+                            .clip(RoundedCornerShape(26.mpx))
+                            .background(Color(0x33101B2C)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        val logo = side.team.logoUrl?.takeIf { it.startsWith("https://") }
+                        if (logo != null) {
+                            AsyncImage(
+                                model = logo,
+                                contentDescription = side.team.name,
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.size(164.mpx),
+                            )
+                        } else {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.mpx)) {
+                                Text(
+                                    side.team.shortName.ifBlank { side.team.name }.take(4).uppercase(),
+                                    style = stageText(38, 800),
+                                    color = StageColors.Text,
+                                )
+                                Text(
+                                    side.team.name,
+                                    style = stageText(14, 600),
+                                    color = StageColors.Muted,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
+                    }
+                    if (index == 0 && event.competitors.size > 1) {
                         Text(
-                            side.team.shortName.take(4).uppercase(),
-                            style = stageText(40, 800),
-                            color = StageColors.Text
+                            stringResource(R.string.lounge_major_events_vs),
+                            style = stageText(22, 900),
+                            color = Color.White,
                         )
                     }
                 }
@@ -214,6 +262,17 @@ internal fun MajorEventsHero(
         }
         }
     }
+}
+
+private fun eventArtworkBrush(event: Match): Brush = when (event.sport) {
+    Sport.MMA -> Brush.linearGradient(listOf(Color(0xFF301313), Color(0xFF0E182A), Color(0xFF06111D)))
+    Sport.RUGBY, Sport.RUGBY_LEAGUE -> Brush.linearGradient(listOf(Color(0xFF123B33), Color(0xFF102843), Color(0xFF07121D)))
+    Sport.CRICKET -> Brush.linearGradient(listOf(Color(0xFF15324B), Color(0xFF102947), Color(0xFF07121E)))
+    Sport.BASKETBALL -> Brush.linearGradient(listOf(Color(0xFF40210E), Color(0xFF142942), Color(0xFF07121E)))
+    Sport.FOOTBALL -> Brush.linearGradient(listOf(Color(0xFF20320F), Color(0xFF152B42), Color(0xFF07121E)))
+    Sport.SOCCER -> Brush.linearGradient(listOf(Color(0xFF173C32), Color(0xFF172846), Color(0xFF07121E)))
+    Sport.RACING -> Brush.linearGradient(listOf(Color(0xFF421616), Color(0xFF17223B), Color(0xFF07121E)))
+    else -> Brush.linearGradient(listOf(Color(0xFF183553), Color(0xFF142B47), Color(0xFF07121E)))
 }
 
 private fun eventLocalTime(epochMs: Long): String =
