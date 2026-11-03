@@ -10,9 +10,9 @@ const fixture = {
 const valid = {
  dateEvent:"2026-11-07", strSport:"Basketball", strEvent:"Golden State Warriors vs Miami Heat",
  strHomeTeam:"Golden State Warriors", strAwayTeam:"Miami Heat",
- strBanner:"https://www.thesportsdb.com/images/media/event/banner/verified-event.jpg"
+ strThumb:"https://www.thesportsdb.com/images/media/event/thumb/verified-event.jpg"
 };
-test("accepts exact dated banner for both participants", () => {
+test("accepts dated widescreen event art for both participants", () => {
  assert.equal(verifiedEventArtwork(fixture,valid)?.confidence,"exact");
 });
 test("accepts swapped home and away order", () => {
@@ -27,20 +27,20 @@ test("rejects stale or wrong dated events", () => {
 test("rejects different sports even with same names", () => {
  assert.equal(verifiedEventArtwork(fixture,{...valid,strSport:"Rugby League"}),null);
 });
-test("rejects generic team art and low-resolution thumbnails", () => {
- assert.equal(verifiedEventArtwork(fixture,{...valid,strBanner:"https://www.thesportsdb.com/images/media/team/banner/art.jpg"}),null);
- assert.equal(verifiedEventArtwork(fixture,{...valid,strBanner:null,strThumb:"https://www.thesportsdb.com/images/media/event/thumb/small.jpg"}),null);
+test("rejects generic team art and skinny event banners", () => {
+ assert.equal(verifiedEventArtwork(fixture,{...valid,strThumb:"https://www.thesportsdb.com/images/media/team/banner/art.jpg"}),null);
+ assert.equal(verifiedEventArtwork(fixture,{...valid,strThumb:null,strBanner:"https://www.thesportsdb.com/images/media/event/banner/skinny.jpg"}),null);
 });
 test("rejects unrelated image domains", () => {
- assert.equal(verifiedEventArtwork(fixture,{...valid,strBanner:"https://images.pexels.com/photos/123/photo.jpg"}),null);
+ assert.equal(verifiedEventArtwork(fixture,{...valid,strThumb:"https://images.pexels.com/photos/123/photo.jpg"}),null);
 });
 test("allows a precisely dated and named motorsport event", () => {
  const gp={ key:"racing/f1:saopaulo", title:"MSC Cruises São Paulo Grand Prix",
   sport:"racing",startUtcMs:Date.parse("2026-11-07T18:00:00Z"),teams:[]};
  assert.ok(verifiedEventArtwork(gp,{dateEvent:"2026-11-07",strSport:"Motorsport",
-  strEvent:"São Paulo Grand Prix",strBanner:valid.strBanner}));
+  strEvent:"São Paulo Grand Prix",strThumb:valid.strThumb}));
  assert.equal(verifiedEventArtwork(gp,{dateEvent:"2026-11-07",strSport:"Motorsport",
-  strEvent:"Australian Grand Prix",strBanner:valid.strBanner}),null);
+  strEvent:"Australian Grand Prix",strThumb:valid.strThumb}),null);
 });
 test("does not confuse rugby league with union", () => {
  const rl={...fixture,sport:"rugby-league"};

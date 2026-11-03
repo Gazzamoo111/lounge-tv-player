@@ -52,8 +52,8 @@ export function verifiedEventArtwork(fixture, item) {
         if (actual.length < 12 || !expected.includes(actual)) return null;
     } else return null;
 
-    // Full-width event banners/fan art only; no generic team or low-resolution thumbs.
-    const urls = [item.strBanner, item.strFanart, item.strFanart1, item.strFanart2];
+    // Use only 1280x720 event thumbs/fan art. Reject the skinny 1000x185 banners.
+    const urls = [item.strFanart, item.strThumb, item.strFanart1, item.strFanart2];
     for (const raw of urls) {
         if (typeof raw !== "string") continue;
         try {
@@ -61,7 +61,7 @@ export function verifiedEventArtwork(fixture, item) {
             if (u.protocol !== "https:") continue;
             if (!["www.thesportsdb.com", "thesportsdb.com", "r2.thesportsdb.com"].includes(u.hostname)) continue;
             if (!u.pathname.startsWith("/images/media/event/")) continue;
-            if (!/\/(?:banner|fanart)\//.test(u.pathname)) continue;
+            if (!/\/(?:thumb|fanart)\//.test(u.pathname)) continue;
             return { url: u.href, source: "thesportsdb", confidence: "exact" };
         } catch { /* invalid source image */ }
     }

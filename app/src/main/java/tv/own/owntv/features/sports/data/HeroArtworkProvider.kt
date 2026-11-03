@@ -38,7 +38,7 @@ internal object HeroArtworkParser {
                 "www.thesportsdb.com", "thesportsdb.com", "r2.thesportsdb.com"
             ) &&
             url.path.startsWith("/images/media/event/") &&
-            (url.path.contains("/banner/") || url.path.contains("/fanart/"))
+            (url.path.contains("/thumb/") || url.path.contains("/fanart/"))
     }.getOrDefault(false)
 }
 
