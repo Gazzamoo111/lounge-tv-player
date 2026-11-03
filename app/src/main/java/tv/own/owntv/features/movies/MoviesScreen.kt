@@ -1408,7 +1408,7 @@ private fun buildMovieDetails(
     return tv.own.owntv.features.shell.components.MediaDetailsUi(
         title = loungeVodTitle(movie.name),
         backdropUrl = backdrop,
-        logoUrl = tv.own.owntv.core.metadata.MetadataImages.logo(meta?.logoPath),
+        logoUrl = null, // Lounge: never show unverified-language logo assets as hero text
         posterUrl = poster,
         metaLine = metaLine(movie, meta, tmdbWins),
         genres = jsonList(meta?.genresJson),
@@ -1440,7 +1440,7 @@ internal fun movieTitleInfo(
     val tmdbPoster = tv.own.owntv.core.metadata.MetadataImages.poster(meta?.posterPath)
     return VodTitleInfo(
         title = loungeVodTitle(movie.name),
-        logoUrl = tv.own.owntv.core.metadata.MetadataImages.logo(meta?.logoPath),
+        logoUrl = null, // Lounge: never show unverified-language logo assets as hero text
         backdropUrl = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath, size = "w1280")
             ?: movie.backdropUrl?.takeIf { it.isNotBlank() },
         posterUrl = if (tmdbWins) tmdbPoster ?: providerPoster else providerPoster ?: tmdbPoster,
