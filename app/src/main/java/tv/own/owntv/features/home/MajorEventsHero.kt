@@ -66,11 +66,10 @@ internal fun MajorEventsHero(
     onFocused: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    if (events.isEmpty()) return
     var selected by remember { mutableIntStateOf(0) }
     var focused by remember { mutableStateOf(false) }
-    val currentIndex = selected.coerceIn(0, events.lastIndex)
-    val event = events[currentIndex]
+    val currentIndex = selected.coerceIn(0, (events.size - 1).coerceAtLeast(0))
+    val event = events.getOrNull(currentIndex)
 
     // Never rotate an event out from under a customer who is interacting with the buttons.
     LaunchedEffect(events.map { it.key }, currentIndex, focused) {
@@ -93,18 +92,25 @@ internal fun MajorEventsHero(
             .onFocusChanged { focused = it.hasFocus }
             .focusGroup()
     ) {
+        if (event == null) {
+            Column(Modifier.fillMaxSize().padding(start = start, top = 66.mpx), verticalArrangement = Arrangement.spacedBy(22.mpx)) {
+                Text(stringResource(R.string.lounge_major_events_title), style = stageText(22, 800), color = Color(0xFF52D4FF))
+                Text(stringResource(R.string.lounge_major_events_loading), style = stageText(44, 800), color = StageColors.Text)
+                Text(stringResource(R.string.lounge_major_events_empty), style = stageText(20, 500), color = StageColors.Body)
+            }
+        } else {
         // Team crests come from the provider's actual fixture, not fuzzy name matching.
         // No artwork or metadata request is needed to render the event or enable navigation.
         Row(
-            Modifier.align(Alignment.CenterEnd).padding(end = 56.mpx),
-            horizontalArrangement = Arrangement.spacedBy(26.mpx),
+            Modifier.align(Alignment.CenterEnd).padding(end = 42.mpx),
+            horizontalArrangement = Arrangement.spacedBy(14.mpx),
             verticalAlignment = Alignment.CenterVertically
         ) {
             event.competitors.take(2).forEach { side ->
                 Box(
-                    Modifier.size(145.mpx)
+                    Modifier.size(190.mpx)
                         .clip(RoundedCornerShape(22.mpx))
-                        .background(Color(0x223DCDF5)),
+                        .background(Brush.verticalGradient(listOf(Color(0x553DCDF5), Color(0x15102649)))),
                     contentAlignment = Alignment.Center
                 ) {
                     val logo = side.team.logoUrl?.takeIf { it.startsWith("https://") }
@@ -113,12 +119,12 @@ internal fun MajorEventsHero(
                             model = logo,
                             contentDescription = side.team.name,
                             contentScale = ContentScale.Fit,
-                            modifier = Modifier.size(128.mpx)
+                            modifier = Modifier.size(165.mpx)
                         )
                     } else {
                         Text(
                             side.team.shortName.take(4).uppercase(),
-                            style = stageText(34, 800),
+                            style = stageText(40, 800),
                             color = StageColors.Text
                         )
                     }
@@ -180,10 +186,22 @@ internal fun MajorEventsHero(
                 }
                 if (events.size > 1) {
                     StageButton(
+                        text = stringResource(R.string.lounge_major_events_previous),
+                        onClick = { selected = (currentIndex - 1 + events.size) % events.size },
+                        modifier = Modifier.onFocusChanged { if (it.hasFocus) onFocused() }
+                    )
+                    StageButton(
                         text = stringResource(R.string.lounge_major_events_next) + " ${currentIndex + 1}/${events.size}",
                         onClick = { selected = (currentIndex + 1) % events.size },
                         modifier = Modifier.onFocusChanged { if (it.hasFocus) onFocused() }
                     )
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.mpx)) {
+                events.forEachIndexed { index, _ ->
+                    Box(Modifier.size(if (index == currentIndex) 16.mpx else 8.mpx, 8.mpx)
+                        .clip(RoundedCornerShape(6.mpx))
+                        .background(if (index == currentIndex) Color(0xFF52D4FF) else Color(0x7752D4FF)))
                 }
             }
             Text(
@@ -191,6 +209,7 @@ internal fun MajorEventsHero(
                 style = stageText(16, 400),
                 color = StageColors.Muted
             )
+        }
         }
     }
 }
