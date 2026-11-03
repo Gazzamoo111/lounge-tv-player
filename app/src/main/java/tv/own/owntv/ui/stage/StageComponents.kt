@@ -847,7 +847,7 @@ fun StagePoster(
                     horizontalArrangement = Arrangement.spacedBy(5.mpx),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    badges.take(if (compact) 2 else 3).forEachIndexed { index, label ->
+                    badges.take(2).forEachIndexed { index, label ->
                         StageMediaBadge(label, primary = index == 0, compact = compact)
                     }
                 }
