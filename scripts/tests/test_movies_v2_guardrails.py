@@ -25,6 +25,23 @@ class MoviesHighlightsGuardrailsTest(unittest.TestCase):
             self.assertGreaterEqual(screen.count("logoUrl = null, // Lounge:"), 2)
             self.assertNotIn("logoUrl = tv.own.owntv.core.metadata.MetadataImages.logo(meta?.logoPath)", screen)
 
+    def test_real_xperience_badges_use_supplied_artwork(self):
+        components = (ROOT / "app/src/main/java/tv/own/owntv/ui/stage/StageComponents.kt").read_text()
+        mapping = {
+            "gold/uhd.webp": "4K",
+            "elite/8.webp": "1080p",
+            "elite/9.webp": "720p",
+            "elite/18.webp": "HEVC",
+            "elite/19.webp": "AVC",
+            "elite/24.webp": "Dolby Digital Plus",
+        }
+        for image, description in mapping.items():
+            with self.subTest(description=description):
+                self.assertIn(image, components)
+        self.assertIn("AsyncImage(", components)
+        self.assertIn("onState = { if (it is AsyncImagePainter.State.Error) imageFailed = true }", components)
+        self.assertIn("badges.take(2)", components)
+
     def test_both_rows_are_scoped_and_scroll_away(self):
         screen = (MOVIES / "MoviesScreen.kt").read_text()
         self.assertIn("it.categoryKey == selectedKey", screen)
