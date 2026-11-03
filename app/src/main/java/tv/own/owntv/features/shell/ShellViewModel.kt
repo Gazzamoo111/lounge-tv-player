@@ -122,7 +122,16 @@ class ShellViewModel(
                         // canonical customer gateway, then resync once so Live/VOD/Series all use
                         // the active Lounge release. Independent Xtream playlists are untouched.
                         val canonicalPlaylists = playlists.map { source ->
-                            if (!isLegacyLoungeXtream(source.type, source.url)) return@map source
+                            val isLegacy = isLegacyLoungeXtream(source.type, source.url)
+                            val isCanonicalLounge =
+                                source.type == SourceType.XTREAM &&
+                                    tv.own.owntv.features.setup.loungeHost(source.url) ==
+                                    tv.own.owntv.features.setup.loungeHost(LOUNGE_XTREAM_GATEWAY)
+                            val needsCleanResync =
+                                (isLegacy || isCanonicalLounge) &&
+                                    source.userAgent != LOUNGE_XTREAM_USER_AGENT
+                            if (!isLegacy && !needsCleanResync) return@map source
+
                             val updated = source.copy(
                                 url = LOUNGE_XTREAM_GATEWAY,
                                 userAgent = LOUNGE_XTREAM_USER_AGENT,
@@ -131,10 +140,15 @@ class ShellViewModel(
                             sourceRepository.updateSource(updated)
                             catalogSyncScheduler.enqueueSync(
                                 sourceId = updated.id,
-                                reason = "lounge_gateway_migration",
-                                policy = ExistingWorkPolicy.KEEP,
+                                reason = "lounge_gateway_clean_resync_5_2_3_4",
+                                forcePrune = true,
+                                policy = ExistingWorkPolicy.REPLACE,
                             )
-                            Log.i(TAG, "Migrated Lounge Xtream source=" + updated.id + " to canonical gateway")
+                            Log.i(
+                                TAG,
+                                "Clean-resynced Lounge Xtream source=" + updated.id +
+                                    " to canonical gateway with forced prune",
+                            )
                             updated
                         }
                         ensureAutomaticXtreamGuides(
