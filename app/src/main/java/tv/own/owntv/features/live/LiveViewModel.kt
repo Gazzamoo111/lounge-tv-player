@@ -2571,8 +2571,11 @@ internal fun shouldHideBestNzCategory(sourceType: SourceType?, name: String): Bo
  */
 internal fun shouldHideBestNzChannel(sourceType: SourceType?, category: String?, name: String): Boolean {
     if (sourceType != SourceType.XTREAM) return false
-    if (isBrokenBestTvnzLabel(name)) return true
     val folder = category.orEmpty()
+    // Lounge's canonical NZ TV folder contains the audited direct Freeview replacements.
+    // Do not apply the legacy BEST NZ suppression rules to these five rows.
+    if (folder.equals("New Zealand · TV", ignoreCase = true)) return false
+    if (isBrokenBestTvnzLabel(name)) return true
     if (!isBestNzLabel(folder) && !isBestNzLabel(name)) return false
     val allowedFolder = isAllowedBestNzSportsCategory(sourceType, folder)
     val allowedChannel = isSkySportLabel(name) && isRawOrHdLabel(name)
