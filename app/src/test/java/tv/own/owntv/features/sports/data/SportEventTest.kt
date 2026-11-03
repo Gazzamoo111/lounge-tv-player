@@ -6,6 +6,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Test
 import org.json.JSONArray
 import org.json.JSONObject
+import tv.own.owntv.core.sports.model.Broadcast
 import tv.own.owntv.core.sports.model.Match
 import tv.own.owntv.core.sports.model.MatchState
 import tv.own.owntv.core.sports.model.Sport
@@ -27,6 +28,23 @@ class SportEventTest {
         } finally {
             dir.deleteRecursively()
         }
+    }
+
+    @Test fun `calendar round trip preserves broadcaster and venue metadata`() {
+        val match = match("boxing", MatchState.PRE, 2_000_000L).copy(
+            sport = Sport.MMA,
+            feed = "mma/boxing",
+            leagueSlug = "boxing",
+            leagueName = "Boxing",
+            title = "Paul Gallen vs Nelson Asofa-Solomona",
+            venue = "TikTok Entertainment Centre, Sydney",
+            broadcasts = listOf(Broadcast("Main Event", "AU"), Broadcast("Kayo Sports", "AU")),
+        )
+        val event = SportEvent.fromMatch(match, "boxerbook", 1_000_000L)
+        val restored = SportEvent.fromJson(event.toJson())
+        assertEquals(match.venue, restored?.venue)
+        assertEquals(listOf("Main Event", "Kayo Sports"), restored?.broadcasts?.map { it.name })
+        assertEquals(listOf("Main Event", "Kayo Sports"), restored?.toMatch()?.broadcasts?.map { it.name })
     }
 
     @Test fun `out of order status cannot replace a finished event`() {
