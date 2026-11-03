@@ -10,6 +10,12 @@ import sys
 
 PIN = "1de78b1e2690c22b50c060e986bce221454bf880"
 PATCHES = {
+  "tools/i18n/safe_literals.txt": [
+    [
+      "# category json: JSON field or protocol key.",
+      "# category json: JSON field or protocol key.\n1\tjson\tcore/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt\tlounge_quality_rank\n1\tjson\tcore/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt\tlounge_capabilities"
+    ]
+  ],
   "core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt": [
     [
       "    private val FIXTURE = Regex(\"\"\"\\s(vs?\\.?|v)\\s\"\"\", RegexOption.IGNORE_CASE)",
