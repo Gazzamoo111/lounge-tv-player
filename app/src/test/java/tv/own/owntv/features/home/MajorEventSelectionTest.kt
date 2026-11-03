@@ -33,4 +33,25 @@ class MajorEventSelectionTest {
         )
         assertEquals(listOf("future"), MajorEventSelection.select(events, now).map { it.id })
     }
+    @Test fun fillsAtLeastTenWhenHeadlinePoolHasTen() {
+        val events = (1..14).map { fixture("nba$it", Sport.BASKETBALL, "NBA") }
+        val chosen = MajorEventSelection.select(events, now, 12)
+        assertEquals(12, chosen.size)
+        assertTrue(chosen.all { it.sport == Sport.BASKETBALL })
+    }
+
+    @Test fun regionalAndSecondaryForeignFixturesStayOffHome() {
+        val events = listOf(
+            fixture("regional-cricket", Sport.CRICKET, "Quaid-e-Azam Trophy Gold 2026/27"),
+            fixture("secondary-ucl", Sport.SOCCER, "UEFA Champions League Sporting CP at Shakhtar Donetsk"),
+            fixture("nba", Sport.BASKETBALL, "NBA"),
+            fixture("boxing", Sport.MMA, "Gallen title fight")
+        )
+        val ids = MajorEventSelection.select(events, now, 12).map { it.id }
+        assertTrue("regional cricket leaked into Home", "regional-cricket" !in ids)
+        assertTrue("secondary foreign UCL game leaked into Home", "secondary-ucl" !in ids)
+        assertTrue("NBA should remain eligible", "nba" in ids)
+        assertTrue("headline boxing should remain eligible", "boxing" in ids)
+    }
+
 }
