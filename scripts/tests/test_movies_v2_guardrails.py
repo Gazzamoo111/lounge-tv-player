@@ -16,6 +16,15 @@ class MoviesHighlightsGuardrailsTest(unittest.TestCase):
         self.assertIn(".cachedIn(viewModelScope)", model)
         self.assertNotIn("collectAsLazyPagingItems().itemSnapshotList", (MOVIES / "MovieCategoryHighlights.kt").read_text())
 
+    def test_movie_and_series_heroes_use_readable_titles_not_unverified_logo_art(self):
+        # TMDB's cached logoPath has no language field, so even a successful image
+        # fetch can display foreign-language text. Keep English canonical titles.
+        for section in ("movies", "series"):
+            screen = (ROOT / f"app/src/main/java/tv/own/owntv/features/{section}/" /
+                      ("MoviesScreen.kt" if section == "movies" else "SeriesScreen.kt")).read_text()
+            self.assertGreaterEqual(screen.count("logoUrl = null, // Lounge:"), 2)
+            self.assertNotIn("logoUrl = tv.own.owntv.core.metadata.MetadataImages.logo(meta?.logoPath)", screen)
+
     def test_both_rows_are_scoped_and_scroll_away(self):
         screen = (MOVIES / "MoviesScreen.kt").read_text()
         self.assertIn("it.categoryKey == selectedKey", screen)
