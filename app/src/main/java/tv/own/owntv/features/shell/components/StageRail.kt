@@ -265,7 +265,7 @@ fun StageRail(
                     active = (section == selected && !(savedSelected && section == MainSection.DOWNLOADS)) ||
                         (section == MainSection.MORE && selected == MainSection.SETTINGS),
                     onClick = { onSelect(section) },
-                    modifier = if (section == focusSection) Modifier.focusRequester(selectedItemFocusRequester) else Modifier,
+                    modifier = if (section == focusSection && !(savedSelected && section == MainSection.DOWNLOADS)) Modifier.focusRequester(selectedItemFocusRequester) else Modifier,
                 )
                 if (section == MainSection.DOWNLOADS) {
                     RailItem(
@@ -276,6 +276,7 @@ fun StageRail(
                         open = open,
                         active = savedSelected,
                         onClick = onOpenSaved,
+                        modifier = if (savedSelected) Modifier.focusRequester(selectedItemFocusRequester) else Modifier,
                     )
                 }
             }
