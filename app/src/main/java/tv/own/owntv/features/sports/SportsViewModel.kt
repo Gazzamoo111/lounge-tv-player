@@ -60,7 +60,6 @@ import tv.own.owntv.features.sports.data.FileSportEventCache
 import tv.own.owntv.features.sports.data.GatewaySportEventProvider
 import tv.own.owntv.features.sports.data.FixtureReminderScheduler
 import tv.own.owntv.features.sports.data.FixtureSchedule
-import tv.own.owntv.features.sports.data.HeroArtworkProvider
 import tv.own.owntv.features.sports.data.SportEventEditorial
 
 /** Where a match page's Find channels stands (channels are searched only when asked). */
@@ -255,40 +254,14 @@ class SportsViewModel(
     }.flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    // QA-only batched enrichment. Home paints instantly from cached fixtures and
-    // crests; the background scanner never blocks navigation, playback or focus.
-    private val heroArtworkProvider = HeroArtworkProvider(
-        File(context.filesDir, "sport-lounge/hero-artwork-v2.json"),
-        "https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-hero-artwork-qa",
-    )
-    private val artworkRefreshTicks = flow {
-        emit(System.currentTimeMillis())
-        while (true) {
-            delay(6 * 60 * 60_000L)
-            emit(System.currentTimeMillis())
-        }
-    }
-    private val majorHomeArtwork: StateFlow<Map<String, SportEventEditorial>> =
-        combine(majorHomeEvents, artworkRefreshTicks) { matches, _ -> matches }
-            .flatMapLatest { matches ->
-                flow {
-                    emit(heroArtworkProvider.cached(matches))
-                    emit(heroArtworkProvider.refresh(matches))
-                }
-            }.flowOn(Dispatchers.IO)
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
-
-    /** Preserve supplied event metadata and add only strictly verified, cached artwork. */
+    /**
+     * Home only needs the Sport Lounge editorial metadata. Every event now gets
+     * the same local cinematic treatment and real fixture crests; no periodic
+     * remote image scanner, six-hour polling or stale event photos are required.
+     */
     val majorHomeEditorial: StateFlow<Map<String, SportEventEditorial>> =
-        combine(discoveryState, majorHomeArtwork) { discovered, verified ->
-            val editorial = discovered.first.heroEditorialByMatchKey.toMutableMap()
-            for ((key, art) in verified) {
-                val existing = editorial[key]
-                editorial[key] = if (existing == null) art else
-                    existing.copy(heroArtUrl = existing.heroArtUrl ?: art.heroArtUrl)
-            }
-            editorial.toMap()
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+        discoveryState.map { it.first.heroEditorialByMatchKey }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     /** Per-profile event reminder keys for Home and Sport Lounge to render consistently. */
     val majorReminderKeys: StateFlow<Set<String>> = reminderKeys
