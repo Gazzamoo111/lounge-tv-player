@@ -18,7 +18,7 @@ internal object HeroArtworkParser {
         val root = JSONObject(body)
         if (root.optString("status") != "ok") return@runCatching null
         val rows = root.optJSONArray("arts") ?: return@runCatching null
-        buildMap {
+        buildMap<String, String> {
             for (index in 0 until rows.length()) {
                 val item = rows.optJSONObject(index) ?: continue
                 if (item.optString("source") != "thesportsdb" ||
