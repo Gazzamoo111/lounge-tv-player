@@ -7,7 +7,10 @@
     <string name="lounge_major_events_channels">Find channels</string>
     <string name="lounge_major_events_remind">Remind me</string>
     <string name="lounge_major_events_reminder_set">Reminder set</string>
-    <string name="lounge_major_events_next">Next event</string>
+    <string name="lounge_major_events_next">Next</string>
+    <string name="lounge_major_events_previous">Previous</string>
+    <string name="lounge_major_events_loading">Finding the biggest upcoming live events</string>
+    <string name="lounge_major_events_empty">Major live events will appear here when fixtures are available</string>
     <string name="lounge_major_events_unverified">Available streams are checked when the event starts.</string>
     <string name="lounge_major_events_nz_time">NZ time</string>
 </resources>
