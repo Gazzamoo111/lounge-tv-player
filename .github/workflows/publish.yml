@@ -13,7 +13,7 @@ permissions:
   contents: write
 concurrency:
   group: loungetv-release-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   tests:
     uses: ./.github/workflows/playback-tests.yml
