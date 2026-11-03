@@ -17,6 +17,7 @@
     <string name="lounge_saved_title">Saved</string>
     <string name="lounge_saved_favourites">Favourites</string>
     <string name="lounge_saved_reminders">Reminders</string>
+    <string name="lounge_saved_reminders_count">Reminders (%1$d)</string>
     <string name="lounge_saved_no_reminders">No reminders saved. Set one from a major event or Sport Lounge.</string>
     <string name="lounge_saved_remove_reminder">Remove reminder</string>
     <string name="lounge_saved_sport">Sport</string>
