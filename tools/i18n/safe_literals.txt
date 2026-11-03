@@ -2180,7 +2180,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	·
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	${currentIndex + 1}/${events.size}
 1	locale	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	EEE d MMM · h:mm a
-1	url	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	https://
+2	url	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	https://
 1	locale	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	Pacific/Auckland
 
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	wwe
@@ -2221,3 +2221,34 @@
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	motogp
 1	locale	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	EEE d MMM · h:mm a
 1	locale	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	Pacific/Auckland
+
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	 · 
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	 (${reminders.size})
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	:
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	sport
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	espn
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	nba
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	nfl
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	nrl
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	rugby
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	cricket
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	ufc
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	boxing
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	fight
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	golf
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	football
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	soccer
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	tennis
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	f1
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	motogp
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	nhl
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	mlb
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	wwe
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	kids
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	nick
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	cartoon
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	disney
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	junior
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	cbeebies
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	boomerang
+1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	pbs kids
