@@ -239,6 +239,24 @@ class SportsViewModel(
     }.flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /**
+     * Headline fixtures are selected from cached board and Sport Lounge discovery, never from
+     * network requests during rendering. This does not imply stream verification.
+     */
+    val majorHomeEvents: StateFlow<List<Match>> = flow {
+        delay(HOME_ROW_DELAY_MS)
+        emitAll(combine(board, discoveryState) { active, discovered ->
+            tv.own.owntv.features.home.MajorEventSelection.select(
+                active.matches + discovered.first.matches, System.currentTimeMillis(),
+            )
+        })
+    }.flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** Per-profile event reminder keys for Home and Sport Lounge to render consistently. */
+    val majorReminderKeys: StateFlow<Set<String>> = reminderKeys
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
+
     // --- The match page ------------------------------------------------------------------------------
 
     private val openMatch = MutableStateFlow<Match?>(null)
