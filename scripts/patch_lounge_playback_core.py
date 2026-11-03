@@ -148,6 +148,14 @@ PATCHES = {
   ],
   "player-core/src/main/java/tv/own/owntv/player/OwnTVPlayer.kt": [
     [
+      "        if (mpvStuck) {\n            hardReset()\n            // hardReset() destroys mpv on its own thread",
+      "        if (mpvStuck) {\n            hardReset()\n            // Generation changes in hardReset(); capture it AFTER resetting or the\n            // deferred Exo handoff always self-cancels before it can start.\n            val genAfterHardReset = loadGeneration\n            // hardReset() destroys mpv on its own thread"
+    ],
+    [
+      "                delay(CORE_RESET_SETTLE_MS)\n                if (gen != loadGeneration) return@launch // superseded (user zapped/backed out meanwhile)\n                pendingUrl = url\n                load.pendingSeekMs = pos",
+      "                delay(CORE_RESET_SETTLE_MS)\n                if (genAfterHardReset != loadGeneration) return@launch // superseded (user zapped/backed out meanwhile)\n                pendingUrl = url\n                load.pendingSeekMs = pos"
+    ],
+    [
       "code == 408 || code == 429 || LiveStreamQuirks.isSessionLimit(code) -> HttpRefusal.BUSY",
       "code == 408 || code == 429 || LiveStreamQuirks.isSessionLimit(code) ||\n                    LiveStreamQuirks.isTransientGatewayRefusal(code) -> HttpRefusal.BUSY"
     ],
