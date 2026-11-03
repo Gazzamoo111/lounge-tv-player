@@ -2178,7 +2178,6 @@
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	warriors
 5	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	world cup
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	·
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	${currentIndex + 1}/${events.size}
 1	locale	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	EEE d MMM · h:mm a
 2	url	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	https://
 1	locale	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	Pacific/Auckland
@@ -2222,8 +2221,6 @@
 1	locale	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	EEE d MMM · h:mm a
 1	locale	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	Pacific/Auckland
 
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	 · 
-1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	 (${reminders.size})
 1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	:
 1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	sport
 1	technical	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	espn
