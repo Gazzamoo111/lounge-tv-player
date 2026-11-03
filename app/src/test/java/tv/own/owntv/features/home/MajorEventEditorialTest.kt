@@ -50,23 +50,14 @@ class MajorEventEditorialTest {
         assertEquals(match.key, match.key)
     }
 
-    @Test fun everyHeadlineSportHasPhotographicBackdrop() {
-        val sports = listOf(
-            Sport.MMA, Sport.RUGBY_LEAGUE, Sport.RUGBY, Sport.CRICKET,
-            Sport.BASKETBALL, Sport.FOOTBALL, Sport.SOCCER, Sport.RACING,
-        )
-        val urls = sports.map { sport ->
-            MajorEventEditorial.sportBackdrop(boxing("Major fixture", "2026-11-06T06:00:00Z")
-                .copy(sport = sport))
+    @Test fun unknownSportsCannotReceiveRandomPhoto() {
+        val unnamed = boxing("Unknown vs Unknown", "2026-11-06T06:00:00Z")
+        for (sport in listOf(
+            Sport.MMA, Sport.RUGBY, Sport.RUGBY_LEAGUE, Sport.CRICKET,
+            Sport.BASKETBALL, Sport.FOOTBALL, Sport.SOCCER, Sport.RACING
+        )) {
+            assertNull(MajorEventEditorial.forMatch(unnamed.copy(sport = sport)).artworkUrl)
         }
-        assertEquals(8, urls.size)
-        assertTrue(urls.all { it.startsWith("https://images.pexels.com/photos/") })
-        assertTrue(urls.distinct().size >= 6)
-    }
-
-    @Test fun backdropIsStableForSameFixture() {
-        val match = boxing("Main event", "2026-11-06T06:00:00Z")
-        assertEquals(MajorEventEditorial.sportBackdrop(match), MajorEventEditorial.sportBackdrop(match))
     }
 
     @Test fun httpArtworkIsRejected() {

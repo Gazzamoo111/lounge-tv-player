@@ -130,7 +130,6 @@
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventEditorial.kt	gallen
 1	protocol	app/src/main/java/tv/own/owntv/features/home/MajorEventEditorial.kt	https://
 1	url	app/src/main/java/tv/own/owntv/features/home/MajorEventEditorial.kt	https://cdn.sanity.io/images/ahlq1e7s/production/f47084b2b38a13ae8c43df3dc681570a69c96740-1800x964.png?w=1280&fit=max&auto=format
-1	url	app/src/main/java/tv/own/owntv/features/home/MajorEventEditorial.kt	https://images.pexels.com/photos/$id/pexels-photo-$id.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventEditorial.kt	null
 6	empty	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	\0
 2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	a-league

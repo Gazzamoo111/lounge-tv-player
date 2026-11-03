@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,6 +30,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -119,33 +123,36 @@ internal fun MajorEventsHero(
                 Text(stringResource(R.string.lounge_major_events_empty), style = stageText(20, 500), color = StageColors.Body)
             }
         } else {
-        // Full-bleed artwork, with a sport-specific photographic fallback for every
-        // fixture. These are illustrative sport photos, never another event's promo.
-        // Exact match posters take priority when supplied and image loading is async.
+        // Only exact, source-verified event imagery may be photographic.
+        // All other fixtures use a branded, full-bleed vector + real crests.
         val context = LocalContext.current
-        val art = editorialCopy?.artworkUrl
-        var exactArtReady by remember(event.key, art) { mutableStateOf(false) }
-        val backingPhoto = remember(event.key) { MajorEventEditorial.sportBackdrop(event) }
-        val backdropRequest = remember(context, backingPhoto) {
-            ImageRequest.Builder(context).data(backingPhoto).size(1600, 900)
-                .memoryCachePolicy(CachePolicy.ENABLED)
-                .diskCachePolicy(CachePolicy.ENABLED).build()
-        }
-        val exactRequest = remember(context, art) {
-            art?.let {
+        val exactUrl = editorialCopy?.artworkUrl
+        var exactArtReady by remember(event.key, exactUrl) { mutableStateOf(false) }
+        val exactRequest = remember(context, exactUrl) {
+            exactUrl?.let {
                 ImageRequest.Builder(context).data(it).size(1600, 900)
                     .memoryCachePolicy(CachePolicy.ENABLED)
                     .diskCachePolicy(CachePolicy.ENABLED).build()
             }
         }
         Box(Modifier.fillMaxSize().background(eventArtworkBrush(event))) {
-            AsyncImage(
-                model = backdropRequest,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                alignment = Alignment.CenterEnd,
-                modifier = Modifier.fillMaxSize(),
-            )
+            if (!exactArtReady) {
+                val accent = eventAccent(event)
+                // Stadium-style glow and diagonal graphic lines, not stock photography.
+                Box(
+                    Modifier.align(Alignment.CenterEnd).fillMaxHeight().fillMaxWidth(0.64f)
+                        .background(Brush.radialGradient(
+                            listOf(accent.copy(alpha = 0.51f), Color.Transparent),
+                        ))
+                )
+                Box(Modifier.fillMaxSize().drawBehind {
+                    val x = size.width
+                    val h = size.height
+                    drawLine(accent.copy(alpha = 0.21f), Offset(x * 0.64f, 0f), Offset(x * 0.47f, h), 3f)
+                    drawLine(Color.White.copy(alpha = 0.09f), Offset(x * 0.85f, 0f), Offset(x * 0.68f, h), 2f)
+                    drawLine(accent.copy(alpha = 0.13f), Offset(x, h * 0.14f), Offset(x * 0.73f, h), 3f)
+                })
+            }
             if (exactRequest != null) {
                 AsyncImage(
                     model = exactRequest,
@@ -157,26 +164,22 @@ internal fun MajorEventsHero(
                     modifier = Modifier.fillMaxSize().alpha(if (exactArtReady) 1f else 0f),
                 )
             }
-            // The artwork covers the *entire* 520px hero. Fade only beneath
-            // text/actions, leaving the right half cinematic and unobstructed.
             Box(Modifier.fillMaxSize().background(
                 Brush.horizontalGradient(
-                    0.0f to Color(0xFA081321),
-                    0.33f to Color(0xEC0A1829),
-                    0.59f to Color(0x99101B2A),
-                    0.82f to Color(0x33101B2A),
-                    1.0f to Color(0x22060B13),
+                    0.0f to Color(0xFF081321),
+                    0.30f to Color(0xF5081626),
+                    0.56f to Color(0xB20C1729),
+                    0.77f to Color(0x3A0C1829),
+                    1.0f to Color(0x20081019),
                 )
             ))
             Box(Modifier.fillMaxSize().background(
                 Brush.verticalGradient(
-                    0.0f to Color(0x3307111D),
+                    0.0f to Color(0x1807111D),
                     0.72f to Color.Transparent,
-                    1.0f to Color(0x8807111D),
+                    1.0f to Color(0x7707111D),
                 )
             ))
-            // Generic sports photos are identified by the *actual* fixture
-            // competitors, not unrelated athletes or invented matchup art.
             if (!exactArtReady) EventMatchupOverlay(event)
         }
 
@@ -268,38 +271,69 @@ internal fun MajorEventsHero(
 }
 
 
+/**
+ * Actual home/away crests from the fixture feed, or prominent team wordmarks.
+ * Never manufactures photos of teams, athletes or stadiums.
+ */
 @Composable
 private fun androidx.compose.foundation.layout.BoxScope.EventMatchupOverlay(event: Match) {
-    if (event.competitors.isEmpty()) return
+    val sides = event.competitors.take(2)
+    if (sides.isEmpty()) {
+        Text(
+            event.leagueName.uppercase(Locale.ROOT),
+            style = stageText(42, 900), color = Color.White.copy(alpha = 0.82f),
+            modifier = Modifier.align(Alignment.CenterEnd).padding(end = 64.mpx)
+                .width(470.mpx),
+            maxLines = 3, overflow = TextOverflow.Ellipsis,
+        )
+        return
+    }
     Row(
-        Modifier.align(Alignment.BottomEnd).padding(end = 50.mpx, bottom = 46.mpx),
+        Modifier.align(Alignment.CenterEnd).padding(end = 38.mpx, top = 35.mpx),
         horizontalArrangement = Arrangement.spacedBy(16.mpx),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        event.competitors.take(2).forEachIndexed { index, side ->
-            val logo = side.team.logoUrl?.takeIf { it.startsWith("https://") }
-            if (logo != null) {
-                AsyncImage(
-                    model = logo,
-                    contentDescription = side.team.name,
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier.size(132.mpx),
-                )
-            } else {
+        sides.forEachIndexed { index, side ->
+            val logoUrl = side.team.logoUrl?.takeIf { it.startsWith("https://") }
+            var logoReady by remember(event.key, logoUrl) { mutableStateOf(false) }
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.mpx),
+                modifier = Modifier.width(255.mpx),
+            ) {
+                Box(Modifier.size(242.mpx), contentAlignment = Alignment.Center) {
+                    if (!logoReady) {
+                        Text(
+                            side.team.shortName.ifBlank { side.team.name }.uppercase(Locale.ROOT),
+                            style = stageText(34, 900), color = Color.White,
+                            maxLines = 3, overflow = TextOverflow.Ellipsis,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.width(235.mpx),
+                        )
+                    }
+                    if (logoUrl != null) {
+                        AsyncImage(
+                            model = logoUrl, contentDescription = side.team.name,
+                            contentScale = ContentScale.Fit,
+                            onSuccess = { logoReady = true },
+                            onError = { logoReady = false },
+                            modifier = Modifier.size(234.mpx).alpha(if (logoReady) 1f else 0f),
+                        )
+                    }
+                }
                 Text(
-                    side.team.shortName.ifBlank { side.team.name }.take(10).uppercase(),
-                    style = stageText(28, 900),
-                    color = Color.White,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.width(158.mpx),
+                    side.team.shortName.ifBlank { side.team.name },
+                    style = stageText(20, 800), color = Color.White,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.width(245.mpx),
                 )
             }
-            if (index == 0 && event.competitors.size > 1) {
+            if (index == 0 && sides.size > 1) {
                 Text(
                     stringResource(R.string.lounge_major_events_vs),
-                    style = stageText(24, 900),
-                    color = Color.White,
+                    style = stageText(28, 900),
+                    color = Color.White.copy(alpha = 0.86f),
                 )
             }
         }
@@ -324,6 +358,18 @@ private fun eventSynopsis(event: Match, copy: MajorEventHeroCopy?): String? {
         Sport.FOOTBALL, Sport.SOCCER -> stringResource(R.string.lounge_event_synopsis_team, names[0], names[1], league)
         else -> null
     }
+}
+
+private fun eventAccent(event: Match): Color = when (event.sport) {
+    Sport.MMA -> Color(0xFFFF5B63)
+    Sport.RUGBY -> Color(0xFF39C6A0)
+    Sport.RUGBY_LEAGUE -> Color(0xFF4DA8FF)
+    Sport.CRICKET -> Color(0xFF43C89C)
+    Sport.BASKETBALL -> Color(0xFFFF9639)
+    Sport.FOOTBALL -> Color(0xFFF4B44D)
+    Sport.SOCCER -> Color(0xFF63DCC6)
+    Sport.RACING -> Color(0xFFFF555B)
+    else -> Color(0xFF4DBBFF)
 }
 
 private fun eventArtworkBrush(event: Match): Brush = when (event.sport) {
