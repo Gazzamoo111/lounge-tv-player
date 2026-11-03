@@ -1,7 +1,11 @@
 package tv.own.owntv.features.sports.data
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import tv.own.owntv.core.sports.model.Match
+import java.net.HttpURLConnection
+import java.net.URL
 
 enum class SportEventCoverage { OK, PARTIAL, STALE, UNSUPPORTED }
 
@@ -22,6 +26,37 @@ fun interface SportEventProvider {
 class CoreMatchSportEventAdapter(private val sourceId: String) {
     fun adapt(matches: List<Match>, updatedAtMs: Long): List<SportEvent> =
         matches.map { SportEvent.fromMatch(it, sourceId, updatedAtMs) }
+}
+
+
+class GatewaySportEventProvider(
+    private val endpoint: String,
+) : SportEventProvider {
+    override suspend fun events(query: SportEventQuery): SportEventBatch = withContext(Dispatchers.IO) {
+        val separator = if ('?' in endpoint) '&' else '?'
+        val sport = query.sport?.let { "&sport=" + java.net.URLEncoder.encode(it, "UTF-8") }.orEmpty()
+        val url = URL(
+            endpoint + separator +
+                "from=" + query.fromUtcMs +
+                "&to=" + query.toUtcMs +
+                sport,
+        )
+        val connection = (url.openConnection() as HttpURLConnection).apply {
+            connectTimeout = 8_000
+            readTimeout = 12_000
+            requestMethod = "GET"
+            setRequestProperty("Accept", "application/json")
+        }
+        try {
+            val status = connection.responseCode
+            val stream = if (status in 200..299) connection.inputStream else connection.errorStream
+            val body = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
+            if (status !in 200..299) error("Sport Lounge gateway HTTP $status")
+            GatewaySportEventParser.parse(body) ?: error("Sport Lounge gateway returned invalid data")
+        } finally {
+            connection.disconnect()
+        }
+    }
 }
 
 /** Strict parser for the central read-only gateway; it has no BEST/channel semantics. */
