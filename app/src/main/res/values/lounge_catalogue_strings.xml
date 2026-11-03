@@ -39,4 +39,7 @@
     <string name="catalogue_nbc_peacock">NBC / Peacock</string>
     <string name="catalogue_cbs_paramount_plus">CBS / Paramount+</string>
     <string name="catalogue_hulu_fx_fox_abc">Hulu / FX / FOX / ABC</string>
+    <string name="sport_backend_definite">Definite match</string>
+    <string name="sport_backend_likely">Likely match</string>
+    <string name="sport_backend_maybe">Maybe</string>
 </resources>
