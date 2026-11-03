@@ -1346,7 +1346,13 @@ fun OwnTVShell(
                         )
 
                         selectedSection == MainSection.SPORTS -> tv.own.owntv.features.sports.SportsScreen(
-                            onPlayChannel = { ch, zap -> scope.launch { if (liveVm.ensurePlayingByIdAsync(ch.id, zap)) openFullscreen(MainSection.LIVE_TV) } },
+                            onPlayChannel = { ch, zap ->
+                                // Sport Lounge backend candidates are intentionally synthetic and are not
+                                // rows in Room. Play the supplied channel object directly; re-looking it up
+                                // by id makes backend-only candidates blink and do nothing.
+                                liveVm.watchFullscreen(ch, zap)
+                                openFullscreen(MainSection.LIVE_TV)
+                            },
                             onAddPlaylist = { onSelectSection(MainSection.SETTINGS) },
                             onChildFocused = { focusedLayer = ShellLayer.CONTENT },
                             onEntryHook = { sportsEntry = it },
@@ -1641,7 +1647,9 @@ fun OwnTVShell(
                             sportsPlayback.pendingMatch.value = m to previewChannel
                             exitPlayer()
                             onSelectSection(MainSection.SPORTS)
-                        } else if (liveVm.ensurePlayingByIdAsync(best.channel.id, options.map { it.channel })) {
+                        } else {
+                            // Same rule for goal-toast switches: backend candidates may not exist in Room.
+                            liveVm.watchFullscreen(best.channel, options.map { it.channel })
                             sportsPlayback.start(m, options)
                         }
                     }
