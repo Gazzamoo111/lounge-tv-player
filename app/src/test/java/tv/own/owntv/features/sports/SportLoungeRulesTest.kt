@@ -88,6 +88,23 @@ class SportLoungeRulesTest {
         assertEquals(listOf("live", "nz", "generic"), listOf(generic, nz, live).sortedWith(SportLoungeRules.matchComparator(now)).map { it.id })
     }
 
+    @Test fun `hub includes central discovery fixtures missing from profile board`() {
+        val board = match("board-rugby", Sport.RUGBY, "2026-10-26T05:00:00Z")
+        val rlwc = match("rlwc-semi", Sport.RUGBY_LEAGUE, "2026-10-26T06:00:00Z")
+        assertEquals(
+            listOf("board-rugby", "rlwc-semi"),
+            sportLoungeHubMatches(listOf(board), listOf(rlwc)).map { it.id },
+        )
+    }
+
+    @Test fun `rugby league discovery remains visible when profile never followed league`() {
+        val rlwc = match("rlwc-semi", Sport.RUGBY_LEAGUE, "2026-10-26T06:00:00Z")
+        assertEquals(
+            listOf(Sport.RUGBY_LEAGUE, Sport.RUGBY),
+            sportLoungeHubSports(listOf(Sport.RUGBY), listOf(rlwc)),
+        )
+    }
+
     private fun match(id: String, sport: Sport, start: String, state: MatchState = MatchState.PRE) = Match(
         id = id,
         sport = sport,
