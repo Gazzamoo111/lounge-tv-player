@@ -1,5 +1,6 @@
 package tv.own.owntv.features.home
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
@@ -35,6 +36,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -212,100 +214,92 @@ internal fun MajorEventsHero(
 
 
 /**
- * Universal Lounge TV event treatment, independent of fragile exact-event photo matching.
- * All fixtures get a branded cinematic stage and real feed crests. Formula 1 gets a
- * reference racing-car photograph, with the same crest stage as its offline fallback.
- * This is a presentation-only layer: event identity, time, reminders and Watch Live
- * continue to come from the existing verified fixture and playback flows.
+ * Every Home Major Event has a locally packaged AI-designed sports background.
+ * The single atlas keeps the APK lightweight and removes any dependency on
+ * image APIs, remote URL availability, or event-specific image matching.
+ * Live teams, venue, NZ time, reminder and Watch actions remain unchanged.
  */
 @Composable
 private fun androidx.compose.foundation.layout.BoxScope.SportsHeroBackdrop(event: Match) {
-    val accent = eventAccent(event)
-    val secondary = eventSecondaryAccent(event)
-    val formulaOne = isFormulaOne(event)
-    var carReady by remember(event.key, formulaOne) { mutableStateOf(false) }
-
+    val slot = sportArtworkSlot(event)
+    val resources = androidx.compose.ui.platform.LocalContext.current.resources
+    val art = remember(resources, slot) {
+        val atlas = android.graphics.BitmapFactory.decodeResource(
+            resources, R.drawable.lounge_sports_hero_atlas
+        )
+        if (atlas == null) null else {
+            val width = atlas.width / 3
+            val height = atlas.height / 2
+            val panel = android.graphics.Bitmap.createBitmap(
+                atlas, (slot % 3) * width, (slot / 3) * height, width, height
+            )
+            if (panel !== atlas) atlas.recycle()
+            panel.asImageBitmap()
+        }
+    }
     Box(Modifier.fillMaxSize().background(eventArtworkBrush(event))) {
+        // Asset is rendered for EVERY event, including those with no artwork URL.
+        if (art != null) {
+            Image(
+                bitmap = art,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+        // Give the artwork a luminous finish while preserving its source pixels.
         Box(Modifier.fillMaxSize().drawBehind {
             val w = size.width
             val h = size.height
-            // Restrained studio lighting; no unverified player or team photography.
             drawRect(brush = Brush.radialGradient(
-                colors = listOf(accent.copy(alpha = 0.58f), accent.copy(alpha = 0.12f), Color.Transparent),
-                center = Offset(w * 0.76f, h * 0.47f),
-                radius = w * 0.37f,
+                colors = listOf(
+                    eventAccent(event).copy(alpha = 0.24f),
+                    Color.Transparent
+                ),
+                center = Offset(w * 0.74f, h * 0.52f),
+                radius = w * 0.42f,
             ))
-            drawRect(brush = Brush.radialGradient(
-                colors = listOf(secondary.copy(alpha = 0.51f), Color.Transparent),
-                center = Offset(w * 0.99f, h * 0.66f),
-                radius = w * 0.31f,
-            ))
-            drawCircle(
-                color = Color.White.copy(alpha = 0.085f),
-                radius = h * 0.70f,
-                center = Offset(w * 0.80f, h * 0.49f),
-                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5f),
+            drawLine(
+                Color.White.copy(alpha = 0.12f),
+                Offset(w * 0.57f, h * 0.91f),
+                Offset(w * 0.98f, h * 0.82f),
+                2f
             )
-            drawCircle(
-                color = accent.copy(alpha = 0.16f),
-                radius = h * 0.92f,
-                center = Offset(w * 0.80f, h * 0.49f),
-                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3f),
-            )
-            drawLine(accent.copy(alpha = 0.42f), Offset(w * 0.46f, h * 0.92f), Offset(w, h * 0.78f), 3f)
-            drawLine(secondary.copy(alpha = 0.34f), Offset(w * 0.55f, h * 0.10f), Offset(w, h * 0.25f), 2f)
-            drawLine(Color.White.copy(alpha = 0.10f), Offset(w * 0.68f, 0f), Offset(w * 0.54f, h), 2f)
-        })
-        Text(
-            heroCompetitionMark(event),
-            style = stageText(118, 900),
-            color = Color.White.copy(alpha = 0.095f),
-            maxLines = 1,
-            overflow = TextOverflow.Clip,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.align(Alignment.CenterEnd).padding(end = 72.mpx, bottom = 92.mpx)
-                .width(700.mpx),
-        )
-
-        if (formulaOne) {
-            // Fixed example of a real Formula 1 car, not a claim that this is
-            // the car or driver competing in the current event.
-            AsyncImage(
-                model = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Red_Bull_F1_Car_%2855383927464%29.jpg/1280px-Red_Bull_F1_Car_%2855383927464%29.jpg",
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                alignment = Alignment.Center,
-                onSuccess = { carReady = true },
-                onError = { carReady = false },
-                modifier = Modifier.align(Alignment.CenterEnd)
-                    .fillMaxWidth(0.65f).fillMaxHeight()
-                    .alpha(if (carReady) 1f else 0f),
-            )
-        }
-
-        // Keep the left-side live title and controls readable over any background.
+        }))
+        // Readable left-side copy with clean real crest artwork to the right.
         Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(
             0.0f to Color(0xFF07111E),
-            0.24f to Color(0xF2071424),
-            0.43f to Color(0xC20A1727),
-            0.62f to Color(0x4D0B1725),
-            1.0f to Color(0x1607101C),
+            0.28f to Color(0xF2071424),
+            0.47f to Color(0xBF0A1727),
+            0.66f to Color(0x330B1725),
+            1.0f to Color(0x1007101C),
         )))
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
-            0.0f to Color(0x24050B15),
+            0.0f to Color(0x18050B15),
             0.70f to Color.Transparent,
-            1.0f to Color(0x77050B15),
+            1.0f to Color(0x66050B15),
         )))
-        if (!formulaOne || !carReady) EventMatchupOverlay(event)
-        if (formulaOne && carReady) {
+        if (!isFormulaOne(event)) EventMatchupOverlay(event)
+        if (isFormulaOne(event)) {
             Text(
-                stringResource(R.string.lounge_hero_f1_photo_credit),
-                style = stageText(11, 400),
-                color = Color.White.copy(alpha = 0.62f),
-                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.mpx, bottom = 9.mpx),
+                stringResource(R.string.lounge_hero_mark_f1),
+                style = stageText(90, 900),
+                color = Color.White.copy(alpha = 0.82f),
+                modifier = Modifier.align(Alignment.TopEnd)
+                    .padding(end = 52.mpx, top = 38.mpx),
             )
         }
     }
+}
+
+/** Stable 3 x 2 AI art atlas mapping. No hardcoded fixture identities. */
+internal fun sportArtworkSlot(event: Match): Int = when (event.sport) {
+    Sport.FOOTBALL -> 0
+    Sport.BASKETBALL -> 1
+    Sport.RUGBY, Sport.RUGBY_LEAGUE, Sport.AUSSIE_RULES -> 2
+    Sport.MMA -> 4
+    Sport.RACING -> if (isFormulaOne(event)) 5 else 3
+    else -> 3
 }
 
 private fun isFormulaOne(event: Match): Boolean {
@@ -315,31 +309,6 @@ private fun isFormulaOne(event: Match): Boolean {
     return "formula 1" in league || "formula one" in league ||
         Regex("(^|[^a-z0-9])f1([^a-z0-9]|$)").containsMatchIn(league) ||
         "formula 1" in title
-}
-
-@Composable
-private fun heroCompetitionMark(event: Match): String {
-    val name = event.leagueName.lowercase(Locale.ROOT)
-    return when {
-        name.contains("national football league") || name == "nfl" -> stringResource(R.string.lounge_hero_mark_nfl)
-        name.contains("national basketball association") || name == "nba" -> stringResource(R.string.lounge_hero_mark_nba)
-        name.contains("national rugby league") || name == "nrl" -> stringResource(R.string.lounge_hero_mark_nrl)
-        name.contains("ultimate fighting championship") || name == "ufc" -> stringResource(R.string.lounge_hero_mark_ufc)
-        isFormulaOne(event) -> stringResource(R.string.lounge_hero_mark_f1)
-        name.contains("premier league") -> stringResource(R.string.lounge_hero_mark_pl)
-        else -> event.leagueName.trim().uppercase(Locale.ROOT).take(22)
-    }
-}
-
-private fun eventSecondaryAccent(event: Match): Color = when (event.sport) {
-    Sport.BASKETBALL -> Color(0xFF326CFF)
-    Sport.FOOTBALL -> Color(0xFF5C3DCA)
-    Sport.RUGBY, Sport.RUGBY_LEAGUE -> Color(0xFF22D1C7)
-    Sport.SOCCER -> Color(0xFF2B8CFF)
-    Sport.RACING -> Color(0xFFFFB43C)
-    Sport.MMA -> Color(0xFFFF9349)
-    Sport.CRICKET -> Color(0xFF37A1F0)
-    else -> Color(0xFF4B81F5)
 }
 
 /**

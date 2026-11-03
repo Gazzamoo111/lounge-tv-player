@@ -208,7 +208,6 @@
 2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	formula 1
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	formula one
 1	url	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	https://
-1	url	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Red_Bull_F1_Car_%2855383927464%29.jpg/1280px-Red_Bull_F1_Car_%2855383927464%29.jpg
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	national basketball association
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	national football league
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	national rugby league
