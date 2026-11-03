@@ -31,13 +31,15 @@ class PlaybackCorePatcherTests(unittest.TestCase):
             path.write_text("\n\n".join(snippets) + "\n", encoding="utf-8")
 
         live = "player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt"
+        matcher = "core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt"
         manifest = root / "tools/i18n/safe_literals.txt"
         manifest.parent.mkdir(parents=True, exist_ok=True)
         manifest.write_text(
             "# fixture\n\n"
             f"1\tlog\t{live}\tHTTP 458 while the previous engine's session was still open — waiting and retrying once\n"
             f"1\ttechnical\t{live}\tprovider refused with HTTP 458 (account session still in use) uri=${{HttpClient.redactUrl(uri)}}\n"
-            f"1\ttechnical\t{live}\tended mid-live\n",
+            f"1\ttechnical\t{live}\tended mid-live\n"
+            f"1\tregex\t{matcher}\t\\\\s(vs?\\\\.?|v)\\\\s\n",
             encoding="utf-8",
         )
 
