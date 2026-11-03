@@ -120,6 +120,8 @@ private const val TRACK_POLL_TRIES = 20
  *  spinner says the stream is reconnecting by itself, so a long outage doesn't look like a hung app.
  *  Counted from the stall, which itself only starts once the buffer (~10s) has run dry. */
 private const val RECONNECT_NOTICE_AFTER_MS = 10_000L
+/** Once video has already played, brief manifest/segment refreshes must not flash a loading spinner. */
+private const val BUFFERING_SPINNER_GRACE_MS = 750L
 
 internal enum class HudDialog { NONE, AUDIO, SUBS, SPEED, ZOOM, QUALITY, VOLUME, JUMP_BACK, SLEEP_TIMER }
 
@@ -239,6 +241,24 @@ fun PlayerHud(
     val position = player.position.collectAsStateWithLifecycle()
     val duration by player.duration.collectAsStateWithLifecycle()
     val buffering by player.buffering.collectAsStateWithLifecycle()
+    // Initial tune shows loading immediately. After playback has started, only a sustained buffer
+    // earns the full-screen spinner; sub-second DASH/HLS refresh blips stay invisible.
+    var hasPlayedOnce by remember(player) { mutableStateOf(false) }
+    var showBufferingSpinner by remember(player) { mutableStateOf(buffering) }
+    LaunchedEffect(isPlaying) {
+        if (isPlaying) hasPlayedOnce = true
+    }
+    LaunchedEffect(buffering, hasPlayedOnce) {
+        when {
+            !buffering -> showBufferingSpinner = false
+            !hasPlayedOnce -> showBufferingSpinner = true
+            else -> {
+                showBufferingSpinner = false
+                delay(BUFFERING_SPINNER_GRACE_MS)
+                if (buffering) showBufferingSpinner = true
+            }
+        }
+    }
     val error by player.error.collectAsStateWithLifecycle()
     val errorInfo by player.errorInfo.collectAsStateWithLifecycle()
     val providerBackOff by player.providerBackOff.collectAsStateWithLifecycle()
@@ -840,7 +860,7 @@ fun PlayerHud(
             // A provider wait looks like loading, because that is what it is: the channel is queued behind
             // the panel's own countdown and the engine re-asks by itself. The line under the spinner says
             // why nothing is happening yet, so nobody reaches for Retry (or thinks the channel is dead).
-            buffering -> Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
+            showBufferingSpinner -> Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
                 OwnTVSpinner(sizeDp = 56)
                 val stalledSince = stalledSinceMs
                 if (providerBackOff == null && stalledSince != null) {
