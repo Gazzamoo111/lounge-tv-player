@@ -2219,3 +2219,5 @@
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	formula one
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	f1
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	motogp
+1	locale	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	EEE d MMM · h:mm a
+1	locale	app/src/main/java/tv/own/owntv/features/shell/SavedScreen.kt	Pacific/Auckland
