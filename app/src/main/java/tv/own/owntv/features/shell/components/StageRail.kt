@@ -132,6 +132,8 @@ fun StageRail(
     selected: MainSection,
     visibleSections: Set<MainSection>,
     onSelect: (MainSection) -> Unit,
+    savedSelected: Boolean = false,
+    onOpenSaved: () -> Unit = {},
     count: (MainSection) -> Int?,
     detail: @Composable (MainSection) -> String?,
     profileName: String,
@@ -260,10 +262,21 @@ fun StageRail(
                     trailing = if (counts) count(section)?.let { NumberFormat.getIntegerInstance(LocalConfiguration.current.locales[0]).format(it) } else null,
                     detail = if (details) detail(section) else null,
                     open = open,
-                    active = section == selected ||
+                    active = (section == selected && !(savedSelected && section == MainSection.DOWNLOADS)) ||
                         (section == MainSection.MORE && selected == MainSection.SETTINGS),
                     onClick = { onSelect(section) },
                     modifier = if (section == focusSection) Modifier.focusRequester(selectedItemFocusRequester) else Modifier,
+                )
+            }
+            if (MainSection.DOWNLOADS in visibleSections) {
+                RailItem(
+                    icon = OwnTVIcon.FAVORITE,
+                    label = stringResource(R.string.lounge_saved_title),
+                    trailing = null,
+                    detail = null,
+                    open = open,
+                    active = savedSelected,
+                    onClick = onOpenSaved,
                 )
             }
             // Full height: the profile sits at the bottom, after the last separator.
