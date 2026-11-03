@@ -220,6 +220,9 @@ fun OwnTVShell(
     var guideEntry by remember { mutableStateOf<(() -> Boolean)?>(null) }
     var vodEntry by remember { mutableStateOf<(() -> Boolean)?>(null) }
     var downloadsEntry by remember { mutableStateOf<(() -> Boolean)?>(null) }
+    var savedEntry by remember { mutableStateOf<(() -> Boolean)?>(null) }
+    var savedOpen by remember { mutableStateOf(false) }
+    LaunchedEffect(selectedSection) { if (selectedSection != MainSection.DOWNLOADS) savedOpen = false }
     var moreEntry by remember { mutableStateOf<(() -> Boolean)?>(null) }
     var sportsEntry by remember { mutableStateOf<(() -> Boolean)?>(null) }
     // Home's Live sports row opens a match page through the same request the player's Match button uses.
@@ -1027,6 +1030,7 @@ fun OwnTVShell(
         ) {
           if (isOffline) OfflineBanner()
           val selectFromNav: (MainSection) -> Unit = { section ->
+              savedOpen = false
               if (trendingSearchActive || section == MainSection.SEARCH) {
                   searchVm.setQuery("")
                   trendingSearchActive = false
@@ -1331,6 +1335,16 @@ fun OwnTVShell(
                             restoreFocus = restoreFocus,
                             onRestored = { restoreFocus = false },
                             onEntryHook = { vodEntry = it },
+                            modifier = Modifier.fillMaxSize(),
+                        )
+
+                        selectedSection == MainSection.DOWNLOADS && savedOpen -> SavedScreen(
+                            activeProfileId = activeProfileId,
+                            onPlayChannel = { id -> scope.launch { if (liveVm.ensurePlayingByIdAsync(id)) openFullscreen(MainSection.LIVE_TV) } },
+                            onPlayMovie = { id -> scope.launch { if (movieVm.playByIdAsync(id, 0L) && !movieVm.externalPlayerOn.value) openFullscreen(MainSection.MOVIES) } },
+                            onOpenSeries = { id -> seriesVm.openSeriesById(id); restoreFocus = true; onSelectSection(MainSection.SERIES) },
+                            onChildFocused = { focusedLayer = ShellLayer.CONTENT },
+                            onEntryHook = { savedEntry = it },
                             modifier = Modifier.fillMaxSize(),
                         )
 
