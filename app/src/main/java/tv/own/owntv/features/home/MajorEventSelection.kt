@@ -42,6 +42,15 @@ internal object MajorEventSelection {
                 if (selected.size == limit) return selected
             }
         }
+        // Once variety is established, fill every remaining hero slot from the ranked headline pool.
+        // This is what lets a busy NBA/NFL week reach 10+ slides instead of stopping at an arbitrary
+        // per-sport cap after the genuinely bigger events have already been protected.
+        for (event in candidates) {
+            if (event.key !in selected.map { it.key }) {
+                selected.add(event)
+                if (selected.size == limit) return selected
+            }
+        }
         return selected
     }
 
