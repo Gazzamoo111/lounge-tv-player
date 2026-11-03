@@ -1285,7 +1285,7 @@ class LiveViewModel(
     private fun loungeNzPlaybackChannel(channel: ChannelEntity): ChannelEntity {
         val source = sourceById[channel.sourceId] ?: return channel
         if (source.type != SourceType.XTREAM ||
-            !tv.own.owntv.features.setup.isLegacyLoungeXtream(source.type, source.url)
+            !tv.own.owntv.features.setup.isLoungeXtream(source.type, source.url)
         ) return channel
 
         val key = java.text.Normalizer.normalize(channel.name, java.text.Normalizer.Form.NFKD)
