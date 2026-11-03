@@ -265,7 +265,7 @@ private fun androidx.compose.foundation.layout.BoxScope.SportsHeroBackdrop(event
                 Offset(w * 0.98f, h * 0.82f),
                 2f
             )
-        }))
+        })
         // Readable left-side copy with clean real crest artwork to the right.
         Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(
             0.0f to Color(0xFF07111E),
