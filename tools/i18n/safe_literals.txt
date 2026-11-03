@@ -2084,3 +2084,6 @@
 2	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	logoUrl
 2	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	epgId
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	sport-backend:
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	definite
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	likely
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	maybe
