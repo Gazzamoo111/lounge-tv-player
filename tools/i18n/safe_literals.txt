@@ -1118,7 +1118,7 @@
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Sky Sport FHD cache fill unavailable
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Sky Sport FHD guide matches added=
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Sky Sport FHD guide matching deferred
-1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	to canonical gateway
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	to canonical gateway with forced prune
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Unable to register automatic EPG sources
 1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	NZ | SKY SPORT
 1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	NZ| SKY SPORT
