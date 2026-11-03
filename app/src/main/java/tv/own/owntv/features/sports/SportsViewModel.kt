@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import android.content.Context
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onStart
@@ -125,10 +127,11 @@ class SportsViewModel(
     private val fixtureReminders: FixtureReminderScheduler,
     sportsSource: SportsSource,
     private val context: Context,
-    sourceDao: SourceDao,
+    private val sourceDao: SourceDao,
 ) : ViewModel() {
 
     private val config = settings.activeSportsConfig.distinctUntilChanged()
+    private val backendSportsCandidates = BackendSportsCandidateProvider()
 
     private val board = repository.observe(Demand.Hub)
 
@@ -278,15 +281,25 @@ class SportsViewModel(
             if (!has) return@transformLatest emit(ChannelSearch.NotSearched)
             if (w == null) return@transformLatest emit(ChannelSearch.Checking)
             if (w != WatchWindow.Open) return@transformLatest emit(ChannelSearch.Closed(w as WatchWindow))
-            val found = watchReader.found(m) { SportsMemory.rememberedFor(c, it) }
-            when {
-                found != null -> emit(ChannelSearch.Found(found))
-                !asked -> emit(ChannelSearch.NotSearched)
-                else -> {
-                    emit(ChannelSearch.Searching)
-                    emit(ChannelSearch.Found(watchReader.watchFor(listOf(m)) { SportsMemory.rememberedFor(c, it) }[m.key].orEmpty()))
+            if (!asked) return@transformLatest emit(ChannelSearch.NotSearched)
+            emit(ChannelSearch.Searching)
+            val merged = coroutineScope {
+                val loungeSource = activeProfileSources(settings, sourceDao).first().sources.firstOrNull { source ->
+                    source.syncLive &&
+                        tv.own.owntv.features.setup.isLoungeXtream(source.type, source.url) &&
+                        !source.username.isNullOrBlank() &&
+                        !source.password.isNullOrBlank()
                 }
+                val backendJob = async(Dispatchers.IO) {
+                    loungeSource?.let { backendSportsCandidates.options(m, it) }.orEmpty()
+                }
+                val localJob = async(Dispatchers.Default) {
+                    watchReader.found(m) { SportsMemory.rememberedFor(c, it) }
+                        ?: watchReader.watchFor(listOf(m)) { SportsMemory.rememberedFor(c, it) }[m.key].orEmpty()
+                }
+                mergeBackendSportsOptions(backendJob.await(), localJob.await())
             }
+            emit(ChannelSearch.Found(merged))
         }.flowOn(Dispatchers.Default)
         combine(boards, config, search, pageFilter, playlists) { b, c, s, f, lists ->
             val appLanguage = Locale.getDefault().language
