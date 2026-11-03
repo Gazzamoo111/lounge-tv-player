@@ -64,7 +64,11 @@ internal class BackendSportsCandidateProvider(
                     add(
                         WatchOption(
                             channel = channel,
-                            tier = if (confidence == "definite") WatchTier.GUIDE else WatchTier.LIKELY,
+                            tier = when (confidence) {
+                                "definite" -> WatchTier.GUIDE
+                                "likely" -> WatchTier.EVENT
+                                else -> WatchTier.LIKELY
+                            },
                             guideTitle = BACKEND_CONFIDENCE_PREFIX + confidence,
                         ),
                     )
