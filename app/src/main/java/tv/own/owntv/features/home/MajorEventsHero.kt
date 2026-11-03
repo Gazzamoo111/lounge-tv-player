@@ -173,7 +173,7 @@ internal fun MajorEventsHero(
                         text = stringResource(if (event.key in reminders)
                             R.string.lounge_major_events_reminder_set
                             else R.string.lounge_major_events_remind),
-                        icon = OwnTVIcon.REMINDER,
+                        icon = OwnTVIcon.BELL,
                         onClick = { onToggleReminder(event) },
                         modifier = Modifier.onFocusChanged { if (it.hasFocus) onFocused() }
                     )
