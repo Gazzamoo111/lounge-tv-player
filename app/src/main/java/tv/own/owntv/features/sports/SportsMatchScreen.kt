@@ -581,8 +581,14 @@ internal fun ChannelRow(o: WatchOption, m: Match, onClick: () -> Unit, onHold: (
                 Text(o.facets.name, style = stageText(20, 700), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                 qualityTag(o.facets.qualityRank)?.let { StageTag(it) }
             }
+            val backendConfidence = o.guideTitle
+                ?.takeIf { it.startsWith(BACKEND_CONFIDENCE_PREFIX) }
+                ?.removePrefix(BACKEND_CONFIDENCE_PREFIX)
             val (color, icon, text) = when {
                 playing -> Triple(StageColors.Muted, null, stringResource(R.string.sports_playing_now))
+                backendConfidence == "definite" -> Triple(TierGuide, OwnTVIcon.LIVE_TV, stringResource(R.string.sport_backend_definite))
+                backendConfidence == "likely" -> Triple(TierEvent, OwnTVIcon.LIVE_TV, stringResource(R.string.sport_backend_likely))
+                backendConfidence == "maybe" -> Triple(StageColors.Muted, null, stringResource(R.string.sport_backend_maybe))
                 o.tier == WatchTier.GUIDE -> Triple(TierGuide, OwnTVIcon.EPG, o.guideTitle?.let { stringResource(R.string.sports_reason_guide, it) } ?: stringResource(R.string.sports_confirmed))
                 o.tier == WatchTier.EVENT -> Triple(TierEvent, OwnTVIcon.LIVE_TV, stringResource(R.string.sports_reason_event))
                 o.tier == WatchTier.REMEMBERED -> Triple(TierPick, OwnTVIcon.STAR, stringResource(R.string.sports_reason_pick, leagueName(m)))
