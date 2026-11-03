@@ -304,7 +304,7 @@ private fun Broadcasts(m: Match, found: List<WatchOption>?) {
             else -> byCountry(guide.map { it.facets.country.orEmpty() to it.facets.name }).forEach { (country, names) -> BroadcastGroup(country, names) }
         }
         Spacer(Modifier.height(12.mpx))
-        Text(stringResource(R.string.sports_broadcasts_espn), style = stageText(20, 800), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(stringResource(R.string.sport_lounge_broadcasters), style = stageText(20, 800), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis)
         if (m.broadcasts.isEmpty()) Text(stringResource(R.string.sports_broadcasts_none), style = stageText(18, 400), color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
         byCountry(m.broadcasts.map { it.market?.takeIf { c -> c.length == 2 }.orEmpty() to it.name }).forEach { (country, names) -> BroadcastGroup(country, names) }
     }
