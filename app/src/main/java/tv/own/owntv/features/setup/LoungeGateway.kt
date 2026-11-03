@@ -20,6 +20,12 @@ internal fun loungeHost(raw: String): String =
 internal fun isLegacyLoungeXtream(type: SourceType, url: String): Boolean =
     type == SourceType.XTREAM && loungeHost(url) in LEGACY_LOUNGE_HOSTS
 
+internal fun isLoungeXtream(type: SourceType, url: String): Boolean =
+    type == SourceType.XTREAM && (
+        loungeHost(url) == loungeHost(LOUNGE_XTREAM_GATEWAY) ||
+            loungeHost(url) in LEGACY_LOUNGE_HOSTS
+    )
+
 internal fun loungeXtreamUserAgent(server: String, current: String): String =
     if (loungeHost(server) == loungeHost(LOUNGE_XTREAM_GATEWAY)) LOUNGE_XTREAM_USER_AGENT else current
 
