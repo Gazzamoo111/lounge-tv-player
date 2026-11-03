@@ -221,7 +221,7 @@ internal fun MajorEventsHero(
                     modifier = Modifier.width(760.mpx),
                 )
             }
-            editorialCopy?.synopsis?.let { synopsis ->
+            eventSynopsis(event, editorialCopy)?.let { synopsis ->
                 Text(
                     synopsis, style = stageText(21, 500), color = StageColors.Body,
                     maxLines = 2, overflow = TextOverflow.Ellipsis,
@@ -336,6 +336,27 @@ private fun androidx.compose.foundation.layout.BoxScope.EventLogoFallback(event:
                 }
             }
         }
+    }
+}
+
+
+/** Render text from device translations when the cached backend supplies no editorial copy. */
+@Composable
+private fun eventSynopsis(event: Match, copy: MajorEventHeroCopy?): String? {
+    copy?.synopsis?.takeIf(String::isNotBlank)?.let { return it }
+    val names = event.competitors.take(2).map { it.team.name.trim() }
+        .filter { it.isNotBlank() && !it.equals("TBD", ignoreCase = true) &&
+            !it.equals("TBA", ignoreCase = true) && !it.equals("Unknown", ignoreCase = true) }
+    if (names.size != 2) return null
+    val league = copy?.competition ?: event.leagueName
+    return when (event.sport) {
+        Sport.MMA -> stringResource(R.string.lounge_event_synopsis_combat, names[0], names[1], league)
+        Sport.RUGBY -> stringResource(R.string.lounge_event_synopsis_rugby, names[0], names[1], league)
+        Sport.RUGBY_LEAGUE -> stringResource(R.string.lounge_event_synopsis_league, names[0], names[1], league)
+        Sport.CRICKET -> stringResource(R.string.lounge_event_synopsis_cricket, names[0], names[1], league)
+        Sport.BASKETBALL -> stringResource(R.string.lounge_event_synopsis_basketball, names[0], names[1], league)
+        Sport.FOOTBALL, Sport.SOCCER -> stringResource(R.string.lounge_event_synopsis_team, names[0], names[1], league)
+        else -> null
     }
 }
 

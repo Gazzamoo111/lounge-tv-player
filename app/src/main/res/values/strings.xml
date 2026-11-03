@@ -36,4 +36,11 @@
     <string name="lounge_epg_guide_description">Additional programme listings from Lounge TV</string>
     <string name="lounge_epg_primary_description">Programme listings from your TV account</string>
     <string name="sport_lounge_remove_reminder">Remove reminder</string>
+    <!-- Factual Major Events hero copy, formatted with both participants and competition. -->
+    <string name="lounge_event_synopsis_combat">%1$s meets %2$s in %3$s.</string>
+    <string name="lounge_event_synopsis_rugby">%1$s face %2$s in %3$s rugby action.</string>
+    <string name="lounge_event_synopsis_league">%1$s face %2$s in %3$s.</string>
+    <string name="lounge_event_synopsis_cricket">%1$s take on %2$s in %3$s cricket action.</string>
+    <string name="lounge_event_synopsis_basketball">%1$s take on %2$s in %3$s basketball.</string>
+    <string name="lounge_event_synopsis_team">%1$s meet %2$s in %3$s.</string>
 </resources>
