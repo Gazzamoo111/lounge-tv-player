@@ -2,6 +2,7 @@ package tv.own.owntv.features.sports.data
 
 import org.json.JSONArray
 import org.json.JSONObject
+import tv.own.owntv.core.sports.model.Broadcast
 import tv.own.owntv.core.sports.model.Competitor
 import tv.own.owntv.core.sports.model.League
 import tv.own.owntv.core.sports.model.Match
@@ -22,6 +23,11 @@ data class SportEventCompetitor(
     val score: String?,
 )
 
+data class SportEventBroadcast(
+    val name: String,
+    val market: String?,
+)
+
 /** Provider-neutral fixture contract shared by the device cache and the proposed central gateway. */
 data class SportEvent(
     val stableId: String,
@@ -34,6 +40,8 @@ data class SportEvent(
     val leagueSlug: String,
     val title: String,
     val subtitle: String?,
+    val venue: String? = null,
+    val broadcasts: List<SportEventBroadcast> = emptyList(),
     val startUtcMs: Long,
     val state: SportEventState,
     val statusText: String,
@@ -52,6 +60,12 @@ data class SportEvent(
         .put("leagueSlug", leagueSlug)
         .put("title", title)
         .put("subtitle", subtitle)
+        .put("venue", venue)
+        .put("broadcasts", JSONArray().apply {
+            broadcasts.forEach { broadcast ->
+                put(JSONObject().put("name", broadcast.name).put("market", broadcast.market))
+            }
+        })
         .put("startUtcMs", startUtcMs)
         .put("state", state.name.lowercase())
         .put("statusText", statusText)
@@ -85,6 +99,8 @@ data class SportEvent(
             statusText = statusText,
             title = title,
             subtitle = subtitle,
+            venue = venue,
+            broadcasts = broadcasts.map { Broadcast(it.name, it.market) },
             competitors = competitors.map { side ->
                 Competitor(
                     team = Team(side.id, side.name, side.shortName, side.abbreviation, logoUrl = side.crestUrl),
@@ -108,6 +124,8 @@ data class SportEvent(
             leagueSlug = match.leagueSlug,
             title = match.title,
             subtitle = match.subtitle,
+            venue = match.venue,
+            broadcasts = match.broadcasts.map { SportEventBroadcast(it.name, it.market) },
             startUtcMs = match.startMs,
             state = match.state.toSportEventState(),
             statusText = match.statusText,
@@ -139,6 +157,19 @@ data class SportEvent(
                 leagueSlug = json.getString("leagueSlug"),
                 title = json.getString("title"),
                 subtitle = json.optString("subtitle").takeIf { !json.isNull("subtitle") },
+                venue = json.optString("venue").takeIf { !json.isNull("venue") && it.isNotBlank() },
+                broadcasts = json.optJSONArray("broadcasts")?.let { rows ->
+                    (0 until rows.length()).mapNotNull { index ->
+                        rows.optJSONObject(index)?.let { row ->
+                            row.optString("name").takeIf(String::isNotBlank)?.let { name ->
+                                SportEventBroadcast(
+                                    name = name,
+                                    market = row.optString("market").takeIf { !row.isNull("market") && it.isNotBlank() },
+                                )
+                            }
+                        }
+                    }
+                }.orEmpty(),
                 startUtcMs = json.getLong("startUtcMs"),
                 state = SportEventState.valueOf(json.getString("state").uppercase()),
                 statusText = json.getString("statusText"),
