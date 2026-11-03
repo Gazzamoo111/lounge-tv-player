@@ -12,8 +12,8 @@ PIN = "1de78b1e2690c22b50c060e986bce221454bf880"
 PATCHES = {
   "core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt": [
     [
-      "    private val FIXTURE = Regex(\"\"\"\\\\s(vs?\\\\.?|v)\\\\s\"\"\", RegexOption.IGNORE_CASE)",
-      "    private val FIXTURE = Regex(\"\"\"\\\\s(vs?\\\\.?|v|@)\\\\s\"\"\", RegexOption.IGNORE_CASE)"
+      "    private val FIXTURE = Regex(\"\"\"\\s(vs?\\.?|v)\\s\"\"\", RegexOption.IGNORE_CASE)",
+      "    private val FIXTURE = Regex(\"\"\"\\s(vs?\\.?|v|@)\\s\"\"\", RegexOption.IGNORE_CASE)"
     ]
   ],
   "player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt": [
