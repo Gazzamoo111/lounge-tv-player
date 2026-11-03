@@ -3,7 +3,7 @@ package tv.own.owntv.features.setup
 import tv.own.owntv.core.model.SourceType
 
 internal const val LOUNGE_XTREAM_GATEWAY = "https://connect.loungetv.nz"
-internal const val LOUNGE_XTREAM_USER_AGENT = "LoungeTV/Android/5.2.3.4"
+internal const val LOUNGE_XTREAM_USER_AGENT = "LoungeTV/Android/5.2.3.8"
 
 private val LEGACY_LOUNGE_HOSTS = setOf(
     "line.bestnz.vip",
