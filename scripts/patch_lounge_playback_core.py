@@ -164,8 +164,8 @@ PATCHES = {
       "            transform = { streamId, name, icon, rating, plot, itemCategoryId, containerExt, added, qualityRank, capabilities ->\n                XtVod(streamId, name, icon, rating, plot, itemCategoryId, containerExt, added, qualityRank, capabilities)\n            },"
     ],
     [
-      "            containerExt: String?,\n            added: Long?,\n        ) -> T?,",
-      "            containerExt: String?,\n            added: Long?,\n            qualityRank: Int?,\n            capabilities: String?,\n        ) -> T?,"
+      "    suspend fun <T : Any> streamVod(\n        s: SourceEntity,\n        categoryId: String? = null,\n        transform: (\n            streamId: String,\n            name: String,\n            icon: String?,\n            rating: Double?,\n            plot: String?,\n            categoryId: String?,\n            containerExt: String?,\n            added: Long?,\n        ) -> T?,",
+      "    suspend fun <T : Any> streamVod(\n        s: SourceEntity,\n        categoryId: String? = null,\n        transform: (\n            streamId: String,\n            name: String,\n            icon: String?,\n            rating: Double?,\n            plot: String?,\n            categoryId: String?,\n            containerExt: String?,\n            added: Long?,\n            qualityRank: Int?,\n            capabilities: String?,\n        ) -> T?,"
     ],
     [
       "            containerExt: String?,\n            added: Long?,\n        ) -> T?,\n    ): T? {",
@@ -196,8 +196,8 @@ PATCHES = {
   ],
   "core/src/main/java/tv/own/owntv/core/catalog/ProviderCatalogMetadata.kt": [
     [
-      "        qualityRank = parsed.qualityRank,\n        advertisedCapabilities = parsed.capabilities,",
-      "        qualityRank = qualityRank.takeIf { it > 0 } ?: parsed.qualityRank,\n        advertisedCapabilities = advertisedCapabilities?.takeIf { it.isNotBlank() } ?: parsed.capabilities,"
+      "fun MovieEntity.withProviderCatalogMetadata(): MovieEntity {\n    val parsed = ProviderCatalogMetadataParser.parse(name, year)\n    return copy(\n        canonicalTitle = parsed.canonicalTitle,\n        titleSignature = parsed.titleSignature,\n        parsedYear = parsed.parsedYear,\n        providerLanguage = parsed.language,\n        qualityRank = parsed.qualityRank,\n        advertisedCapabilities = parsed.capabilities,\n    )\n}",
+      "fun MovieEntity.withProviderCatalogMetadata(): MovieEntity {\n    val parsed = ProviderCatalogMetadataParser.parse(name, year)\n    return copy(\n        canonicalTitle = parsed.canonicalTitle,\n        titleSignature = parsed.titleSignature,\n        parsedYear = parsed.parsedYear,\n        providerLanguage = parsed.language,\n        qualityRank = qualityRank.takeIf { it > 0 } ?: parsed.qualityRank,\n        advertisedCapabilities = advertisedCapabilities?.takeIf { it.isNotBlank() } ?: parsed.capabilities,\n    )\n}"
     ]
   ],
   "core/src/main/java/tv/own/owntv/core/database/entity/ContentEntities.kt": [
