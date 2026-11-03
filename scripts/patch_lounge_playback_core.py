@@ -144,6 +144,66 @@ PATCHES = {
     [
       "code == 408 || code == 429 || LiveStreamQuirks.isSessionLimit(code) -> HttpRefusal.BUSY",
       "code == 408 || code == 429 || LiveStreamQuirks.isSessionLimit(code) ||\n                    LiveStreamQuirks.isTransientGatewayRefusal(code) -> HttpRefusal.BUSY"
+    ],
+    [
+      "                            item.triedOpenReset = true\n                            android.util.Log.w(TAG, \"watchdog T_OPEN — no FILE_LOADED after ${elapsed}ms, silent hard-reset + retry\")\n                            val url = currentUrl\n                            val seekMs = load.pendingSeekMs\n                            val archive = item.archiveThisItem\n                            load.expectingPlayback = false\n                            _buffering.value = true\n                            hardReset()",
+      "                            item.triedOpenReset = true\n                            // A normal VOD item has already spent the full open window on mpv.\n                            // Try the second engine now instead of burning another identical wait.\n                            if (!item.archiveThisItem &&\n                                fallbackToExoVod(PlaybackFailure.MpvOpenDecode, mpvStuck = true)\n                            ) return@launch\n                            android.util.Log.w(TAG, \"watchdog T_OPEN — no FILE_LOADED after ${elapsed}ms, silent hard-reset + retry\")\n                            val url = currentUrl\n                            val seekMs = load.pendingSeekMs\n                            val archive = item.archiveThisItem\n                            load.expectingPlayback = false\n                            _buffering.value = true\n                            hardReset()"
+    ],
+    [
+      "                            android.util.Log.w(TAG, \"watchdog MOOV-AT-END — FILE_LOADED but no bitrate/height after ${elapsed}ms, aborting (server lacks Range support)\")\n                            _error.value = vodErrorMessage(PlaybackFailure.NotStreaming)",
+      "                            // A file can be valid while mpv cannot index it on this device. Give\n                            // ExoPlayer one chance before declaring the provider file unstreamable.\n                            if (fallbackToExoVod(PlaybackFailure.MpvOpenDecode, mpvStuck = false)) return@launch\n                            android.util.Log.w(TAG, \"watchdog MOOV-AT-END — FILE_LOADED but no bitrate/height after ${elapsed}ms, aborting (server lacks Range support)\")\n                            _error.value = vodErrorMessage(PlaybackFailure.NotStreaming)"
+    ]
+  ],
+  "core/src/main/java/tv/own/owntv/core/parser/XtreamClient.kt": [
+    [
+      "data class XtVod(\n    val streamId: String, val name: String, val icon: String?, val rating: Double?, val plot: String?,\n    val categoryId: String?, val containerExt: String?, val added: Long?,\n)",
+      "data class XtVod(\n    val streamId: String, val name: String, val icon: String?, val rating: Double?, val plot: String?,\n    val categoryId: String?, val containerExt: String?, val added: Long?,\n    val qualityRank: Int? = null, val capabilities: String? = null,\n)"
+    ],
+    [
+      "            transform = { streamId, name, icon, rating, plot, itemCategoryId, containerExt, added ->\n                XtVod(streamId, name, icon, rating, plot, itemCategoryId, containerExt, added)\n            },",
+      "            transform = { streamId, name, icon, rating, plot, itemCategoryId, containerExt, added, qualityRank, capabilities ->\n                XtVod(streamId, name, icon, rating, plot, itemCategoryId, containerExt, added, qualityRank, capabilities)\n            },"
+    ],
+    [
+      "            containerExt: String?,\n            added: Long?,\n        ) -> T?,",
+      "            containerExt: String?,\n            added: Long?,\n            qualityRank: Int?,\n            capabilities: String?,\n        ) -> T?,"
+    ],
+    [
+      "            containerExt: String?,\n            added: Long?,\n        ) -> T?,\n    ): T? {",
+      "            containerExt: String?,\n            added: Long?,\n            qualityRank: Int?,\n            capabilities: String?,\n        ) -> T?,\n    ): T? {"
+    ],
+    [
+      "        var containerExt: String? = null\n        var added: Long? = null",
+      "        var containerExt: String? = null\n        var added: Long? = null\n        var qualityRank: Int? = null\n        var capabilities: String? = null"
+    ],
+    [
+      "                \"added\" -> added = reader.nextLongOrNull()\n                else -> reader.skipValue()",
+      "                \"added\" -> added = reader.nextLongOrNull()\n                \"lounge_quality_rank\" -> qualityRank = reader.nextIntOrNull()\n                \"lounge_capabilities\" -> capabilities = reader.nextScalarStringOrNull()?.takeIf { it.isNotBlank() }\n                else -> reader.skipValue()"
+    ],
+    [
+      "        return streamId?.let { transform(it, name, icon, rating, cleanPlot, categoryId, containerExt, added) }",
+      "        return streamId?.let { transform(it, name, icon, rating, cleanPlot, categoryId, containerExt, added, qualityRank, capabilities) }"
+    ]
+  ],
+  "core/src/main/java/tv/own/owntv/core/sync/XtreamSyncer.kt": [
+    [
+      "                            containerExt: String?,\n                            added: Long? ->",
+      "                            containerExt: String?,\n                            added: Long?,\n                            qualityRank: Int?,\n                            capabilities: String? ->"
+    ],
+    [
+      "                                addedAt = added?.takeIf { it > 0L }?.let { if (it < 10_000_000_000L) it * 1000L else it },\n                                sortOrder = order++,",
+      "                                addedAt = added?.takeIf { it > 0L }?.let { if (it < 10_000_000_000L) it * 1000L else it },\n                                sortOrder = order++,\n                                qualityRank = qualityRank ?: 0,\n                                advertisedCapabilities = capabilities,"
+    ]
+  ],
+  "core/src/main/java/tv/own/owntv/core/catalog/ProviderCatalogMetadata.kt": [
+    [
+      "        qualityRank = parsed.qualityRank,\n        advertisedCapabilities = parsed.capabilities,",
+      "        qualityRank = qualityRank.takeIf { it > 0 } ?: parsed.qualityRank,\n        advertisedCapabilities = advertisedCapabilities?.takeIf { it.isNotBlank() } ?: parsed.capabilities,"
+    ]
+  ],
+  "core/src/main/java/tv/own/owntv/core/database/entity/ContentEntities.kt": [
+    [
+      "    if (httpHeaders == null && drmConfig == null && manifestType == null) return base\n    val withHeaders = Objects.hash(base, httpHeaders)\n    val withDrm = if (drmConfig == null) withHeaders else Objects.hash(withHeaders, drmConfig)\n    return if (manifestType == null) withDrm else Objects.hash(withDrm, manifestType)",
+      "    val playbackHash = if (httpHeaders == null && drmConfig == null && manifestType == null) {\n        base\n    } else {\n        val withHeaders = Objects.hash(base, httpHeaders)\n        val withDrm = if (drmConfig == null) withHeaders else Objects.hash(withHeaders, drmConfig)\n        if (manifestType == null) withDrm else Objects.hash(withDrm, manifestType)\n    }\n    return if (qualityRank == 0 && advertisedCapabilities == null) playbackHash\n    else Objects.hash(playbackHash, qualityRank, advertisedCapabilities)"
     ]
   ],
   "player-core/src/main/java/tv/own/owntv/player/PlayerDiagnostics.kt": [
