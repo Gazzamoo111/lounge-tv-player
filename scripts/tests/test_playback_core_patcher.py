@@ -35,7 +35,8 @@ class PlaybackCorePatcherTests(unittest.TestCase):
         manifest = root / "tools/i18n/safe_literals.txt"
         manifest.parent.mkdir(parents=True, exist_ok=True)
         manifest.write_text(
-            "# fixture\n\n"
+            "# fixture\n"
+            "# category json: JSON field or protocol key.\n\n"
             f"1\tlog\t{live}\tHTTP 458 while the previous engine's session was still open — waiting and retrying once\n"
             f"1\ttechnical\t{live}\tprovider refused with HTTP 458 (account session still in use) uri=${{HttpClient.redactUrl(uri)}}\n"
             f"1\ttechnical\t{live}\tended mid-live\n"
