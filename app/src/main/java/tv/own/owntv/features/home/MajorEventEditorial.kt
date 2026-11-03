@@ -40,6 +40,28 @@ internal object MajorEventEditorial {
         )
     }
 
+    /**
+     * Two independently photographed, freely licensed sports scenes per sport.
+     * Chosen by stable fixture key so an NBA-heavy Home does not repeat one image
+     * on every slide. These are NOT claimed as footage of the named teams/players.
+     * Exact event art from the editorial sidecar takes precedence in the hero.
+     */
+    fun sportBackdrop(match: Match): String {
+        val imageIds = when (match.sport) {
+            Sport.MMA -> listOf(26582515, 26891604)
+            Sport.RUGBY_LEAGUE -> listOf(3746173, 35102715)
+            Sport.RUGBY -> listOf(35102715, 3746173)
+            Sport.CRICKET -> listOf(21415108, 21415109)
+            Sport.BASKETBALL -> listOf(30555522, 30555529)
+            Sport.FOOTBALL -> listOf(159505, 14300284)
+            Sport.SOCCER -> listOf(37335305, 16014450)
+            Sport.RACING -> listOf(30205195, 29252117)
+            else -> listOf(16014450, 37335305)
+        }
+        val id = imageIds[Math.floorMod(match.key.hashCode(), imageIds.size)]
+        return "https://images.pexels.com/photos/$id/pexels-photo-$id.jpeg?auto=compress&cs=tinysrgb&w=1600&h=900&fit=crop"
+    }
+
     private fun knownEventImage(match: Match): String? {
         if (match.sport != Sport.MMA) return null
         val title = match.title.lowercase(Locale.ROOT)

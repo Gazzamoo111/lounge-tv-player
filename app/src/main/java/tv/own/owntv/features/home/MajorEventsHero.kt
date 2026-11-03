@@ -131,56 +131,65 @@ internal fun MajorEventsHero(
                     .diskCachePolicy(CachePolicy.ENABLED).build()
             }
         }
-        Box(
-            Modifier.align(Alignment.CenterEnd).size(940.mpx, 520.mpx)
-                .background(eventArtworkBrush(event)),
-        ) {
-            if (artworkRequest != null) {
+        // Full-bleed artwork, with a sport-specific photographic fallback for every
+        // fixture. These are illustrative sport photos, never another event's promo.
+        // Exact match posters take priority when supplied and image loading is async.
+        val context = LocalContext.current
+        val art = editorialCopy?.artworkUrl
+        var exactArtReady by remember(event.key, art) { mutableStateOf(false) }
+        val backingPhoto = remember(event.key) { MajorEventEditorial.sportBackdrop(event) }
+        val backdropRequest = remember(context, backingPhoto) {
+            ImageRequest.Builder(context).data(backingPhoto).size(1600, 900)
+                .memoryCachePolicy(CachePolicy.ENABLED)
+                .diskCachePolicy(CachePolicy.ENABLED).build()
+        }
+        val exactRequest = remember(context, art) {
+            art?.let {
+                ImageRequest.Builder(context).data(it).size(1600, 900)
+                    .memoryCachePolicy(CachePolicy.ENABLED)
+                    .diskCachePolicy(CachePolicy.ENABLED).build()
+            }
+        }
+        Box(Modifier.fillMaxSize().background(eventArtworkBrush(event))) {
+            AsyncImage(
+                model = backdropRequest,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                alignment = Alignment.CenterEnd,
+                modifier = Modifier.fillMaxSize(),
+            )
+            if (exactRequest != null) {
                 AsyncImage(
-                    model = artworkRequest,
+                    model = exactRequest,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    onSuccess = { artworkReady = true },
-                    onError = { artworkReady = false },
-                    modifier = Modifier.fillMaxSize().alpha(if (artworkReady) 1f else 0f),
+                    alignment = Alignment.CenterEnd,
+                    onSuccess = { exactArtReady = true },
+                    onError = { exactArtReady = false },
+                    modifier = Modifier.fillMaxSize().alpha(if (exactArtReady) 1f else 0f),
                 )
             }
-            Box(
-                Modifier.fillMaxSize().background(
-                    Brush.horizontalGradient(listOf(
-                        Color(0xFF111F39), Color(0xCC111F39), Color(0x00111F39),
-                    ))
+            // The artwork covers the *entire* 520px hero. Fade only beneath
+            // text/actions, leaving the right half cinematic and unobstructed.
+            Box(Modifier.fillMaxSize().background(
+                Brush.horizontalGradient(
+                    0.0f to Color(0xFA081321),
+                    0.33f to Color(0xEC0A1829),
+                    0.59f to Color(0x99101B2A),
+                    0.82f to Color(0x33101B2A),
+                    1.0f to Color(0x22060B13),
                 )
-            )
-            Box(
-                Modifier.fillMaxSize().background(
-                    Brush.verticalGradient(listOf(Color.Transparent, Color(0x9907111D)))
+            ))
+            Box(Modifier.fillMaxSize().background(
+                Brush.verticalGradient(
+                    0.0f to Color(0x3307111D),
+                    0.72f to Color.Transparent,
+                    1.0f to Color(0x8807111D),
                 )
-            )
-            if (!artworkReady) {
-                EventLogoFallback(event)
-            } else {
-                Row(
-                    Modifier.align(Alignment.BottomEnd).padding(end = 34.mpx, bottom = 24.mpx),
-                    horizontalArrangement = Arrangement.spacedBy(12.mpx),
-                ) {
-                    event.competitors.take(2).forEach { side ->
-                        side.team.logoUrl?.takeIf { it.startsWith("https://") }?.let { logo ->
-                            Box(
-                                Modifier.size(82.mpx).clip(RoundedCornerShape(16.mpx))
-                                    .background(Color(0xAA081624)),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                AsyncImage(
-                                    model = logo, contentDescription = null,
-                                    contentScale = ContentScale.Fit,
-                                    modifier = Modifier.size(66.mpx),
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+            ))
+            // Generic sports photos are identified by the *actual* fixture
+            // competitors, not unrelated athletes or invented matchup art.
+            if (!exactArtReady) EventMatchupOverlay(event)
         }
 
         Column(
@@ -272,73 +281,42 @@ internal fun MajorEventsHero(
 
 
 @Composable
-private fun androidx.compose.foundation.layout.BoxScope.EventLogoFallback(event: Match) {
-    Box(
-        Modifier.align(Alignment.CenterEnd).padding(end = 34.mpx)
-            .size(650.mpx, 390.mpx).clip(RoundedCornerShape(28.mpx))
-            .background(eventArtworkBrush(event)),
+private fun androidx.compose.foundation.layout.BoxScope.EventMatchupOverlay(event: Match) {
+    if (event.competitors.isEmpty()) return
+    Row(
+        Modifier.align(Alignment.BottomEnd).padding(end = 50.mpx, bottom = 46.mpx),
+        horizontalArrangement = Arrangement.spacedBy(16.mpx),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        event.competitors.firstOrNull()?.team?.logoUrl
-            ?.takeIf { it.startsWith("https://") }
-            ?.let { logo ->
+        event.competitors.take(2).forEachIndexed { index, side ->
+            val logo = side.team.logoUrl?.takeIf { it.startsWith("https://") }
+            if (logo != null) {
                 AsyncImage(
-                    model = logo, contentDescription = null,
+                    model = logo,
+                    contentDescription = side.team.name,
                     contentScale = ContentScale.Fit,
-                    modifier = Modifier.align(Alignment.CenterEnd).size(360.mpx).alpha(0.12f),
+                    modifier = Modifier.size(132.mpx),
+                )
+            } else {
+                Text(
+                    side.team.shortName.ifBlank { side.team.name }.take(10).uppercase(),
+                    style = stageText(28, 900),
+                    color = Color.White,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.width(158.mpx),
                 )
             }
-        Text(
-            event.leagueName.uppercase(), style = stageText(18, 800),
-            color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.align(Alignment.TopStart)
-                .padding(start = 26.mpx, top = 22.mpx, end = 24.mpx),
-        )
-        Row(
-            Modifier.align(Alignment.Center).padding(horizontal = 26.mpx),
-            horizontalArrangement = Arrangement.spacedBy(18.mpx),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            event.competitors.take(2).forEachIndexed { index, side ->
-                Box(
-                    Modifier.size(190.mpx).clip(RoundedCornerShape(26.mpx))
-                        .background(Color(0x33101B2C)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    val logo = side.team.logoUrl?.takeIf { it.startsWith("https://") }
-                    if (logo != null) {
-                        AsyncImage(
-                            model = logo, contentDescription = side.team.name,
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier.size(164.mpx),
-                        )
-                    } else {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.mpx),
-                        ) {
-                            Text(
-                                side.team.shortName.ifBlank { side.team.name }.take(4).uppercase(),
-                                style = stageText(38, 800), color = StageColors.Text,
-                            )
-                            Text(
-                                side.team.name, style = stageText(14, 600),
-                                color = StageColors.Muted,
-                                maxLines = 2, overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                    }
-                }
-                if (index == 0 && event.competitors.size > 1) {
-                    Text(
-                        stringResource(R.string.lounge_major_events_vs),
-                        style = stageText(22, 900), color = Color.White,
-                    )
-                }
+            if (index == 0 && event.competitors.size > 1) {
+                Text(
+                    stringResource(R.string.lounge_major_events_vs),
+                    style = stageText(24, 900),
+                    color = Color.White,
+                )
             }
         }
     }
 }
-
 
 /** Render text from device translations when the cached backend supplies no editorial copy. */
 @Composable
