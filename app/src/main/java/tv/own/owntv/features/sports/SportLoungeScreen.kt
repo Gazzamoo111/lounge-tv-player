@@ -302,8 +302,16 @@ private fun SportLoungeEventCard(
             Spacer(Modifier.weight(1f))
             Box(Modifier.fillMaxWidth().height(1.mpx).background(Color.White.copy(alpha = 0.07f)))
             Row(Modifier.padding(top = 10.mpx), verticalAlignment = Alignment.CenterVertically) {
+                val broadcasterText = match.broadcasts
+                    .map { it.name }
+                    .filter { it.isNotBlank() }
+                    .distinct()
+                    .take(3)
+                    .joinToString(stringResource(R.string.content_epg_bits_separator))
                 Text(
-                    stringResource(if (hasPlaylist) R.string.sport_lounge_find_channels else R.string.sport_lounge_no_playlist),
+                    broadcasterText.ifBlank {
+                        stringResource(if (hasPlaylist) R.string.sport_lounge_find_channels else R.string.sport_lounge_no_playlist)
+                    },
                     style = stageText(15.5f, 500), color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f),
                 )
