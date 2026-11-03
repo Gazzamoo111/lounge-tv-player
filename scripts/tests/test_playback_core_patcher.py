@@ -62,6 +62,17 @@ class PlaybackCorePatcherTests(unittest.TestCase):
                     if not any(later_before in after for later_before, _ in changes[index + 1:]):
                         self.assertIn(after, text, relative)
 
+    def test_mpv_timeout_exo_handoff_generation_survives_hard_reset(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.make_pinned_core_fixture(root)
+            with patch.object(patcher.subprocess, "check_output", return_value=patcher.PIN), patch.object(patcher.subprocess, "run"):
+                patcher.apply(root)
+            source = (root / "player-core/src/main/java/tv/own/owntv/player/OwnTVPlayer.kt").read_text()
+            self.assertIn("hardReset()\n            // Generation changes in hardReset()", source)
+            self.assertIn("val genAfterHardReset = loadGeneration", source)
+            self.assertIn("if (genAfterHardReset != loadGeneration) return@launch", source)
+
     def test_patcher_fails_closed_when_source_is_already_patched(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
