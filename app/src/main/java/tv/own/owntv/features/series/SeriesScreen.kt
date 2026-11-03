@@ -1394,7 +1394,7 @@ private fun buildSeriesDetails(
     return tv.own.owntv.features.shell.components.MediaDetailsUi(
         title = loungeVodTitle(s.name),
         backdropUrl = backdrop,
-        logoUrl = tv.own.owntv.core.metadata.MetadataImages.logo(meta?.logoPath),
+        logoUrl = null, // Lounge: never show unverified-language logo assets as hero text
         posterUrl = poster,
         metaLine = metaLine,
         genres = jsonStringList(meta?.genresJson),
@@ -2123,7 +2123,7 @@ internal fun seriesTitleInfo(
     val tmdbPoster = tv.own.owntv.core.metadata.MetadataImages.poster(meta?.posterPath)
     return VodTitleInfo(
         title = loungeVodTitle(series.name),
-        logoUrl = tv.own.owntv.core.metadata.MetadataImages.logo(meta?.logoPath),
+        logoUrl = null, // Lounge: never show unverified-language logo assets as hero text
         backdropUrl = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath, size = "w1280")
             ?: series.backdropUrl?.takeIf { it.isNotBlank() },
         posterUrl = if (tmdbWins) tmdbPoster ?: providerPoster else providerPoster ?: tmdbPoster,
