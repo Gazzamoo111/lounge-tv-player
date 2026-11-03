@@ -267,17 +267,17 @@ fun StageRail(
                     onClick = { onSelect(section) },
                     modifier = if (section == focusSection) Modifier.focusRequester(selectedItemFocusRequester) else Modifier,
                 )
-            }
-            if (MainSection.DOWNLOADS in visibleSections) {
-                RailItem(
-                    icon = OwnTVIcon.FAVORITE,
-                    label = stringResource(R.string.lounge_saved_title),
-                    trailing = null,
-                    detail = null,
-                    open = open,
-                    active = savedSelected,
-                    onClick = onOpenSaved,
-                )
+                if (section == MainSection.DOWNLOADS) {
+                    RailItem(
+                        icon = OwnTVIcon.FAVORITE,
+                        label = stringResource(R.string.lounge_saved_title),
+                        trailing = null,
+                        detail = null,
+                        open = open,
+                        active = savedSelected,
+                        onClick = onOpenSaved,
+                    )
+                }
             }
             // Full height: the profile sits at the bottom, after the last separator.
             if (full) Spacer(Modifier.weight(1f))
