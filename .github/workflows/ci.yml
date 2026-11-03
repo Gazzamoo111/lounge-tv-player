@@ -29,6 +29,8 @@ jobs:
           ref: 1de78b1e2690c22b50c060e986bce221454bf880
           path: shared-core
           persist-credentials: false
+      - name: Verify strict event-artwork matching
+        run: node --test services/sport-lounge/test/hero-artwork-matcher.test.mjs
       - name: Apply Lounge TV playback fixes to pinned core
         run: python3 scripts/patch_lounge_playback_core.py shared-core
       - uses: actions/setup-java@v4

@@ -25,6 +25,12 @@ class MajorEventSelectionTest {
         assertEquals(2, chosen.count { it.sport == Sport.BASKETBALL })
     }
 
+    @Test fun eventsBeyondSevenDaysAreNotFeatured() {
+        val tomorrow = fixture("tomorrow", Sport.RUGBY, "All Blacks Test", now + 86_400_000L)
+        val beyond = fixture("beyond", Sport.MMA, "UFC 335", now + 8 * 86_400_000L)
+        assertEquals(listOf("tomorrow"), MajorEventSelection.select(listOf(tomorrow, beyond), now).map { it.id })
+    }
+
     @Test fun noPastOrPostponedEvents() {
         val events = listOf(
             fixture("past", Sport.RUGBY, "Test", now - 1_000L),

@@ -11,7 +11,7 @@ import tv.own.owntv.features.sports.SportLoungeRules
  * A featured event is not an assertion that a broadcast stream has been verified.
  */
 internal object MajorEventSelection {
-    private const val WINDOW_MS = 14L * 24 * 60 * 60 * 1000
+    private const val WINDOW_MS = 7L * 24 * 60 * 60 * 1000
 
     fun select(fixtures: List<Match>, nowMs: Long, limit: Int = 12): List<Match> {
         if (limit <= 0) return emptyList()
