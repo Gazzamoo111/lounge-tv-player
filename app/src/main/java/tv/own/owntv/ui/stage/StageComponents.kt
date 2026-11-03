@@ -797,6 +797,8 @@ fun StagePoster(
     progress: Float? = null,
     /** A finished title: the `.ep` ✓ badge in the top corner instead of a bar. */
     watched: Boolean = false,
+    /** Lounge movie-format badges. Kept deliberately short so poster art stays dominant. */
+    badges: List<String> = emptyList(),
     artwork: @Composable BoxScope.() -> Unit,
 ) {
     val interaction = remember { MutableInteractionSource() }
@@ -828,6 +830,23 @@ fun StagePoster(
         ) {
             artwork()
             if (rating != null) StageRatingChip(rating, Modifier.padding(8.mpx), small = compact)
+            if (badges.isNotEmpty()) {
+                Row(
+                    Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(
+                            start = 8.mpx,
+                            end = 8.mpx,
+                            bottom = if (progress != null && progress > 0f && !watched) 12.mpx else 8.mpx,
+                        ),
+                    horizontalArrangement = Arrangement.spacedBy(5.mpx),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    badges.take(if (compact) 2 else 3).forEachIndexed { index, label ->
+                        StageMediaBadge(label, primary = index == 0, compact = compact)
+                    }
+                }
+            }
             if (watched) {
                 Box(
                     Modifier.align(Alignment.TopEnd).padding(8.mpx).size(if (compact) 26.mpx else 30.mpx)
@@ -1058,6 +1077,25 @@ fun StageMenuChoice(
             }
         }
     }
+}
+
+/** Compact Lounge media-format badge, inspired by the Xperience badge treatment but native to Stage. */
+@Composable
+private fun StageMediaBadge(label: String, primary: Boolean, compact: Boolean) {
+    val accent = stageAccent
+    val bg = if (primary) accent.accent.copy(alpha = 0.94f) else Color(8, 12, 14).copy(alpha = 0.9f)
+    val fg = if (primary) accent.onAccent else Color.White.copy(alpha = 0.95f)
+    Text(
+        text = label,
+        style = stageText(if (compact) 10.5f else 11.5f, 800),
+        color = fg,
+        maxLines = 1,
+        modifier = Modifier
+            .height(if (compact) 22.mpx else 24.mpx)
+            .background(bg, RoundedCornerShape(7.mpx))
+            .padding(horizontal = if (compact) 7.mpx else 8.mpx)
+            .wrapContentHeight(Alignment.CenterVertically),
+    )
 }
 
 /** `.pc .rt`: "★ 7.8" on near-black in the poster's top-left corner; [small] = 66×28 at 14 px. */
