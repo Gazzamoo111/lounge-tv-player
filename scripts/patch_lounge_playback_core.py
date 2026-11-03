@@ -214,13 +214,6 @@ def apply(root: Path) -> None:
         raise SystemExit("Expected one existing ended-mid-live safe literal")
     rows[rows.index(old_ended)] = "2\ttechnical\t" + relative + "\tended mid-live"
 
-    watch_matcher_relative = "core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt"
-    old_fixture_regex = "1\tregex\t" + watch_matcher_relative + "\t\\\\s(vs?\\\\.?|v)\\\\s"
-    new_fixture_regex = "1\tregex\t" + watch_matcher_relative + "\t\\\\s(vs?\\\\.?|v|@)\\\\s"
-    if rows.count(old_fixture_regex) != 1:
-        raise SystemExit("Expected one existing sports fixture regex safe literal")
-    rows[rows.index(old_fixture_regex)] = new_fixture_regex
-
     new_literals = [
         ("1", "file-path", "black.ts"),
         ("1", "log", "HTTP $status while opening a live stream — waiting for the gateway or previous session to release, then retrying"),
@@ -247,6 +240,23 @@ def apply(root: Path) -> None:
     subprocess.run(["git", "-C", str(root), "apply", "--check", str(reliability_patch)], check=True)
     subprocess.run(["git", "-C", str(root), "apply", str(reliability_patch)], check=True)
     print("Applied reviewed tune-cancellation and credential backport")
+
+    # The reliability patch also touches the upstream safe-literal manifest. Update the sports
+    # matcher regex classification only after that patch has landed, so both changes compose cleanly.
+    rows = manifest.read_text(encoding="utf-8").splitlines()
+    watch_matcher_relative = "core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt"
+    old_fixture_regex = "1\tregex\t" + watch_matcher_relative + "\t\\\\s(vs?\\\\.?|v)\\\\s"
+    new_fixture_regex = "1\tregex\t" + watch_matcher_relative + "\t\\\\s(vs?\\\\.?|v|@)\\\\s"
+    if rows.count(old_fixture_regex) != 1:
+        raise SystemExit("Expected one existing sports fixture regex safe literal after reliability patch")
+    rows[rows.index(old_fixture_regex)] = new_fixture_regex
+    if "" not in rows:
+        raise SystemExit("Unrecognized upstream safe literal manifest after reliability patch")
+    header_end = rows.index("") + 1
+    body = sorted(rows[header_end:], key=lambda row: (row.split("\t", 3)[2], row.split("\t", 3)[3]))
+    manifest.write_text("\n".join(rows[:header_end] + body) + "\n", encoding="utf-8")
+    print("Refreshed sports fixture regex safe literal")
+
     print(f"Playback core patch applied to pinned commit {PIN}")
 
 if __name__ == "__main__":
