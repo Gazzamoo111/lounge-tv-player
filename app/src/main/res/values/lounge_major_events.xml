@@ -13,6 +13,7 @@
     <string name="lounge_major_events_empty">Major live events will appear here when fixtures are available</string>
     <string name="lounge_major_events_unverified">Available streams are checked when the event starts.</string>
     <string name="lounge_major_events_nz_time">NZ time</string>
+    <string name="lounge_major_events_vs">VS</string>
     <string name="lounge_saved_title">Saved</string>
     <string name="lounge_saved_favourites">Favourites</string>
     <string name="lounge_saved_reminders">Reminders</string>
