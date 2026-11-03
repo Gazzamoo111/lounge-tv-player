@@ -271,7 +271,7 @@ private fun androidx.compose.foundation.layout.BoxScope.SportsHeroBackdrop(event
             // Fixed example of a real Formula 1 car, not a claim that this is
             // the car or driver competing in the current event.
             AsyncImage(
-                model = "https://commons.wikimedia.org/wiki/Special:FilePath/Red_Bull_F1_Car_(55383927464).jpg?width=1440",
+                model = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Red_Bull_F1_Car_%2855383927464%29.jpg/1280px-Red_Bull_F1_Car_%2855383927464%29.jpg",
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 alignment = Alignment.Center,
@@ -297,6 +297,14 @@ private fun androidx.compose.foundation.layout.BoxScope.SportsHeroBackdrop(event
             1.0f to Color(0x77050B15),
         )))
         if (!formulaOne || !carReady) EventMatchupOverlay(event)
+        if (formulaOne && carReady) {
+            Text(
+                "Car photo: Jason Puddephatt · CC BY-SA 4.0",
+                style = stageText(11, 400),
+                color = Color.White.copy(alpha = 0.62f),
+                modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.mpx, bottom = 9.mpx),
+            )
+        }
     }
 }
 
