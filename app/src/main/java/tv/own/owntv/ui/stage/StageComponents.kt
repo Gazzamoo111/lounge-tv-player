@@ -52,6 +52,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.em
 import androidx.tv.material3.Text
+import androidx.compose.ui.layout.ContentScale
+import coil3.compose.AsyncImage
+import coil3.compose.AsyncImagePainter
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import tv.own.owntv.ui.components.OwnTVIcon
 import tv.own.owntv.ui.theme.StageAccent
 import tv.own.owntv.ui.theme.StageColors
@@ -1079,23 +1084,61 @@ fun StageMenuChoice(
     }
 }
 
-/** Compact Lounge media-format badge, inspired by the Xperience badge treatment but native to Stage. */
+/**
+ * Exact badge artwork from the supplied Xperience badge pack.
+ * Show only supported metadata. Unknown labels remain text rather than claiming unsupported quality.
+ */
+private fun loungeBadgeImage(label: String): String? = when (label.trim().uppercase()) {
+    "4K", "UHD", "2160P" -> "https://cdn.xperience-app.com/badges/gold/uhd.webp"
+    "FHD", "1080P" -> "https://cdn.xperience-app.com/badges/elite/8.webp"
+    "HD", "720P" -> "https://cdn.xperience-app.com/badges/elite/9.webp"
+    "SD", "480P" -> "https://cdn.xperience-app.com/badges/elite/10.webp"
+    "H.264", "AVC", "X264" -> "https://cdn.xperience-app.com/badges/elite/19.webp"
+    "HEVC", "H.265", "X265" -> "https://cdn.xperience-app.com/badges/elite/18.webp"
+    "DOLBY VISION", "DV" -> "https://cdn.xperience-app.com/badges/elite/11.webp"
+    "HDR10+" -> "https://cdn.xperience-app.com/badges/elite/12.webp"
+    "HDR10" -> "https://cdn.xperience-app.com/badges/golden_animated/14.webp?v=2"
+    "HDR", "HLG" -> "https://cdn.xperience-app.com/badges/golden_animated/15.webp?v=2"
+    "IMAX" -> "https://cdn.xperience-app.com/badges/elite/17.webp"
+    "ATMOS", "DOLBY ATMOS" -> "https://cdn.xperience-app.com/badges/elite/22.webp"
+    "TRUEHD" -> "https://cdn.xperience-app.com/badges/elite/23.webp"
+    "E-AC3", "EAC3", "DDP" -> "https://cdn.xperience-app.com/badges/elite/24.webp"
+    "AC3", "DOLBY DIGITAL" -> "https://cdn.xperience-app.com/badges/elite/25.webp"
+    "DTS" -> "https://cdn.xperience-app.com/badges/elite/29.webp"
+    "DTS-HD" -> "https://cdn.xperience-app.com/badges/elite/28.webp"
+    "DTS:X" -> "https://cdn.xperience-app.com/badges/elite/26.webp"
+    else -> null
+}
+
 @Composable
 private fun StageMediaBadge(label: String, primary: Boolean, compact: Boolean) {
-    val accent = stageAccent
-    val bg = if (primary) accent.accent.copy(alpha = 0.94f) else Color(8, 12, 14).copy(alpha = 0.9f)
-    val fg = if (primary) accent.onAccent else Color.White.copy(alpha = 0.95f)
-    Text(
-        text = label,
-        style = stageText(if (compact) 10.5f else 11.5f, 800),
-        color = fg,
-        maxLines = 1,
-        modifier = Modifier
-            .height(if (compact) 22.mpx else 24.mpx)
-            .background(bg, RoundedCornerShape(7.mpx))
-            .padding(horizontal = if (compact) 7.mpx else 8.mpx)
-            .wrapContentHeight(Alignment.CenterVertically),
-    )
+    val imageUrl = loungeBadgeImage(label)
+    var imageFailed by remember(imageUrl) { mutableStateOf(false) }
+    if (imageUrl != null && !imageFailed) {
+        AsyncImage(
+            model = imageUrl,
+            contentDescription = label,
+            contentScale = ContentScale.Fit,
+            onState = { if (it is AsyncImagePainter.State.Error) imageFailed = true },
+            modifier = Modifier.width(if (compact) 61.mpx else 67.mpx)
+                .height(if (compact) 23.mpx else 26.mpx),
+        )
+    } else {
+        val accent = stageAccent
+        val bg = if (primary) accent.accent.copy(alpha = 0.94f) else Color(8, 12, 14).copy(alpha = 0.9f)
+        val fg = if (primary) accent.onAccent else Color.White.copy(alpha = 0.95f)
+        Text(
+            text = label,
+            style = stageText(if (compact) 10.5f else 11.5f, 800),
+            color = fg,
+            maxLines = 1,
+            modifier = Modifier
+                .height(if (compact) 22.mpx else 24.mpx)
+                .background(bg, RoundedCornerShape(7.mpx))
+                .padding(horizontal = if (compact) 7.mpx else 8.mpx)
+                .wrapContentHeight(Alignment.CenterVertically),
+        )
+    }
 }
 
 /** `.pc .rt`: "★ 7.8" on near-black in the poster's top-left corner; [small] = 66×28 at 14 px. */
