@@ -822,7 +822,7 @@ private fun LoungeSportsQuickLinks(
 }
 
 private fun rowHasData(row: Any, state: HomeUiState, sportsCards: Int, majorEvents: Int): Boolean = when (row) {
-    LoungeHomeRow.MAJOR_EVENTS -> majorEvents > 0
+    LoungeHomeRow.MAJOR_EVENTS -> true // Stable hero slot from first frame; never flash the older VOD hero.
     LoungeHomeRow.SPORTS_LINKS -> !state.isLoading
     LoungeHomeRow.SPORTS_FIXTURES -> sportsCards > 0
     LoungeHomeRow.FEATURED_MOVIES -> state.featuredMovies.isNotEmpty()
