@@ -254,6 +254,33 @@ PATCHES = {
   ]
 }
 
+
+# Lounge TV factory defaults. Keep explicit global and legacy VOD choices intact.
+# The pinned upstream core is immutable; the existing fail-closed patcher applies this
+# only when it sees the exact reviewed source, before compilation.
+PATCHES["core/src/main/java/tv/own/owntv/core/settings/SettingsRepository.kt"] = [
+  [
+    "        prefs[Keys.LIVE_ENGINE]?.let { runCatching { tv.own.owntv.core.player.EnginePreference.valueOf(it) }.getOrNull() }\n            ?: tv.own.owntv.core.player.EnginePreference.EXO_FIRST",
+    "        prefs[Keys.LIVE_ENGINE]?.let { runCatching { tv.own.owntv.core.player.EnginePreference.valueOf(it) }.getOrNull() }\n            ?: tv.own.owntv.core.player.EnginePreference.MPV_FIRST"
+  ],
+  [
+    "        prefs[Keys.VOD_ENGINE]?.let { runCatching { tv.own.owntv.core.player.EnginePreference.valueOf(it) }.getOrNull() }\n            ?: if (prefs[Keys.VOD_PREFER_EXO] == true) tv.own.owntv.core.player.EnginePreference.EXO_FIRST\n            else tv.own.owntv.core.player.EnginePreference.MPV_FIRST",
+    "        prefs[Keys.VOD_ENGINE]?.let { runCatching { tv.own.owntv.core.player.EnginePreference.valueOf(it) }.getOrNull() }\n            ?: prefs[Keys.VOD_PREFER_EXO]?.let {\n                if (it) tv.own.owntv.core.player.EnginePreference.EXO_FIRST\n                else tv.own.owntv.core.player.EnginePreference.MPV_FIRST\n            }\n            ?: tv.own.owntv.core.player.EnginePreference.EXO_FIRST"
+  ],
+  [
+    "     * Default is [EnginePreference.EXO_FIRST] — ExoPlayer opens far faster, which is what channel\n     * surfing is made of, and it is the only engine with live closed captions; mpv catches what it\n     * cannot play. The other three exist because that automatic handover is not always wanted:",
+    "     * Lounge TV defaults to [EnginePreference.MPV_FIRST] for ordinary live streams,\n     * with ExoPlayer as the automatic fallback. Protected DRM streams still require ExoPlayer.\n     * The other modes remain available for device and provider compatibility:"
+  ],
+  [
+    "     * Default is [EnginePreference.MPV_FIRST] — the opposite of Live TV's, deliberately: a film is one\n     * long open where breadth of codec support beats speed of opening, and mpv has the wider set\n     * (DTS/TrueHD audio, odd containers) plus the A/V-sync nudge. ExoPlayer-first is for devices and\n     * providers where mpv's path can't open files ExoPlayer plays fine.",
+    "     * Lounge TV defaults to [EnginePreference.EXO_FIRST] for Movies and Series, with mpv\n     * as the automatic fallback for unsupported formats and provider-specific failures.\n     * Explicit user and per-source engine preferences still take precedence."
+  ],
+  [
+    "     * Migrated in place from the older `vod_prefer_exo` switch, which is still read when the new key\n     * has never been written: on → [EnginePreference.EXO_FIRST], off → [EnginePreference.MPV_FIRST].\n     * Nobody's playback changes on upgrade.",
+    "     * Explicit settings made with the older `vod_prefer_exo` switch are preserved:\n     * on → [EnginePreference.EXO_FIRST], off → [EnginePreference.MPV_FIRST].\n     * When neither key is present, the Lounge TV default is ExoPlayer first."
+  ]
+]
+
 def apply(root: Path) -> None:
     actual = subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"], text=True).strip()
     if actual != PIN:
