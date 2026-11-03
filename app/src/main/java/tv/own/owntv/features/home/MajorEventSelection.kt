@@ -12,14 +12,13 @@ import tv.own.owntv.features.sports.SportLoungeRules
  */
 internal object MajorEventSelection {
     private const val WINDOW_MS = 14L * 24 * 60 * 60 * 1000
-    private const val LIVE_GRACE_MS = 6L * 60 * 60 * 1000
 
     fun select(fixtures: List<Match>, nowMs: Long, limit: Int = 6): List<Match> {
         if (limit <= 0) return emptyList()
         val candidates = SportLoungeRules.dedupe(fixtures).asSequence()
             .filter { event ->
                 event.state == MatchState.IN ||
-                    (event.state == MatchState.PRE && event.startMs in (nowMs - LIVE_GRACE_MS)..(nowMs + WINDOW_MS))
+                    (event.state == MatchState.PRE && event.startMs in nowMs..(nowMs + WINDOW_MS))
             }
             .sortedWith(compareByDescending<Match> { priority(it, nowMs) }
                 .thenBy { it.startMs }
