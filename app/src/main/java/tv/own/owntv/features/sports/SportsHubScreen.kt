@@ -97,6 +97,23 @@ private val LINE_SCORE_SPORTS = setOf(Sport.TENNIS, Sport.CRICKET, Sport.GOLF, S
 private const val SPORT_CHIPS = 8
 
 /**
+ * The hub must render the profile board and the central seven-day discovery calendar together.
+ * Discovery carries fixtures that the profile's followed ESPN leagues may not, such as RLWC and boxing.
+ */
+internal fun sportLoungeHubMatches(board: List<Match>, discovery: List<Match>): List<Match> =
+    SportLoungeRules.dedupe(board + discovery)
+
+/**
+ * Keep the user's existing sport order, but never hide Rugby League when the discovery calendar
+ * contains it. Other discovered sports are appended so centrally supplied fixtures remain reachable.
+ */
+internal fun sportLoungeHubSports(followed: List<Sport>, discovery: List<Match>): List<Sport> {
+    val discovered = discovery.map { it.sport }.distinct()
+    val priority = listOf(Sport.RUGBY_LEAGUE).filter { it in discovered }
+    return (priority + followed + discovered).distinct()
+}
+
+/**
  * The Sports hub: title and today's counts, sport chips ending in ⟳ (rebuild),
  * *Live now* with the featured first card, *Sport on your channels now* from the guide, *Starting soon*,
  * and the key hints. Focus enters on the featured card. OK and the Play key open a match (channels are
@@ -158,14 +175,22 @@ fun SportsHubScreen(
             .let { mine -> mine.isEmpty() || feed in mine }
         return bySport || (HubChip.MyTeams in chips && isMine())
     }
-    // ESPN's tennis and golf feeds list a whole tournament; "today" is what is live or starts today.
-    val today = state.board.today.values.flatten().distinctBy { it.key }.filter { it.isLive || isToday(it.startMs) }
+    // ESPN's profile board and the central seven-day discovery calendar are one customer-facing
+    // event set. The latter is essential for fixtures absent from a followed ESPN league, including RLWC.
+    val discoveryMatches = state.discovery.matches
+    val hubMatches = remember(state.board.matches, discoveryMatches) {
+        sportLoungeHubMatches(state.board.matches, discoveryMatches)
+    }
+    // Tennis and golf feeds list a whole tournament; "today" is what is live or starts today.
+    val today = hubMatches.filter { it.isLive || isToday(it.startMs) }
     val live = today.filter { it.isLive && it.passes() }
         .sortedWith(compareBy<Match>({ config.rankOf(it.sport, it.feed).first }, { config.rankOf(it.sport, it.feed).second }, { !it.isMine() }, { it.startMs }))
-    val soon = state.board.matches.filter { it.state == MatchState.PRE && it.startMs > now && it.passes() }
+    val soon = hubMatches.filter { it.state == MatchState.PRE && it.startMs > now && it.passes() }
         .sortedWith(compareBy<Match>({ config.rankOf(it.sport, it.feed).first }, { config.rankOf(it.sport, it.feed).second }, { it.startMs })).take(12)
     val onNow = state.onNow.values.flatten().take(6)
-    val followedSports = remember(config) { vm.followedSports(config) }
+    val followedSports = remember(config, discoveryMatches) {
+        sportLoungeHubSports(vm.followedSports(config), discoveryMatches)
+    }
 
     val featuredFocus = remember { FocusRequester() }
     val chipFocus = remember { FocusRequester() }
