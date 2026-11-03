@@ -18,4 +18,8 @@
     <string name="lounge_saved_reminders">Reminders</string>
     <string name="lounge_saved_no_reminders">No reminders saved. Set one from a major event or Sport Lounge.</string>
     <string name="lounge_saved_remove_reminder">Remove reminder</string>
+    <string name="lounge_saved_sport">Sport</string>
+    <string name="lounge_saved_kids">Kids &amp; Family</string>
+    <string name="lounge_saved_entertainment">Entertainment</string>
+    <string name="lounge_saved_hold_remove">Hold OK to remove a favourite</string>
 </resources>
