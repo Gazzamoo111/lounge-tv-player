@@ -140,7 +140,7 @@ class ShellViewModel(
                             sourceRepository.updateSource(updated)
                             catalogSyncScheduler.enqueueSync(
                                 sourceId = updated.id,
-                                reason = "lounge_gateway_clean_resync_5_2_3_4",
+                                reason = "lounge_gateway_clean_resync_5_2_3_8",
                                 forcePrune = true,
                                 policy = ExistingWorkPolicy.REPLACE,
                             )
