@@ -2145,40 +2145,77 @@
 1	technical	app/src/main/java/tv/own/owntv/ui/stage/StageComponents.kt	DTS:X
 1	url	app/src/main/java/tv/own/owntv/ui/stage/StageComponents.kt	https://cdn.xperience-app.com/badges/elite/26.webp
 1	technical	app/src/main/java/tv/own/owntv/features/movies/LoungeMoviesFeaturedRail.kt	AAC
-4	empty	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	\0
-2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	all blacks
+6	empty	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	\0
+3	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	all blacks
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	australia
-2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	black caps
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	boxing
+3	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	black caps
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	boxing
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	breakers
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	champions league
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	champions league
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	championship
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	cricket
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	fifa
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	final
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	gallen
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	fifa
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	final
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	gallen
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	grand final
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	international
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	kiwis
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	nba
+3	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	international
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	kiwis
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	nba
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	new zealand
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	nfl
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	nrl
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	nfl
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	nrl
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	olympic
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	playoffs
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	premier league
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	rugby
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	semi-final
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	semifinal
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	state of origin
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	super bowl
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	test match
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	title fight
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	ufc
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	premier league
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	rugby
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	semi-final
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	semifinal
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	state of origin
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	super bowl
+3	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	test match
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	title fight
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	ufc
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	warriors
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	world cup
+5	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	world cup
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	·
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	${currentIndex + 1}/${events.size}
 1	locale	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	EEE d MMM · h:mm a
 1	url	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	https://
 1	locale	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	Pacific/Auckland
+
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	wwe
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	one championship
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	super league
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	rugby league
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	six nations
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	bunnings npc
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	ashes
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	ipl
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	big bash
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	t20i
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	champions trophy
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	wnba
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	nbl
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	march madness
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	ncaa division i
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	a-league
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	europa league
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	playoff
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	arsenal
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	chelsea
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	liverpool
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	manchester
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	tottenham
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	barcelona
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	real madrid
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	bayern
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	inter milan
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	ac milan
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	psg
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	paris saint
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	newcastle
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	atletico
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	formula 1
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	formula one
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	f1
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	motogp
