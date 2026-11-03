@@ -971,7 +971,7 @@
 1	url	app/src/main/java/tv/own/owntv/features/setup/LoungeGateway.kt	https://connect.loungetv.nz
 1	protocol	app/src/main/java/tv/own/owntv/features/setup/LoungeGateway.kt	line.bestnz.vip
 1	protocol	app/src/main/java/tv/own/owntv/features/setup/LoungeGateway.kt	line.loungeconnect247.xyz
-1	protocol	app/src/main/java/tv/own/owntv/features/setup/LoungeGateway.kt	LoungeTV/Android/5.2.3.4
+1	protocol	app/src/main/java/tv/own/owntv/features/setup/LoungeGateway.kt	LoungeTV/Android/5.2.3.8
 1	technical	app/src/main/java/tv/own/owntv/features/setup/RemoteSetupScreen.kt	…
 2	empty	app/src/main/java/tv/own/owntv/features/setup/RemoteSetupScreen.kt	\0
 12	empty	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	\0
@@ -1137,7 +1137,7 @@
 1	url	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	https://i.mjh.nz/nz/epg.xml.gz
 1	url	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	i.mjh.nz/nz/kodi-tv.m3u8
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Legacy NZ Freeview cleanup deferred
-1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	lounge_gateway_clean_resync_5_2_3_4
+1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	lounge_gateway_clean_resync_5_2_3_8
 1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	NZ | SKY SPORT
 1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	NZ| SKY SPORT
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	OwnTVHome
@@ -2087,3 +2087,9 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	definite
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	likely
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	maybe
+1	technical	app/src/main/java/tv/own/owntv/features/movies/LoungeMoviesFeaturedRail.kt	8K
+1	technical	app/src/main/java/tv/own/owntv/features/movies/LoungeMoviesFeaturedRail.kt	4K
+1	technical	app/src/main/java/tv/own/owntv/features/movies/LoungeMoviesFeaturedRail.kt	FHD
+1	technical	app/src/main/java/tv/own/owntv/features/movies/LoungeMoviesFeaturedRail.kt	HD
+1	technical	app/src/main/java/tv/own/owntv/features/movies/LoungeMoviesFeaturedRail.kt	SD
+1	technical	app/src/main/java/tv/own/owntv/features/movies/LoungeMoviesFeaturedRail.kt	•
