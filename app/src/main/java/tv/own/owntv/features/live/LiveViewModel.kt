@@ -1288,7 +1288,9 @@ class LiveViewModel(
             !tv.own.owntv.features.setup.isLegacyLoungeXtream(source.type, source.url)
         ) return channel
 
-        val key = channel.name.uppercase().filter { it.isLetterOrDigit() }
+        val key = java.text.Normalizer.normalize(channel.name, java.text.Normalizer.Form.NFKD)
+            .uppercase()
+            .filter { it.isLetterOrDigit() }
         val userAgent = "User-Agent: otg/1.5.1 (AppleTv Apple TV 4; tvOS16.0; appletv.client) libcurl/7.58.0 OpenSSL/1.0.2o zlib/1.2.11 clib/1.8.56"
         return when (key) {
             "TVNZ1" -> channel.copy(
