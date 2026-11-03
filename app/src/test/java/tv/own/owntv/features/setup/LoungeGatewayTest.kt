@@ -17,6 +17,9 @@ class LoungeGatewayTest {
     @Test fun `known legacy Lounge Xtream hosts migrate and BYO sources do not`() {
         assertTrue(isLegacyLoungeXtream(SourceType.XTREAM, "http://line.bestnz.vip:80"))
         assertTrue(isLegacyLoungeXtream(SourceType.XTREAM, "https://line.loungeconnect247.xyz/player_api.php"))
+        assertTrue(isLoungeXtream(SourceType.XTREAM, LOUNGE_XTREAM_GATEWAY))
+        assertTrue(isLoungeXtream(SourceType.XTREAM, "http://line.bestnz.vip:80"))
+        assertFalse(isLoungeXtream(SourceType.XTREAM, "https://example.test"))
         assertFalse(isLegacyLoungeXtream(SourceType.XTREAM, "https://example.test"))
         assertFalse(isLegacyLoungeXtream(SourceType.M3U, "http://line.bestnz.vip/list.m3u"))
         assertEquals("Custom", loungeXtreamUserAgent("https://example.test", "Custom"))
