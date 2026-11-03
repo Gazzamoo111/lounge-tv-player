@@ -1109,8 +1109,8 @@
 1	url	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	https://i.mjh.nz/nz/epg.xml.gz
 1	url	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	i.mjh.nz/nz/kodi-tv.m3u8
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Legacy NZ Freeview cleanup deferred
-1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Migrated Lounge Xtream source=
-1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	lounge_gateway_migration
+1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Clean-resynced Lounge Xtream source=
+1	protocol	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	lounge_gateway_clean_resync_5_2_3_4
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	OwnTVHome
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	profile=
 1	log	app/src/main/java/tv/own/owntv/features/shell/ShellViewModel.kt	Removed legacy NZ Freeview EPG source=
@@ -2011,7 +2011,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	sports
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	streaming
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeLiveSections.kt	·
-1	protocol	app/src/main/java/tv/own/owntv/features/setup/LoungeGateway.kt	LoungeTV/Android
+1	protocol	app/src/main/java/tv/own/owntv/features/setup/LoungeGateway.kt	LoungeTV/Android/5.2.3.4
 1	protocol	app/src/main/java/tv/own/owntv/features/setup/LoungeGateway.kt	http://
 1	protocol	app/src/main/java/tv/own/owntv/features/setup/LoungeGateway.kt	https://
 1	url	app/src/main/java/tv/own/owntv/features/setup/LoungeGateway.kt	https://connect.loungetv.nz
