@@ -122,7 +122,7 @@ import java.util.Locale
 private val RowGap = 40.mpx
 
 /** Lounge TV's first-login rails use the existing card widgets, without altering OwnTV Core. */
-private enum class LoungeHomeRow { FEATURED_MOVIES, POPULAR_SERIES, SPORTS_LINKS, SPORTS_FIXTURES }
+private enum class LoungeHomeRow { MAJOR_EVENTS, FEATURED_MOVIES, POPULAR_SERIES, SPORTS_LINKS, SPORTS_FIXTURES }
 
 /** Quick links only: every destination already exists in the v5.2.2.11 app. */
 enum class LoungeSportsShortcut(val title: Int, val subtitle: Int) {
@@ -185,6 +185,12 @@ fun HomeScreen(
     } else if (state.config.visibleOrder.isNotEmpty() && !state.isLoading) {
         sportsVm.featuredHomeEvents.collectAsStateWithLifecycle().value
     } else emptyList()
+    // Headlines load from the cached Sport Lounge model after Home is already interactive.
+    // This never opens or probes a stream while the user is browsing.
+    val majorEvents = if (state.config.visibleOrder.isNotEmpty()) {
+        sportsVm.majorHomeEvents.collectAsStateWithLifecycle().value
+    } else emptyList()
+    val majorReminders by sportsVm.majorReminderKeys.collectAsStateWithLifecycle()
     val trendingUnavailableMessage = stringResource(R.string.home_trending_unavailable)
     val heroPreviewEngine = koinInject<HeroPreviewEngine>()
     val engineState by heroPreviewEngine.state.collectAsStateWithLifecycle()
@@ -221,6 +227,7 @@ fun HomeScreen(
     val orderedRows: List<Any> = buildList {
         val originalRows = state.config.visibleOrder
         val preferred = listOf<Any>(
+            LoungeHomeRow.MAJOR_EVENTS,
             HomeRow.TRENDING,
             HomeRow.HERO,
             HomeRow.FAVORITE_CHANNELS,
@@ -240,10 +247,10 @@ fun HomeScreen(
         }
     }
     val heroVisible = HomeRow.HERO in orderedRows
-    val hasNonHeroContent = orderedRows.any { it != HomeRow.HERO && rowHasData(it, state, sportsCards.size) }
+    val hasNonHeroContent = orderedRows.any { it != HomeRow.HERO && rowHasData(it, state, sportsCards.size, majorEvents.size) }
     val showHeroFallback = heroVisible && state.heroItems.isEmpty() && !hasNonHeroContent
-    val renderRows = orderedRows.filter { rowCanRender(it, state, showHeroFallback, sportsCards.size) }
-    val firstDataRow = renderRows.firstOrNull { it != HomeRow.HERO && rowHasData(it, state, sportsCards.size) }
+    val renderRows = orderedRows.filter { rowCanRender(it, state, showHeroFallback, sportsCards.size, majorEvents.size) }
+    val firstDataRow = renderRows.firstOrNull { it != HomeRow.HERO && rowHasData(it, state, sportsCards.size, majorEvents.size) }
     val showAllHiddenState = orderedRows.isEmpty()
     val showEmptyState = orderedRows.isNotEmpty() && renderRows.isEmpty()
     val fullBleed = renderRows.firstOrNull() == HomeRow.TRENDING &&
@@ -443,6 +450,17 @@ fun HomeScreen(
                     val firstItemFocusRequester = rowFocusRequester(row)
                     val rowModifier = if (row == firstRowUnderHero) unfoldOnUp else Modifier
                     when (row) {
+                        LoungeHomeRow.MAJOR_EVENTS -> MajorEventsHero(
+                            events = majorEvents,
+                            reminders = majorReminders,
+                            start = contentStart,
+                            focusRequester = firstItemFocusRequester,
+                            onViewEvent = onOpenMatch,
+                            onToggleReminder = { match -> sportsVm.remind(match, emptyList()) },
+                            onFocused = { onSportsRowFocused(LoungeHomeRow.MAJOR_EVENTS) },
+                            modifier = rowModifier,
+                        )
+
                         LoungeHomeRow.SPORTS_LINKS -> LoungeSportsQuickLinks(
                             start = contentStart,
                             onSelect = onSportsShortcut,
@@ -803,7 +821,8 @@ private fun LoungeSportsQuickLinks(
     }
 }
 
-private fun rowHasData(row: Any, state: HomeUiState, sportsCards: Int): Boolean = when (row) {
+private fun rowHasData(row: Any, state: HomeUiState, sportsCards: Int, majorEvents: Int): Boolean = when (row) {
+    LoungeHomeRow.MAJOR_EVENTS -> majorEvents > 0
     LoungeHomeRow.SPORTS_LINKS -> !state.isLoading
     LoungeHomeRow.SPORTS_FIXTURES -> sportsCards > 0
     LoungeHomeRow.FEATURED_MOVIES -> state.featuredMovies.isNotEmpty()
@@ -826,10 +845,10 @@ private fun rowHasData(row: Any, state: HomeUiState, sportsCards: Int): Boolean 
     else -> false
 }
 
-private fun rowCanRender(row: Any, state: HomeUiState, showHeroFallback: Boolean, sportsCards: Int): Boolean =
+private fun rowCanRender(row: Any, state: HomeUiState, showHeroFallback: Boolean, sportsCards: Int, majorEvents: Int): Boolean =
     when (row) {
         HomeRow.HERO -> state.heroItems.isNotEmpty() || showHeroFallback
-        else -> rowHasData(row, state, sportsCards)
+        else -> rowHasData(row, state, sportsCards, majorEvents)
     }
 
 private fun HeroItem.heroKey(): String = when (this) {
