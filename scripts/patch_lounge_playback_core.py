@@ -208,6 +208,13 @@ def apply(root: Path) -> None:
         raise SystemExit("Expected one existing ended-mid-live safe literal")
     rows[rows.index(old_ended)] = "2\ttechnical\t" + relative + "\tended mid-live"
 
+    watch_matcher_relative = "core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt"
+    old_fixture_regex = "1\tregex\t" + watch_matcher_relative + "\t\\\\s(vs?\\\\.?|v)\\\\s"
+    new_fixture_regex = "1\tregex\t" + watch_matcher_relative + "\t\\\\s(vs?\\\\.?|v|@)\\\\s"
+    if rows.count(old_fixture_regex) != 1:
+        raise SystemExit("Expected one existing sports fixture regex safe literal")
+    rows[rows.index(old_fixture_regex)] = new_fixture_regex
+
     new_literals = [
         ("1", "file-path", "black.ts"),
         ("1", "log", "HTTP $status while opening a live stream — waiting for the gateway or previous session to release, then retrying"),
