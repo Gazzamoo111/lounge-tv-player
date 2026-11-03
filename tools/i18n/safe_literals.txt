@@ -208,15 +208,6 @@
 2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	formula 1
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	formula one
 1	url	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	https://
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	national basketball association
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	national football league
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	national rugby league
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	nba
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	nfl
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	nrl
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	premier league
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	ufc
-1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	ultimate fighting championship
 2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	·
 1	technical	app/src/main/java/tv/own/owntv/features/live/CatchupJumpDialog.kt	EEEHm
 1	technical	app/src/main/java/tv/own/owntv/features/live/CatchupJumpDialog.kt	Hm
