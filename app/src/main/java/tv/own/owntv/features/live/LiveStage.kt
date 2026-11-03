@@ -286,7 +286,7 @@ internal fun LiveStagePane(
                     Row(Modifier.align(Alignment.TopEnd).padding(end = 22.mpx, top = 22.mpx), horizontalArrangement = Arrangement.spacedBy(6.mpx)) {
                         // Three facts — quality, frame rate, sound: the
                         // engine's aspect ratio ("16:9") and declared bitrate ("4.2 Mbps") are left out.
-                        streamChips.filterNot { it.contains(':') || it.endsWith("Mbps") }.forEach { StageSpecChip(it) }
+                        streamChips.filterNot { it.contains(':') || it.endsWith("Mbps") }.take(4).forEach { tv.own.owntv.ui.stage.StageMediaBadge(it, primary = false, compact = true) }
                     }
                 }
                 Row(
