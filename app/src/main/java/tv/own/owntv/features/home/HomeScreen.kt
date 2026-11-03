@@ -187,9 +187,7 @@ fun HomeScreen(
     } else emptyList()
     // Headlines load from the cached Sport Lounge model after Home is already interactive.
     // This never opens or probes a stream while the user is browsing.
-    val majorEvents = if (state.config.visibleOrder.isNotEmpty()) {
-        sportsVm.majorHomeEvents.collectAsStateWithLifecycle().value
-    } else emptyList()
+    val majorEvents = sportsVm.majorHomeEvents.collectAsStateWithLifecycle().value
     val majorReminders by sportsVm.majorReminderKeys.collectAsStateWithLifecycle()
     val majorEditorial = sportsVm.majorHomeEditorial.collectAsStateWithLifecycle().value
     val trendingUnavailableMessage = stringResource(R.string.home_trending_unavailable)
@@ -382,9 +380,8 @@ fun HomeScreen(
         }
     }
 
-    // While the first load runs, nothing but the Stage background behind: not the empty state (which
-    // would look wrong, and vanish, for a user who does have history), and no placeholder blocks.
-    if (state.isLoading) return
+    // Keep the Major Events spotlight visible while the movie/series Home feed loads.
+    // Its own loading state is independent of the VOD catalogue, so never blank the Stage.
     if (showAllHiddenState) {
         AllRowsHiddenState(modifier = modifier.fillMaxSize())
         return
