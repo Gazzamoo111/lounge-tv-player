@@ -55,6 +55,7 @@ import tv.own.owntv.core.sports.model.Sport
 import java.util.Locale
 import java.io.File
 import tv.own.owntv.features.sports.data.FileSportEventCache
+import tv.own.owntv.features.sports.data.GatewaySportEventProvider
 import tv.own.owntv.features.sports.data.FixtureReminderScheduler
 import tv.own.owntv.features.sports.data.FixtureSchedule
 
@@ -159,6 +160,9 @@ class SportsViewModel(
     private val discovery = SportLoungeDiscovery(
         sportsSource,
         FileSportEventCache(File(context.filesDir, "sport-lounge/events-v1.json")),
+        GatewaySportEventProvider(
+            "https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-sports-calendar",
+        ),
     )
     // Discovery belongs to EVERY customer, not just a zero-follow profile.
     // Show cached fixtures immediately while the seven-day schedule refreshes.
