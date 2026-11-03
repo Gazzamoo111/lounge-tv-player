@@ -14,6 +14,13 @@
     <string name="lounge_major_events_unverified">Available streams are checked when the event starts.</string>
     <string name="lounge_major_events_nz_time">NZ time</string>
     <string name="lounge_major_events_vs">VS</string>
+    <string name="lounge_hero_mark_nfl">NFL</string>
+    <string name="lounge_hero_mark_nba">NBA</string>
+    <string name="lounge_hero_mark_nrl">NRL</string>
+    <string name="lounge_hero_mark_ufc">UFC</string>
+    <string name="lounge_hero_mark_f1">F1</string>
+    <string name="lounge_hero_mark_pl">PL</string>
+    <string name="lounge_hero_f1_photo_credit">Car photo: Jason Puddephatt · CC BY-SA 4.0</string>
     <string name="lounge_saved_title">Saved</string>
     <string name="lounge_saved_favourites">Favourites</string>
     <string name="lounge_saved_reminders">Reminders</string>

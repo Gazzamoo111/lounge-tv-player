@@ -299,7 +299,7 @@ private fun androidx.compose.foundation.layout.BoxScope.SportsHeroBackdrop(event
         if (!formulaOne || !carReady) EventMatchupOverlay(event)
         if (formulaOne && carReady) {
             Text(
-                "Car photo: Jason Puddephatt · CC BY-SA 4.0",
+                stringResource(R.string.lounge_hero_f1_photo_credit),
                 style = stageText(11, 400),
                 color = Color.White.copy(alpha = 0.62f),
                 modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.mpx, bottom = 9.mpx),
@@ -317,15 +317,16 @@ private fun isFormulaOne(event: Match): Boolean {
         "formula 1" in title
 }
 
+@Composable
 private fun heroCompetitionMark(event: Match): String {
     val name = event.leagueName.lowercase(Locale.ROOT)
     return when {
-        name.contains("national football league") || name == "nfl" -> "NFL"
-        name.contains("national basketball association") || name == "nba" -> "NBA"
-        name.contains("national rugby league") || name == "nrl" -> "NRL"
-        name.contains("ultimate fighting championship") || name == "ufc" -> "UFC"
-        isFormulaOne(event) -> "F1"
-        name.contains("premier league") -> "PL"
+        name.contains("national football league") || name == "nfl" -> stringResource(R.string.lounge_hero_mark_nfl)
+        name.contains("national basketball association") || name == "nba" -> stringResource(R.string.lounge_hero_mark_nba)
+        name.contains("national rugby league") || name == "nrl" -> stringResource(R.string.lounge_hero_mark_nrl)
+        name.contains("ultimate fighting championship") || name == "ufc" -> stringResource(R.string.lounge_hero_mark_ufc)
+        isFormulaOne(event) -> stringResource(R.string.lounge_hero_mark_f1)
+        name.contains("premier league") -> stringResource(R.string.lounge_hero_mark_pl)
         else -> event.leagueName.trim().uppercase(Locale.ROOT).take(22)
     }
 }
