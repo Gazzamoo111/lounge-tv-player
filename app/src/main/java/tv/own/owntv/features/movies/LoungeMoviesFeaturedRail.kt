@@ -17,6 +17,23 @@ import tv.own.owntv.ui.components.OwnTVIcon
 import tv.own.owntv.ui.components.loungeVodTitle
 import tv.own.owntv.ui.stage.StagePoster
 
+internal fun loungeMovieBadges(item: MovieEntity, max: Int = 3): List<String> = buildList {
+    val quality = when (item.qualityRank) {
+        5 -> "8K"
+        4 -> "4K"
+        3 -> "FHD"
+        2 -> "HD"
+        1 -> "SD"
+        else -> null
+    }
+    quality?.let(::add)
+    item.advertisedCapabilities
+        ?.split("•")
+        ?.map(String::trim)
+        ?.filter(String::isNotEmpty)
+        ?.forEach(::add)
+}.distinct().take(max)
+
 /**
  * A standard 2:3 portrait tile within the SINGLE vertical browse grid.
  * Featured, new and full-library cards use identical measured dimensions.
@@ -39,6 +56,7 @@ internal fun LoungeMoviesEditorialPoster(
         title = loungeVodTitle(title),
         width = width,
         height = width * 1.5f,
+        badges = loungeMovieBadges(item),
         onClick = { onOpen(item) },
         modifier = Modifier
             .then(if (firstInSection) Modifier.focusRequester(focusRequester) else Modifier)
