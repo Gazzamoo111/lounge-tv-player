@@ -16,6 +16,12 @@ PATCHES = {
       "    private val FIXTURE = Regex(\"\"\"\\s(vs?\\.?|v|@)\\s\"\"\", RegexOption.IGNORE_CASE)"
     ]
   ],
+  "core/src/test/java/tv/own/owntv/core/sports/WatchReaderTest.kt": [
+    [
+      "        assertEquals(false, WatchMatcher.isLikely(keys, \"Next | Hertha vs. Bochum | German Bundesliga\"))\n        assertTrue(WatchMatcher.isSeparator(\"##### BUNDESLIGA #####\"))",
+      "        assertEquals(false, WatchMatcher.isLikely(keys, \"Next | Hertha vs. Bochum | German Bundesliga\"))\n        assertEquals(false, WatchMatcher.isLikely(keys, \"Bundesliga • Bayern Munich @ Borussia Dortmund\"))\n        assertTrue(WatchMatcher.isSeparator(\"##### BUNDESLIGA #####\"))"
+    ]
+  ],
   "player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt": [
     [
       "if (LiveStreamQuirks.isSessionLimit(code)) { noteSessionLimit(loadEventInfo.uri.toString()); return }",
