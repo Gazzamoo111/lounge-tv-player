@@ -1158,7 +1158,7 @@ private fun FoldedHeroLine(item: TrendingHomeItem, start: Dp, height: Dp = Compa
  * [trendingPagerTarget].
  */
 @Composable
-private fun TrendingPager(count: Int, activeIndex: Int, progress: Float, onNavigate: (Int) -> Unit, modifier: Modifier = Modifier) {
+internal fun TrendingPager(count: Int, activeIndex: Int, progress: Float, onNavigate: (Int) -> Unit, modifier: Modifier = Modifier) {
     val a = stageAccent
     StageSurface(
         onClick = {},
