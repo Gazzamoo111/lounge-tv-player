@@ -47,6 +47,20 @@ class SportEventTest {
         assertEquals(listOf("Main Event", "Kayo Sports"), restored?.toMatch()?.broadcasts?.map { it.name })
     }
 
+    @Test fun editorialFieldsSurviveCacheAndPreserveMatchKey() {
+        val match = match("ed", MatchState.PRE, 2_000_000L)
+        val event = SportEvent.fromMatch(match, "espn", 1_000_000L).copy(
+            heroArtUrl = "https://example.org/event.jpg",
+            synopsis = "A meets B in a scheduled event.",
+            editorialTitle = "A vs B",
+            competition = "Test Rugby",
+        )
+        val restored = SportEvent.fromJson(event.toJson())
+        assertEquals("https://example.org/event.jpg", restored?.toEditorial()?.heroArtUrl)
+        assertEquals("A meets B in a scheduled event.", restored?.toEditorial()?.synopsis)
+        assertEquals(match.key, restored?.toMatch()?.key)
+    }
+
     @Test fun `out of order status cannot replace a finished event`() {
         val scheduled = SportEvent.fromMatch(match("42", MatchState.PRE, 2_000_000L), "espn", 3_000L)
         val finished = SportEvent.fromMatch(match("42", MatchState.POST, 2_000_000L), "espn", 2_000L)

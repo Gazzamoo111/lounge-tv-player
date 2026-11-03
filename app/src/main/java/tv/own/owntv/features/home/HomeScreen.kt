@@ -191,6 +191,7 @@ fun HomeScreen(
         sportsVm.majorHomeEvents.collectAsStateWithLifecycle().value
     } else emptyList()
     val majorReminders by sportsVm.majorReminderKeys.collectAsStateWithLifecycle()
+    val majorEditorial = sportsVm.majorHomeEditorial.collectAsStateWithLifecycle().value
     val trendingUnavailableMessage = stringResource(R.string.home_trending_unavailable)
     val heroPreviewEngine = koinInject<HeroPreviewEngine>()
     val engineState by heroPreviewEngine.state.collectAsStateWithLifecycle()
@@ -453,6 +454,7 @@ fun HomeScreen(
                         LoungeHomeRow.MAJOR_EVENTS -> MajorEventsHero(
                             events = majorEvents,
                             reminders = majorReminders,
+                            editorialByEvent = majorEditorial,
                             start = contentStart,
                             focusRequester = firstItemFocusRequester,
                             onViewEvent = onOpenMatch,

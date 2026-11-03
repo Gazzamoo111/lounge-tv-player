@@ -28,6 +28,17 @@ data class SportEventBroadcast(
     val market: String?,
 )
 
+/** Optional, additive presentation fields. The core Match stays unchanged. */
+data class SportEventEditorial(
+    val heroArtUrl: String? = null,
+    val synopsis: String? = null,
+    val editorialTitle: String? = null,
+    val editorialSubtitle: String? = null,
+    val importanceTag: String? = null,
+    val competition: String? = null,
+    val venue: String? = null,
+)
+
 /** Provider-neutral fixture contract shared by the device cache and the proposed central gateway. */
 data class SportEvent(
     val stableId: String,
@@ -48,6 +59,12 @@ data class SportEvent(
     val competitors: List<SportEventCompetitor>,
     val sourceUpdatedAtMs: Long,
     val lastSuccessfulUpdateMs: Long,
+    val heroArtUrl: String? = null,
+    val synopsis: String? = null,
+    val editorialTitle: String? = null,
+    val editorialSubtitle: String? = null,
+    val importanceTag: String? = null,
+    val competition: String? = null,
 ) {
     fun toJson(): JSONObject = JSONObject()
         .put("id", stableId)
@@ -71,6 +88,12 @@ data class SportEvent(
         .put("statusText", statusText)
         .put("sourceUpdatedAtMs", sourceUpdatedAtMs)
         .put("lastSuccessfulUpdateMs", lastSuccessfulUpdateMs)
+        .put("hero_art_url", heroArtUrl)
+        .put("synopsis", synopsis)
+        .put("editorial_title", editorialTitle)
+        .put("editorial_subtitle", editorialSubtitle)
+        .put("importance_tag", importanceTag)
+        .put("competition", competition)
         .put("competitors", JSONArray().apply {
             competitors.forEach { side ->
                 put(
@@ -85,6 +108,11 @@ data class SportEvent(
                 )
             }
         })
+
+    fun toEditorial(): SportEventEditorial? {
+        if (listOf(heroArtUrl, synopsis, editorialTitle, editorialSubtitle, importanceTag, competition).all { it.isNullOrBlank() }) return null
+        return SportEventEditorial(heroArtUrl, synopsis, editorialTitle, editorialSubtitle, importanceTag, competition, venue)
+    }
 
     fun toMatch(): Match? {
         val kind = Sport.ofPath(sport) ?: return null
@@ -187,6 +215,12 @@ data class SportEvent(
                 },
                 sourceUpdatedAtMs = json.getLong("sourceUpdatedAtMs"),
                 lastSuccessfulUpdateMs = json.getLong("lastSuccessfulUpdateMs"),
+                heroArtUrl = json.optEditorial("hero_art_url", "heroArtUrl")?.takeIf { it.startsWith("https://") },
+                synopsis = json.optEditorial("synopsis"),
+                editorialTitle = json.optEditorial("editorial_title", "editorialTitle"),
+                editorialSubtitle = json.optEditorial("editorial_subtitle", "editorialSubtitle"),
+                importanceTag = json.optEditorial("importance_tag", "importanceTag"),
+                competition = json.optEditorial("competition"),
             )
         }.getOrNull()
     }
@@ -207,3 +241,7 @@ private fun SportEventState.toMatchState(): MatchState = when (this) {
     SportEventState.POSTPONED -> MatchState.POSTPONED
     SportEventState.CANCELLED -> MatchState.CANCELLED
 }
+
+private fun JSONObject.optEditorial(key: String, fallback: String = key): String? =
+    optString(key).takeIf { it.isNotBlank() && it != "null" }
+        ?: optString(fallback).takeIf { it.isNotBlank() && it != "null" }

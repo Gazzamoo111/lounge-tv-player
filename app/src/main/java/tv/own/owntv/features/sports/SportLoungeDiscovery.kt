@@ -26,6 +26,7 @@ data class SportLoungeDiscoverySnapshot(
     val matches: List<Match> = emptyList(),
     val updatedAt: Long? = null,
     val failedFeeds: Int = 0,
+    val heroEditorialByMatchKey: Map<String, tv.own.owntv.features.sports.data.SportEventEditorial> = emptyMap(),
 )
 
 /** Locked, previously validated feed coverage for the seven-day Sport Lounge window. */
@@ -75,6 +76,7 @@ class SportLoungeDiscovery(
         return SportLoungeDiscoverySnapshot(
             matches = SportLoungeRules.dedupe(entries.mapNotNull { it.toMatch() }),
             updatedAt = entries.maxOfOrNull { it.lastSuccessfulUpdateMs },
+            heroEditorialByMatchKey = editorialByKey(entries),
         )
     }
 
@@ -152,8 +154,15 @@ class SportLoungeDiscovery(
             updatedAt = events.maxOfOrNull { it.lastSuccessfulUpdateMs }
                 ?: nowMs.takeIf { failures < jobs.size + if (supplemental != null) 1 else 0 },
             failedFeeds = failures,
+            heroEditorialByMatchKey = editorialByKey(events),
         )
     }
+
+    private fun editorialByKey(events: List<SportEvent>) = events.mapNotNull { event ->
+        val details = event.toEditorial() ?: return@mapNotNull null
+        val key = event.toMatch()?.key ?: return@mapNotNull null
+        key to details
+    }.toMap()
 
     private companion object {
         const val TAG = "LoungeTV-SportLounge"

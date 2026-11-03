@@ -253,6 +253,11 @@ class SportsViewModel(
     }.flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /** Cached editorial sidecar, no extra Home network requests. */
+    val majorHomeEditorial: StateFlow<Map<String, tv.own.owntv.features.sports.data.SportEventEditorial>> =
+        discoveryState.map { it.first.heroEditorialByMatchKey }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
     /** Per-profile event reminder keys for Home and Sport Lounge to render consistently. */
     val majorReminderKeys: StateFlow<Set<String>> = reminderKeys
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
