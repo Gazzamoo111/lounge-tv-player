@@ -40,9 +40,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
-import coil3.request.CachePolicy
-import coil3.request.ImageRequest
-import androidx.compose.ui.platform.LocalContext
 import tv.own.owntv.features.sports.data.SportEventEditorial
 import kotlinx.coroutines.delay
 import tv.own.owntv.R
@@ -63,7 +60,7 @@ import java.util.Locale
 
 /**
  * One lightweight, focus-safe spotlight above VOD rails.
- * No stream preview, background autoplay, external artwork lookup or tune on focus.
+ * No stream preview, background autoplay, event-artwork scanning or tune on focus.
  * Pressing View event navigates to Sport Lounge, where candidates are verified/ranked.
  */
 @Composable
@@ -123,65 +120,7 @@ internal fun MajorEventsHero(
                 Text(stringResource(R.string.lounge_major_events_empty), style = stageText(20, 500), color = StageColors.Body)
             }
         } else {
-        // Only exact, source-verified event imagery may be photographic.
-        // All other fixtures use a branded, full-bleed vector + real crests.
-        val context = LocalContext.current
-        val exactUrl = editorialCopy?.artworkUrl
-        var exactArtReady by remember(event.key, exactUrl) { mutableStateOf(false) }
-        val exactRequest = remember(context, exactUrl) {
-            exactUrl?.let {
-                ImageRequest.Builder(context).data(it).size(1600, 900)
-                    .memoryCachePolicy(CachePolicy.ENABLED)
-                    .diskCachePolicy(CachePolicy.ENABLED).build()
-            }
-        }
-        Box(Modifier.fillMaxSize().background(eventArtworkBrush(event))) {
-            if (!exactArtReady) {
-                val accent = eventAccent(event)
-                // Stadium-style glow and diagonal graphic lines, not stock photography.
-                Box(
-                    Modifier.align(Alignment.CenterEnd).fillMaxHeight().fillMaxWidth(0.64f)
-                        .background(Brush.radialGradient(
-                            listOf(accent.copy(alpha = 0.51f), Color.Transparent),
-                        ))
-                )
-                Box(Modifier.fillMaxSize().drawBehind {
-                    val x = size.width
-                    val h = size.height
-                    drawLine(accent.copy(alpha = 0.21f), Offset(x * 0.64f, 0f), Offset(x * 0.47f, h), 3f)
-                    drawLine(Color.White.copy(alpha = 0.09f), Offset(x * 0.85f, 0f), Offset(x * 0.68f, h), 2f)
-                    drawLine(accent.copy(alpha = 0.13f), Offset(x, h * 0.14f), Offset(x * 0.73f, h), 3f)
-                })
-            }
-            if (exactRequest != null) {
-                AsyncImage(
-                    model = exactRequest,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    alignment = Alignment.CenterEnd,
-                    onSuccess = { exactArtReady = true },
-                    onError = { exactArtReady = false },
-                    modifier = Modifier.fillMaxSize().alpha(if (exactArtReady) 1f else 0f),
-                )
-            }
-            Box(Modifier.fillMaxSize().background(
-                Brush.horizontalGradient(
-                    0.0f to Color(0xFF081321),
-                    0.30f to Color(0xF5081626),
-                    0.56f to Color(0xB20C1729),
-                    0.77f to Color(0x3A0C1829),
-                    1.0f to Color(0x20081019),
-                )
-            ))
-            Box(Modifier.fillMaxSize().background(
-                Brush.verticalGradient(
-                    0.0f to Color(0x1807111D),
-                    0.72f to Color.Transparent,
-                    1.0f to Color(0x7707111D),
-                )
-            ))
-            if (!exactArtReady) EventMatchupOverlay(event)
-        }
+        SportsHeroBackdrop(event)
 
         Column(
             Modifier.fillMaxSize().padding(start = start, top = 28.mpx, end = 24.mpx),
@@ -271,9 +210,132 @@ internal fun MajorEventsHero(
 }
 
 
+
+/**
+ * Universal Lounge TV event treatment, independent of fragile exact-event photo matching.
+ * All fixtures get a branded cinematic stage and real feed crests. Formula 1 gets a
+ * reference racing-car photograph, with the same crest stage as its offline fallback.
+ * This is a presentation-only layer: event identity, time, reminders and Watch Live
+ * continue to come from the existing verified fixture and playback flows.
+ */
+@Composable
+private fun androidx.compose.foundation.layout.BoxScope.SportsHeroBackdrop(event: Match) {
+    val accent = eventAccent(event)
+    val secondary = eventSecondaryAccent(event)
+    val formulaOne = isFormulaOne(event)
+    var carReady by remember(event.key, formulaOne) { mutableStateOf(false) }
+
+    Box(Modifier.fillMaxSize().background(eventArtworkBrush(event))) {
+        Box(Modifier.fillMaxSize().drawBehind {
+            val w = size.width
+            val h = size.height
+            // Restrained studio lighting; no unverified player or team photography.
+            drawRect(brush = Brush.radialGradient(
+                colors = listOf(accent.copy(alpha = 0.58f), accent.copy(alpha = 0.12f), Color.Transparent),
+                center = Offset(w * 0.76f, h * 0.47f),
+                radius = w * 0.37f,
+            ))
+            drawRect(brush = Brush.radialGradient(
+                colors = listOf(secondary.copy(alpha = 0.51f), Color.Transparent),
+                center = Offset(w * 0.99f, h * 0.66f),
+                radius = w * 0.31f,
+            ))
+            drawCircle(
+                color = Color.White.copy(alpha = 0.085f),
+                radius = h * 0.70f,
+                center = Offset(w * 0.80f, h * 0.49f),
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5f),
+            )
+            drawCircle(
+                color = accent.copy(alpha = 0.16f),
+                radius = h * 0.92f,
+                center = Offset(w * 0.80f, h * 0.49f),
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3f),
+            )
+            drawLine(accent.copy(alpha = 0.42f), Offset(w * 0.46f, h * 0.92f), Offset(w, h * 0.78f), 3f)
+            drawLine(secondary.copy(alpha = 0.34f), Offset(w * 0.55f, h * 0.10f), Offset(w, h * 0.25f), 2f)
+            drawLine(Color.White.copy(alpha = 0.10f), Offset(w * 0.68f, 0f), Offset(w * 0.54f, h), 2f)
+        })
+        Text(
+            heroCompetitionMark(event),
+            style = stageText(118, 900),
+            color = Color.White.copy(alpha = 0.095f),
+            maxLines = 1,
+            overflow = TextOverflow.Clip,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.align(Alignment.CenterEnd).padding(end = 72.mpx, bottom = 92.mpx)
+                .width(700.mpx),
+        )
+
+        if (formulaOne) {
+            // Fixed example of a real Formula 1 car, not a claim that this is
+            // the car or driver competing in the current event.
+            AsyncImage(
+                model = "https://commons.wikimedia.org/wiki/Special:FilePath/Red_Bull_F1_Car_(55383927464).jpg?width=1440",
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                alignment = Alignment.Center,
+                onSuccess = { carReady = true },
+                onError = { carReady = false },
+                modifier = Modifier.align(Alignment.CenterEnd)
+                    .fillMaxWidth(0.65f).fillMaxHeight()
+                    .alpha(if (carReady) 1f else 0f),
+            )
+        }
+
+        // Keep the left-side live title and controls readable over any background.
+        Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(
+            0.0f to Color(0xFF07111E),
+            0.24f to Color(0xF2071424),
+            0.43f to Color(0xC20A1727),
+            0.62f to Color(0x4D0B1725),
+            1.0f to Color(0x1607101C),
+        )))
+        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
+            0.0f to Color(0x24050B15),
+            0.70f to Color.Transparent,
+            1.0f to Color(0x77050B15),
+        )))
+        if (!formulaOne || !carReady) EventMatchupOverlay(event)
+    }
+}
+
+private fun isFormulaOne(event: Match): Boolean {
+    if (event.sport != Sport.RACING) return false
+    val league = event.leagueName.lowercase(Locale.ROOT)
+    val title = event.title.lowercase(Locale.ROOT)
+    return "formula 1" in league || "formula one" in league ||
+        Regex("(^|[^a-z0-9])f1([^a-z0-9]|$)").containsMatchIn(league) ||
+        "formula 1" in title
+}
+
+private fun heroCompetitionMark(event: Match): String {
+    val name = event.leagueName.lowercase(Locale.ROOT)
+    return when {
+        name.contains("national football league") || name == "nfl" -> "NFL"
+        name.contains("national basketball association") || name == "nba" -> "NBA"
+        name.contains("national rugby league") || name == "nrl" -> "NRL"
+        name.contains("ultimate fighting championship") || name == "ufc" -> "UFC"
+        isFormulaOne(event) -> "F1"
+        name.contains("premier league") -> "PL"
+        else -> event.leagueName.trim().uppercase(Locale.ROOT).take(22)
+    }
+}
+
+private fun eventSecondaryAccent(event: Match): Color = when (event.sport) {
+    Sport.BASKETBALL -> Color(0xFF326CFF)
+    Sport.FOOTBALL -> Color(0xFF5C3DCA)
+    Sport.RUGBY, Sport.RUGBY_LEAGUE -> Color(0xFF22D1C7)
+    Sport.SOCCER -> Color(0xFF2B8CFF)
+    Sport.RACING -> Color(0xFFFFB43C)
+    Sport.MMA -> Color(0xFFFF9349)
+    Sport.CRICKET -> Color(0xFF37A1F0)
+    else -> Color(0xFF4B81F5)
+}
+
 /**
  * Actual home/away crests from the fixture feed, or prominent team wordmarks.
- * Never manufactures photos of teams, athletes or stadiums.
+ * Never invents team identities or stretches their feed crests.
  */
 @Composable
 private fun androidx.compose.foundation.layout.BoxScope.EventMatchupOverlay(event: Match) {
@@ -289,8 +351,8 @@ private fun androidx.compose.foundation.layout.BoxScope.EventMatchupOverlay(even
         return
     }
     Row(
-        Modifier.align(Alignment.CenterEnd).padding(end = 38.mpx, top = 35.mpx),
-        horizontalArrangement = Arrangement.spacedBy(16.mpx),
+        Modifier.align(Alignment.CenterEnd).padding(end = 44.mpx, top = 20.mpx),
+        horizontalArrangement = Arrangement.spacedBy(12.mpx),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         sides.forEachIndexed { index, side ->
@@ -299,16 +361,16 @@ private fun androidx.compose.foundation.layout.BoxScope.EventMatchupOverlay(even
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.mpx),
-                modifier = Modifier.width(255.mpx),
+                modifier = Modifier.width(286.mpx),
             ) {
-                Box(Modifier.size(242.mpx), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(275.mpx), contentAlignment = Alignment.Center) {
                     if (!logoReady) {
                         Text(
                             side.team.shortName.ifBlank { side.team.name }.uppercase(Locale.ROOT),
                             style = stageText(34, 900), color = Color.White,
                             maxLines = 3, overflow = TextOverflow.Ellipsis,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.width(235.mpx),
+                            modifier = Modifier.width(265.mpx),
                         )
                     }
                     if (logoUrl != null) {
@@ -317,7 +379,7 @@ private fun androidx.compose.foundation.layout.BoxScope.EventMatchupOverlay(even
                             contentScale = ContentScale.Fit,
                             onSuccess = { logoReady = true },
                             onError = { logoReady = false },
-                            modifier = Modifier.size(234.mpx).alpha(if (logoReady) 1f else 0f),
+                            modifier = Modifier.size(270.mpx).alpha(if (logoReady) 1f else 0f),
                         )
                     }
                 }
@@ -326,13 +388,13 @@ private fun androidx.compose.foundation.layout.BoxScope.EventMatchupOverlay(even
                     style = stageText(20, 800), color = Color.White,
                     maxLines = 2, overflow = TextOverflow.Ellipsis,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.width(245.mpx),
+                    modifier = Modifier.width(275.mpx),
                 )
             }
             if (index == 0 && sides.size > 1) {
                 Text(
                     stringResource(R.string.lounge_major_events_vs),
-                    style = stageText(28, 900),
+                    style = stageText(30, 900),
                     color = Color.White.copy(alpha = 0.86f),
                 )
             }
