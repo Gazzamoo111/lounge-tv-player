@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,16 +68,28 @@ internal fun MajorEventsHero(
     modifier: Modifier = Modifier,
 ) {
     var selected by remember { mutableIntStateOf(0) }
-    var focused by remember { mutableStateOf(false) }
+    var progress by remember { mutableFloatStateOf(0f) }
+    var resetClock by remember { mutableIntStateOf(0) }
     val currentIndex = selected.coerceIn(0, (events.size - 1).coerceAtLeast(0))
     val event = events.getOrNull(currentIndex)
 
-    // Never rotate an event out from under a customer who is interacting with the buttons.
-    LaunchedEffect(events.map { it.key }, currentIndex, focused) {
-        if (!focused && events.size > 1) {
-            delay(12_000L)
-            selected = (currentIndex + 1) % events.size
+    // Same ten-second carousel and focusable progress pager as the original Home hero.
+    LaunchedEffect(events.map { it.key }, currentIndex, resetClock) {
+        if (events.size < 2) return@LaunchedEffect
+        val started = System.nanoTime()
+        while (true) {
+            val elapsed = (System.nanoTime() - started) / 1_000_000L
+            progress = (elapsed.toFloat() / 10_000f).coerceIn(0f, 1f)
+            if (elapsed >= 10_000L) break
+            delay(120L)
         }
+        progress = 0f
+        selected = (currentIndex + 1) % events.size
+    }
+    val navigate: (Int) -> Unit = { index ->
+        selected = index
+        progress = 0f
+        resetClock++
     }
 
     Box(
@@ -89,7 +102,6 @@ internal fun MajorEventsHero(
                     listOf(Color(0xFF111F39), Color(0xFF142E4B), Color(0xFF122039))
                 )
             )
-            .onFocusChanged { focused = it.hasFocus }
             .focusGroup()
     ) {
         if (event == null) {
@@ -184,25 +196,15 @@ internal fun MajorEventsHero(
                         modifier = Modifier.onFocusChanged { if (it.hasFocus) onFocused() }
                     )
                 }
-                if (events.size > 1) {
-                    StageButton(
-                        text = stringResource(R.string.lounge_major_events_previous),
-                        onClick = { selected = (currentIndex - 1 + events.size) % events.size },
-                        modifier = Modifier.onFocusChanged { if (it.hasFocus) onFocused() }
-                    )
-                    StageButton(
-                        text = stringResource(R.string.lounge_major_events_next) + " ${currentIndex + 1}/${events.size}",
-                        onClick = { selected = (currentIndex + 1) % events.size },
-                        modifier = Modifier.onFocusChanged { if (it.hasFocus) onFocused() }
-                    )
-                }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.mpx)) {
-                events.forEachIndexed { index, _ ->
-                    Box(Modifier.size(if (index == currentIndex) 16.mpx else 8.mpx, 8.mpx)
-                        .clip(RoundedCornerShape(6.mpx))
-                        .background(if (index == currentIndex) Color(0xFF52D4FF) else Color(0x7752D4FF)))
-                }
+            if (events.size > 1) {
+                TrendingPager(
+                    count = events.size,
+                    activeIndex = currentIndex,
+                    progress = progress,
+                    onNavigate = navigate,
+                    modifier = Modifier.onFocusChanged { if (it.hasFocus) onFocused() },
+                )
             }
             Text(
                 stringResource(R.string.lounge_major_events_unverified),
