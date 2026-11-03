@@ -14,6 +14,8 @@ import tv.own.owntv.core.sports.model.Sport
 import tv.own.owntv.features.sports.data.SportEvent
 import tv.own.owntv.features.sports.data.SportEventCache
 import tv.own.owntv.features.sports.data.SportEventMerge
+import tv.own.owntv.features.sports.data.SportEventProvider
+import tv.own.owntv.features.sports.data.SportEventQuery
 import java.time.Instant
 import java.time.ZoneId
 import java.time.LocalDate
@@ -51,7 +53,11 @@ internal fun sportLoungeDays(nowMs: Long, zoneId: ZoneId): List<LocalDate> {
     return (0 until 7).map { today.plusDays(it.toLong()) }
 }
 
-class SportLoungeDiscovery(private val source: SportsSource, private val cache: SportEventCache) {
+class SportLoungeDiscovery(
+    private val source: SportsSource,
+    private val cache: SportEventCache,
+    private val supplemental: SportEventProvider? = null,
+) {
     /**
      * Seven NZ calendar dates: today plus the following six dates. Month-level feeds
      * fetch complete basketball/NFL/rugby/football/F1 schedules without 7 network
@@ -103,8 +109,6 @@ class SportLoungeDiscovery(private val source: SportsSource, private val cache: 
             }
         }
         val results = jobs.awaitAll()
-        val failures = results.count { it.third }
-        val failedFeeds = results.filter { it.third }.mapTo(hashSetOf()) { it.first }
         val firstDay = days.first()
         val lastDay = days.last()
         val freshMatches = results.filterNot { it.third }.flatMap { it.second }
@@ -113,15 +117,40 @@ class SportLoungeDiscovery(private val source: SportsSource, private val cache: 
                 localDate in firstDay..lastDay ||
                     (match.isLive && match.startMs in (nowMs - 24 * 60 * 60_000L)..nowMs)
             }
-        val freshEvents = freshMatches.map { SportEvent.fromMatch(it, SOURCE_ESPN, nowMs) }
+
+        val failedFeeds = results.filter { it.third }.mapTo(hashSetOf()) { it.first }
+        val supplementalBatch = supplemental?.let { provider ->
+            runCatching {
+                provider.events(
+                    SportEventQuery(
+                        fromUtcMs = nowMs - 6 * 60 * 60_000L,
+                        toUtcMs = nowMs + 7 * 24 * 60 * 60_000L,
+                    ),
+                )
+            }.onFailure { error ->
+                Log.w(TAG, "supplemental sports calendar failed: ${error.javaClass.simpleName}")
+                failedFeeds += BOXING_FEED
+            }.getOrNull()
+        }
+        supplementalBatch?.failedFeedIds?.let(failedFeeds::addAll)
+
+        val freshEvents = freshMatches.map { SportEvent.fromMatch(it, SOURCE_ESPN, nowMs) } +
+            supplementalBatch?.events.orEmpty()
         val events = SportEventMerge.withSafeStale(freshEvents, cache.read(), failedFeeds, nowMs)
         cache.write(events)
+
         val freshByStableId = freshMatches.associateBy { "$SOURCE_ESPN:${it.key}" }
-        val matches = events.mapNotNull { event -> freshByStableId[event.stableId] ?: event.toMatch() }
+        val supplementalByStableId = supplementalBatch?.events.orEmpty()
+            .mapNotNull { event -> event.toMatch()?.let { event.stableId to it } }
+            .toMap()
+        val matches = events.mapNotNull { event ->
+            freshByStableId[event.stableId] ?: supplementalByStableId[event.stableId] ?: event.toMatch()
+        }
+        val failures = results.count { it.third } + if (BOXING_FEED in failedFeeds) 1 else 0
         SportLoungeDiscoverySnapshot(
             matches = SportLoungeRules.dedupe(matches),
             updatedAt = events.maxOfOrNull { it.lastSuccessfulUpdateMs }
-                ?: nowMs.takeIf { failures < jobs.size },
+                ?: nowMs.takeIf { failures < jobs.size + if (supplemental != null) 1 else 0 },
             failedFeeds = failures,
         )
     }
@@ -129,6 +158,7 @@ class SportLoungeDiscovery(private val source: SportsSource, private val cache: 
     private companion object {
         const val TAG = "LoungeTV-SportLounge"
         const val SOURCE_ESPN = "espn"
+        const val BOXING_FEED = "mma/boxing"
         const val MAX_PARALLEL = 3
         fun discoveryLeague(key: String): League? = SportsCatalog.league(key) ?: when (key) {
             "basketball/nbl" -> League(Sport.BASKETBALL, "nbl", "National Basketball League", "NBL", "AU")
