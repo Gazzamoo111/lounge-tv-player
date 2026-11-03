@@ -1111,7 +1111,7 @@ private fun loungeBadgeImage(label: String): String? = when (label.trim().upperc
 }
 
 @Composable
-private fun StageMediaBadge(label: String, primary: Boolean, compact: Boolean) {
+internal fun StageMediaBadge(label: String, primary: Boolean, compact: Boolean) {
     val imageUrl = loungeBadgeImage(label)
     var imageFailed by remember(imageUrl) { mutableStateOf(false) }
     if (imageUrl != null && !imageFailed) {
