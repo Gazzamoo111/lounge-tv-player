@@ -37,7 +37,8 @@ internal class BackendSportsCandidateProvider(
             "title" to match.title,
             "home" to home,
             "away" to away,
-            "broadcasters" to match.broadcasts.joinToString("|") { it.name },\n            "limit" to "6",
+            "broadcasters" to match.broadcasts.joinToString("|") { it.name },
+            "limit" to "6",
         )
         val query = params.entries.joinToString("&") { (key, value) -> q(key) + "=" + q(value) }
         val connection = (URL(endpoint + "?" + query).openConnection() as HttpURLConnection).apply {
