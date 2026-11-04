@@ -55,7 +55,8 @@ internal class BackendSportsCandidateProvider(
             val now = System.currentTimeMillis()
             if (version !in 1..2) return@withContext emptyList()
             if (version == 2 && (response.optString("eventId") != match.key ||
-                parseUtc(response.optString("expiresAtUtc")) <= now)) return@withContext emptyList()
+                parseUtc(response.optString("expiresAtUtc")) <= now ||
+                response.optBoolean("catalogueStale", true))) return@withContext emptyList()
             val rows = response.optJSONArray("candidates") ?: return@withContext emptyList()
             buildList {
                 for (index in 0 until rows.length()) {
