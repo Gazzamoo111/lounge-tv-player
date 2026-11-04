@@ -2,6 +2,8 @@ name: Playback regression tests
 
 on:
   workflow_call:
+  push:
+    branches: [001-live-sports-reliability]
 
 permissions:
   contents: read
@@ -24,6 +26,8 @@ jobs:
           persist-credentials: false
       - name: Apply the same reviewed patches used by the APK
         run: python3 scripts/patch_lounge_playback_core.py shared-core
+      - name: Sports reliability backend regressions
+        run: node --test backend/supabase/functions/lounge-sports-candidates-qa/test/*.test.mjs backend/supabase/functions/lounge-sports-candidates/test/*.test.mjs
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
