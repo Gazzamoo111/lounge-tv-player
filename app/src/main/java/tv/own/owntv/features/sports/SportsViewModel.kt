@@ -335,7 +335,7 @@ class SportsViewModel(
                     watchReader.found(m) { SportsMemory.rememberedFor(c, it) }
                         ?: watchReader.watchFor(listOf(m)) { SportsMemory.rememberedFor(c, it) }[m.key].orEmpty()
                 }
-                mergeBackendSportsOptions(backendJob.await(), localJob.await()).filterNot { option ->
+                mergeBackendSportsOptions(m, backendJob.await(), localJob.await()).filterNot { option ->
                     option.channel.sourceId == loungeSource?.id && tv.own.owntv.features.live.SportsChannelPolicy.excludedBest(
                         option.channel.remoteId?.substringAfterLast(":"), option.channel.name,
                     )
