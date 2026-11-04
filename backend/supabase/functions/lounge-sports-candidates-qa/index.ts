@@ -62,6 +62,9 @@ Deno.serve(async(req)=>{
     const parsedEnd=Date.parse(event.scheduledEndUtc);
     const end=Number.isFinite(parsedEnd)&&parsedEnd>start?parsedEnd:start+4*60*60*1000;
     const selected=rankCandidates(event,rows,limit);
+    // Catalogue names and client-supplied fixture metadata are discovery hints only.
+    // No programme/assignment evidence producer is connected to this QA endpoint.
+    // Never fabricate observedAt, event identity, or reviewed service status.
     const candidates=selected.map(({row,decision}:any)=>({
       sourceId:"best",
       providerItemId:Number(row.provider_item_id),
@@ -71,26 +74,18 @@ Deno.serve(async(req)=>{
       logoUrl:row.artwork_url||null,
       epgId:null,
       serviceMarket:decision.market,
-      identityReviewed:true,
-      tier:decision.tier,
+      identityReviewed:false,
+      tier:"unverified",
       reason:decision.reason,
       expiresAtUtc:iso(now+300000),
-      evidence:[{
-        type:decision.tier==="verified"?"event-feed":"assignment",
-        source:decision.reason,
-        eventId,sportId,competitionId,
-        startUtc:iso(start),endUtc:iso(end),observedAtUtc:iso(now),
-        declaredStartUtc:iso(start),
-        market:decision.market,
-        serviceId:decision.logicalServiceId,
-        contentMismatch:false,
-      }],
+      evidence:[],
+      playbackObservation:{status:"unknown"},
     }));
     return Response.json({
       contractVersion:2,eventId,generatedAtUtc:iso(now),
       catalogueRevision:latest?String(latest.poll_id):"unknown",
       importCompletedAtUtc:Number.isFinite(importMs)?iso(importMs):null,
-      evidenceAsOfUtc:iso(now),expiresAtUtc:iso(now+300000),catalogueStale,
+      evidenceAsOfUtc:null,expiresAtUtc:iso(now+300000),catalogueStale,
       candidates,totalEligible:candidates.length,nextCursor:null,
     },{headers:{"Cache-Control":"private, no-store","Access-Control-Allow-Origin":"*"}});
   }catch(e){
