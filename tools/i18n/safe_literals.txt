@@ -1329,7 +1329,6 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	GET
 1	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	home
 1	url	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-xtream
-1	url	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-sports-candidates
 1	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	league
 2	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	logoUrl
 1	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	name
@@ -2359,19 +2358,6 @@
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	resolution-start
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	selected-ui
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	sport-backend:
-1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	646975
-1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	646976
-1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	646977
-1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	NO EVENT|REPLAY|HIGHLIGHTS|OFFLINE
-1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	^AU\\s*[|:]\\s*BEIN SPORTS?\\s*([123])(?:\\s+(?:HD|FHD|SD|4K|UHD|RAW))*$
-1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	au:bein:$it
-1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	au:bein:1
-1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	au:bein:2
-1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	au:bein:3
-2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	event:${it.id}
-1	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	1520168
-1	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	646974
-1	regex	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	^AU\\s*[|:]?\\s*(?:KAYO\\s*[-:]?\\s*)?ESPN\\s*1(?:\\s|$)
 1	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	2
 1	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	assignment
 1	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	best
@@ -2387,7 +2373,7 @@
 2	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	expiresAtUtc
 1	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	identityReviewed
 1	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	observedAtUtc
-1	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	plausible
+2	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	plausible
 1	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	programme
 1	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	scheduledStartUtc
 1	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	serviceMarket
@@ -2399,10 +2385,80 @@
 1	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	tier
 1	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	type
 1	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	unverified
-1	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	verified
+2	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	verified
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	plausible
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	verified
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsViewModel.kt	:
 1	log	app/src/main/java/tv/own/owntv/player/TuneGeneration.kt	error
 1	log	app/src/main/java/tv/own/owntv/player/TuneGeneration.kt	first-frame
 1	log	app/src/main/java/tv/own/owntv/player/TuneGeneration.kt	intent
+
+1	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	646974
+1	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	1520168
+1	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	646977
+1	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	646976
+1	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	646975
+1	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	646948
+1	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	646971
+1	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	1520176
+1	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	646970
+1	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	1520171
+1	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	646969
+1	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	1520175
+1	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	646968
+1	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	1520170
+1	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	646967
+1	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	1520174
+1	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	646966
+1	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	1520169
+1	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	646965
+1	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	1520173
+2	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	FOXCricket.au
+2	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	FoxLeague.au
+2	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	FoxSports3.au
+2	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	FoxFooty.au
+2	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	FoxSports5.au
+2	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	FoxSports6.au
+2	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	FoxSportsMore.au
+1	regex	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	^AU\\s*[|:]?\\s*(?:KAYO\\s*[-:]?\\s*)?ESPN\\s*1(?:\\s|$)
+1	regex	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	^AU\\s*[|:]?\\s*BEIN SPORTS?\\s*[123](?:\\s|$)
+1	regex	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	^AU\\s*[|:]?\\s*(?:KAYO\\s*-\\s*)?FOX(?: SPORTS)?\\s*501(?:\\s+CRICKET)?(?:\\s|$)
+1	regex	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	^AU\\s*[|:]?\\s*FOX CRICKET(?:\\s|$)
+1	regex	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	^AU\\s*[|:]?\\s*(?:KAYO\\s*-\\s*)?FOX SPORTS\\s*502(?:\\s+LEAUGE|\\s+LEAGUE)?(?:\\s|$)
+1	regex	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	^AU\\s*[|:]?\\s*(?:KAYO\\s*-\\s*)?FOX SPORTS\\s*503(?:\\s|$)
+1	regex	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	^AU\\s*[|:]?\\s*(?:KAYO\\s*-\\s*)?FOX SPORTS\\s*504(?:\\s+FOTTY|\\s+FOOTY)?(?:\\s|$)
+1	regex	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	^AU\\s*[|:]?\\s*(?:KAYO\\s*-\\s*)?FOX SPORTS\\s*505(?:\\s|$)
+1	regex	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	^AU\\s*[|:]?\\s*(?:KAYO\\s*-\\s*)?FOX SPORTS\\s*506(?:\\s|$)
+1	regex	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	^AU\\s*[|:]?\\s*(?:KAYO\\s*-\\s*)?FOX SPORTS\\s*507(?:\\s|$)
+2	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	:
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	646977
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	646976
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	646975
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	au:bein:1
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	au:bein:2
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	au:bein:3
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	au:bein:$it
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	uk:sky:$it
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	uk:tnt:$it
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	uk:premier:$it
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	uk:bein:$it
+2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	event:${it.id}
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	:
+1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	 
+1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	-
+1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	^AU\\s*[|:]\\s*BEIN SPORTS?\\s*([123])(?:\\s+(?:HD|FHD|SD|4K|UHD|RAW))*$
+1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	^UK\\s*[|:]\\s*SKY SPORTS\\s+(FOOTBALL|PREMIER LEAGUE|MAIN EVENTS?)(?:\\s+(?:HD|FHD|SD|4K|UHD|HEVC|RAW|BK))*$
+1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	^UK\\s*[|:]\\s*TNT SPORTS?\\s*([1-4])(?:\\s+(?:HD|FHD|SD|4K|UHD|HEVC|RAW|◉))*$
+1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	^UK\\s*[|:]\\s*PREMIER SPORTS?\\s*([12])(?:\\s+(?:HD|FHD|SD|4K|UHD|HEVC|RAW))*$
+1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	^UK\\s*[|:]\\s*BEIN SPORTS?\\s*([123])(?:\\s+(?:EN|PREMIUM|HD|FHD|SD|4K|UHD|RAW))*$
+1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	NO EVENT|REPLAY|HIGHLIGHTS|OFFLINE
+1	url	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-sports-candidates-qa
+1	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	limit
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	6
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	soccer
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	football
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	champions league
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	premier league
+1	regex	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	\\b(?:STAN\\s+SPORT|PARAMOUNT(?:\\s*\\+|\\s+PLUS)?)\\b
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	AU
+1	protocol	app/src/main/java/tv/own/owntv/features/epg/EpgViewModel.kt	AU
