@@ -530,7 +530,10 @@ class LiveViewModel(
     private val keyedNowNext: StateFlow<Pair<Long?, EpgNowNext?>> = combine(_previewChannel, epgRefresh) { ch, tick -> ch to tick }
         .debounce(350)
         .distinctUntilChanged { a, b -> a.first?.id == b.first?.id && a.second == b.second }
-        .mapLatest { (ch, _) -> ch?.id to ch?.let { epgReader.nowNext(it, custom.value, epgOffset.value) } }
+        .mapLatest { (ch, _) ->
+            ch?.id to ch?.takeUnless { SportsChannelPolicy.guideUntrusted(it.remoteId, it.name) }
+                ?.let { epgReader.nowNext(it, custom.value, epgOffset.value) }
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null to null)
 
     val nowNext: StateFlow<EpgNowNext?> = keyedNowNext.map { it.second }
@@ -573,7 +576,8 @@ class LiveViewModel(
         combine(_previewChannel, epgRefresh) { ch, tick -> ch to tick }
             .distinctUntilChanged { a, b -> a.first?.id == b.first?.id && a.second == b.second }
             .mapLatest { (ch, _) ->
-                ch?.let { catchupProgrammes(it).map { p -> LiveProgramme(p.startMs, p.stopMs, p.title) } }.orEmpty()
+                ch?.takeUnless { SportsChannelPolicy.guideUntrusted(it.remoteId, it.name) }
+                    ?.let { catchupProgrammes(it).map { p -> LiveProgramme(p.startMs, p.stopMs, p.title) } }.orEmpty()
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
@@ -2307,7 +2311,11 @@ class LiveViewModel(
      * actually have something airing right now.
      */
     suspend fun nowPlayingFor(channels: List<ChannelEntity>): Map<Long, tv.own.owntv.core.parser.XtEpgEntry> =
-        epgReader.nowProgrammesFor(channels, custom.value, epgOffset.value)
+        epgReader.nowProgrammesFor(
+            channels.filterNot { SportsChannelPolicy.guideUntrusted(it.remoteId, it.name) },
+            custom.value,
+            epgOffset.value,
+        )
 
     /**
      * Current programme title per channel id, shared by the Live list and the in-player overlays.
