@@ -2349,7 +2349,7 @@
 2	empty	app/src/main/java/tv/own/owntv/ui/theme/OwnTVColors.kt	\0
 2	empty	app/src/main/java/tv/own/owntv/ui/theme/Theme.kt	\0
 1	protocol	app/src/main/java/tv/own/owntv/features/home/HomeViewModel.kt	:
-1	protocol	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	:
+3	protocol	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	:
 1	url	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	connect.loungetv.nz
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	controller-start
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	debounce-${delayMs}
@@ -2430,7 +2430,7 @@
 1	regex	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	^AU\\s*[|:]?\\s*(?:KAYO\\s*-\\s*)?FOX SPORTS\\s*505(?:\\s|$)
 1	regex	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	^AU\\s*[|:]?\\s*(?:KAYO\\s*-\\s*)?FOX SPORTS\\s*506(?:\\s|$)
 1	regex	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	^AU\\s*[|:]?\\s*(?:KAYO\\s*-\\s*)?FOX SPORTS\\s*507(?:\\s|$)
-2	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	:
+3	protocol	app/src/main/java/tv/own/owntv/features/live/SportsChannelPolicy.kt	:
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	646977
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	646976
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	646975
@@ -2444,7 +2444,6 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	uk:bein:$it
 2	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	event:${it.id}
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	:
-1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	 
 1	technical	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	-
 1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	^AU\\s*[|:]\\s*BEIN SPORTS?\\s*([123])(?:\\s+(?:HD|FHD|SD|4K|UHD|RAW))*$
 1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	^UK\\s*[|:]\\s*SKY SPORTS\\s+(FOOTBALL|PREMIER LEAGUE|MAIN EVENTS?)(?:\\s+(?:HD|FHD|SD|4K|UHD|HEVC|RAW|BK))*$
@@ -2462,3 +2461,4 @@
 1	regex	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	\\b(?:STAN\\s+SPORT|PARAMOUNT(?:\\s*\\+|\\s+PLUS)?)\\b
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	AU
 1	protocol	app/src/main/java/tv/own/owntv/features/epg/EpgViewModel.kt	AU
+1	empty	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	\0
