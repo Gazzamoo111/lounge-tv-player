@@ -100,3 +100,22 @@ export function rankCandidates(event,rows,limit=6){
   }
   return out;
 }
+/** Adapt inventory discovery without inventing broadcast or playback evidence. */
+export function discoveryCandidate(row,decision,now){
+  return {
+    sourceId:"best",
+    providerItemId:Number(row.provider_item_id),
+    categoryId:String(row.category_id),
+    logicalServiceId:decision.logicalServiceId,
+    displayName:String(row.name),
+    logoUrl:row.artwork_url||null,
+    epgId:null,
+    serviceMarket:decision.market,
+    identityReviewed:false,
+    tier:"unverified",
+    reason:decision.reason,
+    expiresAtUtc:new Date(now+300000).toISOString(),
+    evidence:[],
+    playbackObservation:{status:"unknown"},
+  };
+}
