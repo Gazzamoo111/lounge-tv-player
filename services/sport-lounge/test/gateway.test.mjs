@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  canonicalEspnCrest,
   collectEvents,
   createGateway,
   dedupe,
@@ -144,4 +145,29 @@ test("known but unsupported sport returns an honest empty response", async () =>
   assert.equal(body.status, "unsupported");
   assert.deepEqual(body.events, []);
   assert.equal(body.diagnostics.unsupportedSport, "netball");
+});
+
+test("canonical ESPN crest upgrades rugby league and major US team logos to 500px", () => {
+  assert.equal(
+    canonicalEspnCrest(null, { modelSport: "rugby-league" }, "289196", "MAN"),
+    "https://a.espncdn.com/i/teamlogos/rugby/teams/500/289196.png",
+  );
+  assert.equal(
+    canonicalEspnCrest(null, { modelSport: "basketball", league: "nba" }, "9", "GSW"),
+    "https://a.espncdn.com/i/teamlogos/nba/500/gsw.png",
+  );
+  assert.equal(
+    canonicalEspnCrest(null, { modelSport: "hockey", league: "nhl" }, "1", "NJD"),
+    "https://a.espncdn.com/i/teamlogos/nhl/500/njd.png",
+  );
+  assert.equal(
+    canonicalEspnCrest("https://a.espncdn.com/i/teamlogos/soccer/100/123.png", { modelSport: "soccer" }, "123", "ABC"),
+    "https://a.espncdn.com/i/teamlogos/soccer/500/123.png",
+  );
+});
+
+test("tennis golf baseball and hockey are valid gateway sport filters", () => {
+  for (const sport of ["tennis", "golf", "baseball", "hockey"]) {
+    assert.equal(parseQuery(new URL(`https://example.test/v1/sports/events?sport=${sport}`), 1_000).sport, sport);
+  }
 });

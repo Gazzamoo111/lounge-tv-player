@@ -2324,3 +2324,37 @@
 1	technical	app/src/main/java/tv/own/owntv/features/sports/data/HeroArtworkProvider.kt	team
 1	json	app/src/main/java/tv/own/owntv/features/sports/data/HeroArtworkProvider.kt	teamLogos
 1	json	app/src/main/java/tv/own/owntv/features/sports/data/HeroArtworkProvider.kt	url
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	atp
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	wta
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	grand slam
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	australian open
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	roland garros
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	wimbledon
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	us open
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	masters
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	pga
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	lpga
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	open championship
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	ryder cup
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	presidents cup
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	mlb
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	world series
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	playoffs
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	nhl
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	stanley cup
+1	url	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	https://a.espncdn.com/i/teamlogos/rugby/teams/500/
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	UTF-8
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	.png
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	nba
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	nfl
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	mlb
+2	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	nhl
+1	url	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	https://a.espncdn.com/i/teamlogos/$prefix/500/
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	a.espncdn.com
+1	regex	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	/(?:40|50|60|100|200|250|300)/
+1	regex	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	/teams/(?:40|50|60|100|200|250|300)/
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	/500/
+1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	/teams/500/
+1	url	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	https://
+2	json	app/src/main/java/tv/own/owntv/features/sports/data/SportEvent.kt	competitionLogoUrl
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/data/SportEvent.kt	https://

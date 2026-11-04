@@ -60,4 +60,18 @@ class MajorEventSelectionTest {
         assertTrue("headline boxing should remain eligible", "boxing" in ids)
     }
 
+    @Test fun tennisGolfBaseballAndHockeyMajorsCanReachHome() {
+        val events = listOf(
+            fixture("tennis", Sport.TENNIS, "ATP Masters"),
+            fixture("golf", Sport.GOLF, "PGA Tour"),
+            fixture("baseball", Sport.BASEBALL, "MLB World Series"),
+            fixture("hockey", Sport.HOCKEY, "NHL Stanley Cup Playoffs")
+        )
+        val ids = MajorEventSelection.select(events, now, 12).map { it.id }
+        assertTrue("tennis headline missing", "tennis" in ids)
+        assertTrue("golf headline missing", "golf" in ids)
+        assertTrue("baseball headline missing", "baseball" in ids)
+        assertTrue("hockey headline missing", "hockey" in ids)
+    }
+
 }

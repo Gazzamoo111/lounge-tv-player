@@ -237,6 +237,10 @@ private fun androidx.compose.foundation.layout.BoxScope.SportsHeroBackdrop(
         7 -> R.drawable.lounge_hero_cricket
         8 -> R.drawable.lounge_hero_boxing
         9 -> R.drawable.lounge_hero_wwe
+        10 -> R.drawable.lounge_hero_tennis
+        11 -> R.drawable.lounge_hero_golf
+        12 -> R.drawable.lounge_hero_baseball
+        13 -> R.drawable.lounge_hero_hockey
         else -> R.drawable.lounge_hero_soccer
     }
     Box(Modifier.fillMaxSize().background(eventArtworkBrush(event))) {
@@ -306,6 +310,10 @@ internal fun sportArtworkSlot(event: Match): Int = when (heroArtworkKind(event))
     HeroArtworkKind.CRICKET -> 7
     HeroArtworkKind.BOXING -> 8
     HeroArtworkKind.WWE -> 9
+    HeroArtworkKind.TENNIS -> 10
+    HeroArtworkKind.GOLF -> 11
+    HeroArtworkKind.BASEBALL -> 12
+    HeroArtworkKind.HOCKEY -> 13
 }
 
 private fun isFormulaOne(event: Match): Boolean {
@@ -346,7 +354,7 @@ private fun androidx.compose.foundation.layout.BoxScope.EventMatchupOverlay(
             val logoUrl = (
                 editorial?.teamLogoUrls?.get(heroLogoKey(side.team.name))
                     ?: editorial?.teamLogoUrls?.get(heroLogoKey(side.team.shortName))
-                    ?: side.team.logoUrl
+                    ?: heroCrestUrl(event, side.team.id, side.team.abbreviation, side.team.logoUrl)
                 )?.takeIf { it.startsWith("https://") }
             var logoReady by remember(event.key, logoUrl) { mutableStateOf(false) }
             Column(
@@ -393,6 +401,35 @@ private fun androidx.compose.foundation.layout.BoxScope.EventMatchupOverlay(
     }
 }
 
+private fun heroCrestUrl(
+    event: Match,
+    teamId: String,
+    abbreviation: String,
+    providerUrl: String?,
+): String? {
+    if ((event.sport == Sport.RUGBY || event.sport == Sport.RUGBY_LEAGUE) && teamId.isNotBlank()) {
+        return "https://a.espncdn.com/i/teamlogos/rugby/teams/500/" +
+            java.net.URLEncoder.encode(teamId, "UTF-8") + ".png"
+    }
+    val league = event.leagueName.lowercase(Locale.ROOT)
+    val prefix = when {
+        event.sport == Sport.BASKETBALL && "nba" in league -> "nba"
+        event.sport == Sport.FOOTBALL && "nfl" in league -> "nfl"
+        event.sport == Sport.BASEBALL && "mlb" in league -> "mlb"
+        event.sport == Sport.HOCKEY && "nhl" in league -> "nhl"
+        else -> null
+    }
+    if (prefix != null && abbreviation.isNotBlank()) {
+        return "https://a.espncdn.com/i/teamlogos/$prefix/500/" +
+            abbreviation.lowercase(Locale.ROOT) + ".png"
+    }
+    val raw = providerUrl?.takeIf { it.startsWith("https://") } ?: return null
+    if (!raw.contains("a.espncdn.com")) return raw
+    return raw
+        .replace(Regex("/(?:40|50|60|100|200|250|300)/"), "/500/")
+        .replace(Regex("/teams/(?:40|50|60|100|200|250|300)/"), "/teams/500/")
+}
+
 @Composable
 private fun androidx.compose.foundation.layout.BoxScope.CompetitionLogoOverlay(
     editorial: SportEventEditorial?,
@@ -428,6 +465,7 @@ private fun eventSynopsis(event: Match, copy: MajorEventHeroCopy?): String? {
         Sport.RUGBY_LEAGUE -> stringResource(R.string.lounge_event_synopsis_league, names[0], names[1], league)
         Sport.CRICKET -> stringResource(R.string.lounge_event_synopsis_cricket, names[0], names[1], league)
         Sport.BASKETBALL -> stringResource(R.string.lounge_event_synopsis_basketball, names[0], names[1], league)
+        Sport.TENNIS, Sport.BASEBALL, Sport.HOCKEY -> stringResource(R.string.lounge_event_synopsis_team, names[0], names[1], league)
         Sport.FOOTBALL, Sport.SOCCER -> stringResource(R.string.lounge_event_synopsis_team, names[0], names[1], league)
         else -> null
     }
@@ -442,6 +480,10 @@ private fun eventAccent(event: Match): Color = when (event.sport) {
     Sport.FOOTBALL -> Color(0xFFF4B44D)
     Sport.SOCCER -> Color(0xFF63DCC6)
     Sport.RACING -> Color(0xFFFF555B)
+    Sport.TENNIS -> Color(0xFF4DD6FF)
+    Sport.GOLF -> Color(0xFF69D38A)
+    Sport.BASEBALL -> Color(0xFFFF6E5A)
+    Sport.HOCKEY -> Color(0xFF70C8FF)
     else -> Color(0xFF4DBBFF)
 }
 
@@ -453,6 +495,10 @@ private fun eventArtworkBrush(event: Match): Brush = when (event.sport) {
     Sport.FOOTBALL -> Brush.linearGradient(listOf(Color(0xFF20320F), Color(0xFF152B42), Color(0xFF07121E)))
     Sport.SOCCER -> Brush.linearGradient(listOf(Color(0xFF173C32), Color(0xFF172846), Color(0xFF07121E)))
     Sport.RACING -> Brush.linearGradient(listOf(Color(0xFF421616), Color(0xFF17223B), Color(0xFF07121E)))
+    Sport.TENNIS -> Brush.linearGradient(listOf(Color(0xFF12394A), Color(0xFF142B47), Color(0xFF07121E)))
+    Sport.GOLF -> Brush.linearGradient(listOf(Color(0xFF143D2C), Color(0xFF142B47), Color(0xFF07121E)))
+    Sport.BASEBALL -> Brush.linearGradient(listOf(Color(0xFF3E1B18), Color(0xFF172842), Color(0xFF07121E)))
+    Sport.HOCKEY -> Brush.linearGradient(listOf(Color(0xFF102C43), Color(0xFF172A45), Color(0xFF07121E)))
     else -> Brush.linearGradient(listOf(Color(0xFF183553), Color(0xFF142B47), Color(0xFF07121E)))
 }
 

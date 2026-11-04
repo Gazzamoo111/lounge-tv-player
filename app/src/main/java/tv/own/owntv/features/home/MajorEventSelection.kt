@@ -74,6 +74,10 @@ internal object MajorEventSelection {
                     any("arsenal", "chelsea", "liverpool", "manchester", "tottenham", "barcelona", "real madrid",
                         "bayern", "inter milan", "ac milan", "psg", "paris saint", "newcastle", "atletico"))
             Sport.RACING -> any("formula 1", "formula one", "f1", "motogp")
+            Sport.TENNIS -> any("atp", "wta", "grand slam", "australian open", "roland garros", "wimbledon", "us open", "masters")
+            Sport.GOLF -> any("pga", "lpga", "masters", "open championship", "ryder cup", "presidents cup")
+            Sport.BASEBALL -> any("mlb", "world series", "playoffs")
+            Sport.HOCKEY -> any("nhl", "stanley cup", "playoffs")
             else -> false
         }
     }
@@ -96,6 +100,7 @@ internal object MajorEventSelection {
             Sport.RUGBY, Sport.RUGBY_LEAGUE -> 26
             Sport.CRICKET, Sport.SOCCER -> 20
             Sport.FOOTBALL, Sport.BASKETBALL -> 17
+            Sport.TENNIS, Sport.GOLF, Sport.BASEBALL, Sport.HOCKEY -> 14
             else -> 6
         }
         val imminent = if (m.state == MatchState.IN) 45

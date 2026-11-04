@@ -30,8 +30,8 @@ jobs:
           ref: 1de78b1e2690c22b50c060e986bce221454bf880
           path: shared-core
           persist-credentials: false
-      - name: Verify strict event-artwork matching
-        run: node --test services/sport-lounge/test/hero-artwork-matcher.test.mjs
+      - name: Verify Sport Lounge gateway, logos and artwork matching
+        run: node --test services/sport-lounge/test/*.test.mjs
       - name: Apply Lounge TV playback fixes to pinned core
         run: python3 scripts/patch_lounge_playback_core.py shared-core
       - uses: actions/setup-java@v4
@@ -46,6 +46,7 @@ jobs:
         run: |
           python3 -m pip install --disable-pip-version-check Pillow
           python3 scripts/generate_loungetv_brand_assets.py
+          python3 scripts/extract_loungetv_hero_assets.py
       - name: Check branding and release guardrails
         run: |
           python3 scripts/check_branding.py

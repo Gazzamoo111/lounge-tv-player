@@ -2,7 +2,7 @@ const ESPN = "https://site.api.espn.com/apis/site/v2/sports";
 const ESPN_CRICKET = "https://site.web.api.espn.com/apis/v2/scoreboard/header";
 const MAX_WINDOW_MS = 72 * 60 * 60 * 1000;
 const CACHE_CONTROL = "public, max-age=120, stale-while-revalidate=600, stale-if-error=3600";
-const KNOWN_SPORTS = new Set(["nfl", "league", "rugby", "cricket", "basketball", "netball", "football", "combat", "motorsport"]);
+const KNOWN_SPORTS = new Set(["nfl", "league", "rugby", "cricket", "basketball", "netball", "football", "combat", "motorsport", "tennis", "golf", "baseball", "hockey"]);
 
 /** Public, no-secret ESPN feeds already supported by OwnTV's sports integration. */
 export const FEEDS = Object.freeze([
@@ -17,6 +17,12 @@ export const FEEDS = Object.freeze([
   { sport: "football", modelSport: "soccer", path: "soccer", league: "uefa.champions", name: "UEFA Champions League" },
   { sport: "motorsport", modelSport: "racing", path: "racing", league: "f1", name: "Formula 1" },
   { sport: "combat", modelSport: "mma", path: "mma", league: "ufc", name: "UFC" },
+  { sport: "tennis", modelSport: "tennis", path: "tennis", league: "atp", name: "ATP" },
+  { sport: "tennis", modelSport: "tennis", path: "tennis", league: "wta", name: "WTA" },
+  { sport: "golf", modelSport: "golf", path: "golf", league: "pga", name: "PGA Tour" },
+  { sport: "golf", modelSport: "golf", path: "golf", league: "lpga", name: "LPGA Tour" },
+  { sport: "baseball", modelSport: "baseball", path: "baseball", league: "mlb", name: "MLB" },
+  { sport: "hockey", modelSport: "hockey", path: "hockey", league: "nhl", name: "NHL" },
 ]);
 
 export class ProviderBackoff {
@@ -63,13 +69,13 @@ export function parseQuery(url, now = Date.now()) {
   return { from, to, sport };
 }
 
-export function normalizeEspnEvent(raw, feed, fetchedAt) {
+export function normalizeEspnEvent(raw, feed, fetchedAt, competitionLogoUrl = null) {
   const id = textOf(raw?.id);
   const startUtcMs = Date.parse(raw?.date);
   if (!id || !Number.isFinite(startUtcMs)) return null;
   const competition = raw.competitions?.[0] ?? {};
   const state = normalizeState(raw.status?.type?.state, raw.status?.type?.name);
-  const competitors = (competition.competitors ?? []).map(normalizeStandardCompetitor).filter(Boolean);
+  const competitors = (competition.competitors ?? []).map((side) => normalizeStandardCompetitor(side, feed)).filter(Boolean);
   return eventContract({
     id, feed,
     leagueName: raw.league?.name ?? feed.name ?? raw.season?.name,
@@ -77,7 +83,7 @@ export function normalizeEspnEvent(raw, feed, fetchedAt) {
     subtitle: raw.shortName ?? null,
     startUtcMs, state,
     statusText: raw.status?.type?.shortDetail ?? raw.status?.type?.detail ?? state,
-    competitors, fetchedAt,
+    competitors, fetchedAt, competitionLogoUrl,
   });
 }
 
@@ -186,33 +192,69 @@ async function fetchFeed(feed, day, fetcher, fetchedAt, backoff) {
     const events = feed.kind === "cricket-header"
       ? (payload.sports ?? []).flatMap((sport) => (sport.leagues ?? []).flatMap((league) =>
         (league.events ?? []).map((event) => normalizeCricketEvent(event, league, feed, fetchedAt))))
-      : (payload.events ?? []).map((event) => normalizeEspnEvent(event, feed, fetchedAt));
+      : (payload.events ?? []).map((event) =>
+          normalizeEspnEvent(event, feed, fetchedAt, bestLogoUrl(payload.leagues?.[0]?.logos)));
     return { feed, ok: true, status: response.status, events: events.filter(Boolean) };
   } catch (error) {
     return { feed, ok: false, status: 0, error: error instanceof Error ? error.message : String(error), events: [] };
   }
 }
 
-function eventContract({ id, feed, leagueId = feedId(feed), leagueSlug = feed.league, leagueName, title, subtitle, startUtcMs, state, statusText, competitors, fetchedAt }) {
+function eventContract({ id, feed, leagueId = feedId(feed), leagueSlug = feed.league, leagueName, title, subtitle, startUtcMs, state, statusText, competitors, fetchedAt, competitionLogoUrl = null }) {
   const sourceFeedId = feedId(feed);
   return {
     id: `espn:${sourceFeedId}#${id}`, source: "espn", externalId: id, sport: feed.modelSport ?? feed.sport,
     leagueId, leagueName: leagueName || feed.name, feedId: sourceFeedId, leagueSlug,
     title: title || competitorTitle(competitors) || feed.name, subtitle, startUtcMs, state, statusText,
-    competitors, sourceUpdatedAtMs: fetchedAt, lastSuccessfulUpdateMs: fetchedAt,
+    competitors, competitionLogoUrl, sourceUpdatedAtMs: fetchedAt, lastSuccessfulUpdateMs: fetchedAt,
   };
 }
 
-function normalizeStandardCompetitor(side) {
+function normalizeStandardCompetitor(side, feed) {
   const entity = side?.team ?? side?.athlete ?? {};
   const id = textOf(entity.id ?? side?.id);
   const name = entity.displayName ?? entity.fullName ?? entity.name ?? side?.displayName ?? side?.name;
   if (!id && !name) return null;
+  const rawLogo = entity.logo ?? bestLogoUrl(entity.logos) ?? entity.headshot?.href ?? null;
   return {
     id, name: name ?? "", shortName: entity.shortDisplayName ?? entity.name ?? name ?? "",
-    abbreviation: entity.abbreviation ?? "", crestUrl: entity.logo ?? entity.headshot?.href ?? null,
+    abbreviation: entity.abbreviation ?? "",
+    crestUrl: canonicalEspnCrest(rawLogo, feed, id, entity.abbreviation),
     home: side?.homeAway === "home", score: side?.score == null ? null : String(side.score),
   };
+}
+
+function bestLogoUrl(logos) {
+  if (!Array.isArray(logos)) return null;
+  return logos
+    .filter((logo) => typeof logo?.href === "string")
+    .sort((a, b) => Number(b.width || 0) - Number(a.width || 0))[0]?.href ?? null;
+}
+
+export function canonicalEspnCrest(raw, feed, id, abbreviation) {
+  if (feed?.modelSport === "rugby-league" || feed?.modelSport === "rugby") {
+    if (id) return `https://a.espncdn.com/i/teamlogos/rugby/teams/500/${encodeURIComponent(id)}.png`;
+  }
+  const folder = {
+    basketball: feed?.league === "nba" ? "nba" : null,
+    football: feed?.league === "nfl" ? "nfl" : null,
+    baseball: feed?.league === "mlb" ? "mlb" : null,
+    hockey: feed?.league === "nhl" ? "nhl" : null,
+  }[feed?.modelSport] ?? null;
+  if (folder && abbreviation) {
+    return `https://a.espncdn.com/i/teamlogos/${folder}/500/${String(abbreviation).toLowerCase()}.png`;
+  }
+  if (typeof raw !== "string" || !raw.startsWith("https://")) return raw ?? null;
+  try {
+    const url = new URL(raw);
+    if (url.hostname === "a.espncdn.com") {
+      url.pathname = url.pathname
+        .replace(/\/(?:40|50|60|100|200|250|300)\//, "/500/")
+        .replace(/\/teams\/(?:40|50|60|100|200|250|300)\//, "/teams/500/");
+      return url.href;
+    }
+  } catch { /* keep the provider URL */ }
+  return raw;
 }
 
 function normalizeCricketCompetitor(side) {

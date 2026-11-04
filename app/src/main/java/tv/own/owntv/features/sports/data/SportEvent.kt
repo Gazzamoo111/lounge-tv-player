@@ -67,6 +67,7 @@ data class SportEvent(
     val editorialSubtitle: String? = null,
     val importanceTag: String? = null,
     val competition: String? = null,
+    val competitionLogoUrl: String? = null,
 ) {
     fun toJson(): JSONObject = JSONObject()
         .put("id", stableId)
@@ -96,6 +97,7 @@ data class SportEvent(
         .put("editorial_subtitle", editorialSubtitle)
         .put("importance_tag", importanceTag)
         .put("competition", competition)
+        .put("competitionLogoUrl", competitionLogoUrl)
         .put("competitors", JSONArray().apply {
             competitors.forEach { side ->
                 put(
@@ -112,8 +114,17 @@ data class SportEvent(
         })
 
     fun toEditorial(): SportEventEditorial? {
-        if (listOf(heroArtUrl, synopsis, editorialTitle, editorialSubtitle, importanceTag, competition).all { it.isNullOrBlank() }) return null
-        return SportEventEditorial(heroArtUrl, synopsis, editorialTitle, editorialSubtitle, importanceTag, competition, venue)
+        if (listOf(heroArtUrl, synopsis, editorialTitle, editorialSubtitle, importanceTag, competition, competitionLogoUrl).all { it.isNullOrBlank() }) return null
+        return SportEventEditorial(
+            heroArtUrl = heroArtUrl,
+            synopsis = synopsis,
+            editorialTitle = editorialTitle,
+            editorialSubtitle = editorialSubtitle,
+            importanceTag = importanceTag,
+            competition = competition,
+            venue = venue,
+            competitionLogoUrl = competitionLogoUrl,
+        )
     }
 
     fun toMatch(): Match? {
@@ -223,6 +234,7 @@ data class SportEvent(
                 editorialSubtitle = json.optEditorial("editorial_subtitle", "editorialSubtitle"),
                 importanceTag = json.optEditorial("importance_tag", "importanceTag"),
                 competition = json.optEditorial("competition"),
+                competitionLogoUrl = json.optEditorial("competitionLogoUrl")?.takeIf { it.startsWith("https://") },
             )
         }.getOrNull()
     }

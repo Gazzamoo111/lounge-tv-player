@@ -33,5 +33,9 @@ class MajorEventHeroArtworkTest {
         assertEquals(HeroArtworkKind.CRICKET, heroArtworkKind(event(Sport.CRICKET, "ICC Cricket")))
         assertEquals(HeroArtworkKind.RUGBY, heroArtworkKind(event(Sport.RUGBY, "International Rugby")))
         assertEquals(HeroArtworkKind.RUGBY_LEAGUE, heroArtworkKind(event(Sport.RUGBY_LEAGUE, "Pacific Championships")))
+        assertEquals(HeroArtworkKind.TENNIS, heroArtworkKind(event(Sport.TENNIS, "ATP Masters")))
+        assertEquals(HeroArtworkKind.GOLF, heroArtworkKind(event(Sport.GOLF, "PGA Tour")))
+        assertEquals(HeroArtworkKind.BASEBALL, heroArtworkKind(event(Sport.BASEBALL, "MLB")))
+        assertEquals(HeroArtworkKind.HOCKEY, heroArtworkKind(event(Sport.HOCKEY, "NHL")))
     }
 }

@@ -5,7 +5,7 @@ import tv.own.owntv.core.sports.model.Sport
 import java.util.Locale
 
 internal enum class HeroArtworkKind {
-    NFL, NBA, RUGBY, SOCCER, MMA, F1, RUGBY_LEAGUE, CRICKET, BOXING, WWE
+    NFL, NBA, RUGBY, SOCCER, MMA, F1, RUGBY_LEAGUE, CRICKET, BOXING, WWE, TENNIS, GOLF, BASEBALL, HOCKEY
 }
 
 internal fun heroArtworkKind(event: Match): HeroArtworkKind = when (event.sport) {
@@ -16,6 +16,10 @@ internal fun heroArtworkKind(event: Match): HeroArtworkKind = when (event.sport)
     Sport.RACING -> HeroArtworkKind.F1
     Sport.SOCCER -> HeroArtworkKind.SOCCER
     Sport.CRICKET -> HeroArtworkKind.CRICKET
+    Sport.TENNIS -> HeroArtworkKind.TENNIS
+    Sport.GOLF -> HeroArtworkKind.GOLF
+    Sport.BASEBALL -> HeroArtworkKind.BASEBALL
+    Sport.HOCKEY -> HeroArtworkKind.HOCKEY
     Sport.MMA -> combatArtworkKind(event)
     else -> HeroArtworkKind.SOCCER
 }
