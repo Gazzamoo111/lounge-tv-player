@@ -64,8 +64,10 @@ internal class BackendSportsCandidateProvider(
                     val name = row.optString("displayName", row.optString("name")).takeIf(String::isNotBlank) ?: continue
                     val evidenceValid = version == 2 && candidateEvidenceValid(row, match, now) && !response.optBoolean("catalogueStale", true)
                     if (tv.own.owntv.features.live.SportsChannelPolicy.excludedBest(providerItemId.toString(), name)) continue
+                    // Keep unverified catalogue discovery in the secondary alternatives only.
+                    // Do not let a name/fixture guess masquerade as programme evidence.
                     val tierName = if (evidenceValid) row.optString("tier") else "unverified"
-                    if (tierName !in setOf("verified", "plausible")) continue
+                    if (tierName !in setOf("verified", "plausible", "unverified")) continue
                     val streamUrl = playbackEndpoint + "/sport/_/_/" + providerItemId + ".ts" +
                         "?username=" + q(username) + "&password=" + q(password)
                     val channel = ChannelEntity(
