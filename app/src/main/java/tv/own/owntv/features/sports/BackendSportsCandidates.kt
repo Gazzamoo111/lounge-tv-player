@@ -99,6 +99,12 @@ internal class BackendSportsCandidateProvider(
 }
 
 /** Merge strongest evidence first; backend presence never discards local alternatives. */
+internal fun mergeBackendSportsOptions(backend: List<WatchOption>, local: List<WatchOption>): List<WatchOption> =
+    (backend + local)
+        .sortedBy { it.tier.ordinal }
+        .distinctBy { it.channel.sourceId to (it.channel.remoteId?.removePrefix("sport-backend:") ?: it.channel.id.toString()) }
+        .take(8)
+
 internal fun mergeBackendSportsOptions(match: Match, backend: List<WatchOption>, local: List<WatchOption>): List<WatchOption> {
     val soccer = match.sport.path.contains("soccer", ignoreCase = true) ||
         match.leagueName.contains("football", ignoreCase = true) ||
@@ -106,10 +112,7 @@ internal fun mergeBackendSportsOptions(match: Match, backend: List<WatchOption>,
         match.leagueName.contains("premier league", ignoreCase = true)
     val noisySoccerNetwork = Regex("\\b(?:STAN\\s+SPORT|PARAMOUNT(?:\\s*\\+|\\s+PLUS)?)\\b", RegexOption.IGNORE_CASE)
     val cleanLocal = if (!soccer) local else local.filterNot { noisySoccerNetwork.containsMatchIn(it.channel.name) }
-    return (backend + cleanLocal)
-        .sortedBy { it.tier.ordinal }
-        .distinctBy { it.channel.sourceId to (it.channel.remoteId?.removePrefix("sport-backend:") ?: it.channel.id.toString()) }
-        .take(8)
+    return mergeBackendSportsOptions(backend, cleanLocal)
 }
 
 internal fun validatedBackendTier(version: Int, tier: String, evidenceValid: Boolean): WatchTier = when {
