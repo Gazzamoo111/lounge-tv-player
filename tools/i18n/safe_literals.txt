@@ -2462,3 +2462,5 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	AU
 1	protocol	app/src/main/java/tv/own/owntv/features/epg/EpgViewModel.kt	AU
 1	empty	app/src/main/java/tv/own/owntv/features/live/LoungeSoccerCatalogue.kt	\0
+2	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	catalogueStale
+2	protocol	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	unverified
