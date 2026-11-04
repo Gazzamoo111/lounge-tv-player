@@ -417,7 +417,6 @@
 1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	\\b(?:HEVC|FHD|HD|UHD|4K|RAW|VIP|60\\s*FPS|BK)\\b
 1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	\\b(?:SYDNEY|NSW|MELBOURNE|VIC|PERTH|WA|BRISBANE|QLD|ADELAIDE|SA|CANBERRA|DARWIN|HOBART|GOLD.COAST|LISMORE|NEWCASTLE|NATIONAL)\\b
 10	empty	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	\0
-1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	^(?:AU|UK|US|NZ)\\s*(?:\\||:)\\s*
 1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	^(?:AU|UK|US|NZ)\s*(?:\||:)\s*
 1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	^#{3,}
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeLiveDuplicates.kt	10
