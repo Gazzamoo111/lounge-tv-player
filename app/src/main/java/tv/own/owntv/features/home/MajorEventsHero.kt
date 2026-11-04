@@ -138,6 +138,12 @@ internal fun MajorEventsHero(
                     else R.string.lounge_major_events_upcoming
                 ))
                 StageTag(editorialCopy?.competition ?: event.leagueName)
+                heroDivision(event)?.let { division ->
+                    StageTag(stringResource(
+                        if (division == HeroDivision.WOMEN) R.string.lounge_major_events_women
+                        else R.string.lounge_major_events_men
+                    ))
+                }
                 editorialCopy?.importanceTag?.let { StageTag(it) }
             }
             Text(
@@ -245,8 +251,7 @@ private fun androidx.compose.foundation.layout.BoxScope.SportsHeroBackdrop(
         Image(
             painter = painterResource(imageRes),
             contentDescription = null,
-            contentScale = ContentScale.Fit,
-            alignment = Alignment.CenterEnd,
+            contentScale = ContentScale.FillBounds,
             modifier = Modifier.fillMaxSize(),
         )
         // Readable left-side copy with clean real crest artwork to the right.
@@ -262,8 +267,9 @@ private fun androidx.compose.foundation.layout.BoxScope.SportsHeroBackdrop(
             0.70f to Color.Transparent,
             1.0f to Color(0x66050B15),
         )))
-        if (!isFormulaOne(event)) {
-            CompetitionLogoOverlay(event, editorial)
+        val competitionOnly = usesCompetitionIdentityOnly(event)
+        CompetitionLogoOverlay(event, editorial, prominent = competitionOnly)
+        if (!competitionOnly) {
             EventMatchupOverlay(event, editorial)
         }
     }
@@ -389,22 +395,28 @@ private fun androidx.compose.foundation.layout.BoxScope.EventMatchupOverlay(
 private fun androidx.compose.foundation.layout.BoxScope.CompetitionLogoOverlay(
     event: Match,
     editorial: SportEventEditorial?,
+    prominent: Boolean,
 ) {
     val logoUrl = HeroLogoCatalogue.competition(event, editorial?.competitionLogoUrl) ?: return
     var logoReady by remember(logoUrl) { mutableStateOf(false) }
+    val size = if (prominent) 176.mpx else 74.mpx
+    val padding = if (prominent) 18.mpx else 8.mpx
+    val placement = if (prominent) {
+        Modifier.align(Alignment.CenterEnd).padding(end = 92.mpx)
+    } else {
+        Modifier.align(Alignment.TopEnd).padding(end = 46.mpx, top = 26.mpx)
+    }
     AsyncImage(
         model = logoUrl,
         contentDescription = null,
         contentScale = ContentScale.Fit,
         onSuccess = { logoReady = true },
         onError = { logoReady = false },
-        modifier = Modifier
-            .align(Alignment.TopEnd)
-            .padding(end = 46.mpx, top = 26.mpx)
-            .size(74.mpx)
-            .clip(RoundedCornerShape(18.mpx))
-            .background(Color(0x8806101C))
-            .padding(8.mpx)
+        modifier = placement
+            .size(size)
+            .clip(RoundedCornerShape(if (prominent) 34.mpx else 18.mpx))
+            .background(Color(0x9906101C))
+            .padding(padding)
             .alpha(if (logoReady) 0.96f else 0f),
     )
 }
