@@ -138,10 +138,19 @@ private fun candidateEvidenceValid(row: JSONObject, match: Match, now: Long): Bo
         val start = parseUtc(e.optString("startUtc"))
         val end = parseUtc(e.optString("endUtc"))
         val ageLimit = if (match.startMs > now) 86_400_000L else 300_000L
+        val evidenceType = e.optString("type")
+        val claimTier = row.optString("tier")
+        val typeSupportsClaim = when (claimTier) {
+            "verified" -> evidenceType in setOf("programme", "event-feed")
+            "plausible" -> evidenceType in setOf("programme", "event-feed", "assignment")
+            else -> false
+        }
         e.optString("eventId") == match.key && e.optString("source").isNotBlank() &&
-            now - observed in 0..ageLimit && start < end && end > match.startMs &&
+            now - observed in 0..ageLimit && start < end &&
+            start <= match.startMs + 900_000L && end > match.startMs &&
             e.optString("sportId") == match.sport.path && e.optString("competitionId") == match.feed &&
-            !e.optBoolean("contentMismatch") &&
-            e.optString("type") in setOf("programme", "event-feed", "assignment")
+            e.optString("serviceId") == row.optString("logicalServiceId") &&
+            e.optString("market") == row.optString("serviceMarket") &&
+            !e.optBoolean("contentMismatch") && typeSupportsClaim
     }
 }
