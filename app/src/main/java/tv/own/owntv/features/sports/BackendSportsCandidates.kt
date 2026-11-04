@@ -17,7 +17,7 @@ import java.net.URLEncoder
 internal const val BACKEND_CONFIDENCE_PREFIX = "__LTV_BACKEND__:"
 
 internal class BackendSportsCandidateProvider(
-    private val endpoint: String = "https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-sports-candidates",
+    private val endpoint: String = "https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-sports-candidates-qa",
     private val playbackEndpoint: String = "https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-xtream",
 ) {
     suspend fun options(match: Match, source: SourceEntity): List<WatchOption> = withContext(Dispatchers.IO) {
@@ -37,7 +37,7 @@ internal class BackendSportsCandidateProvider(
             "title" to match.title,
             "home" to home,
             "away" to away,
-            "broadcasters" to match.broadcasts.joinToString("|") { it.name },
+            "broadcasters" to match.broadcasts.joinToString("|") { it.name },\n            "limit" to "6",
         )
         val query = params.entries.joinToString("&") { (key, value) -> q(key) + "=" + q(value) }
         val connection = (URL(endpoint + "?" + query).openConnection() as HttpURLConnection).apply {
@@ -98,9 +98,18 @@ internal class BackendSportsCandidateProvider(
 }
 
 /** Merge strongest evidence first; backend presence never discards local alternatives. */
-internal fun mergeBackendSportsOptions(backend: List<WatchOption>, local: List<WatchOption>): List<WatchOption> =
-    (local + backend).sortedBy { it.tier.ordinal }
+internal fun mergeBackendSportsOptions(match: Match, backend: List<WatchOption>, local: List<WatchOption>): List<WatchOption> {
+    val soccer = match.sport.path.contains("soccer", ignoreCase = true) ||
+        match.leagueName.contains("football", ignoreCase = true) ||
+        match.leagueName.contains("champions league", ignoreCase = true) ||
+        match.leagueName.contains("premier league", ignoreCase = true)
+    val noisySoccerNetwork = Regex("\\b(?:STAN\\s+SPORT|PARAMOUNT(?:\\s*\\+|\\s+PLUS)?)\\b", RegexOption.IGNORE_CASE)
+    val cleanLocal = if (!soccer) local else local.filterNot { noisySoccerNetwork.containsMatchIn(it.channel.name) }
+    return (backend + cleanLocal)
+        .sortedBy { it.tier.ordinal }
         .distinctBy { it.channel.sourceId to (it.channel.remoteId?.removePrefix("sport-backend:") ?: it.channel.id.toString()) }
+        .take(8)
+}
 
 internal fun validatedBackendTier(version: Int, tier: String, evidenceValid: Boolean): WatchTier = when {
     version == 2 && evidenceValid && tier == "verified" -> WatchTier.GUIDE
