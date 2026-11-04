@@ -31,8 +31,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -247,28 +245,10 @@ private fun androidx.compose.foundation.layout.BoxScope.SportsHeroBackdrop(
         Image(
             painter = painterResource(imageRes),
             contentDescription = null,
-            contentScale = ContentScale.Crop,
+            contentScale = ContentScale.Fit,
+            alignment = Alignment.CenterEnd,
             modifier = Modifier.fillMaxSize(),
         )
-        // Give the artwork a luminous finish while preserving its source pixels.
-        Box(Modifier.fillMaxSize().drawBehind {
-            val w = size.width
-            val h = size.height
-            drawRect(brush = Brush.radialGradient(
-                colors = listOf(
-                    eventAccent(event).copy(alpha = 0.24f),
-                    Color.Transparent
-                ),
-                center = Offset(w * 0.74f, h * 0.52f),
-                radius = w * 0.42f,
-            ))
-            drawLine(
-                Color.White.copy(alpha = 0.12f),
-                Offset(w * 0.57f, h * 0.91f),
-                Offset(w * 0.98f, h * 0.82f),
-                2f
-            )
-        })
         // Readable left-side copy with clean real crest artwork to the right.
         Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(
             0.0f to Color(0xFF07111E),
@@ -283,17 +263,8 @@ private fun androidx.compose.foundation.layout.BoxScope.SportsHeroBackdrop(
             1.0f to Color(0x66050B15),
         )))
         if (!isFormulaOne(event)) {
-            CompetitionLogoOverlay(editorial)
+            CompetitionLogoOverlay(event, editorial)
             EventMatchupOverlay(event, editorial)
-        }
-        if (isFormulaOne(event)) {
-            Text(
-                stringResource(R.string.lounge_hero_mark_f1),
-                style = stageText(90, 900),
-                color = Color.White.copy(alpha = 0.82f),
-                modifier = Modifier.align(Alignment.TopEnd)
-                    .padding(end = 52.mpx, top = 38.mpx),
-            )
         }
     }
 }
@@ -346,30 +317,43 @@ private fun androidx.compose.foundation.layout.BoxScope.EventMatchupOverlay(
         return
     }
     Row(
-        Modifier.align(Alignment.CenterEnd).padding(end = 44.mpx, top = 20.mpx),
-        horizontalArrangement = Arrangement.spacedBy(12.mpx),
+        Modifier.align(Alignment.CenterEnd).padding(end = 44.mpx, top = 26.mpx),
+        horizontalArrangement = Arrangement.spacedBy(16.mpx),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         sides.forEachIndexed { index, side ->
             val logoUrl = (
-                editorial?.teamLogoUrls?.get(heroLogoKey(side.team.name))
+                HeroLogoCatalogue.resolve(
+                    event = event,
+                    teamName = side.team.name,
+                    shortName = side.team.shortName,
+                    abbreviation = side.team.abbreviation,
+                    teamId = side.team.id,
+                    providerUrl = side.team.logoUrl,
+                )
+                    ?: editorial?.teamLogoUrls?.get(heroLogoKey(side.team.name))
                     ?: editorial?.teamLogoUrls?.get(heroLogoKey(side.team.shortName))
-                    ?: heroCrestUrl(event, side.team.id, side.team.abbreviation, side.team.logoUrl)
                 )?.takeIf { it.startsWith("https://") }
             var logoReady by remember(event.key, logoUrl) { mutableStateOf(false) }
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.mpx),
-                modifier = Modifier.width(286.mpx),
+                modifier = Modifier.width(205.mpx),
             ) {
-                Box(Modifier.size(275.mpx), contentAlignment = Alignment.Center) {
+                Box(
+                    Modifier
+                        .size(194.mpx)
+                        .clip(RoundedCornerShape(30.mpx))
+                        .background(Color(0x9906101C)),
+                    contentAlignment = Alignment.Center,
+                ) {
                     if (!logoReady) {
                         Text(
                             side.team.shortName.ifBlank { side.team.name }.uppercase(Locale.ROOT),
-                            style = stageText(34, 900), color = Color.White,
+                            style = stageText(25, 900), color = Color.White,
                             maxLines = 3, overflow = TextOverflow.Ellipsis,
                             textAlign = TextAlign.Center,
-                            modifier = Modifier.width(265.mpx),
+                            modifier = Modifier.width(172.mpx),
                         )
                     }
                     if (logoUrl != null) {
@@ -378,22 +362,22 @@ private fun androidx.compose.foundation.layout.BoxScope.EventMatchupOverlay(
                             contentScale = ContentScale.Fit,
                             onSuccess = { logoReady = true },
                             onError = { logoReady = false },
-                            modifier = Modifier.size(270.mpx).alpha(if (logoReady) 1f else 0f),
+                            modifier = Modifier.size(172.mpx).alpha(if (logoReady) 1f else 0f),
                         )
                     }
                 }
                 Text(
                     side.team.shortName.ifBlank { side.team.name },
-                    style = stageText(20, 800), color = Color.White,
+                    style = stageText(18, 800), color = Color.White,
                     maxLines = 2, overflow = TextOverflow.Ellipsis,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.width(275.mpx),
+                    modifier = Modifier.width(205.mpx),
                 )
             }
             if (index == 0 && sides.size > 1) {
                 Text(
                     stringResource(R.string.lounge_major_events_vs),
-                    style = stageText(30, 900),
+                    style = stageText(26, 900),
                     color = Color.White.copy(alpha = 0.86f),
                 )
             }
@@ -401,40 +385,12 @@ private fun androidx.compose.foundation.layout.BoxScope.EventMatchupOverlay(
     }
 }
 
-private fun heroCrestUrl(
-    event: Match,
-    teamId: String,
-    abbreviation: String,
-    providerUrl: String?,
-): String? {
-    if ((event.sport == Sport.RUGBY || event.sport == Sport.RUGBY_LEAGUE) && teamId.isNotBlank()) {
-        return "https://a.espncdn.com/i/teamlogos/rugby/teams/500/" +
-            java.net.URLEncoder.encode(teamId, "UTF-8") + ".png"
-    }
-    val league = event.leagueName.lowercase(Locale.ROOT)
-    val prefix = when {
-        event.sport == Sport.BASKETBALL && "nba" in league -> "nba"
-        event.sport == Sport.FOOTBALL && "nfl" in league -> "nfl"
-        event.sport == Sport.BASEBALL && "mlb" in league -> "mlb"
-        event.sport == Sport.HOCKEY && "nhl" in league -> "nhl"
-        else -> null
-    }
-    if (prefix != null && abbreviation.isNotBlank()) {
-        return "https://a.espncdn.com/i/teamlogos/$prefix/500/" +
-            abbreviation.lowercase(Locale.ROOT) + ".png"
-    }
-    val raw = providerUrl?.takeIf { it.startsWith("https://") } ?: return null
-    if (!raw.contains("a.espncdn.com")) return raw
-    return raw
-        .replace(Regex("/(?:40|50|60|100|200|250|300)/"), "/500/")
-        .replace(Regex("/teams/(?:40|50|60|100|200|250|300)/"), "/teams/500/")
-}
-
 @Composable
 private fun androidx.compose.foundation.layout.BoxScope.CompetitionLogoOverlay(
+    event: Match,
     editorial: SportEventEditorial?,
 ) {
-    val logoUrl = editorial?.competitionLogoUrl?.takeIf { it.startsWith("https://") } ?: return
+    val logoUrl = HeroLogoCatalogue.competition(event, editorial?.competitionLogoUrl) ?: return
     var logoReady by remember(logoUrl) { mutableStateOf(false) }
     AsyncImage(
         model = logoUrl,
@@ -444,9 +400,12 @@ private fun androidx.compose.foundation.layout.BoxScope.CompetitionLogoOverlay(
         onError = { logoReady = false },
         modifier = Modifier
             .align(Alignment.TopEnd)
-            .padding(end = 48.mpx, top = 28.mpx)
-            .size(82.mpx)
-            .alpha(if (logoReady) 0.92f else 0f),
+            .padding(end = 46.mpx, top = 26.mpx)
+            .size(74.mpx)
+            .clip(RoundedCornerShape(18.mpx))
+            .background(Color(0x8806101C))
+            .padding(8.mpx)
+            .alpha(if (logoReady) 0.96f else 0f),
     )
 }
 
