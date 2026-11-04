@@ -1,3 +1,5 @@
+> Implementation/build authorization: Gary’s 5 November 2026 request supersedes the historical documentation-only authorization below. See implementation-notes.md and implementation-verification.md. Production, merge and release remain prohibited. Current status: partial implementation, release gate closed.
+
 # Feature Specification: Lounge TV Live Sports Reliability Overhaul
 
 **Feature ID**: 001-live-sports-reliability  

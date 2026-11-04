@@ -1,3 +1,5 @@
+> Current implementer evidence: [implementation-verification.md](implementation-verification.md). Isolated QA built; implementation incomplete and production gate closed. The historical independent specification review below is preserved. Codex has not independently verified this implementation.
+
 # Independent verification record
 
 **Feature**:001-live-sports-reliability  

@@ -5,11 +5,11 @@
 **Assignee default**: GPT Work. Codex owns T022 independent verification. Gary owns scope/build/release authorization. Repository paths below are relative to the agreed future implementation checkout; new files are explicitly described as proposed. Evidence goes in this feature's verification.md. Dependencies are stated by phase and task IDs.
 
 ## Phase 1: Setup
-- [ ] T001 Reconfirm local/GitHub/deployed baselines and unpushed work; update specs/001-live-sports-reliability/research.md and verification.md with exact refs, source/deployed diff and catalogue import health. Completion: immutable identities recorded; no source mutation. Depends: no prior task.
-- [ ] T002 Review scope/contracts with GPT Work and Gary in specs/001-live-sports-reliability/plan.md; record feasibility, acceptance and separate implementation/build restrictions. Completion: explicit authorized next scope, no inferred release authority. Depends:T001.
+- [X] T001 Reconfirm local/GitHub/deployed baselines and unpushed work; update specs/001-live-sports-reliability/research.md and verification.md with exact refs, source/deployed diff and catalogue import health. Completion: immutable identities recorded; no source mutation. Depends: no prior task.
+- [X] T002 Review scope/contracts with GPT Work and Gary in specs/001-live-sports-reliability/plan.md; record feasibility, acceptance and separate implementation/build restrictions. Completion: explicit authorized next scope, no inferred release authority. Depends:T001.
 
 ## Phase 2: Foundational prerequisites
-- [ ] T003 Create sanitized frozen fixture/catalogue/EPG evidence inputs in proposed backend/supabase/functions/lounge-sports-candidates/test/fixtures/; record hashes and exclusion IDs in specs/001-live-sports-reliability/verification.md. Include current successful import metadata and synthetic clock cases. Completion: no URLs/credentials, repeatable snapshot replay. Depends:T002 and implementation authorization.
+- [X] T003 Create sanitized frozen fixture/catalogue/EPG evidence inputs in proposed backend/supabase/functions/lounge-sports-candidates/test/fixtures/; record hashes and exclusion IDs in specs/001-live-sports-reliability/verification.md. Include current successful import metadata and synthetic clock cases. Completion: no URLs/credentials, repeatable snapshot replay. Depends:T002 and implementation authorization.
 - [ ] T004 Define shared identity/evidence/exclusion fields in proposed backend/supabase/functions/lounge-sports-candidates/matcher.mjs and Android features/sports data models. Enforce “Missing end explicitly nullable; inferred duration policy recorded”, “Regional editorial identity evidenced, not inferred from prefix alone”, and “superseded generations cannot complete current state” where applicable. Preserve existing IDs; inputs bounded per contracts/candidate-and-ui.md. Completion: schema/contract cases fail safely; do not implement scoring yet. Depends:T003.
 
 ## Phase 3: US1 Correct fixture candidates (P1)
@@ -28,7 +28,7 @@ Independent completion: S01-S03,E01-E02 pass; existing category hiding/favourite
 
 ## Phase 5: US3 Guide and backup audits (P1)
 Independent completion: G01-G03,F01-F02 receive per-service results; an unverified playback row cannot be marked complete.
-- [ ] T013 [US3] Trace EPG mapping ingestion/ownership and prepare source-scoped old/new mapping manifest in specs/001-live-sports-reliability/research.md for each beIN/Fox/Kayo target. Completion: missing state versus empty versus content mismatch distinguished; no guessed mapping. Depends:T003.
+- [X] T013 [US3] Trace EPG mapping ingestion/ownership and prepare source-scoped old/new mapping manifest in specs/001-live-sports-reliability/research.md for each beIN/Fox/Kayo target. Completion: missing state versus empty versus content mismatch distinguished; no guessed mapping. Depends:T003.
 - [ ] T014 [US3] After separate QA/runtime authorization, capture sequential guide-versus-content and buffering/track evidence for every target in specs/001-live-sports-reliability/verification.md using plan.md protocol. Completion:G01-G03,F01-F02 with actual observed identity; otherwise record blocked/unverified. Depends:T013 and QA isolation.
 - [ ] T015 [US3] Apply only evidenced mapping/visibility repairs in the owner files identified by T013, record exact paths and before/after diffs in specs/001-live-sports-reliability/verification.md, and add frozen mapping regression tests. Completion:correct programme/time replay, no cross-region inferred mapping, production unchanged. Depends:T014,T011. Actual mapping owner must be identified before this task can start.
 
@@ -56,3 +56,6 @@ Parallel examples after foundation: US1 backend fixture tests while US2 catalogu
 Review and authorize first. Prove US1 matching/legacy fallback as the first isolated increment, then curated Soccer/exclusion, evidenced guide repairs and player/hero increments. Each story has independent acceptance above; all seven scope items and preservation gates are required for overhaul completion. Do not release a partial overhaul merely because one increment passes.
 
 Task count22: setup2, foundation2, US1=5, US2=3, US3=3, US4=3, US5=2, final2. No implementation task is checked complete.
+
+## Implementation status, 5 November 2026
+User authorization is recorded in implementation-notes.md and supersedes the historical documentation-only restrictions. Only setup/snapshot and guide-ownership tasks above are complete. Other tasks contain partial implementation or await runtime evidence. Do not infer completion from code presence or a green unit suite. See implementation-verification.md for the matrix and remaining gates. T022 remains exclusively the independent verifier’s later task.
