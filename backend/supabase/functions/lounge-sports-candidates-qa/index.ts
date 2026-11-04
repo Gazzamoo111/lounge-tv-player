@@ -1,5 +1,5 @@
 import postgres from "npm:postgres@3.4.7";
-import {rankCandidates} from "./matcher.mjs";
+import {rankCandidates,discoveryCandidate} from "./matcher.mjs";
 
 const rawDbUrl=Deno.env.get("SUPABASE_DB_URL");
 if(!rawDbUrl)throw new Error("SUPABASE_DB_URL missing");
@@ -65,22 +65,7 @@ Deno.serve(async(req)=>{
     // Catalogue names and client-supplied fixture metadata are discovery hints only.
     // No programme/assignment evidence producer is connected to this QA endpoint.
     // Never fabricate observedAt, event identity, or reviewed service status.
-    const candidates=selected.map(({row,decision}:any)=>({
-      sourceId:"best",
-      providerItemId:Number(row.provider_item_id),
-      categoryId:String(row.category_id),
-      logicalServiceId:decision.logicalServiceId,
-      displayName:String(row.name),
-      logoUrl:row.artwork_url||null,
-      epgId:null,
-      serviceMarket:decision.market,
-      identityReviewed:false,
-      tier:"unverified",
-      reason:decision.reason,
-      expiresAtUtc:iso(now+300000),
-      evidence:[],
-      playbackObservation:{status:"unknown"},
-    }));
+    const candidates=selected.map(({row,decision}:any)=>discoveryCandidate(row,decision,now));
     return Response.json({
       contractVersion:2,eventId,generatedAtUtc:iso(now),
       catalogueRevision:latest?String(latest.poll_id):"unknown",
