@@ -6,11 +6,16 @@ import java.util.Locale
 
 /** Display-only deduplication. Backups and original provider rows are never deleted. */
 internal object LoungeLiveDuplicates {
-    data class Result(val hiddenIds: Set<Long>, val backups: Map<Long, List<Long>>, val hiddenByCategory: Map<Long, Int> = emptyMap())
+    data class Result(
+        val hiddenIds: Set<Long>,
+        val backups: Map<Long, List<Long>>,
+        val hiddenByCategory: Map<Long, Int> = emptyMap(),
+        val fallbackUrls: Map<Long, List<String>> = emptyMap(),
+    )
 
     private val quality = Regex("\\b(?:HEVC|FHD|HD|UHD|4K|RAW|VIP|60\\s*FPS|BK)\\b")
     private val cities = Regex("\\b(?:SYDNEY|NSW|MELBOURNE|VIC|PERTH|WA|BRISBANE|QLD|ADELAIDE|SA|CANBERRA|DARWIN|HOBART|GOLD.COAST|LISMORE|NEWCASTLE|NATIONAL)\\b")
-    private val prefix = Regex("^(?:AU|UK|US)\\s*(?:\\||:)\\s*")
+    private val prefix = Regex("^(?:AU|UK|US|NZ)\\s*(?:\\||:)\\s*")
     private val superscript = Regex("[ᴿᴬᵂ⁶⁰ᶠᵖˢ]+")
     private val dividers = Regex("^#{3,}")
     private val parentheses = Regex("\\([^)]*\\)")
@@ -20,10 +25,18 @@ internal object LoungeLiveDuplicates {
         name.startsWith("AU|", ignoreCase = true) -> "AU"
         name.startsWith("UK|", ignoreCase = true) -> "UK"
         name.startsWith("US|", ignoreCase = true) -> "US"
+        name.startsWith("NZ|", ignoreCase = true) -> "NZ"
         else -> null
     }
 
+    private fun nzSkyNumber(name: String): Int? {
+        val compact = name.uppercase(Locale.ROOT).replace(Regex("[^A-Z0-9]+"), "")
+        return Regex("SKYSPORTSNZ([1-9])").find(compact)?.groupValues?.get(1)?.toIntOrNull()
+            ?: Regex("SKYSPORTS?([1-9])").find(compact)?.groupValues?.get(1)?.toIntOrNull()
+    }
+
     private fun key(name: String, area: String): String {
+        if (area == "NZ") return nzSkyNumber(name)?.let { "SKY SPORT $it" } ?: "UNIQUE:$name"
         var n = superscript.replace(name.uppercase(Locale.ROOT), " ")
         n = prefix.replace(n, "")
         if (area == "AU") {
@@ -49,7 +62,8 @@ internal object LoungeLiveDuplicates {
     // Metadata priority is only a trial default, not verified stream reliability.
     private fun score(ch: ChannelEntity, cat: CategoryEntity): Int {
         val n = ch.name.uppercase(Locale.ROOT)
-        val au = if (region(cat.name) == "AU") {
+        val area = region(cat.name)
+        val au = if (area == "AU") {
             when {
                 n.contains("SYDNEY") || n.contains("NSW") -> 15
                 n.contains("NATIONAL") -> 12
@@ -57,8 +71,18 @@ internal object LoungeLiveDuplicates {
                 else -> 0
             }
         } else 0
+        val nz = if (area == "NZ") {
+            val c = java.text.Normalizer.normalize(cat.name, java.text.Normalizer.Form.NFKC)
+                .uppercase(Locale.ROOT).replace(Regex("[^A-Z0-9]+"), "")
+            when {
+                c.contains("SKYSPORTRAW") -> 1_000
+                c == "NZNEWZEALAND" -> 200
+                c == "NZSKYSPORTSNZ" -> 100
+                else -> 0
+            }
+        } else 0
         return (if (ch.epgChannelId.isNullOrBlank()) 0 else 100) +
-            (if (ch.logoUrl.isNullOrBlank()) 0 else 6) + au +
+            (if (ch.logoUrl.isNullOrBlank()) 0 else 6) + au + nz +
             (if (n.contains("HEVC")) -20 else 0) +
             (if (n.contains("UHD") || n.contains("4K")) -30 else 0) +
             (if (n.contains("FHD")) 8 else if (n.contains("HD")) 12 else 0)
@@ -67,9 +91,14 @@ internal object LoungeLiveDuplicates {
     fun choose(channels: List<ChannelEntity>, categories: Map<Long, CategoryEntity>,
                auditedSources: Set<Long>, hiddenCategories: Set<Long>): Result {
         val candidates = channels.filter { ch ->
+            val cat = ch.categoryId?.let(categories::get)
+            val area = cat?.let { region(it.name) }
+            val nzSky = area == "NZ" && nzSkyNumber(ch.name) != null
             ch.sourceId in auditedSources &&
-                ch.categoryId != null && ch.categoryId !in hiddenCategories &&
-                categories[ch.categoryId]?.let { region(it.name) != null } == true &&
+                ch.categoryId != null &&
+                area != null &&
+                (ch.categoryId !in hiddenCategories || nzSky) &&
+                (area != "NZ" || nzSky) &&
                 !dividers.containsMatchIn(ch.name.trim())
         }
         val groups = candidates.groupBy { ch ->
@@ -88,6 +117,7 @@ internal object LoungeLiveDuplicates {
         val hidden = HashSet<Long>()
         val backups = HashMap<Long, List<Long>>()
         val hiddenByCategory = HashMap<Long, Int>()
+        val fallbackUrls = HashMap<Long, List<String>>()
         for (group in groups.values) {
             if (group.size < 2) continue
             val sorted = group.sortedWith(compareByDescending<ChannelEntity> { ch ->
@@ -101,7 +131,8 @@ internal object LoungeLiveDuplicates {
                 hiddenByCategory[categoryId] = (hiddenByCategory[categoryId] ?: 0) + 1
             }
             backups[primary.id] = other
+            fallbackUrls[primary.id] = sorted.drop(1).map { it.streamUrl }.distinct()
         }
-        return Result(hidden, backups, hiddenByCategory)
+        return Result(hidden, backups, hiddenByCategory, fallbackUrls)
     }
 }

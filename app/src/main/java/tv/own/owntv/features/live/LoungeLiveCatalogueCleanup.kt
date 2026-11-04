@@ -47,6 +47,7 @@ internal object LoungeLiveCatalogueCleanup {
         "NA| HOCKEY LEAGUE",
         "NA| PPV & LIVE EVENTS",
         "NZ| NEW ZEALAND",
+        "NZ| SKY SPORTS NZ",
         "UK| APPLE TV F1 PPV",
         "UK| BBC STREAM PPV",
         "UK| CUP GAMES & INTERNATIONAL",
@@ -137,7 +138,6 @@ internal object LoungeLiveCatalogueCleanup {
         reviewedHidden: Set<String> = REVIEWED_HIDDEN,
     ): Boolean {
         val n = norm(name)
-        if (n.startsWith("nz| sky sport")) return false
         return reviewedHidden.any { norm(it) == n }
     }
 

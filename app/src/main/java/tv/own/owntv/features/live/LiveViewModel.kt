@@ -1288,7 +1288,18 @@ class LiveViewModel(
             !tv.own.owntv.features.setup.isLoungeXtream(source.type, source.url)
         ) return channel
 
-        val key = java.text.Normalizer.normalize(channel.name, java.text.Normalizer.Form.NFKD)
+        val categoryName = channel.categoryId?.let(categoryNamesById.value::get).orEmpty()
+        val fallbackUrl = duplicateSelection.value.fallbackUrls[channel.id]?.firstOrNull()
+        val routed = if (
+            fallbackUrl != null &&
+            bestNzSkyGroup(source.type, categoryName) == BestNzSkyGroup.RAW
+        ) {
+            // RAW is the customer-facing NZ Sky Sport stream. A hidden provider duplicate is carried
+            // as ExoPlayer's final direct-source rung so a genuine RAW failure still has one rescue path.
+            channel.copy(directSource = fallbackUrl)
+        } else channel
+
+        val key = java.text.Normalizer.normalize(routed.name, java.text.Normalizer.Form.NFKD)
             .uppercase()
             .filter { it.isLetterOrDigit() }
         val userAgent = "User-Agent: otg/1.5.1 (AppleTv Apple TV 4; tvOS16.0; appletv.client) libcurl/7.58.0 OpenSSL/1.0.2o zlib/1.2.11 clib/1.8.56"
@@ -1328,7 +1339,7 @@ class LiveViewModel(
                 manifestType = "hls",
                 directSource = null,
             )
-            else -> channel
+            else -> routed
         }
     }
 

@@ -76,9 +76,12 @@ class LoungeLiveCatalogueCleanupTest {
         assertEquals("US · Sports Network", LoungeLiveCatalogueCleanup.categoryTitle("US| SPORTS NETWORK"))
     }
 
-    @Test fun keepsNzGenericSkyAlongsideRaw() {
+    @Test fun rawSkyFolderIsKeptWhileGenericSkyFolderIsHiddenByDefault() {
+        val plan = LoungeLiveCatalogueCleanup.plan(audited)
+        assertFalse(5L in plan.hiddenIds)
+        assertTrue(12L in plan.hiddenIds)
+        assertTrue(13L in plan.hiddenIds)
         assertTrue(isAllowedBestNzSportsCategory(SourceType.XTREAM, "NZ| SKY SPORTS NZ"))
-        assertFalse(shouldHideBestNzChannel(SourceType.XTREAM, "NZ| SKY SPORTS NZ", "NZ| SKY NZ ESPN"))
         assertTrue(shouldHideBestNzChannel(SourceType.XTREAM, "NZ| NEW ZEALAND", "NZ| TVNZ 1 HD"))
     }
 }
