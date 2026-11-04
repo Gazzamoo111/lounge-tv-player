@@ -2343,7 +2343,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/home/MajorEventSelection.kt	stanley cup
 2	json	app/src/main/java/tv/own/owntv/features/sports/data/SportEvent.kt	competitionLogoUrl
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/data/SportEvent.kt	https://
-1	technical	app/src/main/java/tv/own/owntv/features/home/HeroEventPresentation.kt	 
+1	empty	app/src/main/java/tv/own/owntv/features/home/HeroEventPresentation.kt	\0
 1	regex	app/src/main/java/tv/own/owntv/features/home/HeroEventPresentation.kt	\\b(women|women's|womens|female|ladies|girls)\\b
 1	technical	app/src/main/java/tv/own/owntv/features/home/HeroEventPresentation.kt	nrlw
 1	technical	app/src/main/java/tv/own/owntv/features/home/HeroEventPresentation.kt	wta
