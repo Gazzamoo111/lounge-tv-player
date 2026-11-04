@@ -134,7 +134,11 @@ fun SportsMatchScreen(
     }
 
     val sep = stringResource(R.string.content_epg_bits_separator)
-    val shown = state.list.shown
+    var alternativesPage by remember(m.key) { mutableStateOf(-1) }
+    val allOptions = state.list.shown
+    val recommendations = allOptions.filter { it.tier != WatchTier.LIKELY }.take(6)
+    val alternatives = allOptions.filter { it !in recommendations }
+    val shown = if (alternativesPage < 0) recommendations else alternatives.drop(alternativesPage * 12).take(12)
     val zap = shown.map { it.channel }
     val play: (WatchOption) -> Unit = { o -> vm.playedFrom(m, shown, o.channel); onPlayChannel(o.channel, zap) }
     // Back from the player: focus the channel that was playing, not the first.
@@ -241,6 +245,20 @@ fun SportsMatchScreen(
                 FilterChips(state.filter, onOpenFilters)
                 // Ends above the key hints at the bottom of the screen, which would otherwise cover the last rows.
                 LazyColumn(Modifier.weight(1f).padding(top = 6.mpx, bottom = 84.mpx).focusRestorer().focusGroup()) {
+                    if (alternatives.isNotEmpty()) {
+                        item {
+                            StageButton(
+                                text = if (alternativesPage < 0) "Find other channels (${alternatives.size})" else "Recommendations",
+                                onClick = { alternativesPage = if (alternativesPage < 0) 0 else -1 },
+                            )
+                        }
+                    }
+                    if (alternativesPage >= 0 && (alternativesPage + 1) * 12 < alternatives.size) {
+                        item { StageButton(text = "Next channels", onClick = { alternativesPage++ }) }
+                    }
+                    if (alternativesPage > 0) {
+                        item { StageButton(text = "Previous channels", onClick = { alternativesPage-- }) }
+                    }
                     items(shown, key = { it.channel.id }) { o ->
                         ChannelRow(
                             o, m,
@@ -586,9 +604,9 @@ internal fun ChannelRow(o: WatchOption, m: Match, onClick: () -> Unit, onHold: (
                 ?.removePrefix(BACKEND_CONFIDENCE_PREFIX)
             val (color, icon, text) = when {
                 playing -> Triple(StageColors.Muted, null, stringResource(R.string.sports_playing_now))
-                backendConfidence == "definite" -> Triple(TierGuide, OwnTVIcon.LIVE_TV, stringResource(R.string.sport_backend_definite))
-                backendConfidence == "likely" -> Triple(TierEvent, OwnTVIcon.LIVE_TV, stringResource(R.string.sport_backend_likely))
-                backendConfidence == "maybe" -> Triple(StageColors.Muted, null, stringResource(R.string.sport_backend_maybe))
+                backendConfidence == "verified" -> Triple(TierGuide, OwnTVIcon.LIVE_TV, "Verified fixture · playback untested")
+                backendConfidence == "plausible" -> Triple(TierEvent, OwnTVIcon.LIVE_TV, "Plausible broadcast · programme unconfirmed")
+                backendConfidence != null -> Triple(StageColors.Muted, null, "Unverified discovery")
                 o.tier == WatchTier.GUIDE -> Triple(TierGuide, OwnTVIcon.EPG, o.guideTitle?.let { stringResource(R.string.sports_reason_guide, it) } ?: stringResource(R.string.sports_confirmed))
                 o.tier == WatchTier.EVENT -> Triple(TierEvent, OwnTVIcon.LIVE_TV, stringResource(R.string.sports_reason_event))
                 o.tier == WatchTier.REMEMBERED -> Triple(TierPick, OwnTVIcon.STAR, stringResource(R.string.sports_reason_pick, leagueName(m)))

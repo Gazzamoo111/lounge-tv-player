@@ -25,6 +25,7 @@ import kotlinx.coroutines.CancellationException
 data class SportLoungeDiscoverySnapshot(
     val matches: List<Match> = emptyList(),
     val updatedAt: Long? = null,
+    val statusObservedAt: Map<String, Long> = emptyMap(),
     val failedFeeds: Int = 0,
     val heroEditorialByMatchKey: Map<String, tv.own.owntv.features.sports.data.SportEventEditorial> = emptyMap(),
 )
@@ -76,6 +77,7 @@ class SportLoungeDiscovery(
         return SportLoungeDiscoverySnapshot(
             matches = SportLoungeRules.dedupe(entries.mapNotNull { it.toMatch() }),
             updatedAt = entries.maxOfOrNull { it.lastSuccessfulUpdateMs },
+            statusObservedAt = entries.mapNotNull { e -> e.toMatch()?.let { it.key to e.lastSuccessfulUpdateMs } }.toMap(),
             heroEditorialByMatchKey = editorialByKey(entries),
         )
     }
@@ -151,10 +153,31 @@ class SportLoungeDiscovery(
         val failures = results.count { it.third } + if (BOXING_FEED in failedFeeds) 1 else 0
         SportLoungeDiscoverySnapshot(
             matches = SportLoungeRules.dedupe(matches),
+            statusObservedAt = events.mapNotNull { e -> e.toMatch()?.let { it.key to e.lastSuccessfulUpdateMs } }.toMap(),
             updatedAt = events.maxOfOrNull { it.lastSuccessfulUpdateMs }
                 ?: nowMs.takeIf { failures < jobs.size + if (supplemental != null) 1 else 0 },
             failedFeeds = failures,
             heroEditorialByMatchKey = editorialByKey(events),
+        )
+    }
+
+    /** Refresh only live or imminently starting feeds. One caller owns this loop while Home is visible. */
+    suspend fun refreshVisible(previous: SportLoungeDiscoverySnapshot, now: Long): SportLoungeDiscoverySnapshot = coroutineScope {
+        val feeds = previous.matches.filter { it.isLive || it.startMs in now..(now + 60_000L) }.map { it.feed }.distinct()
+        val gate = Semaphore(MAX_PARALLEL)
+        val updates = feeds.mapNotNull(::discoveryLeague).map { league ->
+            async {
+                try {
+                    gate.withPermit { source.scoreboard(league, Instant.ofEpochMilli(now).atZone(ZoneId.of("Pacific/Auckland")).toLocalDate()) }
+                } catch (cancelled: CancellationException) { throw cancelled }
+                catch (_: Exception) { emptyList() }
+            }
+        }.awaitAll().flatten()
+        val byKey = updates.associateBy { it.key }
+        previous.copy(
+            matches = SportLoungeRules.dedupe(previous.matches.filterNot { it.key in byKey } + updates),
+            statusObservedAt = previous.statusObservedAt + updates.associate { it.key to now },
+            updatedAt = if (updates.isNotEmpty()) now else previous.updatedAt,
         )
     }
 

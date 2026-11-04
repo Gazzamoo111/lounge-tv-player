@@ -246,13 +246,23 @@ class SportsViewModel(
      */
     val majorHomeEvents: StateFlow<List<Match>> = flow {
         delay(HOME_ROW_DELAY_MS)
-        emitAll(combine(board, discoveryState) { active, discovered ->
+        var visible = discoveryState.value.first
+        var previousRefresh = 0L
+        val ticks = flow { while (true) { emit(System.currentTimeMillis()); delay(30_000L) } }
+        emitAll(combine(board, discoveryState, ticks) { active, discovered, now ->
+            if ((discovered.first.updatedAt ?: 0L) > (visible.updatedAt ?: 0L)) visible = discovered.first
+            if (now - previousRefresh >= 60_000L) {
+                previousRefresh = now
+                visible = kotlinx.coroutines.withTimeoutOrNull(15_000L) { discovery.refreshVisible(visible, now) } ?: visible
+            }
+            val authoritativeKeys = visible.matches.mapTo(hashSetOf()) { it.key }
             tv.own.owntv.features.home.MajorEventSelection.select(
-                active.matches + discovered.first.matches, System.currentTimeMillis(),
+                active.matches.filterNot { it.key in authoritativeKeys } + visible.matches, System.currentTimeMillis(),
+                statusObservedAt = visible.statusObservedAt,
             )
         })
-    }.flowOn(Dispatchers.Default)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    }.flowOn(Dispatchers.IO)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(0), emptyList())
 
     /**
      * Home only needs the Sport Lounge editorial metadata. Every event now gets
@@ -325,7 +335,11 @@ class SportsViewModel(
                     watchReader.found(m) { SportsMemory.rememberedFor(c, it) }
                         ?: watchReader.watchFor(listOf(m)) { SportsMemory.rememberedFor(c, it) }[m.key].orEmpty()
                 }
-                mergeBackendSportsOptions(backendJob.await(), localJob.await())
+                mergeBackendSportsOptions(backendJob.await(), localJob.await()).filterNot { option ->
+                    option.channel.sourceId == loungeSource?.id && tv.own.owntv.features.live.SportsChannelPolicy.excludedBest(
+                        option.channel.remoteId?.substringAfterLast(":"), option.channel.name,
+                    )
+                }
             }
             emit(ChannelSearch.Found(merged))
         }.flowOn(Dispatchers.Default)

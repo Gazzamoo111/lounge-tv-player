@@ -393,9 +393,18 @@ class LiveViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
 
+    private fun excludedSportsChannel(channel: ChannelEntity): Boolean {
+        val source = sourceById[channel.sourceId]
+        val best = channel.sourceId in loungeCuration.value.sourceIds ||
+            source?.let { tv.own.owntv.features.setup.isLoungeXtream(it.type, it.url) } == true ||
+            source?.url?.let { it.contains("connect.loungetv.nz") || it.contains("line.bestnz.vip") } == true ||
+            channel.remoteId?.startsWith("sport-backend:") == true
+        return best && SportsChannelPolicy.excludedBest(channel.remoteId?.substringAfterLast(":"), channel.name)
+    }
+
     /** One NZ visibility rule used by lists, saved history and channel zapping. */
     private fun showInNzSelection(channel: ChannelEntity): Boolean =
-        !shouldHideBestNzChannel(
+        !excludedSportsChannel(channel) && !shouldHideBestNzChannel(
             sourceById[channel.sourceId]?.type,
             channel.categoryId?.let(categoryNamesById.value::get),
             channel.name,
@@ -770,7 +779,9 @@ class LiveViewModel(
             }
         }
         .combine(loungeCuration) { items, plan ->
-            items.filterNot { (it.key as? LiveKey.Folder)?.id in plan.hiddenIds }
+            (items + if (plan.sourceIds.isNotEmpty() && items.none { it.title == "Soccer" }) listOf(
+                LiveRailItem(key = LiveKey.Folder(LoungeSoccerCatalogue.FOLDER_ID), title = "Soccer", section = LoungeLiveSection.SPORTS),
+            ) else emptyList()).filterNot { (it.key as? LiveKey.Folder)?.id in plan.hiddenIds }
                 .map { item ->
                     val folderId = (item.key as? LiveKey.Folder)?.id
                     if (folderId != null && item.title == plan.originalNames[folderId]) {
@@ -1065,6 +1076,7 @@ class LiveViewModel(
                 }.let { visible ->
                     buildMap<LiveKey, Int> {
                         put(LiveKey.All, visible.all)
+                        put(LiveKey.Folder(LoungeSoccerCatalogue.FOLDER_ID), LoungeSoccerCatalogue.project(snapshot, inputs.curation.sourceIds, emptyList(), System.currentTimeMillis()).size)
                         visible.folders.forEach { (categoryId, count) -> put(LiveKey.Folder(categoryId), count) }
                     }
                 }
@@ -1250,6 +1262,7 @@ class LiveViewModel(
 
     /** In-pane preview playback (no history) — triggered by the UI after the focus settles. */
     fun playPreview(channel: ChannelEntity) {
+        if (excludedSportsChannel(channel)) return
         if (!showInNzSelection(channel) || channel.categoryId != null && channel.categoryId in hiddenCategoryIds.value) return
         // Core keeps the preview off a promoted full-screen stream, re-mutes on a re-focus instead of
         // reloading, mints a Stalker link, and holds back on a one-session panel while mpv plays.
@@ -1357,6 +1370,7 @@ class LiveViewModel(
      * grid would drift the first time one of them changed.
      */
     fun tuneTile(engine: tv.own.owntv.player.LivePreviewEngine, channel: ChannelEntity, muted: Boolean) {
+        if (excludedSportsChannel(channel)) return
         viewModelScope.launch { live.playTile(engine, loungeNzPlaybackChannel(channel), muted) }
     }
 
@@ -1450,6 +1464,7 @@ class LiveViewModel(
 
     /** One provider category, in its manual order — the in-player category browser's pick. */
     private suspend fun channelsInCategory(categoryId: Long): List<ChannelEntity> {
+        if (categoryId == LoungeSoccerCatalogue.FOLDER_ID) return soccerChannels(ctx.value)
         val pid = currentProfileId() ?: return emptyList()
         val ctxKey = folderContextKeys.value[categoryId] ?: ""
         val channels = channelDao.snapshotByCategoryManual(categoryId, pid, ctxKey, ZAP_LIST_LIMIT)
@@ -1608,6 +1623,7 @@ class LiveViewModel(
 
     /** When the last CH+/- press moved the channel (elapsedRealtime); null before the first. */
     private var lastZapPressMs: Long? = null
+    private val tuneTrace = tv.own.owntv.player.TuneGeneration()
 
     /**
      * CH+/- step: show the channel at once, open the stream once the user stops moving.
@@ -1630,8 +1646,11 @@ class LiveViewModel(
      * costs at most two opens — the first step and the channel the user stops on.
      */
     private fun zapTo(channel: ChannelEntity) {
-        _previewChannel.value = channel
+        if (excludedSportsChannel(channel)) return
         val now = android.os.SystemClock.elapsedRealtime()
+        val generation = tuneTrace.select(now)
+        _previewChannel.value = channel
+        tuneTrace.mark(generation, "selected-ui", android.os.SystemClock.elapsedRealtime())
         val delayMs = zapTuneDelayMs(lastZapPressMs, now)
         // Logged only: single-connection panels follow the same rule (see ZAP_ISOLATED_PRESS_MS).
         val singleConnection = sourceById[channel.sourceId]?.maxConnections == 1 ||
@@ -1643,6 +1662,7 @@ class LiveViewModel(
         // Diagnostics only: the tune this press causes claims it and times its first frame from here.
         tv.own.owntv.player.ZapTiming.shared.markPress(now)
         pendingZapTuneJob?.cancel()
+        tuneTrace.mark(generation, "debounce-${delayMs}", now)
         if (delayMs <= 0L) {
             pendingZapTuneJob = null
             startTune(channel)
@@ -1650,6 +1670,8 @@ class LiveViewModel(
         }
         pendingZapTuneJob = viewModelScope.launch {
             delay(delayMs)
+            if (generation != tuneTrace.generation) return@launch
+            tuneTrace.mark(generation, "debounce-fired", android.os.SystemClock.elapsedRealtime())
             // Cleared before handing over, so this tune's own [startTune] doesn't cancel the job
             // it is running inside.
             pendingZapTuneJob = null
@@ -1809,6 +1831,7 @@ class LiveViewModel(
      *  [playChannel] when Live TV's external-player default is on. Stalker channels store a portal
      *  cmd rather than a URL, so it's resolved first — an external app can't mint one. */
     fun playExternal(channel: ChannelEntity) {
+        if (excludedSportsChannel(channel)) return
         viewModelScope.launch {
             val pid = currentProfileId() ?: return@launch
             if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, channel.categoryId, profileDao, categoryDao)) return@launch
@@ -1847,11 +1870,13 @@ class LiveViewModel(
     fun ensurePlaying(channel: ChannelEntity) {
         // A deliberate pick, not a CH+/- step: an unclaimed zap press must not be timed against it.
         tv.own.owntv.player.ZapTiming.shared.clear()
+        tuneTrace.select(android.os.SystemClock.elapsedRealtime())
         startTune(channel)
     }
 
     /** [ensurePlaying] without forgetting the zap press: the tune a CH+/- step opens, timed from that press. */
     private fun startTune(channel: ChannelEntity) {
+        if (excludedSportsChannel(channel)) return
         zapList.cancelPendingRebuild()
         // A deliberate pick supersedes a CH+/- step still waiting out its delay — otherwise the deferred
         // tune would land half a second later and drag the user off the channel they just chose.
@@ -1872,6 +1897,7 @@ class LiveViewModel(
      *  channel. Direct-tune's background rebuild path calls this without cancelling the rebuild
      *  so the in-flight rebuild it owns isn't killed by its own play. */
     private suspend fun playChannel(channel: ChannelEntity) {
+        if (excludedSportsChannel(channel)) return
         val pid = currentProfileId() ?: return
         if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, channel.categoryId, profileDao, categoryDao)) return
         val playback = loungeNzPlaybackChannel(channel)
@@ -1885,7 +1911,12 @@ class LiveViewModel(
         _catchupActive.value = false // tuning live ends any archive playback the HUD was showing
         // Core routes it (DRM, the pin, a learned panel refusal, the playlist, the setting), arms the
         // ladder and starts the engine — the same code the phone runs.
-        live.start(playback, getSource(playback.sourceId))
+        val traceGeneration = tuneTrace.generation
+        tuneTrace.mark(traceGeneration, "resolution-start", android.os.SystemClock.elapsedRealtime())
+        val source = getSource(playback.sourceId)
+        if (traceGeneration != tuneTrace.generation) return
+        tuneTrace.mark(traceGeneration, "controller-start", android.os.SystemClock.elapsedRealtime())
+        live.start(playback, source)
         recordLiveHistory(channel)
     }
 
@@ -1925,6 +1956,7 @@ class LiveViewModel(
      *  playback browse/zap context instead of replacing it with provider-category metadata. */
     suspend fun ensurePlayingByIdAsync(channelId: Long, zapChannels: List<ChannelEntity> = emptyList()): Boolean {
         val channel = channelDao.getById(channelId) ?: return false
+        if (excludedSportsChannel(channel)) return false
         if (zapChannels.isEmpty()) {
             // A single Home "continue watching" tile has no browse rail of its own.
             zapList.armFor(channel)
@@ -2360,10 +2392,18 @@ class LiveViewModel(
         return if (preferred >= 0) profileDao.resolveExistingProfileId(preferred) else null
     }
 
+    private suspend fun soccerChannels(c: Ctx): List<ChannelEntity> = LoungeSoccerCatalogue.project(
+        channelDao.snapshotAll(c.sourceIds.ifEmpty { listOf(-1L) }, VISIBLE_COUNT_LIMIT),
+        loungeCuration.value.sourceIds, emptyList(), System.currentTimeMillis(),
+    ).filter(::showInNzSelection)
+
     private fun pagingSource(
         key: LiveKey, c: Ctx, query: String, sort: SettingsRepository.SortMode,
         nzFolderIds: Set<Long> = nzFreeviewFolderIds.value,
     ): PagingSource<Int, ChannelEntity> {
+        if (key == LiveKey.Folder(LoungeSoccerCatalogue.FOLDER_ID)) return LoungeSoccerPagingSource {
+            soccerChannels(c).filter { query.isBlank() || it.name.contains(query, ignoreCase = true) }
+        }
         // Fixed launch five must lead in BOTH Playlist and A-Z modes. Keep the
         // existing manual order for every other NZ channel and every other folder.
         if (key is LiveKey.Folder && key.id in nzFolderIds && query.isBlank()) {

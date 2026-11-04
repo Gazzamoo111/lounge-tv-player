@@ -70,3 +70,6 @@ replay_pid*.log
 .env
 .env.*
 local.properties
+
+__pycache__/
+*.pyc

@@ -139,6 +139,11 @@ fun MpvVideoSurface(
                 modifier = viewModifier,
                 contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
             )
+            androidx.tv.material3.Text(
+                text = "Previous picture · loading",
+                color = Color.White,
+                modifier = Modifier.align(Alignment.TopStart).background(Color.Black),
+            )
         }
     }
 }

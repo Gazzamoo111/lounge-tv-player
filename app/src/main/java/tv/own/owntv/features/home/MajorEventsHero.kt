@@ -76,11 +76,13 @@ internal fun MajorEventsHero(
     modifier: Modifier = Modifier,
     editorialByEvent: Map<String, SportEventEditorial> = emptyMap(),
 ) {
-    var selected by remember { mutableIntStateOf(0) }
+    var selectedKey by remember { mutableStateOf<String?>(null) }
+    val selected = events.indexOfFirst { it.key == selectedKey }.coerceAtLeast(0)
     var progress by remember { mutableFloatStateOf(0f) }
     var resetClock by remember { mutableIntStateOf(0) }
     val currentIndex = selected.coerceIn(0, (events.size - 1).coerceAtLeast(0))
     val event = events.getOrNull(currentIndex)
+    LaunchedEffect(event?.key) { selectedKey = event?.key }
     val editorialCopy = event?.let { MajorEventEditorial.forMatch(it, editorialByEvent[it.key]) }
 
     // Same ten-second carousel and focusable progress pager as the original Home hero.
@@ -94,10 +96,10 @@ internal fun MajorEventsHero(
             delay(120L)
         }
         progress = 0f
-        selected = (currentIndex + 1) % events.size
+        selectedKey = events[(currentIndex + 1) % events.size].key
     }
     val navigate: (Int) -> Unit = { index ->
-        selected = index
+        selectedKey = events.getOrNull(index)?.key
         progress = 0f
         resetClock++
     }
@@ -181,7 +183,7 @@ internal fun MajorEventsHero(
                         else R.string.lounge_major_events_view
                     ),
                     icon = OwnTVIcon.PLAY,
-                    onClick = { onViewEvent(event) },
+                    onClick = { events.firstOrNull { it.key == event.key }?.let(onViewEvent) },
                     modifier = Modifier
                         .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
                         .onFocusChanged { if (it.hasFocus) onFocused() }

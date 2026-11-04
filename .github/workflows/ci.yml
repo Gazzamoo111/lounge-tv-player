@@ -31,7 +31,7 @@ jobs:
           path: shared-core
           persist-credentials: false
       - name: Verify Sport Lounge gateway, logos and artwork matching
-        run: node --test services/sport-lounge/test/*.test.mjs
+        run: node --test services/sport-lounge/test/*.test.mjs backend/supabase/functions/lounge-sports-candidates/test/*.test.mjs
       - name: Apply Lounge TV playback fixes to pinned core
         run: python3 scripts/patch_lounge_playback_core.py shared-core
       - uses: actions/setup-java@v4

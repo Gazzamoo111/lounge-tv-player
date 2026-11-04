@@ -13,13 +13,13 @@ import tv.own.owntv.features.sports.SportLoungeRules
 internal object MajorEventSelection {
     private const val WINDOW_MS = 7L * 24 * 60 * 60 * 1000
 
-    fun select(fixtures: List<Match>, nowMs: Long, limit: Int = 12): List<Match> {
+    fun select(fixtures: List<Match>, nowMs: Long, limit: Int = 12, statusObservedAt: Map<String, Long> = emptyMap()): List<Match> {
         if (limit <= 0) return emptyList()
         val candidates = SportLoungeRules.dedupe(fixtures).asSequence()
             .filter(::isHeadlineFixture)
             .filter { event ->
-                event.state == MatchState.IN ||
-                    (event.state == MatchState.PRE && event.startMs in nowMs..(nowMs + WINDOW_MS))
+                (event.state == MatchState.IN && statusObservedAt[event.key]?.let { nowMs - it in 0..300_000L } == true) ||
+                    (event.state == MatchState.PRE && event.startMs >= nowMs && event.startMs < nowMs + WINDOW_MS)
             }
             .sortedWith(compareByDescending<Match> { priority(it, nowMs) }
                 .thenBy { it.startMs }
@@ -27,6 +27,13 @@ internal object MajorEventSelection {
             .toList()
         // Variety matters: six generic basketball fixtures must not displace a boxing main event,
         // a rugby international or an important cricket match.
+        val live = candidates.filter { it.state == MatchState.IN }
+        val upcoming = candidates.filter { it.state != MatchState.IN }
+        return (varied(live, limit.coerceAtMost(12)) + varied(upcoming, (limit.coerceAtMost(12) - live.size).coerceAtLeast(0))).take(limit.coerceAtMost(12))
+    }
+
+    private fun varied(candidates: List<Match>, limit: Int): List<Match> {
+        if (limit <= 0) return emptyList()
         val selected = mutableListOf<Match>()
         val sportsUsed = mutableSetOf<Sport>()
         for (event in candidates) {

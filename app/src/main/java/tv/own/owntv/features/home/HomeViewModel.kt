@@ -229,6 +229,7 @@ class HomeViewModel(
             }
         }
         MediaType.LIVE -> channelDao.getById(h.itemId)?.let { c ->
+            if (excludedSports(c)) return@let null
             if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, c.categoryId, profileDao, categoryDao)) return@let null
             ContinueTarget(ContinueKind.LIVE, c.name, ContinueAction.LAST_CHANNEL, channelId = c.id)
         }
@@ -405,6 +406,12 @@ class HomeViewModel(
      * stays here is what only a television does with it: the caches keyed to the previous pass, and the
      * hero carousel's position.
      */
+    private suspend fun excludedSports(channel: ChannelEntity): Boolean {
+        val source = sourceDao.getById(channel.sourceId) ?: return false
+        return tv.own.owntv.features.setup.isLoungeXtream(source.type, source.url) &&
+            tv.own.owntv.features.live.SportsChannelPolicy.excludedBest(channel.remoteId?.substringAfterLast(":"), channel.name)
+    }
+
     private suspend fun loadHomeData(profileId: Long) {
         val previous = _uiState.value
         val data = feed.load(profileId)
@@ -420,8 +427,8 @@ class HomeViewModel(
             continueMovies = data.continueMovies,
             continueSeries = data.continueSeries,
             heroMetadata = previous.heroMetadata.filterKeys { key -> data.heroItems.any { it.homeKey == key } },
-            recentLive = data.recentLive,
-            favoriteLive = data.favoriteLive,
+            recentLive = data.recentLive.filterNot { excludedSports(it) },
+            favoriteLive = data.favoriteLive.filterNot { excludedSports(it) },
             favoriteMovies = data.favoriteMovies,
             favoriteSeries = data.favoriteSeries,
             config = data.config,

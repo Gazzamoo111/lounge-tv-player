@@ -1,0 +1,320 @@
+{
+  "observedAt": "2026-11-04T20:56:47Z",
+  "observationTimeApproximate": true,
+  "sourceType": "best_short_epg",
+  "latestSuccessfulLiveImport": 138,
+  "importCompletedAtUtc": "2026-11-01T12:35:00.273929Z",
+  "rows": [
+    {
+      "provider_item_id": "238264",
+      "name": "UK| BEIN SPORTS 2 HD",
+      "epg_channel_id": "beINSports4En.qa",
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "238265",
+      "name": "UK| BEIN SPORTS 1 HD",
+      "epg_channel_id": "beINSports5En.qa",
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "238266",
+      "name": "UK| BEIN SPORTS 3 HD",
+      "epg_channel_id": "beINSports6En.qa",
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "483921",
+      "name": "UK| BEIN SPORT 1 EN FHD",
+      "epg_channel_id": "BeinSports1EnEn.qa",
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "646965",
+      "name": "AU| FOX SPORTS 507 HD",
+      "epg_channel_id": null,
+      "is_present": true,
+      "guide_status": "empty",
+      "programme_count": 0,
+      "last_synced_at": "2026-11-01 10:42:05.22514+00",
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "646966",
+      "name": "AU| FOX SPORTS 506 HD",
+      "epg_channel_id": "FoxSports6.au",
+      "is_present": true,
+      "guide_status": "empty",
+      "programme_count": 0,
+      "last_synced_at": "2026-11-01 10:42:04.860162+00",
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "646967",
+      "name": "AU| FOX SPORTS 505 HD",
+      "epg_channel_id": "FoxSports5.au",
+      "is_present": true,
+      "guide_status": "empty",
+      "programme_count": 0,
+      "last_synced_at": "2026-11-01 10:42:04.503661+00",
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "646968",
+      "name": "AU| FOX SPORTS 504 HD",
+      "epg_channel_id": null,
+      "is_present": true,
+      "guide_status": "empty",
+      "programme_count": 0,
+      "last_synced_at": "2026-11-01 10:42:04.116129+00",
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "646969",
+      "name": "AU| FOX SPORTS 503 HD",
+      "epg_channel_id": "FoxSports3.au",
+      "is_present": true,
+      "guide_status": "empty",
+      "programme_count": 0,
+      "last_synced_at": "2026-11-01 10:42:03.710281+00",
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "646970",
+      "name": "AU| FOX SPORTS 502 HD",
+      "epg_channel_id": null,
+      "is_present": true,
+      "guide_status": "empty",
+      "programme_count": 0,
+      "last_synced_at": "2026-11-01 10:42:03.352727+00",
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "646971",
+      "name": "AU| FOX SPORTS 501 HD",
+      "epg_channel_id": null,
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "646973",
+      "name": "AU| ESPN 2 HD",
+      "epg_channel_id": null,
+      "is_present": true,
+      "guide_status": "empty",
+      "programme_count": 0,
+      "last_synced_at": "2026-11-01 10:43:05.285864+00",
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "646974",
+      "name": "AU| ESPN 1 HD",
+      "epg_channel_id": null,
+      "is_present": true,
+      "guide_status": "empty",
+      "programme_count": 0,
+      "last_synced_at": "2026-11-01 10:43:04.122338+00",
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "646975",
+      "name": "AU| BEIN SPORTS 3 HD",
+      "epg_channel_id": "beINSports3.au",
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "646976",
+      "name": "AU| BEIN SPORTS 2 HD",
+      "epg_channel_id": "beINSports2.au",
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "646977",
+      "name": "AU| BEIN SPORTS 1 HD",
+      "epg_channel_id": "beINSports1.au",
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "735944",
+      "name": "UK| BEIN SPORTS 3 EN SD",
+      "epg_channel_id": "beINSports1En.qa",
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "735945",
+      "name": "UK| BEIN SPORTS 2 EN SD",
+      "epg_channel_id": "beINSports3En.qa",
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "735946",
+      "name": "UK| BEIN SPORTS 1 EN SD",
+      "epg_channel_id": "BeinSports1EnEn.qa",
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "1348093",
+      "name": "UK| BEIN SPORTS AU 1",
+      "epg_channel_id": null,
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "1348102",
+      "name": "UK| BEIN SPORTS AU 2",
+      "epg_channel_id": null,
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "1348103",
+      "name": "UK| BEIN SPORTS AU 3",
+      "epg_channel_id": null,
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "1520167",
+      "name": "AU| KAYO - ESPN 2",
+      "epg_channel_id": null,
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "1520168",
+      "name": "AU| KAYO - ESPN 1",
+      "epg_channel_id": null,
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "1520169",
+      "name": "AU| KAYO - FOX SPORTS 506",
+      "epg_channel_id": "FoxSports6.au",
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "1520170",
+      "name": "AU| KAYO - FOX SPORTS 504 FOTTY",
+      "epg_channel_id": null,
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "1520171",
+      "name": "AU| KAYO - FOX SPORTS 502 LEAUGE",
+      "epg_channel_id": null,
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "1520173",
+      "name": "AU| KAYO - FOX SPORTS 507",
+      "epg_channel_id": null,
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "1520174",
+      "name": "AU| KAYO - FOX SPORTS 505",
+      "epg_channel_id": "FoxSports5.au",
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "1520175",
+      "name": "AU| KAYO - FOX SPORTS 503",
+      "epg_channel_id": null,
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    },
+    {
+      "provider_item_id": "1520176",
+      "name": "AU| KAYO - FOX SPORTS 501 CRICKET",
+      "epg_channel_id": null,
+      "is_present": true,
+      "guide_status": null,
+      "programme_count": null,
+      "last_synced_at": null,
+      "next_24h_programmes": 0
+    }
+  ],
+  "observationTimeNote": "Captured within one minute before this local timestamp; SQL coverage window uses database now()."
+}

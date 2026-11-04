@@ -1,3 +1,4 @@
+import { parseRequest, decide, rank, excluded } from "./matcher.mjs";
 
 import postgres from "npm:postgres@3.4.7";
 
@@ -65,9 +66,9 @@ function broadcasterMatchScore(name:string,broadcaster:string){
   if(b==="MAIN EVENT") return market==="AU" && hasPhrase(n,"MAIN EVENT") && !hasPhrase(n,"SKY SPORTS MAIN EVENT") ? 280 : 0;
   if(b==="KAYO SPORTS"||b==="KAYO") return market==="AU" && hasPhrase(n,"KAYO") ? 280 : 0;
   if(b==="FOXTEL") return market==="AU" && (hasPhrase(n,"FOXTEL")||hasPhrase(n,"MAIN EVENT")) ? 250 : 0;
-  if(b==="SEVEN"||b==="7PLUS"||b==="7 PLUS") return market==="AU" && (/\\bCHANNEL 7\\b/.test(n)||/\\b7PLUS\\b/.test(n)) ? 250 : 0;
+  if(b==="SEVEN"||b==="7PLUS"||b==="7 PLUS") return market==="AU" && (/\bCHANNEL 7\b/.test(n)||/\b7PLUS\b/.test(n)) ? 250 : 0;
   if(b==="THREENOW"||b==="THREE NOW") return market==="NZ" && (hasPhrase(n,"THREE")||hasPhrase(n,"THREENOW")) ? 250 : 0;
-  if(b.startsWith("SKY SPORT")) return market==="NZ" && hasPhrase(n,b) ? 290 : 0;
+  if(b.startsWith("SKY SPORT")&&!b.startsWith("SKY SPORTS")) return market==="NZ" && hasPhrase(n,b) ? 290 : 0;
   return hasPhrase(n,b) ? 240 : 0;
 }
 function sportNetworkScore(name:string,sport:string,league:string,broadcasters:string[]){
@@ -89,13 +90,13 @@ function sportNetworkScore(name:string,sport:string,league:string,broadcasters:s
     if(/\bSKY SPORT\b|\bSTAN SPORT\b|\bPREMIER SPORTS?\b|\bRUGBYPASS\b|\bSUPERSPORT\b|\bITV\b/i.test(n))score=Math.max(score,120);
   } else if(is("CRICKET")){
     if(/\bSKY SPORT\b|\bSKY SPORTS CRICKET\b|\bWILLOW\b|\bFOX CRICKET\b|\bSTAN SPORT\b/i.test(n))score=Math.max(score,125);
-  } else if(is("NFL","FOOTBALL")){
+  } else if(is("NFL") || (is("FOOTBALL") && !is("SOCCER") && !/PREMIER|CHAMPIONS|A LEAGUE/.test(l))){
     if(/\bNFL\b|\bREDZONE\b|\bESPN\b|\bCBS\b|\bFOX\b|\bNBC\b|\bPEACOCK\b|\bPRIME\b/i.test(n))score=Math.max(score,120);
   } else if(is("HOCKEY","NHL")){
     if(/\bNHL\b|\bESPN\b|\bTNT\b/i.test(n))score=Math.max(score,120);
   } else if(is("BASEBALL","MLB")){
     if(/\bMLB\b|\bESPN\b|\bFOX SPORTS?\b|\bTBS\b/i.test(n))score=Math.max(score,120);
-  } else if(is("SOCCER")){
+  } else if(is("SOCCER","FOOTBALL")){
     if(/\bSKY SPORTS (FOOTBALL|PREMIER LEAGUE|MAIN EVENT)\b|\bTNT SPORTS?\b|\bBEIN\b|\bDAZN\b|\bPARAMOUNT\b|\bPEACOCK\b/i.test(n))score=Math.max(score,115);
   } else if(is("MMA","BOXING","COMBAT")){
     if(/\bUFC\b|\bBOXING\b|\bDAZN\b|\bFITE\b|\bTRILLER\b|\bTNT SPORTS?\b|\bSKY SPORTS?\b/i.test(n))score=Math.max(score,125);
@@ -107,6 +108,8 @@ Deno.serve(async req=>{
   if(req.method!=="GET")return Response.json({error:"method_not_allowed"},{status:405});
   try{
     const u=new URL(req.url);
+    let request;
+    try { request=parseRequest(u); } catch (_) { return Response.json({error:"invalid_candidate_request"},{status:400}); }
     const sport=u.searchParams.get("sport")||"",league=u.searchParams.get("league")||"",title=u.searchParams.get("title")||"";
     const home=u.searchParams.get("home")||"",away=u.searchParams.get("away")||"";
     const broadcasters=(u.searchParams.get("broadcasters")||"").split("|").map(norm).filter(Boolean);
@@ -135,7 +138,7 @@ Deno.serve(async req=>{
     `;
     const candidates:any[]=[];
     for(const r of rows){
-      const name=String(r.name||"");if(!name||PLACEHOLDER.test(name))continue;
+      const name=String(r.name||"");if(!name||PLACEHOLDER.test(name)||excluded({sourceId:"best",providerItemId:String(r.provider_item_id),displayName:name}))continue;
       const fixtureName=FIXTURE.test(name);
       const eventish=fixtureName||/\bLIVE\b|\bNEXT\b|\bPPV\b|\bEVENT\b/i.test(name);
       const h=homeAliases.length>0&&matchesAny(name,homeAliases,fixtureName),a=awayAliases.length>0&&matchesAny(name,awayAliases,fixtureName);
@@ -156,7 +159,7 @@ Deno.serve(async req=>{
       // A named fixture involving only one target team is a different game, never a fallback.
       if(fixtureName&&teamsKnown&&!both)continue;
       score+=marketBoost+qualityBoost;
-      candidates.push({providerItemId:Number(r.provider_item_id),categoryId:String(r.category_id),name,logoUrl:r.artwork_url||null,epgId:r.epg_channel_id||null,confidence,score});
+      candidates.push({providerItemId:Number(r.provider_item_id),categoryId:String(r.category_id),name,logoUrl:r.artwork_url||null,epgId:r.epg_channel_id||null,confidence:"maybe",score});
     }
     candidates.sort((x,y)=>{
       const tier:Record<string,number>={definite:0,likely:1,maybe:2};
@@ -164,6 +167,32 @@ Deno.serve(async req=>{
     });
     const seen=new Set<number>();
     const unique=candidates.filter(x=>!seen.has(x.providerItemId)&&(seen.add(x.providerItemId),true));
-    return Response.json({event:{sport,league,title,home,away},candidates:unique,total:unique.length},{headers:{"Cache-Control":"private, max-age=30","Access-Control-Allow-Origin":"*"}});
-  }catch(e){console.error("SPORT_CANDIDATES",e);return Response.json({error:"sports_candidates_unavailable"},{status:503});}
+    // Legacy discovery remains usable but can never promote unsupported confidence.
+    if(request.contractVersion===1)return Response.json({event:{sport,league,title,home,away},candidates:unique,total:unique.length},{headers:{"Cache-Control":"private, max-age=30","Access-Control-Allow-Origin":"*"}});
+    const imports=await sql`select poll_id,completed_at from lounge_sync.best_inventory_imports where kind='live' and status='complete' order by completed_at desc limit 1`;
+    const snapshot=imports[0];
+    const importCompletedAtUtc=snapshot?.completed_at ? new Date(snapshot.completed_at).toISOString():null;
+    const catalogueRevision=snapshot ? String(snapshot.poll_id):"unknown";
+    // Inventory and guide names are not reviewed fixture identities. Until the isolated audit
+    // establishes service/programme identity these rows stay explicitly unverified.
+    const now=Date.now();
+    const decisions=rank(unique.map(r=>decide({...request,importCompletedAtUtc},{
+      sourceId:"best",providerItemId:String(r.providerItemId),logicalServiceId:"best:"+r.providerItemId,
+      displayName:r.name,name:r.name,logoUrl:r.logoUrl,epgId:r.epgId,
+      serviceMarket:null,identityReviewed:false,present:true,evidence:[],
+    },now))).all;
+    const cursor=u.searchParams.get("cursor");
+    let offset=0;
+    if(cursor){
+      const parts=cursor.split(":");
+      if(parts[0]!==encodeURIComponent(request.eventId)||parts[1]!==catalogueRevision||!/^\d+$/.test(parts[2]||""))return Response.json({error:"invalid_cursor"},{status:400});
+      offset=Number(parts[2]);
+    }
+    const page=decisions.slice(offset,offset+request.limit);
+    const next=offset+request.limit;
+    return Response.json({contractVersion:2,eventId:request.eventId,generatedAtUtc:new Date(now).toISOString(),catalogueRevision,importCompletedAtUtc,evidenceAsOfUtc:null,
+      expiresAtUtc:new Date(now+300000).toISOString(),catalogueStale:!importCompletedAtUtc||now-Date.parse(importCompletedAtUtc)>86400000,
+      candidates:page,totalEligible:decisions.length,nextCursor:next<decisions.length?encodeURIComponent(request.eventId)+":"+catalogueRevision+":"+next:null,
+    },{headers:{"Cache-Control":"private, no-store","Access-Control-Allow-Origin":"*"}});
+  }catch(_){console.error("SPORT_CANDIDATES unavailable");return Response.json({error:"sports_candidates_unavailable"},{status:503});}
 });

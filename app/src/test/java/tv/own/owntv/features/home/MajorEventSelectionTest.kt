@@ -74,4 +74,15 @@ class MajorEventSelectionTest {
         assertTrue("hockey headline missing", "hockey" in ids)
     }
 
+    @Test fun freshLiveAlwaysPrecedesUpcomingFinal() {
+        val live=fixture("live", Sport.BASKETBALL,"NBA",now-1000,MatchState.IN)
+        val final=fixture("final", Sport.MMA,"UFC championship")
+        assertEquals("live",MajorEventSelection.select(listOf(final,live),now,statusObservedAt=mapOf(live.key to now)).first().id)
+    }
+    @Test fun staleLiveAndExactSevenDayBoundaryAreExcluded() {
+        val live=fixture("live",Sport.BASKETBALL,"NBA",now-1000,MatchState.IN)
+        val edge=fixture("edge",Sport.BASKETBALL,"NBA",now+168*3600000L)
+        assertTrue(MajorEventSelection.select(listOf(live,edge),now,statusObservedAt=mapOf(live.key to now-300001)).isEmpty())
+    }
+
 }
