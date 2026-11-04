@@ -1085,7 +1085,7 @@ class LiveViewModel(
                 }.let { visible ->
                     buildMap<LiveKey, Int> {
                         put(LiveKey.All, visible.all)
-                        put(LiveKey.Folder(LoungeSoccerCatalogue.FOLDER_ID), LoungeSoccerCatalogue.project(snapshot, reviewedBestSourceIds(), emptyList(), System.currentTimeMillis()).size)
+                        put(LiveKey.Folder(LoungeSoccerCatalogue.FOLDER_ID), LoungeSoccerCatalogue.project(snapshot, c.sourceIds.toSet(), emptyList(), System.currentTimeMillis()).size)
                         visible.folders.forEach { (categoryId, count) -> put(LiveKey.Folder(categoryId), count) }
                     }
                 }
@@ -2418,7 +2418,7 @@ class LiveViewModel(
 
     private suspend fun soccerChannels(c: Ctx): List<ChannelEntity> = LoungeSoccerCatalogue.project(
         channelDao.snapshotAll(c.sourceIds.ifEmpty { listOf(-1L) }, VISIBLE_COUNT_LIMIT),
-        reviewedBestSourceIds(), emptyList(), System.currentTimeMillis(),
+        c.sourceIds.toSet(), emptyList(), System.currentTimeMillis(),
     ).filter(::showInNzSelection)
 
     private fun pagingSource(
