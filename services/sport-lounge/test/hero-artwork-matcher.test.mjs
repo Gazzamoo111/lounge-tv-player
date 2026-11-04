@@ -69,13 +69,13 @@ test("resolves exact rugby league international badges and league badge without 
 });
 test("never accepts a team badge from an untrusted host", () => {
  const item={...valid,
-  strHomeTeamBadge:"https://example.org/miami.png",
-  strAwayTeamBadge:"https://r2.thesportsdb.com/images/media/team/badge/warriors.png"
+  strHomeTeamBadge:"https://example.org/warriors.png",
+  strAwayTeamBadge:"https://r2.thesportsdb.com/images/media/team/badge/heat.png"
  };
  const assets=verifiedEventAssets(fixture,item);
  assert.ok(assets);
  assert.deepEqual(assets.teamLogos,[{
-  name:"Golden State Warriors",
-  url:"https://r2.thesportsdb.com/images/media/team/badge/warriors.png"
+  name:"Miami Heat",
+  url:"https://r2.thesportsdb.com/images/media/team/badge/heat.png"
  }]);
 });

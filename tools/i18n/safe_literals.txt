@@ -2301,3 +2301,26 @@
 1	technical	app/src/main/java/tv/own/owntv/ui/theme/Glass.kt	glassPosition
 2	empty	app/src/main/java/tv/own/owntv/ui/theme/OwnTVColors.kt	\0
 2	empty	app/src/main/java/tv/own/owntv/ui/theme/Theme.kt	\0
+1	empty	app/src/main/java/tv/own/owntv/features/home/HeroArtworkKind.kt	\0
+1	regex	app/src/main/java/tv/own/owntv/features/home/HeroArtworkKind.kt	\\b(bare ?knuckle|bkfc)\\b
+1	regex	app/src/main/java/tv/own/owntv/features/home/HeroArtworkKind.kt	\\b(boxing|boxerbook|wbc|wba|ibf|wbo)\\b
+1	regex	app/src/main/java/tv/own/owntv/features/home/HeroArtworkKind.kt	\\b(wwe|wrestlemania|smackdown|nxt|royal rumble|summerslam|survivor series)\\b
+1	technical	app/src/main/java/tv/own/owntv/features/home/HeroArtworkKind.kt	golden boy
+1	technical	app/src/main/java/tv/own/owntv/features/home/HeroArtworkKind.kt	matchroom
+1	url	app/src/main/java/tv/own/owntv/features/home/MajorEventsHero.kt	https://
+3	empty	app/src/main/java/tv/own/owntv/features/sports/data/HeroArtworkProvider.kt	\0
+1	technical	app/src/main/java/tv/own/owntv/features/sports/data/HeroArtworkProvider.kt	.png
+1	uri	app/src/main/java/tv/own/owntv/features/sports/data/HeroArtworkProvider.kt	/images/media/$kind/badge/
+1	uri	app/src/main/java/tv/own/owntv/features/sports/data/HeroArtworkProvider.kt	/medium
+1	uri	app/src/main/java/tv/own/owntv/features/sports/data/HeroArtworkProvider.kt	/small
+1	uri	app/src/main/java/tv/own/owntv/features/sports/data/HeroArtworkProvider.kt	/tiny
+1	regex	app/src/main/java/tv/own/owntv/features/sports/data/HeroArtworkProvider.kt	[^a-z0-9]+
+1	regex	app/src/main/java/tv/own/owntv/features/sports/data/HeroArtworkProvider.kt	\\p{M}+
+1	regex	app/src/main/java/tv/own/owntv/features/sports/data/HeroArtworkProvider.kt	\\s+
+1	json	app/src/main/java/tv/own/owntv/features/sports/data/HeroArtworkProvider.kt	competitionLogoUrl
+2	technical	app/src/main/java/tv/own/owntv/features/sports/data/HeroArtworkProvider.kt	https
+1	technical	app/src/main/java/tv/own/owntv/features/sports/data/HeroArtworkProvider.kt	league
+1	json	app/src/main/java/tv/own/owntv/features/sports/data/HeroArtworkProvider.kt	name
+1	technical	app/src/main/java/tv/own/owntv/features/sports/data/HeroArtworkProvider.kt	team
+1	json	app/src/main/java/tv/own/owntv/features/sports/data/HeroArtworkProvider.kt	teamLogos
+1	json	app/src/main/java/tv/own/owntv/features/sports/data/HeroArtworkProvider.kt	url
