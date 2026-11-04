@@ -397,6 +397,7 @@ class LiveViewModel(
         .filter { tv.own.owntv.features.setup.isLoungeXtream(it.type, it.url) }.map { it.id }
 
     private fun excludedSportsChannel(channel: ChannelEntity): Boolean {
+        if (SportsChannelPolicy.excludedBest(channel.remoteId?.substringAfterLast(":"), channel.name)) return true
         val source = sourceById[channel.sourceId]
         val best = channel.sourceId in loungeCuration.value.sourceIds ||
             source?.let { tv.own.owntv.features.setup.isLoungeXtream(it.type, it.url) } == true ||
