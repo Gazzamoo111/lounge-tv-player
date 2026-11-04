@@ -15,4 +15,14 @@ class SportsChannelPolicyTest {
   assertFalse(SportsChannelPolicy.guideUntrusted(null,"UK| BEIN SPORTS 1 EN FHD"))
   assertFalse(SportsChannelPolicy.guideUntrusted(null,"AU| FOX SPORTS 503 HD"))
  }
+ @Test fun mapsFox501To507GuideIds() {
+  assertEquals("FOXCricket.au", SportsChannelPolicy.foxGuideId("best:646971","Renamed"))
+  assertEquals("FoxLeague.au", SportsChannelPolicy.foxGuideId(null,"AU| KAYO - FOX SPORTS 502 LEAUGE"))
+  assertEquals("FoxSports3.au", SportsChannelPolicy.foxGuideId("646969","AU| FOX SPORTS 503 HD"))
+  assertEquals("FoxFooty.au", SportsChannelPolicy.foxGuideId("1520170","Renamed"))
+  assertEquals("FoxSports5.au", SportsChannelPolicy.foxGuideId("646967","Renamed"))
+  assertEquals("FoxSports6.au", SportsChannelPolicy.foxGuideId("646966","Renamed"))
+  assertEquals("FoxSportsMore.au", SportsChannelPolicy.foxGuideId("646965","Renamed"))
+  assertNull(SportsChannelPolicy.foxGuideId(null,"AU| ESPN 2 HD"))
+ }
 }
