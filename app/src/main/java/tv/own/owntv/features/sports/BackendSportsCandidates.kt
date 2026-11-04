@@ -125,6 +125,13 @@ internal fun validatedBackendTier(version: Int, tier: String, evidenceValid: Boo
     else -> WatchTier.LIKELY
 }
 
+/** An assignment alone can only make a channel plausible, never fixture-verified. */
+internal fun evidenceSupportsClaim(tier: String, evidenceType: String): Boolean = when (tier) {
+    "verified" -> evidenceType in setOf("programme", "event-feed")
+    "plausible" -> evidenceType in setOf("programme", "event-feed", "assignment")
+    else -> false
+}
+
 private fun parseUtc(value: String): Long = runCatching { Instant.parse(value).toEpochMilli() }.getOrDefault(Long.MIN_VALUE)
 
 /** Unknown intervals/identity fail closed; labels never establish trust. */
@@ -138,13 +145,7 @@ private fun candidateEvidenceValid(row: JSONObject, match: Match, now: Long): Bo
         val start = parseUtc(e.optString("startUtc"))
         val end = parseUtc(e.optString("endUtc"))
         val ageLimit = if (match.startMs > now) 86_400_000L else 300_000L
-        val evidenceType = e.optString("type")
-        val claimTier = row.optString("tier")
-        val typeSupportsClaim = when (claimTier) {
-            "verified" -> evidenceType in setOf("programme", "event-feed")
-            "plausible" -> evidenceType in setOf("programme", "event-feed", "assignment")
-            else -> false
-        }
+        val typeSupportsClaim = evidenceSupportsClaim(row.optString("tier"), e.optString("type"))
         e.optString("eventId") == match.key && e.optString("source").isNotBlank() &&
             now - observed in 0..ageLimit && start < end &&
             start <= match.startMs + 900_000L && end > match.startMs &&
