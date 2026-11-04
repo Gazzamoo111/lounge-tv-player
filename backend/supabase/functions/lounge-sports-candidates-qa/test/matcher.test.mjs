@@ -6,7 +6,7 @@ test("Champions League does not flood Stan or Paramount",()=>{
   for(const name of ["AU| STAN SPORT 1 HD","US| PARAMOUNT PLUS 41 HD"])assert.equal(classify(soccer,{providerItemId:1,name}),null);
 });
 test("AU beIN 1-3 are curated soccer fallbacks",()=>{
-  for(const id of [1,2,3])assert.equal(classify(soccer,{providerItemId:id,name:"AU| BEIN SPORTS "+id+" HD"})?.tier,"plausible");
+  for(const id of [1,2,3])assert.equal(classify(soccer,{providerItemId:id,name:"AU| BEIN SPORTS "+id+" HD"})?.tier,"unverified");
 });
 test("fixture-specific event beats generic networks",()=>{
   const rows=[
@@ -16,7 +16,7 @@ test("fixture-specific event beats generic networks",()=>{
   ];
   const result=rankCandidates(soccer,rows,6);
   assert.equal(result[0].row.providerItemId,10);
-  assert.equal(result[0].decision.tier,"verified");
+  assert.equal(result[0].decision.tier,"unverified");
 });
 test("recommendations are capped and quality variants dedupe",()=>{
   const rows=[
@@ -36,4 +36,17 @@ test("recommendations are capped and quality variants dedupe",()=>{
 test("AU ESPN1 is excluded",()=>{
   assert.equal(classify(soccer,{providerItemId:646974,name:"AU| ESPN 1 HD"}),null);
   assert.equal(classify(soccer,{providerItemId:1520168,name:"AU| KAYO - ESPN 1"}),null);
+});
+test("all sports: catalogue names and broadcaster hints never prove a live broadcast",()=>{
+  const fixtures=[
+    {sportId:"rugby",competitionId:"international",home:"New Zealand",away:"England"},
+    {sportId:"basketball",competitionId:"nba",home:"Lakers",away:"Celtics"},
+    {sportId:"cricket",competitionId:"international",home:"India",away:"Australia"},
+    {sportId:"mma",competitionId:"ufc",home:"Fighter One",away:"Fighter Two"},
+  ];
+  for(const fixture of fixtures){
+    const named=classify(fixture,{providerItemId:123,name:fixture.home+" vs "+fixture.away+" LIVE"});
+    assert.equal(named?.tier,"unverified");
+    assert.equal(classify(fixture,{providerItemId:456,name:"AU | ESPN 1 HD"}),null);
+  }
 });
