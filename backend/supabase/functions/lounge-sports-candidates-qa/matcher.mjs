@@ -78,13 +78,13 @@ export function classify(event,row){
   const soccer=isSoccer(event);
   if(soccer&&SOCCER_NOISE.test(name))return null;
   const exact=sideHit(name,event.home)&&sideHit(name,event.away);
-  if(exact)return {tier:"verified",logicalServiceId:"event:"+row.providerItemId,priority:0,market:market(name),reason:"fixture-name"};
+  if(exact)return {tier:"unverified",logicalServiceId:"event:"+row.providerItemId,priority:0,market:market(name),reason:"fixture-name-unconfirmed"};
   if(soccer){
     const stable=stableSoccer(name);
-    if(stable)return {tier:"plausible",logicalServiceId:stable.key,priority:stable.priority,market:market(name),reason:"curated-soccer-service"};
+    if(stable)return {tier:"unverified",logicalServiceId:stable.key,priority:stable.priority,market:market(name),reason:"curated-soccer-service-unconfirmed"};
   }
   if(stableNamed(name)&&broadcasterHit(name,event.broadcasters)){
-    return {tier:"plausible",logicalServiceId:"broadcaster:"+norm(name).replace(/\b(?:4K|UHD|FHD|HD|SD|HEVC|RAW)\b/g,"").trim(),priority:45,market:market(name),reason:"fixture-broadcaster"};
+    return {tier:"unverified",logicalServiceId:"broadcaster:"+norm(name).replace(/\b(?:4K|UHD|FHD|HD|SD|HEVC|RAW)\b/g,"").trim(),priority:45,market:market(name),reason:"fixture-broadcaster-unconfirmed"};
   }
   return null;
 }
