@@ -274,6 +274,7 @@ fun OwnTVShell(
     val liveCanZap by liveVm.canZap.collectAsStateWithLifecycle()
     // Full-screen is running on the ExoPlayer engine (a promoted Live preview) rather than mpv.
     val liveOnExo by liveVm.liveOnExo.collectAsStateWithLifecycle()
+    val livePreviewState by liveVm.previewEngine.state.collectAsStateWithLifecycle()
     val previousLiveChannel by liveVm.previousChannelTarget.collectAsStateWithLifecycle()
     // A catch-up archive programme is playing (Guide "Watch from start" or the Live TV catch-up picker)
     // rather than the live stream — the HUD swaps live-only controls for the VOD ones.
@@ -1581,6 +1582,17 @@ fun OwnTVShell(
                     player = player, modifier = Modifier.fillMaxSize(), autoFrameRate = isFull && autoFrameRate,
                     afrMatchResolution = afrMatchResolution, afrHoldSecs = afrPauseSecs,
                 )
+            }
+            // A newly selected live channel can leave the decoder's previous frame on its SurfaceView
+            // until Media3 renders the replacement. Cover that stale picture while the engine is loading;
+            // this is presentation-only and opens no extra provider connection.
+            if (liveOnExo && livePreviewState == tv.own.owntv.player.LivePreviewEngine.State.LOADING) {
+                Box(
+                    modifier = Modifier.fillMaxSize().background(Color.Black),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    tv.own.owntv.ui.components.OwnTVSpinner(sizeDp = if (isFull) 36 else 24)
+                }
             }
             // The item has no video track of its own (a radio channel, a music-only "movie"). Playing it is
             // correct — but a black screen with sound reads as a broken player, so name what is happening.
