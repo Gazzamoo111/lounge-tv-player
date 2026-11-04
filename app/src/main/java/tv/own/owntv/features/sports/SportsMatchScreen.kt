@@ -248,16 +248,16 @@ fun SportsMatchScreen(
                     if (alternatives.isNotEmpty()) {
                         item {
                             StageButton(
-                                text = if (alternativesPage < 0) "Find other channels (${alternatives.size})" else "Recommendations",
+                                text = if (alternativesPage < 0) stringResource(R.string.lounge_other_channels, alternatives.size) else stringResource(R.string.lounge_channel_recommendations),
                                 onClick = { alternativesPage = if (alternativesPage < 0) 0 else -1 },
                             )
                         }
                     }
                     if (alternativesPage >= 0 && (alternativesPage + 1) * 12 < alternatives.size) {
-                        item { StageButton(text = "Next channels", onClick = { alternativesPage++ }) }
+                        item { StageButton(text = stringResource(R.string.lounge_next_channels), onClick = { alternativesPage++ }) }
                     }
                     if (alternativesPage > 0) {
-                        item { StageButton(text = "Previous channels", onClick = { alternativesPage-- }) }
+                        item { StageButton(text = stringResource(R.string.lounge_previous_channels), onClick = { alternativesPage-- }) }
                     }
                     items(shown, key = { it.channel.id }) { o ->
                         ChannelRow(
@@ -604,9 +604,9 @@ internal fun ChannelRow(o: WatchOption, m: Match, onClick: () -> Unit, onHold: (
                 ?.removePrefix(BACKEND_CONFIDENCE_PREFIX)
             val (color, icon, text) = when {
                 playing -> Triple(StageColors.Muted, null, stringResource(R.string.sports_playing_now))
-                backendConfidence == "verified" -> Triple(TierGuide, OwnTVIcon.LIVE_TV, "Verified fixture · playback untested")
-                backendConfidence == "plausible" -> Triple(TierEvent, OwnTVIcon.LIVE_TV, "Plausible broadcast · programme unconfirmed")
-                backendConfidence != null -> Triple(StageColors.Muted, null, "Unverified discovery")
+                backendConfidence == "verified" -> Triple(TierGuide, OwnTVIcon.LIVE_TV, stringResource(R.string.lounge_fixture_verified))
+                backendConfidence == "plausible" -> Triple(TierEvent, OwnTVIcon.LIVE_TV, stringResource(R.string.lounge_fixture_plausible))
+                backendConfidence != null -> Triple(StageColors.Muted, null, stringResource(R.string.lounge_fixture_unverified))
                 o.tier == WatchTier.GUIDE -> Triple(TierGuide, OwnTVIcon.EPG, o.guideTitle?.let { stringResource(R.string.sports_reason_guide, it) } ?: stringResource(R.string.sports_confirmed))
                 o.tier == WatchTier.EVENT -> Triple(TierEvent, OwnTVIcon.LIVE_TV, stringResource(R.string.sports_reason_event))
                 o.tier == WatchTier.REMEMBERED -> Triple(TierPick, OwnTVIcon.STAR, stringResource(R.string.sports_reason_pick, leagueName(m)))

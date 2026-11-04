@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="lounge_soccer_folder">Soccer</string>
+    <string name="lounge_other_channels">Find other channels (%1$d)</string>
+    <string name="lounge_channel_recommendations">Recommendations</string>
+    <string name="lounge_next_channels">Next channels</string>
+    <string name="lounge_previous_channels">Previous channels</string>
+    <string name="lounge_fixture_verified">Verified fixture · playback untested</string>
+    <string name="lounge_fixture_plausible">Plausible broadcast · programme unconfirmed</string>
+    <string name="lounge_fixture_unverified">Unverified discovery</string>
+    <string name="lounge_previous_picture">Previous picture · loading</string>
+</resources>

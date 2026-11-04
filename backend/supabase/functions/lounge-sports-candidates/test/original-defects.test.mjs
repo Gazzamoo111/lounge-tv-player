@@ -1,11 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { stripTypeScriptTypes } from 'node:module';
-import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
 import vm from 'node:vm';
 
 // Replays the actual immutable source, not a hand-written approximation of the old matcher.
-const original=execFileSync('git',['show','d081d77cbec6f5f498a16c58250d96f440842c90:backend/supabase/functions/lounge-sports-candidates/index.ts'],{encoding:'utf8'});
+const original=fs.readFileSync(new URL('./fixtures/original-repository.ts',import.meta.url),'utf8');
 const pure=stripTypeScriptTypes(original.slice(original.indexOf('const SPORT_CATEGORY_IDS')));
 async function runSource(source){
  let handler,n=0;
@@ -21,4 +21,9 @@ test('R03/R07 original UK and football defects are reproducible',()=>{
  const context={};vm.createContext(context);
  vm.runInContext(pure.slice(0,pure.indexOf('Deno.serve'))+';globalThis.probe={uk:broadcasterMatchScore("UK| Sky Sports Premier League","Sky Sports Premier League"),football:sportNetworkScore("US| NFL RedZone","football","Premier League",[])}',context);
  assert.equal(context.probe.uk,0);assert(context.probe.football>0);
+});
+
+test('R01/R02 actual deployed v9 also promotes name-only fixtures',async()=>{
+ const deployed=fs.readFileSync(new URL('./fixtures/original-deployed-v9.ts',import.meta.url),'utf8');
+ assert.equal((await runSource(stripTypeScriptTypes(deployed))).candidates[0].confidence,'definite');
 });

@@ -77,17 +77,21 @@ internal fun MajorEventsHero(
     editorialByEvent: Map<String, SportEventEditorial> = emptyMap(),
 ) {
     var selectedKey by remember { mutableStateOf<String?>(null) }
-    val selected = events.indexOfFirst { it.key == selectedKey }.coerceAtLeast(0)
+    var previousKeys by remember { mutableStateOf(emptyList<String>()) }
+    var interacting by remember { mutableStateOf(false) }
+    val keys = events.map { it.key }
+    val currentKey = retainedHeroKey(selectedKey, previousKeys, keys)
+    val selected = events.indexOfFirst { it.key == currentKey }.coerceAtLeast(0)
     var progress by remember { mutableFloatStateOf(0f) }
     var resetClock by remember { mutableIntStateOf(0) }
     val currentIndex = selected.coerceIn(0, (events.size - 1).coerceAtLeast(0))
     val event = events.getOrNull(currentIndex)
-    LaunchedEffect(event?.key) { selectedKey = event?.key }
+    LaunchedEffect(keys) { selectedKey = currentKey; previousKeys = keys }
     val editorialCopy = event?.let { MajorEventEditorial.forMatch(it, editorialByEvent[it.key]) }
 
     // Same ten-second carousel and focusable progress pager as the original Home hero.
-    LaunchedEffect(events.map { it.key }, currentIndex, resetClock) {
-        if (events.size < 2) return@LaunchedEffect
+    LaunchedEffect(keys, currentIndex, resetClock, interacting) {
+        if (events.size < 2 || interacting) return@LaunchedEffect
         val started = System.nanoTime()
         while (true) {
             val elapsed = (System.nanoTime() - started) / 1_000_000L
@@ -114,6 +118,7 @@ internal fun MajorEventsHero(
                     listOf(Color(0xFF111F39), Color(0xFF142E4B), Color(0xFF122039))
                 )
             )
+            .onFocusChanged { interacting = it.hasFocus }
             .focusGroup()
     ) {
         if (event == null) {

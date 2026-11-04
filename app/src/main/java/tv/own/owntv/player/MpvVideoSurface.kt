@@ -140,7 +140,7 @@ fun MpvVideoSurface(
                 contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
             )
             androidx.tv.material3.Text(
-                text = "Previous picture · loading",
+                text = androidx.compose.ui.res.stringResource(tv.own.owntv.R.string.lounge_previous_picture),
                 color = Color.White,
                 modifier = Modifier.align(Alignment.TopStart).background(Color.Black),
             )

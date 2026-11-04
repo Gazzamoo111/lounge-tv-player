@@ -58,5 +58,11 @@ export function rank(rows){
  const sorted=rows.filter(Boolean).sort((a,b)=>order[a.tier]-order[b.tier] || Math.max(0,...b.evidence.map(e=>instant(e.observedAtUtc)||0))-Math.max(0,...a.evidence.map(e=>instant(e.observedAtUtc)||0)) || a.logicalServiceId.localeCompare(b.logicalServiceId));
  const services=new Map();
  for(const r of sorted){const k=r.sourceId+':'+r.logicalServiceId;const existing=services.get(k);if(existing)existing.variantIds.push(String(r.providerItemId));else services.set(k,{...r,variantIds:[String(r.providerItemId)]});}
- const all=[...services.values()];return {initial:all.filter(r=>r.tier!=='unverified').slice(0,6),all};
+ const all=[...services.values()];
+ const initial=all.filter(r=>r.tier!=='unverified').slice(0,6);
+ if(initial.length===6 && initial.every(r=>r.networkId && r.networkId===initial[0].networkId)){
+  const alternate=all.find(r=>r.tier===initial[5].tier && r.networkId && r.networkId!==initial[0].networkId && !initial.includes(r));
+  if(alternate)initial[5]=alternate;
+ }
+ return {initial,all};
 }

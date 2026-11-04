@@ -85,4 +85,10 @@ class MajorEventSelectionTest {
         assertTrue(MajorEventSelection.select(listOf(live,edge),now,statusObservedAt=mapOf(live.key to now-300001)).isEmpty())
     }
 
+    @Test fun identitySurvivesReorderAndRemovalChoosesNextSurvivor() {
+        assertEquals("B",retainedHeroKey("B",listOf("A","B","C"),listOf("C","B","A")))
+        assertEquals("C",retainedHeroKey("B",listOf("A","B","C"),listOf("A","C")))
+        assertEquals(null,retainedHeroKey("B",listOf("A","B","C"),emptyList()))
+    }
+
 }

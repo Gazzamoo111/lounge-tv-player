@@ -119,3 +119,14 @@ internal object MajorEventSelection {
         return headliner + local + sport + imminent
     }
 }
+
+/** Preserve identity and choose the next surviving item after removal, independent of list indices. */
+internal fun retainedHeroKey(selected: String?, previous: List<String>, current: List<String>): String? {
+    if (selected in current) return selected
+    val from = previous.indexOf(selected)
+    if (from >= 0) for (step in 1..previous.size) {
+        val next = previous[(from + step) % previous.size]
+        if (next in current) return next
+    }
+    return current.firstOrNull()
+}

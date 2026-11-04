@@ -393,6 +393,9 @@ class LiveViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
 
+    private fun reviewedBestSourceIds(): Set<Long> = loungeCuration.value.sourceIds + sourceById.values
+        .filter { tv.own.owntv.features.setup.isLoungeXtream(it.type, it.url) }.map { it.id }
+
     private fun excludedSportsChannel(channel: ChannelEntity): Boolean {
         val source = sourceById[channel.sourceId]
         val best = channel.sourceId in loungeCuration.value.sourceIds ||
@@ -779,8 +782,8 @@ class LiveViewModel(
             }
         }
         .combine(loungeCuration) { items, plan ->
-            (items + if (plan.sourceIds.isNotEmpty() && items.none { it.title == "Soccer" }) listOf(
-                LiveRailItem(key = LiveKey.Folder(LoungeSoccerCatalogue.FOLDER_ID), title = "Soccer", section = LoungeLiveSection.SPORTS),
+            (items + if (reviewedBestSourceIds().isNotEmpty() && items.none { it.title == appContext.getString(tv.own.owntv.R.string.lounge_soccer_folder) }) listOf(
+                LiveRailItem(key = LiveKey.Folder(LoungeSoccerCatalogue.FOLDER_ID), title = appContext.getString(tv.own.owntv.R.string.lounge_soccer_folder), section = LoungeLiveSection.SPORTS),
             ) else emptyList()).filterNot { (it.key as? LiveKey.Folder)?.id in plan.hiddenIds }
                 .map { item ->
                     val folderId = (item.key as? LiveKey.Folder)?.id
@@ -1076,7 +1079,7 @@ class LiveViewModel(
                 }.let { visible ->
                     buildMap<LiveKey, Int> {
                         put(LiveKey.All, visible.all)
-                        put(LiveKey.Folder(LoungeSoccerCatalogue.FOLDER_ID), LoungeSoccerCatalogue.project(snapshot, inputs.curation.sourceIds, emptyList(), System.currentTimeMillis()).size)
+                        put(LiveKey.Folder(LoungeSoccerCatalogue.FOLDER_ID), LoungeSoccerCatalogue.project(snapshot, reviewedBestSourceIds(), emptyList(), System.currentTimeMillis()).size)
                         visible.folders.forEach { (categoryId, count) -> put(LiveKey.Folder(categoryId), count) }
                     }
                 }
@@ -2031,6 +2034,7 @@ class LiveViewModel(
     /** Hand an archive programme to an external app (VLC, MX Player). No HUD, resume or engine toggle
      *  once it leaves, but external players cope with mid-GOP archive segments some providers serve. */
     fun playCatchupExternal(ch: ChannelEntity, programme: tv.own.owntv.core.database.entity.EpgProgrammeEntity) {
+        if (excludedSportsChannel(ch)) return
         viewModelScope.launch {
             val pid = currentProfileId() ?: return@launch
             if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, ch.categoryId, profileDao, categoryDao)) return@launch
@@ -2056,6 +2060,7 @@ class LiveViewModel(
 
     /** Replay a past programme from the channel's archive (seekable, like the Guide's "Watch from start"). */
     fun playCatchupProgramme(ch: ChannelEntity, programme: tv.own.owntv.core.database.entity.EpgProgrammeEntity) {
+        if (excludedSportsChannel(ch)) return
         // The controller's one tune job: a live tune still resolving is cancelled rather than starting
         // over the programme a moment later.
         live.launch {
@@ -2394,7 +2399,7 @@ class LiveViewModel(
 
     private suspend fun soccerChannels(c: Ctx): List<ChannelEntity> = LoungeSoccerCatalogue.project(
         channelDao.snapshotAll(c.sourceIds.ifEmpty { listOf(-1L) }, VISIBLE_COUNT_LIMIT),
-        loungeCuration.value.sourceIds, emptyList(), System.currentTimeMillis(),
+        reviewedBestSourceIds(), emptyList(), System.currentTimeMillis(),
     ).filter(::showInNzSelection)
 
     private fun pagingSource(
