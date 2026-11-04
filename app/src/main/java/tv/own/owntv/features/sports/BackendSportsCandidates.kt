@@ -64,6 +64,7 @@ internal class BackendSportsCandidateProvider(
                     val evidenceValid = version == 2 && candidateEvidenceValid(row, match, now) && !response.optBoolean("catalogueStale", true)
                     if (tv.own.owntv.features.live.SportsChannelPolicy.excludedBest(providerItemId.toString(), name)) continue
                     val tierName = if (evidenceValid) row.optString("tier") else "unverified"
+                    if (tierName !in setOf("verified", "plausible")) continue
                     val streamUrl = playbackEndpoint + "/sport/_/_/" + providerItemId + ".ts" +
                         "?username=" + q(username) + "&password=" + q(password)
                     val channel = ChannelEntity(
