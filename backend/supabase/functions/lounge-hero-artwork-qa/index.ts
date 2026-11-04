@@ -1,4 +1,4 @@
-import { verifiedEventArtwork } from "./matcher.mjs";
+import { verifiedEventAssets } from "./matcher.mjs";
 
 // Isolated read-only QA endpoint. No user data, database calls, stream matching or redirects.
 // Public key 123 is the documented TheSportsDB demo key. Optional server-side premium key.
@@ -47,7 +47,7 @@ async function findOne(fixture) {
     for (let order = 0; order < (fixture.sport === "racing" ? 1 : 2); order++) {
         try {
             const candidates = await searchSportDB(fixture, order);
-            art = candidates.map(c => verifiedEventArtwork(fixture, c)).find(Boolean) || null;
+            art = candidates.map(c => verifiedEventAssets(fixture, c)).find(Boolean) || null;
             if (art) break;
         } catch { /* providers can fail; use the guaranteed crest fallback */ }
     }

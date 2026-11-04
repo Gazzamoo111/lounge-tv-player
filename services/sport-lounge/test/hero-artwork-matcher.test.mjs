@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { verifiedEventArtwork } from "../../../backend/supabase/functions/lounge-hero-artwork-qa/matcher.mjs";
+import { verifiedEventArtwork, verifiedEventAssets } from "../../../backend/supabase/functions/lounge-hero-artwork-qa/matcher.mjs";
 
 const fixture = {
  key:"basketball/nba:miami-gsw", title:"Miami Heat at Golden State Warriors",
@@ -45,4 +45,37 @@ test("allows a precisely dated and named motorsport event", () => {
 test("does not confuse rugby league with union", () => {
  const rl={...fixture,sport:"rugby-league"};
  assert.equal(verifiedEventArtwork(rl,{...valid,strSport:"Rugby"}),null);
+});
+test("resolves exact rugby league international badges and league badge without preview downscaling", () => {
+ const rl={
+  key:"rugby-league/3:nz-samoa", title:"New Zealand Kiwis vs Samoa",
+  sport:"rugby-league", startUtcMs:Date.parse("2026-11-08T03:00:00Z"),
+  teams:[{name:"New Zealand Kiwis",shortName:"New Zealand"},{name:"Samoa",shortName:"Samoa"}]
+ };
+ const item={
+  dateEvent:"2026-11-08", strSport:"Rugby League",
+  strEvent:"New Zealand vs Samoa", strHomeTeam:"New Zealand", strAwayTeam:"Samoa",
+  strHomeTeamBadge:"https://r2.thesportsdb.com/images/media/team/badge/kiwis.png/small",
+  strAwayTeamBadge:"https://r2.thesportsdb.com/images/media/team/badge/samoa.png",
+  strLeagueBadge:"https://r2.thesportsdb.com/images/media/league/badge/pacific.png/medium"
+ };
+ const assets=verifiedEventAssets(rl,item);
+ assert.ok(assets);
+ assert.deepEqual(assets.teamLogos,[
+  {name:"New Zealand Kiwis",url:"https://r2.thesportsdb.com/images/media/team/badge/kiwis.png"},
+  {name:"Samoa",url:"https://r2.thesportsdb.com/images/media/team/badge/samoa.png"}
+ ]);
+ assert.equal(assets.competitionLogoUrl,"https://r2.thesportsdb.com/images/media/league/badge/pacific.png");
+});
+test("never accepts a team badge from an untrusted host", () => {
+ const item={...valid,
+  strHomeTeamBadge:"https://example.org/miami.png",
+  strAwayTeamBadge:"https://r2.thesportsdb.com/images/media/team/badge/warriors.png"
+ };
+ const assets=verifiedEventAssets(fixture,item);
+ assert.ok(assets);
+ assert.deepEqual(assets.teamLogos,[{
+  name:"Golden State Warriors",
+  url:"https://r2.thesportsdb.com/images/media/team/badge/warriors.png"
+ }]);
 });

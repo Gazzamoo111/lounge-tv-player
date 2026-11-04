@@ -24,7 +24,11 @@ class ReleaseTestGateTests(unittest.TestCase):
 
     def test_qa_build_cannot_bypass_the_tests(self):
         qa = (ROOT / '.github/workflows/ci.yml').read_text()
-        self.assertRegex(qa, r'(?m)^  test:\n    needs: tests\n')
+        self.assertIn('lounge-tv-internal-unverified-candidate', qa)
+        self.assertRegex(
+            qa,
+            r'(?m)^  approve:\n    name: Publish validated QA artifact\n    needs: \[tests, test\]\n',
+        )
         self.assertIn("name='com.loungetv.player.auditqa'", qa)
 
 

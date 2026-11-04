@@ -36,13 +36,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
 import tv.own.owntv.features.sports.data.SportEventEditorial
+import tv.own.owntv.features.sports.data.heroLogoKey
 import kotlinx.coroutines.delay
 import tv.own.owntv.R
 import tv.own.owntv.core.sports.model.Match
@@ -122,7 +123,7 @@ internal fun MajorEventsHero(
                 Text(stringResource(R.string.lounge_major_events_empty), style = stageText(20, 500), color = StageColors.Body)
             }
         } else {
-        SportsHeroBackdrop(event)
+        SportsHeroBackdrop(event, editorialByEvent[event.key])
 
         Column(
             Modifier.fillMaxSize().padding(start = start, top = 28.mpx, end = 24.mpx),
@@ -220,9 +221,11 @@ internal fun MajorEventsHero(
  * Live teams, venue, NZ time, reminder and Watch actions remain unchanged.
  */
 @Composable
-private fun androidx.compose.foundation.layout.BoxScope.SportsHeroBackdrop(event: Match) {
+private fun androidx.compose.foundation.layout.BoxScope.SportsHeroBackdrop(
+    event: Match,
+    editorial: SportEventEditorial?,
+) {
     val slot = sportArtworkSlot(event)
-    val resources = androidx.compose.ui.platform.LocalContext.current.resources
     val imageRes = when (slot) {
         0 -> R.drawable.lounge_hero_nfl
         1 -> R.drawable.lounge_hero_nba
@@ -232,21 +235,17 @@ private fun androidx.compose.foundation.layout.BoxScope.SportsHeroBackdrop(event
         5 -> R.drawable.lounge_hero_f1
         6 -> R.drawable.lounge_hero_league
         7 -> R.drawable.lounge_hero_cricket
+        8 -> R.drawable.lounge_hero_boxing
+        9 -> R.drawable.lounge_hero_wwe
         else -> R.drawable.lounge_hero_soccer
     }
-    val art = remember(resources, imageRes) {
-        android.graphics.BitmapFactory.decodeResource(resources, imageRes)?.asImageBitmap()
-    }
     Box(Modifier.fillMaxSize().background(eventArtworkBrush(event))) {
-        // Asset is rendered for EVERY event, including those with no artwork URL.
-        if (art != null) {
-            Image(
-                bitmap = art,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
+        Image(
+            painter = painterResource(imageRes),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize(),
+        )
         // Give the artwork a luminous finish while preserving its source pixels.
         Box(Modifier.fillMaxSize().drawBehind {
             val w = size.width
@@ -279,7 +278,10 @@ private fun androidx.compose.foundation.layout.BoxScope.SportsHeroBackdrop(event
             0.70f to Color.Transparent,
             1.0f to Color(0x66050B15),
         )))
-        if (!isFormulaOne(event)) EventMatchupOverlay(event)
+        if (!isFormulaOne(event)) {
+            CompetitionLogoOverlay(editorial)
+            EventMatchupOverlay(event, editorial)
+        }
         if (isFormulaOne(event)) {
             Text(
                 stringResource(R.string.lounge_hero_mark_f1),
@@ -293,16 +295,17 @@ private fun androidx.compose.foundation.layout.BoxScope.SportsHeroBackdrop(event
 }
 
 /** Stable sport-specific AI art mapping; no hardcoded fixture identities. */
-internal fun sportArtworkSlot(event: Match): Int = when (event.sport) {
-    Sport.FOOTBALL -> 0
-    Sport.BASKETBALL -> 1
-    Sport.RUGBY -> 2
-    Sport.RUGBY_LEAGUE, Sport.AUSSIE_RULES -> 6
-    Sport.MMA -> 4
-    Sport.RACING -> 5
-    Sport.SOCCER -> 3
-    Sport.CRICKET -> 7
-    else -> 3
+internal fun sportArtworkSlot(event: Match): Int = when (heroArtworkKind(event)) {
+    HeroArtworkKind.NFL -> 0
+    HeroArtworkKind.NBA -> 1
+    HeroArtworkKind.RUGBY -> 2
+    HeroArtworkKind.SOCCER -> 3
+    HeroArtworkKind.MMA -> 4
+    HeroArtworkKind.F1 -> 5
+    HeroArtworkKind.RUGBY_LEAGUE -> 6
+    HeroArtworkKind.CRICKET -> 7
+    HeroArtworkKind.BOXING -> 8
+    HeroArtworkKind.WWE -> 9
 }
 
 private fun isFormulaOne(event: Match): Boolean {
@@ -319,7 +322,10 @@ private fun isFormulaOne(event: Match): Boolean {
  * Never invents team identities or stretches their feed crests.
  */
 @Composable
-private fun androidx.compose.foundation.layout.BoxScope.EventMatchupOverlay(event: Match) {
+private fun androidx.compose.foundation.layout.BoxScope.EventMatchupOverlay(
+    event: Match,
+    editorial: SportEventEditorial?,
+) {
     val sides = event.competitors.take(2)
     if (sides.isEmpty()) {
         Text(
@@ -337,7 +343,11 @@ private fun androidx.compose.foundation.layout.BoxScope.EventMatchupOverlay(even
         verticalAlignment = Alignment.CenterVertically,
     ) {
         sides.forEachIndexed { index, side ->
-            val logoUrl = side.team.logoUrl?.takeIf { it.startsWith("https://") }
+            val logoUrl = (
+                editorial?.teamLogoUrls?.get(heroLogoKey(side.team.name))
+                    ?: editorial?.teamLogoUrls?.get(heroLogoKey(side.team.shortName))
+                    ?: side.team.logoUrl
+                )?.takeIf { it.startsWith("https://") }
             var logoReady by remember(event.key, logoUrl) { mutableStateOf(false) }
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -381,6 +391,26 @@ private fun androidx.compose.foundation.layout.BoxScope.EventMatchupOverlay(even
             }
         }
     }
+}
+
+@Composable
+private fun androidx.compose.foundation.layout.BoxScope.CompetitionLogoOverlay(
+    editorial: SportEventEditorial?,
+) {
+    val logoUrl = editorial?.competitionLogoUrl?.takeIf { it.startsWith("https://") } ?: return
+    var logoReady by remember(logoUrl) { mutableStateOf(false) }
+    AsyncImage(
+        model = logoUrl,
+        contentDescription = null,
+        contentScale = ContentScale.Fit,
+        onSuccess = { logoReady = true },
+        onError = { logoReady = false },
+        modifier = Modifier
+            .align(Alignment.TopEnd)
+            .padding(end = 48.mpx, top = 28.mpx)
+            .size(82.mpx)
+            .alpha(if (logoReady) 0.92f else 0f),
+    )
 }
 
 /** Render text from device translations when the cached backend supplies no editorial copy. */

@@ -1,7 +1,9 @@
-// QA-only match guard for public event artwork; no URLs are constructed from caller hosts.
+// QA-only match guard for public event artwork and badges; caller hosts are never trusted.
 export const normalizeName = value => String(value ?? "").normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "").toLowerCase()
     .replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
+
+const TRUSTED_HOSTS = new Set(["www.thesportsdb.com", "thesportsdb.com", "r2.thesportsdb.com"]);
 
 function nearEventDate(fixture, item) {
     const expected = Number(fixture.startUtcMs);
@@ -34,36 +36,83 @@ function nameMatches(name, shortName, candidate) {
     const value = " " + normalizeName(candidate) + " ";
     return variants.some(v => value.includes(" " + v + " "));
 }
-export function verifiedEventArtwork(fixture, item) {
+function identityMatches(fixture, item) {
     if (!fixture || !item || !nearEventDate(fixture, item) ||
-        !sportMatches(fixture.sport, item.strSport)) return null;
+        !sportMatches(fixture.sport, item.strSport)) return false;
     const participants = Array.isArray(fixture.teams) ? fixture.teams.slice(0, 2) : [];
     if (participants.length === 2) {
         const info = [item.strHomeTeam, item.strAwayTeam, item.strEvent]
             .filter(Boolean).join(" ");
-        if (!participants.every(team => nameMatches(team.name, team.shortName, info))) return null;
-        // Never accept a record that has one correct team but the wrong opponent.
+        if (!participants.every(team => nameMatches(team.name, team.shortName, info))) return false;
         const actualSides = [item.strHomeTeam, item.strAwayTeam].filter(Boolean);
         if (actualSides.length === 2 && !participants.every(team =>
-            actualSides.some(name => nameMatches(team.name, team.shortName, name)))) return null;
-    } else if (fixture.sport === "racing") {
+            actualSides.some(name => nameMatches(team.name, team.shortName, name)))) return false;
+        return true;
+    }
+    if (fixture.sport === "racing") {
         const actual = normalizeName(item.strEvent);
         const expected = normalizeName(fixture.title);
-        if (actual.length < 12 || !expected.includes(actual)) return null;
-    } else return null;
-
-    // Use only 1280x720 event thumbs/fan art. Reject the skinny 1000x185 banners.
+        return actual.length >= 12 && expected.includes(actual);
+    }
+    return false;
+}
+function trustedOriginalBadge(raw, kind) {
+    if (typeof raw !== "string") return null;
+    try {
+        const u = new URL(raw);
+        if (u.protocol !== "https:" || !TRUSTED_HOSTS.has(u.hostname)) return null;
+        let path = u.pathname.replace(/\/(?:medium|small|tiny)$/i, "");
+        if (!path.startsWith(`/images/media/${kind}/badge/`) || !path.toLowerCase().endsWith(".png")) return null;
+        return `https://${u.hostname}${path}`;
+    } catch {
+        return null;
+    }
+}
+function verifiedEventArtUrl(item) {
     const urls = [item.strFanart, item.strThumb, item.strFanart1, item.strFanart2];
     for (const raw of urls) {
         if (typeof raw !== "string") continue;
         try {
             const u = new URL(raw);
-            if (u.protocol !== "https:") continue;
-            if (!["www.thesportsdb.com", "thesportsdb.com", "r2.thesportsdb.com"].includes(u.hostname)) continue;
+            if (u.protocol !== "https:" || !TRUSTED_HOSTS.has(u.hostname)) continue;
             if (!u.pathname.startsWith("/images/media/event/")) continue;
             if (!/\/(?:thumb|fanart)\//.test(u.pathname)) continue;
-            return { url: u.href, source: "thesportsdb", confidence: "exact" };
+            return u.href;
         } catch { /* invalid source image */ }
     }
     return null;
+}
+function resolvedTeamLogos(fixture, item) {
+    const participants = Array.isArray(fixture.teams) ? fixture.teams.slice(0, 2) : [];
+    if (participants.length !== 2) return [];
+    const actual = [
+        { name: item.strHomeTeam, url: item.strHomeTeamBadge },
+        { name: item.strAwayTeam, url: item.strAwayTeamBadge },
+    ];
+    const used = new Set();
+    const logos = [];
+    for (const team of participants) {
+        const index = actual.findIndex((side, i) =>
+            !used.has(i) && side.name && nameMatches(team.name, team.shortName, side.name));
+        if (index < 0) continue;
+        used.add(index);
+        const url = trustedOriginalBadge(actual[index].url, "team");
+        if (url) logos.push({ name: team.name, url });
+    }
+    return logos;
+}
+export function verifiedEventAssets(fixture, item) {
+    if (!identityMatches(fixture, item)) return null;
+    return {
+        url: verifiedEventArtUrl(item),
+        source: "thesportsdb",
+        confidence: "exact",
+        teamLogos: resolvedTeamLogos(fixture, item),
+        competitionLogoUrl: trustedOriginalBadge(item.strLeagueBadge, "league"),
+    };
+}
+export function verifiedEventArtwork(fixture, item) {
+    const assets = verifiedEventAssets(fixture, item);
+    if (!assets?.url) return null;
+    return { url: assets.url, source: assets.source, confidence: assets.confidence };
 }

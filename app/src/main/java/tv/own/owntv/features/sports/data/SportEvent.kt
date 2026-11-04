@@ -37,6 +37,8 @@ data class SportEventEditorial(
     val importanceTag: String? = null,
     val competition: String? = null,
     val venue: String? = null,
+    val teamLogoUrls: Map<String, String> = emptyMap(),
+    val competitionLogoUrl: String? = null,
 )
 
 /** Provider-neutral fixture contract shared by the device cache and the proposed central gateway. */
