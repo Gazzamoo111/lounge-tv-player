@@ -1,6 +1,6 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
-import {classify,rankCandidates} from "../matcher.mjs";
+import {classify,rankCandidates,discoveryCandidate} from "../matcher.mjs";
 const soccer={sportId:"soccer",competitionId:"uefa-champions-league",home:"Fenerbahce",away:"Liverpool",broadcasters:[]};
 test("Champions League does not flood Stan or Paramount",()=>{
   for(const name of ["AU| STAN SPORT 1 HD","US| PARAMOUNT PLUS 41 HD"])assert.equal(classify(soccer,{providerItemId:1,name}),null);
@@ -49,4 +49,14 @@ test("all sports: catalogue names and broadcaster hints never prove a live broad
     assert.equal(named?.tier,"unverified");
     assert.equal(classify(fixture,{providerItemId:456,name:"AU | ESPN 1 HD"}),null);
   }
+});
+
+test("QA HTTP adapter never manufactures reviewed identity or programme evidence",()=>{
+  const candidate=discoveryCandidate({provider_item_id:123,category_id:"sport",name:"AU | BEIN SPORTS 1 HD"},
+    {tier:"verified",logicalServiceId:"AU:BEIN:1",market:"AU",reason:"fixture-name"},
+    Date.parse("2026-11-05T00:00:00Z"));
+  assert.equal(candidate.tier,"unverified");
+  assert.equal(candidate.identityReviewed,false);
+  assert.deepEqual(candidate.evidence,[]);
+  assert.equal(candidate.playbackObservation.status,"unknown");
 });
