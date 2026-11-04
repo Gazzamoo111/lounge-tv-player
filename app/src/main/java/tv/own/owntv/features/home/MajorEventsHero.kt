@@ -251,16 +251,18 @@ private fun androidx.compose.foundation.layout.BoxScope.SportsHeroBackdrop(
         Image(
             painter = painterResource(imageRes),
             contentDescription = null,
-            contentScale = ContentScale.FillBounds,
+            contentScale = ContentScale.Crop,
+            alignment = Alignment.Center,
             modifier = Modifier.fillMaxSize(),
         )
-        // Readable left-side copy with clean real crest artwork to the right.
+        // Keep the artwork visible across the full hero. Only the copy area gets
+        // a light readability fade instead of a manufactured dark half-screen.
         Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(
-            0.0f to Color(0xFF07111E),
-            0.28f to Color(0xF2071424),
-            0.47f to Color(0xBF0A1727),
-            0.66f to Color(0x330B1725),
-            1.0f to Color(0x1007101C),
+            0.0f to Color(0xB807111E),
+            0.24f to Color(0x78071424),
+            0.44f to Color(0x2E0A1727),
+            0.64f to Color.Transparent,
+            1.0f to Color.Transparent,
         )))
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
             0.0f to Color(0x18050B15),
