@@ -12,4 +12,22 @@ class LoungeSoccerCatalogueTest {
   assertEquals(listOf(500L,501L),LoungeSoccerCatalogue.project(noise+permanent+uk,setOf(1),current,11000).map{it.id})
   assertTrue(LoungeSoccerCatalogue.project(noise+permanent+uk,emptySet(),current,3000).isEmpty())
  }
+ @Test fun realCataloguedServicesPopulateSoccerForActiveLiveSources() {
+  fun ch(id:Long,source:Long,name:String,remote:String) =
+   ChannelEntity(id=id,sourceId=source,name=name,remoteId=remote,streamUrl="https://example.invalid/$id")
+  val live=82L
+  val all=listOf(
+   ch(501,live,"AU| BEIN SPORTS 1 HD","646977"),
+   ch(502,live,"AU| BEIN SPORTS 1 FHD","646977"),
+   ch(503,live,"UK| TNT SPORTS 1 FHD","30567"),
+   ch(504,live,"UK| SKY SPORTS FOOTBALL FHD","30498"),
+   ch(505,live,"AU| ESPN 1 HD","646974"),
+   ch(506,live,"AU| KAYO - ESPN 1","1520168"),
+   ch(507,live,"Soccer PPV 105","other:105"),
+   ch(508,1,"AU| BEIN SPORTS 2 HD","646976"),
+  )
+  assertEquals(listOf(501L,504L,503L),LoungeSoccerCatalogue.project(all,setOf(live),emptyList(),3000).map{it.id})
+  assertTrue(LoungeSoccerCatalogue.project(all,setOf(999L),emptyList(),3000).isEmpty())
+ }
+
 }
