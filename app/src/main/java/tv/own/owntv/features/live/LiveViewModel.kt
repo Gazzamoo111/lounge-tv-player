@@ -532,6 +532,7 @@ class LiveViewModel(
         .distinctUntilChanged { a, b -> a.first?.id == b.first?.id && a.second == b.second }
         .mapLatest { (ch, _) ->
             ch?.id to ch?.takeUnless { SportsChannelPolicy.guideUntrusted(it.remoteId, it.name) }
+                ?.let { guideChannel(it) }
                 ?.let { epgReader.nowNext(it, custom.value, epgOffset.value) }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null to null)
@@ -1311,12 +1312,14 @@ class LiveViewModel(
 
         val categoryName = channel.categoryId?.let(categoryNamesById.value::get).orEmpty()
         val fallbackUrl = duplicateSelection.value.fallbackUrls[channel.id]?.firstOrNull()
+        val foxAu = categoryName.startsWith("AU", ignoreCase = true) &&
+            SportsChannelPolicy.foxGuideId(channel.remoteId, channel.name) != null
         val routed = if (
             fallbackUrl != null &&
-            bestNzSkyGroup(source.type, categoryName) == BestNzSkyGroup.RAW
+            (bestNzSkyGroup(source.type, categoryName) == BestNzSkyGroup.RAW || foxAu)
         ) {
-            // RAW is the customer-facing NZ Sky Sport stream. A hidden provider duplicate is carried
-            // as ExoPlayer's final direct-source rung so a genuine RAW failure still has one rescue path.
+            // Hidden duplicates are last-resort direct-source rungs. They are opened only after the
+            // primary tune ladder fails, so normal playback still uses one provider connection.
             channel.copy(directSource = fallbackUrl)
         } else channel
 
@@ -2310,9 +2313,16 @@ class LiveViewModel(
      * guide simply has no entry here, and the row shows no second line. Returns only channels that
      * actually have something airing right now.
      */
+    private fun guideChannel(channel: ChannelEntity): ChannelEntity =
+        SportsChannelPolicy.foxGuideId(channel.remoteId, channel.name)
+            ?.let { channel.copy(epgChannelId = it) }
+            ?: channel
+
     suspend fun nowPlayingFor(channels: List<ChannelEntity>): Map<Long, tv.own.owntv.core.parser.XtEpgEntry> =
         epgReader.nowProgrammesFor(
-            channels.filterNot { SportsChannelPolicy.guideUntrusted(it.remoteId, it.name) },
+            channels
+                .filterNot { SportsChannelPolicy.guideUntrusted(it.remoteId, it.name) }
+                .map(::guideChannel),
             custom.value,
             epgOffset.value,
         )
