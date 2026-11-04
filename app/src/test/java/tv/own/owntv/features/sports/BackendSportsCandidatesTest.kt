@@ -23,6 +23,13 @@ class BackendSportsCandidatesTest {
         assertEquals(1L,merged.first().channel.id)
         assertTrue(merged.any{it.channel.id==2L})
     }
+    @Test fun `assignment evidence never makes a channel verified`() {
+        assertFalse(evidenceSupportsClaim("verified", "assignment"))
+        assertTrue(evidenceSupportsClaim("plausible", "assignment"))
+        assertTrue(evidenceSupportsClaim("verified", "programme"))
+        assertTrue(evidenceSupportsClaim("verified", "event-feed"))
+        assertFalse(evidenceSupportsClaim("unverified", "programme"))
+    }
     @Test fun `recommendations are bounded to eight`() {
         val merged=mergeBackendSportsOptions((1L..20L).map{option(it,WatchTier.LIKELY)}, emptyList())
         assertEquals(8,merged.size)
