@@ -17,8 +17,9 @@ env:
 jobs:
   tests:
     uses: ./.github/workflows/playback-tests.yml
+  # Build and full regression checks run in parallel. A separate gate publishes
+  # the installable QA artifact only when BOTH jobs have succeeded.
   test:
-    needs: tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -114,9 +115,31 @@ jobs:
               --expected-cert-sha256 "$EXPECTED_QA_CERT_SHA256" \
               --expected-version-code "$VERSION_CODE"
           fi
-      - name: Upload test APK
+      - name: Stage QA candidate (not yet regression-approved)
+        uses: actions/upload-artifact@v4
+        with:
+          name: lounge-tv-internal-unverified-candidate
+          path: app/build/outputs/apk/standard/debug/*.apk
+          if-no-files-found: error
+          retention-days: 1
+
+  approve:
+    name: Publish validated QA artifact
+    needs: [tests, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Retrieve compiled candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: lounge-tv-internal-unverified-candidate
+          path: validated-qa
+      - name: Confirm exactly one APK is present
+        run: |
+          set -euo pipefail
+          test "$(find validated-qa -type f -name '*.apk' | wc -l | tr -d ' ')" -eq 1
+      - name: Upload approved QA APK
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.LOUNGE_CORE_QA == 'true' && 'lounge-tv-catalogue-qa' || (github.event_name != 'workflow_dispatch' && 'lounge-tv-reliability-auditqa' || 'lounge-tv-qa') }}
-          path: app/build/outputs/apk/standard/debug/*.apk
+          path: validated-qa/*.apk
           if-no-files-found: error
