@@ -92,3 +92,9 @@ App tests: **280 passed, 0 failures/errors/skips, 53 suites**. Per-suite counts 
 Core patcher SHA256a0f99978ce2bd83ce413894ecf7c01226be9c510241d32727f74f010aad60565; playback-reliability.patch SHA2565fe79f211e82f282585ac3352bf98c01861e35e84c086b3917fa11d0cc4d8edc. No changes to either.
 
 Local build is compiled QA, not accepted runtime QA. Separate database/backend/provider isolation remains unproved, so do not use this artifact to imply successful production service testing. CI #503 failed because the original-source test assumed Git history; the source is now frozen as fixtures and #504 runs the corrected candidate.
+
+## Final automated regression result
+
+Pinned core: **1,249 passed** in153 suites. Player-core: **433 passed** in54 suites. App: **280 passed** in53 suites. Combined **1,962 tests, zero failures/errors/skips**. Node37 and Python27 also passed. GitHub QA #504 (https://github.com/Gazzamoo111/lounge-tv-player/actions/runs/41912723509) completed successfully: build, complete core/player/app regression and validated-artifact publication passed for application candidate87a03222cebc7fc8ffb00c387766f8e655c98961. Documentation-only headfe45a92f04a21efc77580afdd392d5356eea51f6 was compared and changes only specs/report files.
+
+These green tests do not resolve the implementation or runtime acceptance gaps listed above. Final verdict remains **incomplete / not production-ready**.
