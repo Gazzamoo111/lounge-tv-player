@@ -27,7 +27,7 @@ internal object LoungeSoccerCatalogue {
             !SportsChannelPolicy.excludedBest(ch.remoteId, ch.name) &&
             !Regex("NO EVENT|REPLAY|HIGHLIGHTS|OFFLINE",RegexOption.IGNORE_CASE).containsMatchIn(ch.name) &&
             (reviewedService(ch) != null || ch.id in active) }
-        return admitted.sortedWith(compareBy({ reviewedService(it) ?: "event:${it.id}" }, { it.id }))
+        return admitted.sortedWith(compareBy<ChannelEntity>({ reviewedService(it) == null }, { reviewedService(it) ?: "event:${it.id}" }, { it.id }))
             .distinctBy { it.sourceId to (reviewedService(it) ?: "event:${it.id}") }
     }
 }
