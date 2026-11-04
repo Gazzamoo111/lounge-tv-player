@@ -23,4 +23,8 @@ class BackendSportsCandidatesTest {
         assertEquals(1L,merged.first().channel.id)
         assertTrue(merged.any{it.channel.id==2L})
     }
+    @Test fun `recommendations are bounded to eight`() {
+        val merged=mergeBackendSportsOptions((1L..20L).map{option(it,WatchTier.LIKELY)}, emptyList())
+        assertEquals(8,merged.size)
+    }
 }
