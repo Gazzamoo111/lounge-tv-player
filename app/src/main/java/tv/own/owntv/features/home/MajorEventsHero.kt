@@ -214,8 +214,8 @@ internal fun MajorEventsHero(
 
 
 /**
- * Every Home Major Event has a locally packaged AI-designed sports background.
- * The single atlas keeps the APK lightweight and removes any dependency on
+ * Every Home Major Event has a locally packaged high-resolution sports background.
+ * Separate assets avoid atlas blurring and remove any dependency on
  * image APIs, remote URL availability, or event-specific image matching.
  * Live teams, venue, NZ time, reminder and Watch actions remain unchanged.
  */
@@ -223,19 +223,19 @@ internal fun MajorEventsHero(
 private fun androidx.compose.foundation.layout.BoxScope.SportsHeroBackdrop(event: Match) {
     val slot = sportArtworkSlot(event)
     val resources = androidx.compose.ui.platform.LocalContext.current.resources
-    val art = remember(resources, slot) {
-        val atlas = android.graphics.BitmapFactory.decodeResource(
-            resources, R.drawable.lounge_sports_hero_atlas
-        )
-        if (atlas == null) null else {
-            val width = atlas.width / 3
-            val height = atlas.height / 2
-            val panel = android.graphics.Bitmap.createBitmap(
-                atlas, (slot % 3) * width, (slot / 3) * height, width, height
-            )
-            if (panel !== atlas) atlas.recycle()
-            panel.asImageBitmap()
-        }
+    val imageRes = when (slot) {
+        0 -> R.drawable.lounge_hero_nfl
+        1 -> R.drawable.lounge_hero_nba
+        2 -> R.drawable.lounge_hero_rugby
+        3 -> R.drawable.lounge_hero_soccer
+        4 -> R.drawable.lounge_hero_combat
+        5 -> R.drawable.lounge_hero_f1
+        6 -> R.drawable.lounge_hero_league
+        7 -> R.drawable.lounge_hero_cricket
+        else -> R.drawable.lounge_hero_soccer
+    }
+    val art = remember(resources, imageRes) {
+        android.graphics.BitmapFactory.decodeResource(resources, imageRes)?.asImageBitmap()
     }
     Box(Modifier.fillMaxSize().background(eventArtworkBrush(event))) {
         // Asset is rendered for EVERY event, including those with no artwork URL.
@@ -292,13 +292,16 @@ private fun androidx.compose.foundation.layout.BoxScope.SportsHeroBackdrop(event
     }
 }
 
-/** Stable 3 x 2 AI art atlas mapping. No hardcoded fixture identities. */
+/** Stable sport-specific AI art mapping; no hardcoded fixture identities. */
 internal fun sportArtworkSlot(event: Match): Int = when (event.sport) {
     Sport.FOOTBALL -> 0
     Sport.BASKETBALL -> 1
-    Sport.RUGBY, Sport.RUGBY_LEAGUE, Sport.AUSSIE_RULES -> 2
+    Sport.RUGBY -> 2
+    Sport.RUGBY_LEAGUE, Sport.AUSSIE_RULES -> 6
     Sport.MMA -> 4
-    Sport.RACING -> if (isFormulaOne(event)) 5 else 3
+    Sport.RACING -> 5
+    Sport.SOCCER -> 3
+    Sport.CRICKET -> 7
     else -> 3
 }
 
