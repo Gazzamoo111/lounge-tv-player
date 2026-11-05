@@ -64,7 +64,7 @@ for theme in ['values/themes.xml', 'values-v31/themes.xml']:
     assert theme_text.count('@drawable/loungetv_system_launch_art') >= 9, f'Native splash missing on some icon styles: {theme}'
     assert '@drawable/loungetv_system_launch_logo' not in theme_text, 'Old undersized system splash is back'
 
-allowed = {'ci.yml', 'upstream-sync.yml', 'publish.yml', 'playback-hotfix-qa.yml', 'playback-tests.yml', 'db-rescue.yml', 'event-streams-qa.yml'}
+allowed = {'ci.yml', 'upstream-sync.yml', 'publish.yml', 'playback-hotfix-qa.yml', 'playback-tests.yml', 'db-rescue.yml', 'event-streams-qa.yml', 'sports-qa-smoke.yml'}
 actual = {x.name for x in (R/'.github/workflows').glob('*.yml')}
 assert actual <= allowed, f'Unexpected upstream workflows: {actual - allowed}'
 qa_workflow = (R/'.github/workflows/event-streams-qa.yml').read_text()
