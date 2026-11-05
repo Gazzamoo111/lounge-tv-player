@@ -25,6 +25,7 @@ test("exact NBA fixture feeds match while another NBA game does not",()=>{
   ];
   for(const row of exact)assert.equal(classify(nba,row,now)?.tier,"verified");
   assert.equal(classify(nba,{provider_item_id:1955373,name:"LIVE | BOS - CELTICS VS MIL - BUCKS | US: NBA PASS PPV 3"},now),null);
+  assert.equal(classify(nba,{provider_item_id:1949790,name:"US ESPN+ | NCAA Football: PHI vs. DET • CMU vs. EMU"},now),null);
 });
 
 test("generic NBA and single-team channels never become fixture recommendations",()=>{

@@ -19,10 +19,40 @@ function aliasesFor(event,side){
   const value=event[side];
   return cleanAliases(value?[value]:[]);
 }
+function sportContextHit(event,name){
+  const n=norm(name),sport=norm(event.sportId),competition=norm(event.competitionId);
+  if(sport.includes("BASKETBALL")){
+    if(competition.includes("NBA")&&/\\bWNBA\\b/.test(n))return false;
+    return /\\bNBA\\b|\\bNBL\\b|\\bBASKETBALL\\b/.test(n);
+  }
+  if(sport.includes("SOCCER")){
+    if(/\\bNFL\\b|\\bNCAA(?:F| FOOTBALL)\\b|AMERICAN FOOTBALL/.test(n))return false;
+    return /SOCCER|UEFA|CHAMPIONS LEAGUE|PREMIER LEAGUE|EPL|LA LIGA|SERIE A|BUNDESLIGA|FOOTBALL/.test(n);
+  }
+  if(sport.includes("FOOTBALL"))return /\\bNFL\\b|\\bNCAAF\\b|NCAA FOOTBALL|AMERICAN FOOTBALL/.test(n);
+  if(sport.includes("HOCKEY"))return /\\bNHL\\b|HOCKEY/.test(n);
+  if(sport.includes("BASEBALL"))return /\\bMLB\\b|BASEBALL/.test(n);
+  if(sport.includes("RUGBY LEAGUE"))return /RUGBY LEAGUE|\\bNRL\\b/.test(n);
+  if(sport.includes("RUGBY"))return /RUGBY/.test(n)&&!/RUGBY LEAGUE|\\bNRL\\b/.test(n);
+  if(sport.includes("CRICKET"))return /CRICKET|\\bT20\\b|\\bODI\\b|TEST MATCH/.test(n);
+  if(sport.includes("TENNIS"))return /TENNIS|\\bATP\\b|\\bWTA\\b/.test(n);
+  if(sport.includes("GOLF"))return /GOLF|\\bPGA\\b|\\bLPGA\\b/.test(n);
+  if(sport.includes("MMA"))return /\\bUFC\\b|\\bMMA\\b|\\bBKFC\\b/.test(n);
+  if(sport.includes("BOX"))return /BOXING/.test(n);
+  if(sport.includes("RACING"))return /FORMULA|\\bF1\\b|MOTOGP|RACING/.test(n);
+  return false;
+}
 function fixtureNamed(event,row){
   const name=String(row.name||row.displayName||"");
   const home=aliasesFor(event,"home"),away=aliasesFor(event,"away");
-  if(home.length&&away.length)return aliasHit(name,home)&&aliasHit(name,away);
+  if(home.length&&away.length){
+    const strongHome=home.filter(a=>norm(a).length>=4);
+    const strongAway=away.filter(a=>norm(a).length>=4);
+    if(strongHome.length&&strongAway.length&&aliasHit(name,strongHome)&&aliasHit(name,strongAway))return true;
+    // Three-letter abbreviations are ambiguous across sports (e.g. PHI/DET in NBA and NCAA).
+    // They are usable only when the provider row also names the selected sport/competition family.
+    return aliasHit(name,home)&&aliasHit(name,away)&&sportContextHit(event,name);
+  }
   const title=norm(event.title);
   return title.length>=10&&phrase(name,title);
 }

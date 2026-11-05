@@ -15,6 +15,7 @@ const rows=[
  {provider_item_id:1949811,name:"US (ESPN+ 101) | Basketball: 76ers vs. Pistons"},
  {provider_item_id:1955373,name:"LIVE | BOS - CELTICS VS MIL - BUCKS | US: NBA PASS PPV 3"},
  {provider_item_id:749756,name:"US| NBA TV HD"},
+ {provider_item_id:1949790,name:"US ESPN+ | NCAA Football: PHI vs. DET • CMU vs. EMU"},
 ];
 
 test("simultaneous NBA fixtures cannot exchange streams",()=>{
