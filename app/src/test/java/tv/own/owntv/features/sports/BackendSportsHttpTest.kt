@@ -21,6 +21,11 @@ class BackendSportsHttpTest {
         put("providerItemId",id);put("displayName","AU| BEIN SPORTS 1 HD");put("sourceId","best")
         put("serviceMarket","AU");put("logicalServiceId","AU:BEIN:1");put("identityReviewed",true);put("tier","verified")
         put("expiresAtUtc",Instant.ofEpochMilli(now+120_000).toString())
+        put("playbackObservation",JSONObject().apply {
+            put("status","verified");put("httpAccessible",true);put("decodedFrames",1)
+            put("providerItemId",id.toString());put("serviceId","AU:BEIN:1")
+            put("observedAtUtc",Instant.ofEpochMilli(now).toString());put("streamFingerprint","a".repeat(64))
+        })
         put("evidence",JSONArray().put(JSONObject().apply {
             put("type","programme");put("source","regression-only");put("eventId",match.key)
             put("sportId",match.sport.path);put("competitionId",match.feed);put("serviceId","AU:BEIN:1");put("market","AU")
@@ -60,8 +65,8 @@ class BackendSportsHttpTest {
     }
     @Test fun clientBoundsUnexpectedBackendFloodAndKeepsEspn2() {
         val rows=JSONArray();for(id in 1L..100L)rows.put(row(id))
-        assertEquals(6,request(body(rows).toString()).size)
-        val espn2=row(646973).put("displayName","AU| ESPN 2 HD").put("tier","unverified")
+        assertEquals(1,request(body(rows).toString()).size)
+        val espn2=row(646973).put("displayName","AU| ESPN 2 HD")
         val espn1=row(646974).put("displayName","renamed")
         assertEquals(listOf("sport-backend:646973"),request(body(JSONArray().put(espn1).put(espn2)).toString()).map{it.channel.remoteId})
     }

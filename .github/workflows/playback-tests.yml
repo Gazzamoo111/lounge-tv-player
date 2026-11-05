@@ -43,6 +43,22 @@ jobs:
           python3 scripts/extract_loungetv_hero_assets.py
           python3 scripts/check_branding.py
           PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/tests -p 'test_*.py'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: All-sport event evidence regressions
+        run: node --test services/event-streams-qa/test/*.test.mjs
+      - name: Collect and validate real fixtures in an isolated runtime
+        env:
+          QA_STREAM_URL_TEMPLATE: ${{ secrets.LOUNGE_SPORTS_QA_STREAM_TEMPLATE }}
+        run: |
+          python3 services/event-streams-qa/collect.py
+          node services/event-streams-qa/src/validate.mjs > outputs/event-streams-qa/validation.log
+          python3 services/event-streams-qa/probe.py
+          QA_HEALTH_DATA=outputs/event-streams-qa/health.json node services/event-streams-qa/src/validate.mjs > outputs/event-streams-qa/validation.log
+          QA_HEALTH_DATA=outputs/event-streams-qa/health.json node services/event-streams-qa/src/server.mjs > outputs/event-streams-qa/endpoint.log 2>&1 &
+          echo "SPORTS_QA_ENDPOINT=http://127.0.0.1:18764/candidates" >> "$GITHUB_ENV"
+          echo "QA_EVENT_CASES_FILE=$GITHUB_WORKSPACE/outputs/event-streams-qa/android-cases.json" >> "$GITHUB_ENV"
       - name: Core, playback and app unit tests without signing credentials
         env:
           QA_SIGNING_REQUIRED: 'false'
@@ -59,4 +75,5 @@ jobs:
             shared-core/core/build/test-results/**/*.xml
             shared-core/player-core/build/test-results/**/*.xml
             app/build/test-results/**/*.xml
+            outputs/event-streams-qa/
           if-no-files-found: warn

@@ -69,7 +69,7 @@ sealed interface ChannelSearch {
     data class Closed(val window: WatchWindow) : ChannelSearch
     data object NotSearched : ChannelSearch
     data object Searching : ChannelSearch
-    data class Found(val options: List<WatchOption>) : ChannelSearch
+    data class Found(val options: List<WatchOption>, val coverage: SportsStreamCoverage? = null) : ChannelSearch
 }
 
 /** The match page: the match, its summary and table from the board, and "Watch live" once searched. */
@@ -121,6 +121,7 @@ class SportsViewModel(
     private val settings: SettingsRepository,
     private val repository: SportsRepository,
     private val watchReader: WatchReader,
+    private val eventStreams: EventStreamResolver,
     private val onChannels: SportOnChannels,
     private val alerts: SportsAlertsSetup,
     private val reminders: ReminderManager,
@@ -132,7 +133,6 @@ class SportsViewModel(
 ) : ViewModel() {
 
     private val config = settings.activeSportsConfig.distinctUntilChanged()
-    private val backendSportsCandidates = BackendSportsCandidateProvider()
 
     private val board = repository.observe(Demand.Hub)
 
@@ -321,27 +321,9 @@ class SportsViewModel(
             if (w != WatchWindow.Open) return@transformLatest emit(ChannelSearch.Closed(w as WatchWindow))
             if (!asked) return@transformLatest emit(ChannelSearch.NotSearched)
             emit(ChannelSearch.Searching)
-            val merged = coroutineScope {
-                val loungeSource = activeProfileSources(settings, sourceDao).first().sources.firstOrNull { source ->
-                    source.syncLive &&
-                        tv.own.owntv.features.setup.isLoungeXtream(source.type, source.url) &&
-                        !source.username.isNullOrBlank() &&
-                        !source.password.isNullOrBlank()
-                }
-                val backendJob = async(Dispatchers.IO) {
-                    loungeSource?.let { backendSportsCandidates.options(m, it) }.orEmpty()
-                }
-                val localJob = async(Dispatchers.Default) {
-                    watchReader.found(m) { SportsMemory.rememberedFor(c, it) }
-                        ?: watchReader.watchFor(listOf(m)) { SportsMemory.rememberedFor(c, it) }[m.key].orEmpty()
-                }
-                mergeBackendSportsOptions(m, backendJob.await(), localJob.await()).filterNot { option ->
-                    option.channel.sourceId == loungeSource?.id && tv.own.owntv.features.live.SportsChannelPolicy.excludedBest(
-                        option.channel.remoteId?.substringAfterLast(":"), option.channel.name,
-                    )
-                }
-            }
-            emit(ChannelSearch.Found(merged))
+            val current = repository.board.value.match(m.key) ?: m
+            val resolution = eventStreams.resolve(current)
+            emit(ChannelSearch.Found(resolution.options, resolution.coverage))
         }.flowOn(Dispatchers.Default)
         combine(boards, config, search, pageFilter, playlists) { b, c, s, f, lists ->
             val appLanguage = Locale.getDefault().language
@@ -379,7 +361,7 @@ class SportsViewModel(
 
     fun open(match: Match?) {
         pageFilter.value = null
-        findAsked.value = false
+        findAsked.value = match != null
         openMatch.value = match
     }
 
@@ -468,7 +450,7 @@ class SportsViewModel(
     /** [match]'s channels if Find channels already ran for it (the hub's Remind me needs one); never searches. */
     suspend fun channelsFound(match: Match): List<WatchOption> {
         val c = config.first()
-        val options = watchReader.found(match) { SportsMemory.rememberedFor(c, it) } ?: return emptyList()
+        val options = eventStreams.resolve(match).options
         return WatchList.of(options, WatchFilter.from(c, Locale.getDefault().language, liveSources.value)).shown
     }
 

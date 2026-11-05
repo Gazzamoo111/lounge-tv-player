@@ -19,6 +19,14 @@ jobs:
           node-version: '22'
       - name: Collect real fixtures and independent programme evidence without production credentials
         run: python3 services/event-streams-qa/collect.py
+      - name: Validate all-sport matching and report actual coverage
+        env:
+          QA_STREAM_URL_TEMPLATE: ${{ secrets.LOUNGE_SPORTS_QA_STREAM_TEMPLATE }}
+        run: |
+          node --test services/event-streams-qa/test/*.test.mjs
+          node services/event-streams-qa/src/validate.mjs > outputs/event-streams-qa/validation.log
+          python3 services/event-streams-qa/probe.py
+          QA_HEALTH_DATA=outputs/event-streams-qa/health.json node services/event-streams-qa/src/validate.mjs > outputs/event-streams-qa/validation.log
       - name: Preserve actual source observations
         if: always()
         uses: actions/upload-artifact@v4

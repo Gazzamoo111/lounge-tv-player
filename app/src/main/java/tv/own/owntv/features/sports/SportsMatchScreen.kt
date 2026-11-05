@@ -219,6 +219,12 @@ fun SportsMatchScreen(
                         return@Column
                     }
                 }
+                val coverage = (state.search as? ChannelSearch.Found)?.coverage
+                if (tv.own.owntv.BuildConfig.DEBUG && coverage?.coverageGap == true) {
+                    Text(stringResource(R.string.lounge_event_stream_coverage, coverage.playbackVerified),
+                        style = stageText(19, 400), color = StageColors.Muted,
+                        modifier = Modifier.padding(bottom = 9.mpx))
+                }
                 if (state.list.total == 0) {
                     Text(stringResource(R.string.sports_watch_live), style = stageText(24, 800), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(stringResource(R.string.sports_not_on_channels), style = stageText(19, 400), color = StageColors.Muted, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 9.mpx))

@@ -17,8 +17,8 @@ NOW=dt.datetime.now(dt.timezone.utc)
 ISO=lambda value:value.isoformat().replace('+00:00','Z')
 SOURCES=[('sky-sport-now','NZ','SkySportNow/epg.xml.gz'),('sky-go','NZ','SkyGo/epg.xml.gz'),('foxtel','AU','Foxtel/epg.xml.gz'),('kayo','AU','Kayo/epg.xml.gz'),('dstv','ZA','DStv/za.xml.gz'),('singtel','SG','Singtel/epg.xml.gz')]
 
-def get(url,limit=100_000_000):
-    req=urllib.request.Request(url,headers={'User-Agent':'LoungeTV-EventStreams-IsolatedQA/1.0','Accept':'application/json,application/xml,*/*'})
+def get(url,limit=100_000_000,headers=None):
+    req=urllib.request.Request(url,headers={'User-Agent':'LoungeTV-EventStreams-IsolatedQA/1.0','Accept':'application/json,application/xml,*/*',**(headers or {})})
     with urllib.request.urlopen(req,timeout=30) as r:
         data=r.read(limit+1)
         if len(data)>limit:raise ValueError('response exceeds QA limit')
@@ -56,6 +56,34 @@ def guide(spec):
         status.update(ok=False,error=type(e).__name__+': '+str(e).split('?')[0][:180])
         return None,status
 
+def sky_uk():
+    url='https://awk.epgsky.com/hawk/linear/schedule/'
+    status={'source':'sky-uk-direct','market':'UK','url':url,'fetchedAtUtc':ISO(dt.datetime.now(dt.timezone.utc))}
+    try:
+        root=ET.fromstring(get('https://raw.githubusercontent.com/iptv-org/epg/master/sites/sky.com/sky.com.channels.xml',4_000_000))
+        selected=[c for c in root.findall('channel') if c.get('site_id','').startswith('GB#') and __import__('re').search(r'Sport|TNT|Premier|BBC One|ITV1|Channel 4',c.text or '',__import__('re').I)]
+        # One service can have several editorial aliases. Request it once and retain all names.
+        services={}
+        for c in selected:services.setdefault(c.get('site_id').split('#')[1],set()).add(c.text or '')
+        channels=[{'id':sid,'names':sorted(names)} for sid,names in services.items()]
+        programmes=[]
+        ids=list(services)
+        for delta in [0,1,2]:
+            day=(NOW+dt.timedelta(days=delta)).strftime('%Y%m%d')
+            for offset in range(0,len(ids),20):
+                raw=json.loads(get(url+day+'/'+','.join(ids[offset:offset+20]),15_000_000,{'X-SkyOTT-Territory':'GB'}))
+                schedules=raw.get('schedule',raw.get('schedules',[]))
+                if isinstance(schedules,dict):schedules=[schedules]
+                for schedule in schedules:
+                    sid=str(schedule.get('sid',''))
+                    for e in schedule.get('events',[]):
+                        start=dt.datetime.fromtimestamp(e['st'],dt.timezone.utc);end=start+dt.timedelta(seconds=e['d'])
+                        programmes.append({'channelId':sid,'startUtc':ISO(start),'endUtc':ISO(end),'title':e.get('t',''),'description':e.get('sy',''),'categories':[]})
+        status.update(ok=True,channels=len(channels),programmes=len(programmes),freshnessBasis='direct-live-schedule-fetch')
+        return {'source':status['source'],'market':'UK','url':url,'sourceUpdatedAtUtc':status['fetchedAtUtc'],'fetchedAtUtc':status['fetchedAtUtc'],'freshnessBasis':'direct-live-schedule-fetch','channels':channels,'programmes':programmes},status
+    except Exception as e:
+        status.update(ok=False,error=type(e).__name__+': '+str(e).split('?')[0][:180]);return None,status
+
 def fixtures(feed):
     path,league=feed['path'],feed['league']
     results=[];statuses=[]
@@ -82,7 +110,7 @@ def fixtures(feed):
                     participants.append({'id':str(team.get('id',side.get('id',''))),'name':aliases[0] if aliases else '', 'aliases':aliases})
                 status_value=e.get('status',{})
                 state=(status_value.get('type') or {}).get('state','unknown') if isinstance(status_value,dict) else status_value
-                results.append({'eventId':f'{path}/{league}#{e.get("id")}','providerEventId':str(e.get('id')),'sportId':path,'competitionId':f'{path}/{league}','competitionName':feed['name'],'title':e.get('name') or e.get('shortName',''),'scheduledStartUtc':ISO(start),'status':{'pre':'PRE','in':'IN','post':'POST'}.get(state,state),'statusObservedAtUtc':ISO(dt.datetime.now(dt.timezone.utc)),'participants':participants,'fixtureSource':url,'fixtureFetchedAtUtc':ISO(dt.datetime.now(dt.timezone.utc)),'broadcasts':competition.get('broadcasts',[]),'geoBroadcasts':competition.get('geoBroadcasts',[])})
+                results.append({'eventId':f'{path}/{league}#{e.get("id")}','providerEventId':str(e.get('id')),'sportId':path,'competitionId':f'{path}/{league}','competitionName':feed['name'],'title':e.get('name') or e.get('shortName',''),'scheduledStartUtc':ISO(start),'scheduledEndUtc':e.get('endDate'),'status':{'pre':'PRE','in':'IN','post':'POST'}.get(state,state),'statusObservedAtUtc':ISO(dt.datetime.now(dt.timezone.utc)),'participants':participants,'fixtureSource':url,'fixtureFetchedAtUtc':ISO(dt.datetime.now(dt.timezone.utc)),'broadcasts':competition.get('broadcasts',[]),'geoBroadcasts':competition.get('geoBroadcasts',[])})
             statuses.append({'feed':path+'/'+league,'date':day,'ok':True,'events':len(events)})
         except Exception as e:statuses.append({'feed':path+'/'+league,'date':day,'ok':False,'error':type(e).__name__+': '+str(e).split('?')[0][:180]})
     return results,statuses
@@ -98,6 +126,9 @@ if __name__=='__main__':
         for data,status in pool.map(guide,SOURCES):
             if data:guides.append(data)
             guide_status.append(status)
+    data,status=sky_uk()
+    if data:guides.append(data)
+    guide_status.append(status)
     dataset={'collectedAtUtc':ISO(dt.datetime.now(dt.timezone.utc)),'fixtures':list(all_events.values()),'guides':guides,'feedStatus':feeds_status,'guideStatus':guide_status}
     (OUT/'evidence.json').write_text(json.dumps(dataset))
     summary={'collectedAtUtc':dataset['collectedAtUtc'],'fixtureCount':len(all_events),'sports':sorted({e['sportId'] for e in all_events.values()}),'fixtures':[{'eventId':e['eventId'],'title':e['title'],'startUtc':e['scheduledStartUtc'],'status':e['status'],'broadcasts':e['broadcasts'],'geoBroadcasts':e['geoBroadcasts']} for e in all_events.values()],'guides':guide_status,'feedErrors':[s for s in feeds_status if not s['ok']]}

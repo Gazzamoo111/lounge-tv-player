@@ -14,99 +14,86 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
 
-internal const val QA_SPORTS_IMPLEMENTATION = "qa-sports-evidence-v3"
+internal const val QA_SPORTS_IMPLEMENTATION = "qa-event-streams-v4"
 
 internal const val BACKEND_CONFIDENCE_PREFIX = "__LTV_BACKEND__:"
+
+data class SportsStreamCoverage(
+    val broadcastConfirmed: Int = 0,
+    val playbackVerified: Int = 0,
+    val coverageGap: Boolean = true,
+    val reasons: List<String> = emptyList(),
+)
+
+data class EventStreamResolution(val options: List<WatchOption>, val coverage: SportsStreamCoverage)
 
 internal class BackendSportsCandidateProvider(
     private val endpoint: String = tv.own.owntv.BuildConfig.SPORTS_CANDIDATES_URL,
     private val playbackEndpoint: String = "https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-xtream",
 ) {
-    suspend fun options(match: Match, source: SourceEntity): List<WatchOption> = withContext(Dispatchers.IO) {
-        if (endpoint.isBlank()) return@withContext emptyList()
-        val username = source.username?.takeIf(String::isNotBlank) ?: return@withContext emptyList()
-        val password = source.password?.takeIf(String::isNotBlank) ?: return@withContext emptyList()
-        val home = match.home?.team?.name.orEmpty()
-        val away = match.away?.team?.name.orEmpty()
+    suspend fun options(match: Match, source: SourceEntity): List<WatchOption> = resolve(match, source).options
+
+    suspend fun resolve(match: Match, source: SourceEntity): EventStreamResolution = withContext(Dispatchers.IO) {
+        fun unavailable(reason: String) = EventStreamResolution(emptyList(), SportsStreamCoverage(reasons = listOf(reason)))
+        if (endpoint.isBlank()) return@withContext unavailable("qa-endpoint-not-configured")
+        val username = source.username?.takeIf(String::isNotBlank) ?: return@withContext unavailable("source-not-configured")
+        val password = source.password?.takeIf(String::isNotBlank) ?: return@withContext unavailable("source-not-configured")
         val params = linkedMapOf(
-            "contractVersion" to "2",
-            "eventId" to match.key,
-            "sportId" to match.sport.path,
-            "competitionId" to match.feed,
-            "scheduledStartUtc" to Instant.ofEpochMilli(match.startMs).toString(),
-            "status" to match.state.name,
-            "sport" to match.sport.path,
-            "league" to match.leagueName,
-            "title" to match.title,
-            "home" to home,
-            "away" to away,
-            "broadcasters" to match.broadcasts.joinToString("|") { it.name },
-            "limit" to "6",
+            "contractVersion" to "2", "eventId" to match.key, "sportId" to match.sport.path,
+            "competitionId" to match.feed, "scheduledStartUtc" to Instant.ofEpochMilli(match.startMs).toString(),
+            "status" to match.state.name, "limit" to "12",
         )
-        val query = params.entries.joinToString("&") { (key, value) -> q(key) + "=" + q(value) }
-        val connection = (URL(endpoint + "?" + query).openConnection() as HttpURLConnection).apply {
-            connectTimeout = 8_000
-            readTimeout = 12_000
-            requestMethod = "GET"
-            setRequestProperty("Accept", "application/json")
+        val query = params.entries.joinToString("&") { (k,v) -> q(k)+"="+q(v) }
+        val connection = (URL(endpoint+"?"+query).openConnection() as HttpURLConnection).apply {
+            connectTimeout=8_000; readTimeout=12_000; requestMethod="GET"; setRequestProperty("Accept","application/json")
         }
         try {
-            if (connection.responseCode !in 200..299) return@withContext emptyList()
-            val body = connection.inputStream.bufferedReader().use { it.readText() }
-            val response = JSONObject(body)
-            if (tv.own.owntv.BuildConfig.DEBUG &&
-                response.optString("implementationId") != QA_SPORTS_IMPLEMENTATION) return@withContext emptyList()
-            val version = response.optInt("contractVersion", 1)
-            val now = System.currentTimeMillis()
-            if (version != 2) return@withContext emptyList()
-            if (version == 2 && (response.optString("eventId") != match.key ||
-                parseUtc(response.optString("expiresAtUtc")) <= now ||
-                response.optBoolean("catalogueStale", true))) return@withContext emptyList()
-            val rows = response.optJSONArray("candidates") ?: return@withContext emptyList()
-            buildList {
-                for (index in 0 until minOf(rows.length(), 6)) {
-                    val row = rows.optJSONObject(index) ?: continue
-                    val providerItemId = row.optLong("providerItemId", 0L).takeIf { it > 0L } ?: continue
-                    val name = row.optString("displayName", row.optString("name")).takeIf(String::isNotBlank) ?: continue
-                    val evidenceValid = version == 2 && candidateEvidenceValid(row, match, now) && !response.optBoolean("catalogueStale", true)
-                    if (tv.own.owntv.features.live.SportsChannelPolicy.excludedBest(providerItemId.toString(), name)) continue
-                    if (parseUtc(row.optString("expiresAtUtc")) <= now) continue
-                    if (row.optString("tier") in setOf("verified", "plausible") && !evidenceValid) continue
-                    // Keep unverified catalogue discovery in the secondary alternatives only.
-                    // Do not let a name/fixture guess masquerade as programme evidence.
-                    val tierName = if (evidenceValid) row.optString("tier") else "unverified"
-                    if (tierName !in setOf("verified", "plausible", "unverified")) continue
-                    val streamUrl = playbackEndpoint + "/sport/_/_/" + providerItemId + ".ts" +
-                        "?username=" + q(username) + "&password=" + q(password)
-                    val channel = ChannelEntity(
-                        id = -(8_000_000_000L + providerItemId),
-                        sourceId = source.id,
-                        name = name,
-                        logoUrl = row.optString("logoUrl").takeIf { !row.isNull("logoUrl") && it.isNotBlank() },
-                        streamUrl = streamUrl,
-                        epgChannelId = row.optString("epgId").takeIf { !row.isNull("epgId") && it.isNotBlank() },
-                        remoteId = "sport-backend:" + providerItemId,
-                        sortOrder = index,
-                    )
-                    add(
-                        WatchOption(
-                            channel = channel,
-                            tier = validatedBackendTier(version, tierName, evidenceValid),
-                            guideTitle = BACKEND_CONFIDENCE_PREFIX + tierName,
-                        ),
-                    )
+            if (connection.responseCode !in 200..299) return@withContext unavailable("event-evidence-unavailable")
+            val response=JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
+            val now=System.currentTimeMillis()
+            if (response.optString("implementationId") != QA_SPORTS_IMPLEMENTATION || response.optInt("contractVersion") != 2 ||
+                response.optString("eventId") != match.key || parseUtc(response.optString("expiresAtUtc")) <= now ||
+                response.optBoolean("catalogueStale",true)) return@withContext unavailable("backend-contract-or-freshness-failed")
+            val rows=response.optJSONArray("candidates") ?: return@withContext unavailable("malformed-candidates")
+            val services=hashSetOf<String>()
+            val options=buildList {
+                for (index in 0 until minOf(rows.length(),12)) {
+                    val row=rows.optJSONObject(index) ?: continue
+                    val id=row.optLong("providerItemId",0).takeIf { it>0 } ?: continue
+                    val name=row.optString("displayName").takeIf(String::isNotBlank) ?: continue
+                    val tier=row.optString("tier")
+                    if (tier !in setOf("verified","plausible") || !candidateEvidenceValid(row,match,now) || !candidatePlaybackValid(row,now)) continue
+                    if (tv.own.owntv.features.live.SportsChannelPolicy.excludedBest(id.toString(),name)) continue
+                    if (!services.add(row.optString("logicalServiceId"))) continue
+                    val streamUrl=playbackEndpoint+"/sport/_/_/"+id+".ts?username="+q(username)+"&password="+q(password)
+                    add(WatchOption(channel=ChannelEntity(id=-(8_000_000_000L+id),sourceId=source.id,name=name,
+                        streamUrl=streamUrl,epgChannelId=row.optString("epgId").takeIf { !row.isNull("epgId")&&it.isNotBlank() },
+                        remoteId="sport-backend:"+id,sortOrder=index),tier=validatedBackendTier(2,tier,true),
+                        guideTitle=BACKEND_CONFIDENCE_PREFIX+tier))
                 }
             }
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (_: Exception) {
-            emptyList()
-        } finally {
-            connection.disconnect()
-        }
+            val c=response.optJSONObject("coverage")
+            val reasons=c?.optJSONArray("reasons")
+            EventStreamResolution(options,SportsStreamCoverage(
+                broadcastConfirmed=c?.optInt("broadcastConfirmed",0) ?: 0,
+                playbackVerified=options.size,
+                coverageGap=options.size<3,
+                reasons=if(reasons==null) emptyList() else (0 until reasons.length()).map { reasons.optString(it) },
+            ))
+        } catch (cancelled: CancellationException) { throw cancelled
+        } catch (_: Exception) { unavailable("backend-unavailable")
+        } finally { connection.disconnect() }
     }
+    private fun q(value:String):String=URLEncoder.encode(value,Charsets.UTF_8.name())
+}
 
-    private fun q(value: String): String = URLEncoder.encode(value, Charsets.UTF_8.name())
+internal fun candidatePlaybackValid(row:JSONObject,now:Long):Boolean {
+    val h=row.optJSONObject("playbackObservation") ?: return false
+    val at=parseUtc(h.optString("observedAtUtc"))
+    return h.optString("status")=="verified" && h.optBoolean("httpAccessible") && h.optInt("decodedFrames",0)>0 &&
+        now-at in 0..300_000L && h.optString("providerItemId")==row.optString("providerItemId") &&
+        h.optString("serviceId")==row.optString("logicalServiceId") &&
+        Regex("[a-f0-9]{64}").matches(h.optString("streamFingerprint"))
 }
 
 /** Merge strongest evidence first; backend presence never discards local alternatives. */
@@ -167,10 +154,14 @@ private fun candidateEvidenceValid(row: JSONObject, match: Match, now: Long): Bo
         val start = parseUtc(e.optString("startUtc"))
         val end = parseUtc(e.optString("endUtc"))
         val ageLimit = if (match.startMs > now) 86_400_000L else 300_000L
+        val tournamentInterval = match.sport.path == "golf" &&
+            parseUtc(e.optString("fixtureStartUtc")) == match.startMs &&
+            parseUtc(e.optString("fixtureEndUtc")) > start && start >= match.startMs
+        val intervalMatches = tournamentInterval || (start <= match.startMs + 900_000L && end > match.startMs)
         val typeSupportsClaim = evidenceSupportsClaim(row.optString("tier"), e.optString("type"))
         e.optString("eventId") == match.key && e.optString("source").isNotBlank() &&
             now - observed in 0..ageLimit && start < end &&
-            start <= match.startMs + 900_000L && end > match.startMs && end > now &&
+            intervalMatches && end > now &&
             e.optString("sportId") == match.sport.path && e.optString("competitionId") == match.feed &&
             e.optString("serviceId") == row.optString("logicalServiceId") &&
             e.optString("market") == row.optString("serviceMarket") &&

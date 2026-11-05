@@ -9,4 +9,5 @@
     <string name="lounge_fixture_plausible">Plausible broadcast · programme unconfirmed</string>
     <string name="lounge_fixture_unverified">Unverified discovery</string>
     <string name="lounge_previous_picture">Previous picture · loading</string>
+    <string name="lounge_event_stream_coverage">%1$d verified streams. Coverage below the target of 3.</string>
 </resources>
