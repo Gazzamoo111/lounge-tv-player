@@ -192,6 +192,13 @@ def main():
     end = now + timedelta(days=DAYS)
     rows = json.loads(Path(args.manifest).read_text())["rows"]
     au_rows = [x for x in rows if x.get("category") == "Australia"]
+    # Never overwrite an EPG ID reused by different broadcaster names.
+    # The source manifest currently assigns 10Bold.au to BOTH 10 BOLD and Ten.
+    # Correcting that requires an isolated channel-to-guide mapping fix first.
+    au_id_owners = defaultdict(set)
+    for row in au_rows:
+        if row.get("epgId"):
+            au_id_owners[row["epgId"]].add(row["name"])
     loop_rows = [x for x in rows if x.get("category") == "24/7"]
     root = read_xml(args.existing)
     # Prune only expired synthetic loop markers; preserve all real programme listings.
@@ -238,6 +245,9 @@ def main():
     au_rejections = {}
     for row in au_rows:
         target = str(row.get("epgId") or row["key"]).strip()
+        if len(au_id_owners.get(target, set())) > 1:
+            au_status[row["name"]] = "shared-epg-id-skipped"
+            continue
         choice = select_feed(row, feeds, now, end)
         if not choice:
             au_status[row["name"]] = "no-seven-day-source"
