@@ -96,6 +96,11 @@ jobs:
         with:
           name: lounge-epg-qa-supplement
           path: reviewed
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install XML verification parser
+        run: python -m pip install lxml==5.4.0
       - name: Check backup point and coverage guard
         run: |
           test "$(git -C published rev-parse HEAD)" = "434548940b3c7a21cd791f681e0740300aa4294d" || {
