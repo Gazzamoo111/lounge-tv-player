@@ -1,0 +1,35 @@
+name: Isolated QA ESPN broadcaster snapshot
+on:
+  push:
+    branches: [001-live-sports-reliability]
+    paths:
+      - '.github/workflows/qa-espn-snapshot.yml'
+      - 'services/event-streams-qa/publish_assignments.py'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: qa-espn-snapshot-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  refresh-espn-assignments:
+    if: github.ref == 'refs/heads/001-live-sports-reliability'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Collect ESPN fixture-specific assignments using the existing public-data QA collector
+        run: python3 services/event-streams-qa/collect.py
+      - name: Sanitize source fixture data and commit isolated QA snapshot
+        run: |
+          python3 services/event-streams-qa/publish_assignments.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add backend/supabase/functions/lounge-sports-candidates-qa/data/espn-assignments.json
+          if ! git diff --cached --quiet; then
+            git commit -m "data(qa): refresh ESPN fixture assignments [skip ci]"
+            git push origin HEAD:001-live-sports-reliability
+          fi
