@@ -1,5 +1,8 @@
 name: Lounge TV scheduled seven-day EPG | AU and 24-7 only
 on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/epg-rolling7-au-247.yml']
   schedule:
     - cron: '17 0,12 * * *'
   workflow_dispatch:
@@ -29,7 +32,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p /tmp/lounge-epg7
-          SOURCE_HEAD="$(git ls-remote https://github.com/Gazzamoo111/lounge-tv-player.git refs/heads/epg-data | cut -f1)"
+          SOURCE_HEAD="$(git ls-remote origin refs/heads/epg-data | cut -f1)"
           test -n "$SOURCE_HEAD"
           echo "$SOURCE_HEAD" > /tmp/lounge-epg7/source-head.txt
           curl --fail --location --retry 3 --connect-timeout 30 --max-time 180 \
@@ -130,7 +133,7 @@ jobs:
           p=Path('published/epg/rolling7-au-247-report.json')
           r=json.loads(p.read_text())
           r['previousGuideGitSha']=Path('reviewed/source-head.txt').read_text().strip()
-          p.write_text(json.dumps(r,indent=2)+'\\n')
+          p.write_text(json.dumps(r,indent=2)+chr(10))
           PY
           cd published
           git config user.name 'Lounge TV EPG Automation'
