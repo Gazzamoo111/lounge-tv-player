@@ -47,6 +47,17 @@ def allowed(row):
     return not (row.get("category") in SKIP_CATEGORIES or
         row.get("subcategory") in BAD_SUBCATEGORIES or BAD_NAME.search(row.get("name") or ""))
 
+def effective_epg_id(row):
+    explicit=str(row.get("epgId") or "").strip()
+    if explicit:return explicit
+    name=" ".join(str(row.get("name") or "").upper().split())
+    sky=re.fullmatch(r"SKY SPORT ([1-9])",name)
+    if sky:return f"SkySport{sky.group(1)}.nz"
+    if name=="SKY SPORT SELECT":return "SkySportSelect.nz"
+    if name=="SKY NZ ESPN":return "ESPN.nz"
+    if name=="SKY NZ ESPN 2":return "ESPN2.nz"
+    return str(row["key"]).strip()
+
 def scan_source_channels(path):
     channels={}
     with gzip.open(path,"rb") as src:
@@ -135,7 +146,7 @@ def main():
     reasons=Counter();matches={};wanted={}
     for row in rows:
         if not allowed(row):reasons["excluded-nonscheduled"]+=1;continue
-        target=str(row.get("epgId") or row["key"]).strip()
+        target=effective_epg_id(row)
         cid,reason=match(row,channels,ids,names,names_region)
         reasons[reason]+=1
         if cid:
@@ -182,7 +193,7 @@ def main():
         "earliestProgrammeUtc":earliest.isoformat() if earliest else None,
         "latestProgrammeUtc":latest.isoformat() if latest else None,
         "unmatchedExamples":[{"name":r["name"],"category":r["category"],"epgId":r.get("epgId")}
-             for r in rows if allowed(r) and str(r.get("epgId") or r["key"]) not in wanted][:90],
+             for r in rows if allowed(r) and effective_epg_id(r) not in wanted][:90],
         "supplementSamples":[{**matches[t],"target":t,"programmeCount":programmes[t]}
              for t in list(programmes)[:40]]}
     (out/"coverage.json").write_text(json.dumps(report,indent=2)+"\n")
