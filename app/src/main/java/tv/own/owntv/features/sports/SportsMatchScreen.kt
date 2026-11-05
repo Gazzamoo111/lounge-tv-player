@@ -136,7 +136,16 @@ fun SportsMatchScreen(
     val sep = stringResource(R.string.content_epg_bits_separator)
     var alternativesPage by remember(m.key) { mutableStateOf(-1) }
     val allOptions = state.list.shown
-    val recommendations = allOptions.filter { it.tier != WatchTier.LIKELY }.take(6)
+    val direct = allOptions.filter { it.tier != WatchTier.LIKELY }.take(6)
+    // QA only: show a handful of explicitly unverified sport channels when fixture
+    // evidence is sparse. Do not hide the entire fallback set behind Other channels.
+    val qaSportOnly = if (tv.own.owntv.BuildConfig.DEBUG) {
+        allOptions.filter { it.guideTitle == BACKEND_CONFIDENCE_PREFIX + "sport-option" }
+            .take((6 - direct.size).coerceAtLeast(0))
+    } else emptyList()
+    val recommendations = (direct + qaSportOnly).ifEmpty {
+        if (tv.own.owntv.BuildConfig.DEBUG) allOptions.take(6) else emptyList()
+    }
     val alternatives = allOptions.filter { it !in recommendations }
     val shown = if (alternativesPage < 0) recommendations else alternatives.drop(alternativesPage * 12).take(12)
     val zap = shown.map { it.channel }
