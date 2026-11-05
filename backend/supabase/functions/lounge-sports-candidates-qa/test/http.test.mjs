@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import vm from "node:vm";
 import {stripTypeScriptTypes} from "node:module";
-import {rankCandidates,discoveryCandidate,linearAssignmentCandidates} from "../matcher.mjs";
+import {rankCandidates,discoveryCandidate,linearAssignmentCandidates,sportFallbackCandidates} from "../matcher.mjs";
 import {nzProgrammeCandidates} from "../programme-evidence.mjs";
 
 const rows=[
@@ -17,7 +17,7 @@ const source=fs.readFileSync(new URL("../index.ts",import.meta.url),"utf8");
 const code=stripTypeScriptTypes(source.slice(source.indexOf("Deno.serve")));
 async function request(query,inventory=rows,geo=[]){
  let handler,calls=0;
- vm.runInNewContext(code,{Deno:{serve:h=>handler=h},URL,Response,console,rankCandidates,discoveryCandidate,linearAssignmentCandidates,
+ vm.runInNewContext(code,{Deno:{serve:h=>handler=h},URL,Response,console,rankCandidates,discoveryCandidate,linearAssignmentCandidates,sportFallbackCandidates,
    findIndependentBroadcasts:async()=>({geo,source:"independent-qa-source",status:geo.length?"fixture-confirmed":"fixture-source-not-configured"}),
    loadNzSportsGuide:async()=>[], NZ_GUIDE_URL:"https://qa.invalid/skyguide", nzProgrammeCandidates,
    iso:ms=>new Date(ms).toISOString(),sql:async()=>++calls===1?inventory:[{poll_id:352,completed_at:new Date().toISOString()}]});
@@ -35,12 +35,15 @@ test("QA endpoint scans the internal pool and returns only exact fixture rows",a
  assert.equal(body.implementationId,"qa-event-streams-v5");
  assert.equal(body.catalogueRevision,"352");
  assert.equal(body.totalEligible,5);
- assert.deepEqual(body.candidates.map(x=>x.providerItemId),[1955374,836373,1949811]);
+ assert.deepEqual(body.candidates.map(x=>x.providerItemId),[1955374,836373,1949811,749756]);
  assert.equal(body.coverage.broadcastConfirmed,0);
  assert.equal(body.coverage.playbackVerified,0);
  assert.equal(body.coverage.providerNameHints,3);
+ assert.equal(body.coverage.sportFallbackOptions,1);
  assert.equal(body.coverage.coverageGap,true);
- assert.ok(body.candidates.every(x=>x.evidence[0].type==="name-hint"&&x.playbackObservation.status==="unknown"));
+ assert.equal(body.candidates[3].evidence[0].type,"sport-option");
+ assert.ok(body.candidates.every(x=>x.playbackObservation.status==="unknown"));
+ assert.equal(body.coverage.broadcastConfirmed,0,"Sport-specific alternatives cannot count as confirmed broadcasts");
 });
 
 test("missing participant identity fails closed",async()=>{
