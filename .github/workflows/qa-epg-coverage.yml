@@ -1,0 +1,68 @@
+name: Lounge TV EPG coverage QA
+on:
+  push:
+    branches: [qa-epg-repair-20261105]
+    paths:
+      - '.github/workflows/qa-epg-coverage.yml'
+      - 'qa/epg/**'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: qa-epg-coverage-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install XML stream parser
+        run: python -m pip install lxml==5.4.0
+      - name: Download supplied current EPG source and existing canonical guide
+        run: |
+          mkdir -p /tmp/lounge-epg
+          curl --fail --location --retry 3 --retry-delay 3 --connect-timeout 30 --max-time 600 \
+            'https://epgshare01.online/epgshare01/epg_ripper_ALL_SOURCES1.xml.gz' \
+            --output /tmp/lounge-epg/source.xml.gz
+          curl --fail --location --retry 3 --retry-delay 3 --connect-timeout 30 --max-time 150 \
+            'https://raw.githubusercontent.com/Gazzamoo111/lounge-tv-player/epg-data/epg/guide.xml.gz' \
+            --output /tmp/lounge-epg/current-guide.xml.gz
+          ls -lh /tmp/lounge-epg/*.gz
+      - name: Audit release and build an isolated missing-programmes supplement
+        run: |
+          python qa/epg/build_supplement.py \
+            --source /tmp/lounge-epg/source.xml.gz \
+            --manifest qa/epg/active-release.json \
+            --existing-guide /tmp/lounge-epg/current-guide.xml.gz \
+            --out qa/epg/out
+      - name: Validate XMLTV and programme time coverage
+        run: |
+          python - <<'PY'
+          import gzip,json
+          from datetime import datetime,timezone
+          from lxml import etree
+          report=json.load(open('qa/epg/out/coverage.json'))
+          count=0
+          with gzip.open('qa/epg/out/guide-supplement.xml.gz','rb') as f:
+            for _,node in etree.iterparse(f,events=('end',),tag='programme'):
+              count+=1
+              node.clear()
+              while node.getprevious() is not None:del node.getparent()[0]
+          assert count==report['supplementedProgrammes'],(count,report['supplementedProgrammes'])
+          assert report['matchedTargets']>200,report
+          assert report['supplementedChannels']>20,report
+          assert datetime.fromisoformat(report['latestProgrammeUtc'])>datetime.now(timezone.utc),report
+          print('EPG_QA_PASS', {k:report[k] for k in ('releaseRows','matchedTargets','baselineWithUpcoming','supplementedChannels','supplementedProgrammes')})
+          PY
+      - name: Publish validation-only artifact, never customer EPG
+        uses: actions/upload-artifact@v4
+        with:
+          name: lounge-epg-qa-supplement
+          path: |
+            qa/epg/out/coverage.json
+            qa/epg/out/guide-supplement.xml.gz
+          retention-days: 7
