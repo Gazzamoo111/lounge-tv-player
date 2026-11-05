@@ -184,7 +184,8 @@ export function linearAssignmentCandidates(event,rows,geoBroadcasts,source,now=D
     const row=inventoryRow(raw),name=String(row.name||"");
     if(!name||INACTIVE.test(name)||excluded(row))continue;
     if(!/^US\s*[|:]\s*/i.test(name))continue;
-    const service=norm(name.replace(/^US\s*[|:]\s*/i,""))
+    const service=norm(name.replace(/^US\s*[|:]\s*/i,"")
+      .replace(/[\u1d00-\u1dbf\u2070-\u209f]+/gu," "))
       .replace(/\b(?:4K|UHD|FHD|HD|SD|RAW|HEVC|H264|H265|BACKUP|BK)\b/g,"").trim();
     const assigned=[...assignments].find(network=>approved[network].some(alias=>norm(alias)===service));
     if(!assigned)continue;
