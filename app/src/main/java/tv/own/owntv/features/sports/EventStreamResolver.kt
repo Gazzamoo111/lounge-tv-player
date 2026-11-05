@@ -28,7 +28,16 @@ class EventStreamResolver(
         val now=System.currentTimeMillis()
         cache[key]?.takeIf { now-it.first in 0..30_000L }?.let { return@withLock it.second }
         val result=if(tv.own.owntv.BuildConfig.DEBUG) {
-            source?.let { backend.resolve(match,it) } ?: EventStreamResolution(emptyList(),SportsStreamCoverage(reasons=listOf("lounge-source-not-configured")))
+            // QA: restore the known working local guide/event discovery and extend it
+            // with the full BEST internal-inventory backend. The backend alone cannot
+            // establish many WTA, NFL or other fixtures, especially before kick-off.
+            // Keep provider-only hints unverified and filter generic local suggestions.
+            val config=settings.activeSportsConfig.first()
+            val local=watchReader.found(match) { SportsMemory.rememberedFor(config,it) }
+                ?: watchReader.watchFor(listOf(match)) { SportsMemory.rememberedFor(config,it) }[match.key].orEmpty()
+            val remote=source?.let { backend.resolve(match,it) }
+                ?: EventStreamResolution(emptyList(),SportsStreamCoverage(reasons=listOf("lounge-source-not-configured")))
+            EventStreamResolution(mergeBackendSportsOptions(match,remote.options,local),remote.coverage)
         } else {
             // Production is not deployed by this PR; preserve its existing local-reader path.
             val config=settings.activeSportsConfig.first()
