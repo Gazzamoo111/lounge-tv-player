@@ -26,7 +26,7 @@ function exactFixture(event,programme){
  return title.length>=15&&phrase(text,title);
 }
 /** Match only an actual dated programme on a BEST provider row with the SAME XMLTV identity. */
-export function nzProgrammeCandidates(event,rows,programmes,now=Date.now(),source="",limit=12){
+export function guideProgrammeCandidates(event,rows,programmes,now=Date.now(),source="",market="NZ",limit=12){
  const matching=new Map();
  for(const p of programmes||[]){
   const id=String(p["@_channel"]||"").toLowerCase();
@@ -37,15 +37,16 @@ export function nzProgrammeCandidates(event,rows,programmes,now=Date.now(),sourc
  for(const raw of rows){
   const row=inventoryRow(raw),epgId=String(row.epg_channel_id||"");
   const matches=matching.get(epgId.toLowerCase())||[];
-  if(!epgId||!matches.length||excluded(row)||!/^NZ\s*[|:]\s*/i.test(String(row.name||"")))continue;
-  const logicalServiceId="NZ:"+norm(epgId).replaceAll(" ","");
+  const prefix=market==="AU"?/^AU\s*[|:]\s*/i:/^NZ\s*[|:]\s*/i;
+  if(!epgId||!matches.length||excluded(row)||!prefix.test(String(row.name||"")))continue;
+  const logicalServiceId=market+":"+norm(epgId).replaceAll(" ","");
   for(const p of matches.slice(0,1)){
    const decision={
-    tier:"plausible",logicalServiceId,market:"NZ",
+    tier:"plausible",logicalServiceId,market,
     reason:"independent-fixture-specific-xmltv-programme",
     accepted:[{
       type:"programme",source,eventId:event.eventId,sportId:event.sportId,
-      competitionId:event.competitionId,serviceId:logicalServiceId,market:"NZ",
+      competitionId:event.competitionId,serviceId:logicalServiceId,market,
       startUtc:new Date(xmlUtc(p["@_start"])).toISOString(),
       endUtc:new Date(xmlUtc(p["@_stop"])).toISOString(),
       observedAtUtc:new Date(now).toISOString(),
@@ -56,4 +57,9 @@ export function nzProgrammeCandidates(event,rows,programmes,now=Date.now(),sourc
   }
  }
  return candidates.sort((a,b)=>a.providerItemId-b.providerItemId).slice(0,Math.max(1,Math.min(12,limit)));
+}
+
+/** Keep the existing NZ contract for previous QA tests and consumers. */
+export function nzProgrammeCandidates(event,rows,programmes,now=Date.now(),source="",limit=12){
+ return guideProgrammeCandidates(event,rows,programmes,now,source,"NZ",limit);
 }
