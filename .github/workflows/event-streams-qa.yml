@@ -1,0 +1,28 @@
+name: Isolated live event stream QA
+on:
+  push:
+    branches: [001-live-sports-reliability]
+    paths: ['services/event-streams-qa/**', '.github/workflows/event-streams-qa.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-events:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Collect real fixtures and independent programme evidence without production credentials
+        run: python3 services/event-streams-qa/collect.py
+      - name: Preserve actual source observations
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-event-stream-qa-evidence
+          path: outputs/event-streams-qa/
+          if-no-files-found: error
