@@ -1,5 +1,5 @@
 /** One all-sport evidence policy. Catalogue text discovers identities, never broadcasts. */
-export const IMPLEMENTATION_ID='qa-event-streams-v4';
+export const IMPLEMENTATION_ID='qa-event-streams-v5';
 const MINUTE=60_000,DAY=86_400_000;
 export const norm=v=>String(v??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim();
 const key=v=>norm(v).replaceAll(' ','');
