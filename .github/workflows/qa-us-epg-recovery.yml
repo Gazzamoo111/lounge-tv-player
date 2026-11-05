@@ -1,0 +1,81 @@
+name: US EPG recovery QA (no customer changes)
+on:
+  pull_request:
+    branches: [qa-epg-7day-au-247-20261105]
+  push:
+    branches: [qa-us-epg-recovery-20261106]
+    paths:
+      - "qa/epg/refresh_us.py"
+      - ".github/workflows/qa-us-epg-recovery.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install XMLTV parser
+        run: python -m pip install lxml==5.4.0
+      - name: Verify US recovery code
+        run: python -m py_compile qa/epg/refresh_us.py
+      - name: Download the actual US source and published guide
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/lounge-us
+          curl -fL --retry 3 --max-time 300 \
+            https://epgshare01.online/epgshare01/epg_ripper_ALL_SOURCES1.xml.gz \
+            -o /tmp/lounge-us/source.xml.gz
+          curl -fL --retry 3 --max-time 180 \
+            https://raw.githubusercontent.com/Gazzamoo111/lounge-tv-player/epg-data/epg/guide.xml.gz \
+            -o /tmp/lounge-us/current.xml.gz
+          curl -fL --retry 3 --max-time 300 \
+            https://epgshare01.online/epgshare01/epg_ripper_US2.xml.gz \
+            -o /tmp/lounge-us/us2.xml.gz
+          curl -fL --retry 3 --max-time 300 \
+            https://raw.githubusercontent.com/acidjesuz/EPGTalk/master/US_guide.xml.gz \
+            -o /tmp/lounge-us/national.xml.gz
+          gzip -t /tmp/lounge-us/source.xml.gz
+          gzip -t /tmp/lounge-us/us2.xml.gz
+          gzip -t /tmp/lounge-us/national.xml.gz
+          gzip -t /tmp/lounge-us/current.xml.gz
+      - name: Repair only US EPG and regenerate US short listings
+        run: |
+          python qa/epg/refresh_us.py \
+            --source all=/tmp/lounge-us/source.xml.gz \
+            --source us2=/tmp/lounge-us/us2.xml.gz \
+            --source national=/tmp/lounge-us/national.xml.gz \
+            --existing /tmp/lounge-us/current.xml.gz \
+            --manifest qa/epg/active-release.json \
+            --out qa/epg/us-recovery-out
+      - name: Check regional preservation and US category coverage
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path("qa/epg/us-recovery-out/report.json").read_text())
+          assert r["region"]=="US only"
+          assert r["usRepaired"]>=140,r
+          assert r["usNewProgrammes"]>=9000,r
+          assert r["targetCategoryCounts"].get("US TV",0)>=30,r
+          assert r["targetCategoryCounts"].get("US Sports",0)>=15,r
+          assert r["targetCategoryCounts"].get("US Movies",0)>=15,r
+          assert r["preservedNonUsProgrammes"]>=2000,r
+          assert len(list(Path("qa/epg/us-recovery-out/short").glob("*.json")))==r["usRepaired"],r
+          print("US_EPG_RECOVERY_QA_PASS",r["usRepaired"],r["usNewProgrammes"],r["targetCategoryCounts"])
+          PY
+      - name: Save candidate for gated promotion
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lounge-us-epg-recovery-qa
+          path: |
+            qa/epg/us-recovery-out/report.json
+            qa/epg/us-recovery-out/guide.xml.gz
+            qa/epg/us-recovery-out/short/
+          retention-days: 3
+          if-no-files-found: warn

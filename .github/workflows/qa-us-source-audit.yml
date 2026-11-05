@@ -1,0 +1,53 @@
+name: Audit US national sports movie EPG sources (QA only)
+on:
+  pull_request:
+    branches: [qa-epg-7day-au-247-20261105]
+  push:
+    branches: [qa-us-epg-recovery-20261106]
+    paths:
+      - '.github/workflows/qa-us-source-audit.yml'
+      - 'qa/epg/audit_us_sources.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install lxml==5.4.0
+      - name: Download current US2, sports and national guides
+        shell: bash
+        run: |
+          mkdir -p /tmp/us-epg-audit
+          curl --fail --location --retry 2 --max-time 360 \
+            https://epgshare01.online/epgshare01/epg_ripper_US2.xml.gz \
+            -o /tmp/us-epg-audit/us2.xml.gz || true
+          curl --fail --location --retry 2 --max-time 360 \
+            https://epgshare01.online/epgshare01/epg_ripper_US_SPORTS1.xml.gz \
+            -o /tmp/us-epg-audit/sports.xml.gz || true
+          curl --fail --location --retry 2 --max-time 360 \
+            https://raw.githubusercontent.com/acidjesuz/EPGTalk/master/US_guide.xml.gz \
+            -o /tmp/us-epg-audit/national.xml.gz || true
+          ls -lh /tmp/us-epg-audit/
+      - name: Match against Lounge TV actual US channels
+        shell: bash
+        run: |
+          set -euo pipefail
+          python qa/epg/audit_us_sources.py \
+            --manifest qa/epg/active-release.json \
+            --source us2=/tmp/us-epg-audit/us2.xml.gz \
+            --source sports=/tmp/us-epg-audit/sports.xml.gz \
+            --source national=/tmp/us-epg-audit/national.xml.gz \
+            --out /tmp/us-epg-audit/audit-report.json
+          cat /tmp/us-epg-audit/audit-report.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lounge-us-source-audit
+          path: /tmp/us-epg-audit/audit-report.json
+          if-no-files-found: warn

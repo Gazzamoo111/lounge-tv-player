@@ -1,0 +1,46 @@
+name: Check 10-day US EPG coverage (isolated QA)
+on:
+  pull_request:
+    branches: [qa-epg-7day-au-247-20261105]
+  push:
+    branches: [qa-us-epg-recovery-20261106]
+    paths:
+      - '.github/workflows/qa-us-source-10day.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install lxml==5.4.0
+      - name: Download ten-day US source
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --max-time 360 \
+            https://vcicio.github.io/US-EPG/merged_epg.xml.gz \
+            -o /tmp/us-full-10day.xml.gz
+          gzip -t /tmp/us-full-10day.xml.gz
+          ls -lh /tmp/us-full-10day.xml.gz
+          python qa/epg/audit_us_sources.py \
+            --manifest qa/epg/active-release.json \
+            --source ten=/tmp/us-full-10day.xml.gz \
+            --out /tmp/ten-us-audit.json
+          python - <<'PY'
+          import json
+          x=json.load(open('/tmp/ten-us-audit.json'))
+          print('US_FULL_10DAY_AUDIT',json.dumps({k:v for k,v in x['sources']['ten'].items() if k!='examples'}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: us-10day-epg-audit
+          path: /tmp/ten-us-audit.json
+          retention-days: 3
+          if-no-files-found: warn

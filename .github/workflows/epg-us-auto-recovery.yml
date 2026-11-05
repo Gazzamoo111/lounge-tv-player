@@ -1,0 +1,138 @@
+name: Lounge TV scheduled US EPG refresh, other regions protected
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/epg-us-auto-recovery.yml'
+  schedule:
+    - cron: '43 1,7,13,19 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lounge-us-epg-publisher
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout verified US guide generator only
+        uses: actions/checkout@v4
+        with:
+          ref: 7b8f92515a805d63bd9e05a9fa160d55af52da98
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install lxml==5.4.0
+      - name: Freeze current published EPG revision and fetch US sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/lounge-us-live
+          SOURCE_HEAD="$(git ls-remote origin refs/heads/epg-data | cut -f1)"
+          test -n "$SOURCE_HEAD"
+          echo "$SOURCE_HEAD" > /tmp/lounge-us-live/source-head.txt
+          curl -fL --retry 3 --max-time 180 \
+            "https://raw.githubusercontent.com/Gazzamoo111/lounge-tv-player/$SOURCE_HEAD/epg/guide.xml.gz" \
+            -o /tmp/lounge-us-live/existing.xml.gz
+          curl -fL --retry 3 --max-time 300 \
+            https://epgshare01.online/epgshare01/epg_ripper_ALL_SOURCES1.xml.gz \
+            -o /tmp/lounge-us-live/all.xml.gz
+          curl -fL --retry 3 --max-time 300 \
+            https://epgshare01.online/epgshare01/epg_ripper_US2.xml.gz \
+            -o /tmp/lounge-us-live/us2.xml.gz
+          curl -fL --retry 3 --max-time 300 \
+            https://raw.githubusercontent.com/acidjesuz/EPGTalk/master/US_guide.xml.gz \
+            -o /tmp/lounge-us-live/national.xml.gz
+          for f in /tmp/lounge-us-live/*.xml.gz; do gzip -t "$f"; done
+      - name: Generate US guide only
+        run: |
+          python -m py_compile qa/epg/refresh_us.py
+          python qa/epg/refresh_us.py \
+            --manifest qa/epg/active-release.json \
+            --existing /tmp/lounge-us-live/existing.xml.gz \
+            --source all=/tmp/lounge-us-live/all.xml.gz \
+            --source us2=/tmp/lounge-us-live/us2.xml.gz \
+            --source national=/tmp/lounge-us-live/national.xml.gz \
+            --out qa/epg/us-live-out
+      - name: Guard US Sports TV and Movies; preserve AU NZ UK 24-7
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from datetime import datetime,timezone,timedelta
+          r=json.loads(Path('qa/epg/us-live-out/report.json').read_text())
+          assert r['region']=='US only'
+          assert r['usRepaired']>=140
+          assert r['usNewProgrammes']>=9000
+          assert r['targetCategoryCounts'].get('US Sports',0)>=15
+          assert r['targetCategoryCounts'].get('US TV',0)>=30
+          assert r['targetCategoryCounts'].get('US Movies',0)>=15
+          assert r['preservedNonUsProgrammes']>=2000
+          assert datetime.fromisoformat(r['usLatestProgrammeUtc'])>=datetime.now(timezone.utc)+timedelta(days=2)
+          assert len(list(Path('qa/epg/us-live-out/short').glob('*.json')))==r['usRepaired']
+          print('US_GUIDE_PUBLICATION_GATE_PASS',r['usRepaired'],r['usNewProgrammes'])
+          PY
+      - name: Keep exact source EPG revision with candidate
+        run: cp /tmp/lounge-us-live/source-head.txt qa/epg/us-live-out/source-head.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: us-epg-verified-candidate
+          path: |
+            qa/epg/us-live-out/report.json
+            qa/epg/us-live-out/guide.xml.gz
+            qa/epg/us-live-out/short/
+            qa/epg/us-live-out/source-head.txt
+          retention-days: 3
+
+  publish:
+    needs: validate
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: epg-data
+          path: published
+      - uses: actions/download-artifact@v4
+        with:
+          name: us-epg-verified-candidate
+          path: verified
+      - name: Publish only verified guide and US channel short files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s verified/guide.xml.gz
+          test -s verified/report.json
+          test -s verified/source-head.txt
+          BEFORE="$(cat verified/source-head.txt)"
+          CURRENT="$(git -C published rev-parse HEAD)"
+          if [ "$BEFORE" != "$CURRENT" ]; then
+            echo "EPG branch advanced since QA; refusing to overwrite newer guide"
+            exit 1
+          fi
+          gzip -t verified/guide.xml.gz
+          cp verified/guide.xml.gz published/epg/guide.xml.gz
+          gzip -dc verified/guide.xml.gz > published/epg/guide.xml
+          mkdir -p published/epg/short
+          cp verified/short/*.json published/epg/short/
+          cp verified/report.json published/epg/us-epg-recovery-report.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('published/epg/us-epg-recovery-report.json')
+          r=json.loads(p.read_text())
+          r['previousGuideGitSha']=Path('verified/source-head.txt').read_text().strip()
+          p.write_text(json.dumps(r,indent=2)+chr(10))
+          PY
+          cd published
+          git config user.name 'Lounge TV EPG Automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add epg/guide.xml epg/guide.xml.gz epg/short epg/us-epg-recovery-report.json
+          git diff --cached --quiet && exit 0
+          git commit -m 'epg: refresh actual US sports entertainment movies schedules'
+          git push origin HEAD:epg-data
