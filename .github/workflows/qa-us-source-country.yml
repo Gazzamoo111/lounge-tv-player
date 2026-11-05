@@ -1,0 +1,47 @@
+name: Audit broad US XMLTV guide coverage (isolated)
+on:
+  pull_request:
+    branches: [qa-epg-7day-au-247-20261105]
+  push:
+    branches: [qa-us-epg-recovery-20261106]
+    paths:
+      - '.github/workflows/qa-us-source-country.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install lxml==5.4.0
+      - name: Download and inspect US country XMLTV guide
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 2 --max-time 600 \
+            https://iptv-epg.org/files/epg-us.xml.gz \
+            -o /tmp/us-country.xml.gz
+          gzip -t /tmp/us-country.xml.gz
+          ls -lh /tmp/us-country.xml.gz
+          python qa/epg/audit_us_sources.py \
+            --manifest qa/epg/active-release.json \
+            --source country=/tmp/us-country.xml.gz \
+            --out /tmp/us-country-audit.json
+          python - <<'PY'
+          import json
+          r=json.load(open('/tmp/us-country-audit.json'))
+          s=r['sources']['country']
+          print('US_COUNTRY_AUDIT',json.dumps({k:v for k,v in s.items() if k!='examples'}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: us-country-guide-audit
+          path: /tmp/us-country-audit.json
+          retention-days: 3
+          if-no-files-found: warn
