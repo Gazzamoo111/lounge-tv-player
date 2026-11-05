@@ -71,6 +71,47 @@ Lounge TV is built on the open-source [OwnTV](https://github.com/ahXN00/OwnTV) A
 
 > Lounge TV's media availability, channel lineup and guide coverage depend on the connected service, device and source. The app's documentation does not guarantee that every listing has a playable broadcast.
 
+## Screenshots
+
+Real 1920 × 1080 captures from Lounge TV running on Fire TV. No mockups.
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/home.webp" alt="Lounge TV home screen with live sports hero and trending titles" width="100%">
+      <br><sub><strong>Home</strong> · Discover what to watch</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/live-tv.png" alt="Lounge TV live channel list with preview playing" width="100%">
+      <br><sub><strong>Live TV</strong> · Channels and live preview</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/tv-guide.png" alt="Lounge TV electronic programme guide showing channel schedules" width="100%">
+      <br><sub><strong>TV Guide</strong> · Browse programme schedules</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/sport-lounge.png" alt="Lounge TV Sport Lounge with fixtures, filters and team logos" width="100%">
+      <br><sub><strong>Sport Lounge</strong> · Follow fixtures across sports</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/movies.webp" alt="Lounge TV Movies tab with artwork, synopsis and posters" width="100%">
+      <br><sub><strong>Movies</strong> · Browse a cinematic library</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/series.webp" alt="Lounge TV Series tab with artwork, description and posters" width="100%">
+      <br><sub><strong>Series</strong> · Find your next series</sub>
+    </td>
+  </tr>
+</table>
+
+The pictured programmes and fixtures are examples captured at a moment in time; availability and guide data can change.
+
+---
+
 ## Install Lounge TV
 
 ### Fire TV, Android TV or Google TV
