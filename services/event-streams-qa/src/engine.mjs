@@ -113,7 +113,7 @@ export function resolveEvent(event,catalogue,dataset,health={},now=Date.now(),li
  }
  const broadcast=[...byService.values()].map(variants=>variants.sort((a,b)=>(b.playbackObservation.status==='verified')-(a.playbackObservation.status==='verified')||b.quality-a.quality||a.providerItemId-b.providerItemId)[0]);
  coverage.broadcastConfirmed=broadcast.length;
- if((event.participants||[]).length===2)coverage.namedEventHints=catalogue.rows.filter(r=>!badName.test(r.name)&&!excluded(r)&&event.participants.every(p=>participantHit(p,r.name))).slice(0,12).map(r=>({providerItemId:r.id,name:r.name,reason:'catalogue-name-only; not event or playback verified'}));
+ if((event.participants||[]).length===2)coverage.namedEventHints=catalogue.rows.filter(r=>!badName.test(r.name)&&!excluded(r)&&sportHit(event,r.name)&&event.participants.every(p=>participantHit(p,r.name))).slice(0,12).map(r=>({providerItemId:r.id,name:r.name,reason:'catalogue-name-only; not event or playback verified'}));
  const working=broadcast.filter(c=>c.playbackObservation.status==='verified').sort((a,b)=>instant(b.playbackObservation.observedAtUtc)-instant(a.playbackObservation.observedAtUtc)||b.quality-a.quality||a.logicalServiceId.localeCompare(b.logicalServiceId));
  coverage.playbackVerified=working.length;envelope.candidates=working.slice(0,Math.min(12,Math.max(1,limit)));envelope.broadcastCandidates=broadcast;
  coverage.returned=envelope.candidates.length;coverage.coverageGap=working.length<3;

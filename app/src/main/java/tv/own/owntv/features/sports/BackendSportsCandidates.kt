@@ -62,7 +62,7 @@ internal class BackendSportsCandidateProvider(
                     val id=row.optLong("providerItemId",0).takeIf { it>0 } ?: continue
                     val name=row.optString("displayName").takeIf(String::isNotBlank) ?: continue
                     val tier=row.optString("tier")
-                    if (tier !in setOf("verified","plausible") || !candidateEvidenceValid(row,match,now) || !candidatePlaybackValid(row,now)) continue
+                    if (tier !in setOf("verified","plausible") || !candidateEvidenceValid(row,match,now) || !candidatePlaybackValid(row,now,playbackEndpoint)) continue
                     if (tv.own.owntv.features.live.SportsChannelPolicy.excludedBest(id.toString(),name)) continue
                     if (!services.add(row.optString("logicalServiceId"))) continue
                     val streamUrl=playbackEndpoint+"/sport/_/_/"+id+".ts?username="+q(username)+"&password="+q(password)
@@ -87,13 +87,17 @@ internal class BackendSportsCandidateProvider(
     private fun q(value:String):String=URLEncoder.encode(value,Charsets.UTF_8.name())
 }
 
-internal fun candidatePlaybackValid(row:JSONObject,now:Long):Boolean {
+internal fun candidatePlaybackValid(row:JSONObject,now:Long,playbackEndpoint:String):Boolean {
+    val host=runCatching { java.net.URI(playbackEndpoint).host }.getOrNull() ?: return false
+    val identity=host+"|"+row.optString("providerItemId")+"|"+row.optString("logicalServiceId")
+    val expected=java.security.MessageDigest.getInstance("SHA-256").digest(identity.toByteArray(Charsets.UTF_8))
+        .joinToString("") { "%02x".format(it) }
     val h=row.optJSONObject("playbackObservation") ?: return false
     val at=parseUtc(h.optString("observedAtUtc"))
     return h.optString("status")=="verified" && h.optBoolean("httpAccessible") && h.optInt("decodedFrames",0)>0 &&
         now-at in 0..300_000L && h.optString("providerItemId")==row.optString("providerItemId") &&
         h.optString("serviceId")==row.optString("logicalServiceId") &&
-        Regex("[a-f0-9]{64}").matches(h.optString("streamFingerprint"))
+        expected == h.optString("streamFingerprint")
 }
 
 /** Merge strongest evidence first; backend presence never discards local alternatives. */
