@@ -30,6 +30,8 @@ class BackendSportsCandidatesTest {
         assertTrue(evidenceSupportsClaim("verified", "programme"))
         assertTrue(evidenceSupportsClaim("verified", "event-feed"))
         assertFalse(evidenceSupportsClaim("unverified", "programme"))
+        assertTrue(evidenceSupportsClaim("plausible", "sport-option"))
+        assertFalse(evidenceSupportsClaim("verified", "sport-option"))
     }
     @Test fun `recommendations are bounded to eight`() {
         val merged=mergeBackendSportsOptions((1L..20L).map{option(it,WatchTier.LIKELY)}, emptyList())
