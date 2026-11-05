@@ -29,7 +29,21 @@ export async function findIndependentBroadcasts(event,requester=fetch){
       return match(wantedHome)&&match(wantedAway);
     });
     if(!selected)return {geo:[],source,status:"fixture-not-independently-confirmed"};
-    return {geo:selected.competitions?.[0]?.geoBroadcasts||[],source,status:"fixture-confirmed"};
+    // A single linear service cannot show two different simultaneous live fixtures.
+    // When ESPN supplies conflicting assignments, withhold the disputed channel.
+    const targetStart=Date.parse(selected.date);
+    const conflicts=new Set();
+    const idOf=b=>b.region?.toLowerCase()==="us"&&b.type?.shortName==="TV"
+      ?norm(b.media?.shortName):null;
+    for(const other of data.events||[]){
+      if(String(other.id)===String(selected.id)||Math.abs(Date.parse(other.date)-targetStart)>60*60_000)continue;
+      for(const b of other.competitions?.[0]?.geoBroadcasts||[]){
+        const key=idOf(b);
+        if(key)conflicts.add(key);
+      }
+    }
+    const geo=(selected.competitions?.[0]?.geoBroadcasts||[]).filter(b=>!conflicts.has(idOf(b)));
+    return {geo,source,status:geo.length?"fixture-confirmed":"broadcast-assignments-absent-or-conflicted"};
   }catch{return {geo:[],source,status:"fixture-source-unavailable"};}
 }
 
