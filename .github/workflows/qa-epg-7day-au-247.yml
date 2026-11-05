@@ -1,5 +1,7 @@
 name: Lounge TV 7-day AU and 24-7 QA
 on:
+  pull_request:
+    branches: [qa-epg-repair-20261105]
   push:
     branches: [qa-epg-7day-au-247-20261105]
     paths:
