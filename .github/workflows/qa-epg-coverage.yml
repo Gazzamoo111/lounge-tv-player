@@ -58,6 +58,13 @@ jobs:
           assert datetime.fromisoformat(report['latestProgrammeUtc'])>datetime.now(timezone.utc),report
           print('EPG_QA_PASS', {k:report[k] for k in ('releaseRows','matchedTargets','baselineWithUpcoming','supplementedChannels','supplementedProgrammes')})
           PY
+      - name: Merge current guide and vetted additions into a QA-only candidate
+        run: |
+          python qa/epg/merge_guide.py \
+            --existing /tmp/lounge-epg/current-guide.xml.gz \
+            --supplement qa/epg/out/guide-supplement.xml.gz \
+            --coverage qa/epg/out/coverage.json \
+            --out qa/epg/out/merged
       - name: Publish validation-only artifact, never customer EPG
         uses: actions/upload-artifact@v4
         with:
@@ -65,4 +72,7 @@ jobs:
           path: |
             qa/epg/out/coverage.json
             qa/epg/out/guide-supplement.xml.gz
+            qa/epg/out/merged/guide.xml.gz
+            qa/epg/out/merged/merge-report.json
+            qa/epg/out/merged/short/
           retention-days: 7
