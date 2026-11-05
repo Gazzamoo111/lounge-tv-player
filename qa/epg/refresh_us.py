@@ -41,6 +41,7 @@ def make(args):
     if len(source_specs)<2:
         raise RuntimeError("At least two independently refreshed US sources required.")
     by_target=defaultdict(list)
+    target_sub={}
     source_health={}
     now_upper=now+timedelta(days=7)
     for label,path in source_specs:
