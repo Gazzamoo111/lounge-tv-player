@@ -1,53 +1,33 @@
-# Lounge TV official screenshots
+# Lounge TV screenshot gallery
 
-Seven real **1920 x 1080** Fire TV screenshots were captured for the GitHub showcase. They are **not** emulator or phone-camera photographs.
+The GitHub README features six authentic **1920 × 1080** Fire TV captures taken on 6 November 2026, not mockups.
 
-## Recommended README gallery
-
-| Filename | Screen | Public README |
+| File | Screen | Format |
 | --- | --- | --- |
-| `home.png` | Home screen and event hero | Yes |
-| `live-tv.png` | Live TV list with playback preview | Yes |
-| `tv-guide.png` | TV Guide with populated listings | Yes |
-| `movies.png` | Movies browsing | Yes |
-| `series.png` | Series browsing | Yes |
-| `sport-lounge.png` | Sport Lounge fixture overview | Yes |
-| `match-centre-qa.png` | Individual fixture and channel matching | **No, QA only** |
+| [home.webp](screenshots/home.webp) | Home and major sports hero | Full HD WebP |
+| [live-tv.png](screenshots/live-tv.png) | Live TV channel browser and preview | Full HD PNG |
+| [tv-guide.png](screenshots/tv-guide.png) | Electronic programme guide | Full HD PNG |
+| [sport-lounge.png](screenshots/sport-lounge.png) | Sport Lounge fixtures overview | Full HD PNG |
+| [movies.webp](screenshots/movies.webp) | Movies catalogue | Full HD WebP |
+| [series.webp](screenshots/series.webp) | Series catalogue | Full HD WebP |
 
-The separate Match Centre screenshot visibly says **0 verified streams** and **Unverified discovery**. It should **not** be promoted as evidence of reliable match-to-stream recommendations.
+The three WebP files are high-quality exports at the original pixel dimensions, chosen to reduce download size while keeping the UI appearance. The other captures remain original PNG files.
 
-## Upload process
+## Editorial policy
 
-1. Open the branch `docs/loungetv-showcase-20261105` on GitHub.
-2. Navigate into `docs/screenshots/`.
-3. Upload the seven supplied PNGs without changing their pixel dimensions.
-4. Review the captures before publishing. The original top-right TV status display includes a profile name, time and locality. Confirm those details are acceptable for a **public** GitHub repository.
+- Display actual Lounge TV interfaces only. Never substitute upstream OwnTV screenshots or AI-generated mockups as product captures.
+- The individual-match QA screen was deliberately excluded because it showed **0 verified streams** and unverified channel discovery.
+- Captured schedules, channel listings and fixture information reflect a moment in time, not a guarantee of current playback or EPG accuracy.
+- The screenshots show TV status information, including a local weather location and profile label. Review these before reusing screenshots in customer-facing marketing beyond GitHub.
 
-After upload, add the gallery below to the root README, ideally after the feature descriptions:
+## Updating screenshots
 
-```html
-## Screenshots
+From a connected Fire TV, navigate to the target screen and run:
 
-<table>
-<tr>
-<td align="center"><img src="docs/screenshots/home.png" alt="Lounge TV Home"><br><sub>Home</sub></td>
-<td align="center"><img src="docs/screenshots/live-tv.png" alt="Lounge TV Live TV"><br><sub>Live TV</sub></td>
-</tr>
-<tr>
-<td align="center"><img src="docs/screenshots/tv-guide.png" alt="Lounge TV Guide"><br><sub>TV Guide</sub></td>
-<td align="center"><img src="docs/screenshots/sport-lounge.png" alt="Lounge TV Sport Lounge"><br><sub>Sport Lounge</sub></td>
-</tr>
-<tr>
-<td align="center"><img src="docs/screenshots/movies.png" alt="Lounge TV Movies"><br><sub>Movies</sub></td>
-<td align="center"><img src="docs/screenshots/series.png" alt="Lounge TV Series"><br><sub>Series</sub></td>
-</tr>
-</table>
+```bash
+adb -s 192.168.68.50:5555 exec-out screencap -p > screenshot.png
 ```
 
-## Quality checks
+Replace the relevant image in `docs/screenshots/`, retaining a landscape 16:9 capture and appropriate file extension. Run a final visual check of the README rendering before merging a screenshot update.
 
-- Keep all screenshots 1920 x 1080 and avoid stretching or aggressive cropping.
-- Confirm there are no exposed passwords, access tokens, login details or personal data.
-- Preserve screenshots as genuine app captures. Do not invent or alter UI features.
-- The Live TV and guide screenshots are examples of the interface, not verified playback guarantees.
-- QA and screenshots do not merge or deploy the Android app.
+This gallery is documentation only; it does not modify the Android app, the backend or release workflow.
