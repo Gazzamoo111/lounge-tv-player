@@ -91,3 +91,23 @@ test("NHL regional TV abbreviations map only their explicitly assigned BEST serv
  const found=linearAssignmentCandidates(nhl,rows,evidence,"espn-confirmed",now);
  assert.deepEqual(found.map(x=>x.providerItemId),[2153431]);
 });
+
+test("explicit non-US regional TV assignments find AU, NZ and UK variants without cross-market leakage",()=>{
+ const eventForMarkets={...event,sportId:"cricket",competitionId:"cricket/test"};
+ const schedule=[
+  {region:"au",type:{shortName:"TV"},media:{shortName:"Fox Cricket"}},
+  {region:"nz",type:{shortName:"TV"},media:{shortName:"Sky Sport 1"}},
+  {region:"gb",type:{shortName:"TV"},media:{shortName:"Sky Sports Cricket"}},
+ ];
+ const rows=[
+  {provider_item_id:646948,name:"AU| FOX CRICKET HD",category_id:"384"},
+  {provider_item_id:1001,name:"NZ| SKY SPORT 1 HD",category_id:"401"},
+  {provider_item_id:1002,name:"UK| SKY SPORTS CRICKET FHD",category_id:"500"},
+  {provider_item_id:1003,name:"US| FOX CRICKET HD",category_id:"600"},
+  {provider_item_id:1004,name:"AU| SKY SPORT 1 HD",category_id:"700"}
+ ];
+ const found=linearAssignmentCandidates(eventForMarkets,rows,schedule,"fixture-tv-guide",now,100);
+ assert.deepEqual(found.map(x=>x.providerItemId),[1002,646948,1001]);
+ assert.ok(found.every(x=>x.tier==="plausible"&&x.evidence[0].type==="assignment"));
+ assert.deepEqual(found.map(x=>x.serviceMarket),["UK","AU","NZ"]);
+});

@@ -79,14 +79,17 @@ Deno.serve(async(req)=>{
     const [independent,programmes]=catalogueStale?
       [{geo:[],source:"",status:"catalogue-stale"},[]]:
       await Promise.all([findIndependentBroadcasts(event),loadNzSportsGuide(now)]);
-    const assigned=catalogueStale?[]:linearAssignmentCandidates(event,rows,independent.geo,independent.source,now,limit);
-    const nzGuide=catalogueStale?[]:nzProgrammeCandidates(event,rows,programmes,now,NZ_GUIDE_URL,limit);
-    const selected=catalogueStale?[]:rankCandidates(event,rows,limit,now);
+    // Search ALL provider variants before trimming the customer-facing response to 12.
+    // Otherwise a dozen same-name leads can prevent assigned regional networks from being considered.
+    const discoveryLimit=rows.length;
+    const assigned=catalogueStale?[]:linearAssignmentCandidates(event,rows,independent.geo,independent.source,now,discoveryLimit);
+    const nzGuide=catalogueStale?[]:nzProgrammeCandidates(event,rows,programmes,now,NZ_GUIDE_URL,discoveryLimit);
+    const selected=catalogueStale?[]:rankCandidates(event,rows,discoveryLimit,now);
     const named=selected.map(({row,decision}:any)=>discoveryCandidate(row,decision,now));
-    // Real dated guide evidence first; explicit provider event feeds next; linear TV backups last.
+    // Independently sourced, exact-fixture broadcaster assignments precede provider-name hints.
     // Deduplicate only identical provider stream IDs. Never change source category membership.
     const known=new Set();
-    const candidates=[...nzGuide,...named,...assigned].filter((c:any)=>{
+    const candidates=[...nzGuide,...assigned,...named].filter((c:any)=>{
       if(known.has(c.providerItemId))return false;
       known.add(c.providerItemId);return true;
     }).slice(0,limit);
@@ -105,6 +108,8 @@ Deno.serve(async(req)=>{
         minimumTarget:3,desiredTarget:5,catalogueScanned:rows.length,
         broadcastConfirmed:new Set([...assigned,...nzGuide].map((c:any)=>c.logicalServiceId)).size,
         nzProgrammeVariants:nzGuide.length,
+        independentlyAssignedVariants:assigned.length,
+        independentlyAssignedServices:new Set(assigned.map((c:any)=>c.logicalServiceId)).size,
         providerNameHints:named.length,playbackVerified:0,returned:candidates.length,
         coverageGap:true,independentFixtureStatus:independent.status,reasons,
       },

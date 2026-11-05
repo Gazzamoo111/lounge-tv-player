@@ -98,7 +98,12 @@ export function classify(event,raw,now=Date.now()){
   const start=Date.parse(event.scheduledStartUtc);
   if(!Number.isFinite(start)||["POST","CANCELLED","POSTPONED"].includes(String(event.status).toUpperCase()))return null;
   const parsedEnd=Date.parse(event.scheduledEndUtc);
-  const end=Number.isFinite(parsedEnd)&&parsedEnd>start?parsedEnd:Math.max(start+6*60*60_000,now+30*60_000);
+  const duration=/CRICKET/i.test(event.sportId)?18: /GOLF/i.test(event.sportId)?36:6;
+  const end=Number.isFinite(parsedEnd)&&parsedEnd>start?parsedEnd:start+duration*60*60_000;
+  // A stale event label must not be recycled as live merely because both teams recur.
+  if(now>end||start-now>7*24*60*60_000)return null;
+  const datedName=name.match(/\b(20\d{2}-\d{2}-\d{2})\b/);
+  if(datedName&&Math.abs(Date.parse(datedName[1])-start)>2*24*60*60_000)return null;
   const serviceMarket=market(name);
   const logicalServiceId="best-event:"+row.providerItemId;
   return {
@@ -136,7 +141,7 @@ export function rankCandidates(event,rows,limit=12,now=Date.now()){
     if(seen.has(id))continue;
     seen.add(id);
     out.push(item);
-    if(out.length>=Math.min(12,Math.max(1,limit)))break;
+    if(out.length>=Math.min(rows.length,Math.max(1,limit)))break;
   }
   return out;
 }
@@ -197,31 +202,37 @@ function approvedServiceNames(assigned){
  * network identity, not substring/sport-wide fallback.
  */
 export function linearAssignmentCandidates(event,rows,geoBroadcasts,source,now=Date.now(),limit=12){
+  // Only independent event-specific linear-TV assignments. Never infer that a
+  // country's rights carry over to another country's ESPN/Fox/Sky variant.
+  const regionCodes={us:"US",usa:"US",au:"AU",aus:"AU",nz:"NZ",gb:"UK",uk:"UK",ie:"IE",ca:"CA"};
   const assignments=[];
   for(const b of geoBroadcasts||[]){
-    if(String(b.region||"").toLowerCase()!=="us"||b.type?.shortName!=="TV")continue;
+    const assignedMarket=regionCodes[String(b.region||"").toLowerCase()];
+    if(!assignedMarket||String(b.type?.shortName||"").toUpperCase()!=="TV")continue;
     const name=networkKey(b.media?.shortName);
     if(!name||name.length<3)continue;
-    if(assignments.some(a=>a.name===name))continue;
-    assignments.push({name,variants:approvedServiceNames(name)});
+    if(assignments.some(a=>a.name===name&&a.market===assignedMarket))continue;
+    assignments.push({name,market:assignedMarket,variants:approvedServiceNames(name)});
   }
   const result=[];
   for(const raw of rows){
     const row=inventoryRow(raw),name=String(row.name||"");
     if(!name||INACTIVE.test(name)||excluded(row))continue;
-    if(!/^(?:US|TV)\s*[|:]\s*/i.test(name))continue;
-    const service=networkKey(name.replace(/^(?:US|TV)\s*[|:]\s*/i,""));
-    const assigned=assignments.find(a=>a.variants.has(service));
+    const prefix=name.match(/^(US|AU|NZ|UK|IE|CA|TV)\s*[|:]\s*/i);
+    if(!prefix)continue;
+    // TV| RAW is an established US source family in BEST; preserve its distinct IDs.
+    const serviceMarket=prefix[1].toUpperCase()==="TV"?"US":prefix[1].toUpperCase();
+    const service=networkKey(name.slice(prefix[0].length));
+    const assigned=assignments.find(a=>a.market===serviceMarket&&a.variants.has(service));
     if(!assigned)continue;
-    const serviceId="US:"+assigned.name.replaceAll(" ","");
-    const end=Date.parse(event.scheduledEndUtc);
-    const start=Date.parse(event.scheduledStartUtc);
+    const serviceId=serviceMarket+":"+assigned.name.replaceAll(" ","");
+    const end=Date.parse(event.scheduledEndUtc),start=Date.parse(event.scheduledStartUtc);
     const decision={
-      tier:"plausible",logicalServiceId:serviceId,market:"US",
+      tier:"plausible",logicalServiceId:serviceId,market:serviceMarket,
       reason:"independent-fixture-specific-linear-tv-assignment",
       accepted:[{
         type:"assignment",source,eventId:event.eventId,sportId:event.sportId,
-        competitionId:event.competitionId,serviceId,market:"US",
+        competitionId:event.competitionId,serviceId,market:serviceMarket,
         startUtc:new Date(start).toISOString(),
         endUtc:new Date(Number.isFinite(end)&&end>start?end:start+6*3600000).toISOString(),
         observedAtUtc:new Date(now).toISOString(),contentMismatch:false,
@@ -230,6 +241,6 @@ export function linearAssignmentCandidates(event,rows,geoBroadcasts,source,now=D
     };
     result.push(discoveryCandidate(row,decision,now));
   }
-  result.sort((a,b)=>quality(b.displayName)-quality(a.displayName)||a.providerItemId-b.providerItemId);
-  return result.slice(0,Math.max(1,Math.min(12,limit)));
+  result.sort((a,b)=>quality(b.displayName)-quality(a.displayName||"")||a.providerItemId-b.providerItemId);
+  return result.slice(0,Math.min(rows.length,Math.max(1,limit)));
 }

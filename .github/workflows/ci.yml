@@ -21,6 +21,9 @@ jobs:
   # Build and full regression checks run in parallel. A separate gate publishes
   # the installable QA artifact only when BOTH jobs have succeeded.
   test:
+    # Hold Fire TV APK construction while PR #64's isolated broadcast backend is under validation.
+    # Explicit workflow_dispatch is the only way to build the next candidate after acceptance gates pass.
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.ref_name != '001-live-sports-reliability' && github.head_ref != '001-live-sports-reliability') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

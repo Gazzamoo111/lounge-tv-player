@@ -74,3 +74,11 @@ test("ended, replay and AU ESPN1 rows stay excluded",()=>{
   assert.equal(classify(nba,{provider_item_id:1,name:"REPLAY | DET PISTONS VS PHI 76ERS"},now),null);
   assert.equal(classify(nba,{provider_item_id:646974,name:"AU| ESPN 1 HD | DET PISTONS VS PHI 76ERS"},now),null);
 });
+
+test("dated event hints from an old fixture cannot be recycled for a current cricket match",()=>{
+ const cricket={...nba,sportId:"cricket",competitionId:"cricket/worldcup",
+  scheduledStartUtc:"2026-11-05T00:00:00Z",scheduledEndUtc:"2026-11-05T05:00:00Z",
+  home:"England",away:"India",homeAliases:["England"],awayAliases:["India"]};
+ assert.equal(classify(cricket,{provider_item_id:1,name:"FLSP | cricket: England vs India (2026-09-04 03:10:00)"},now),null);
+ assert.equal(classify(cricket,{provider_item_id:2,name:"FLSP | cricket: England vs India (2026-11-05 03:10:00)"},now)?.tier,"plausible");
+});
