@@ -5,7 +5,7 @@ on:
     paths: ['services/event-streams-qa/**', '.github/workflows/event-streams-qa.yml']
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   real-events:
     runs-on: ubuntu-latest
@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          persist-credentials: true
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -28,6 +28,17 @@ jobs:
           node services/event-streams-qa/src/validate.mjs > outputs/event-streams-qa/validation.log
           python3 services/event-streams-qa/probe.py
           QA_HEALTH_DATA=outputs/event-streams-qa/health.json node services/event-streams-qa/src/validate.mjs > outputs/event-streams-qa/validation.log
+      - name: Publish short-lived ESPN TV assignments for the isolated QA resolver
+        if: github.ref == 'refs/heads/001-live-sports-reliability' && success()
+        run: |
+          python3 services/event-streams-qa/publish_assignments.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add backend/supabase/functions/lounge-sports-candidates-qa/data/espn-assignments.json
+          if ! git diff --cached --quiet; then
+            git commit -m "data(qa): refresh independent ESPN broadcast assignments [skip ci]"
+            git push origin HEAD:001-live-sports-reliability
+          fi
       - name: Preserve actual source observations
         if: always()
         uses: actions/upload-artifact@v4
