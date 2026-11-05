@@ -76,6 +76,8 @@ export function resolveEvent(event,catalogue,dataset,health={},now=Date.now(),li
    const aliases=linearAliases[norm(b.media?.shortName)];
    if(b.region?.toLowerCase()!=='us'||b.type?.shortName!=='TV'||!aliases){coverage.unresolvedBroadcasters.push({name:b.media?.shortName,region:b.region,type:b.type?.shortName,reason:'no-reviewed-linear-service-alias'});continue;}
    const service='US:'+key(aliases[0]);
+   const competingLiveAssignment=event.status==='IN'&&(dataset.fixtures||[]).some(other=>other.eventId!==event.eventId&&other.providerEventId!==event.providerEventId&&other.status==='IN'&&now-instant(other.fixtureFetchedAtUtc)>=0&&now-instant(other.fixtureFetchedAtUtc)<=5*MINUTE&&(other.geoBroadcasts||[]).some(x=>x.region?.toLowerCase()==='us'&&x.type?.shortName==='TV'&&key(linearAliases[norm(x.media?.shortName)]?.[0])===key(aliases[0])));
+   if(competingLiveAssignment){coverage.rejections.contradiction++;continue;}
    for(const row of catalogue.rows){
     if(marketOf(row)!=='US'||!aliases.some(a=>equivalent(serviceName(row.name),a))||badName.test(row.name)||excluded(row))continue;
     const type=event.status==='IN'?'event-feed':'assignment';
@@ -97,7 +99,7 @@ export function resolveEvent(event,catalogue,dataset,health={},now=Date.now(),li
    coverage.programmeMatches+=proof.length;
    if(!catalogue.rows.some(row=>identity(row,channel,guide)))coverage.unmappedProgrammeServices.push({market:guide.market,names:channel.names,guideChannelId:channel.id,programme:proof[0].title});
    const service=guide.market+':'+key(serviceName(channel.names[0]||channel.id));
-   const currentContradiction=current.some(p=>instant(p.startUtc)<=now&&contradiction(event,[p.title,p.description,...(p.categories||[])].join(' ')));
+   const currentContradiction=current.some(p=>{const text=[p.title,p.description,...(p.categories||[])].join(' ');return instant(p.startUtc)<=now&&(contradiction(event,text)||(sportHit(event,text)&&/\s(?:vs?\.?|at|@)\s/i.test(text)&&!programmeMatches(event,p)));});
    for(const row of catalogue.rows){
     if(!identity(row,channel,guide))continue;
     if(badName.test(row.name)){coverage.rejections.inactive++;continue;}

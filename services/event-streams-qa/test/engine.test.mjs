@@ -97,3 +97,13 @@ test('a live multi-day event cannot promote tomorrow\'s television window as air
  g.programmes[0].startUtc=iso(now-1_800_000);
  assert.equal(resolveEvent(e,catalogue([row()]),{guides:[g]},health(),now).candidates.length,1);
 });
+test('two simultaneous live fixtures assigned to the same linear network stay unverified',()=>{
+ const e=fixture();e.geoBroadcasts=[{region:'us',type:{shortName:'TV'},media:{shortName:'ESPN'}}];
+ const other={...e,eventId:'basketball/test#2',providerEventId:'2'};
+ const r=resolveEvent(e,catalogue([{id:45579,name:'US| ESPN HD'}]),{guides:[],fixtures:[e,other]},{},now);
+ assert.equal(r.coverage.broadcastConfirmed,0);assert.equal(r.coverage.rejections.contradiction,1);
+});
+test('conflicting simultaneous games in one guide cannot both verify the same service',()=>{
+ const d=dataset();d.guides[0].programmes.push({...programme(),title:'Live Basketball: Other Athletic v Another United'});
+ const r=resolveEvent(d.fixtures[0],catalogue([row()]),d,health(),now);assert.equal(r.candidates.length,0);assert.equal(r.coverage.rejections.contradiction,1);
+});
