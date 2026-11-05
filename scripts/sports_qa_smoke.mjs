@@ -85,6 +85,9 @@ for(const event of events){
     verifiedFixtures.push({
       fixture:event.name,eventId,
       independentlyAssignedServices:body.coverage.broadcastConfirmed,
+      independentFixtureStatus:body.coverage.independentFixtureStatus,
+      independentFixtureNetworkVariants:body.coverage.independentlyAssignedVariants,
+      independentFixtureNetworkServices:body.coverage.independentlyAssignedServices,
       providerTitleHints:body.coverage.providerNameHints,
       suggestions:body.candidates.map(c=>({
         id:c.providerItemId,name:c.displayName,tier:c.tier,evidence:c.evidence?.[0]?.type
