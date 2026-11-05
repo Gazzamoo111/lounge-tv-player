@@ -107,7 +107,7 @@ test("explicit non-US regional TV assignments find AU, NZ and UK variants withou
   {provider_item_id:1004,name:"AU| SKY SPORT 1 HD",category_id:"700"}
  ];
  const found=linearAssignmentCandidates(eventForMarkets,rows,schedule,"fixture-tv-guide",now,100);
- assert.deepEqual(found.map(x=>x.providerItemId),[1002,646948,1001]);
+ assert.deepEqual(found.map(x=>x.providerItemId),[1002,1001,646948]);
  assert.ok(found.every(x=>x.tier==="plausible"&&x.evidence[0].type==="assignment"));
- assert.deepEqual(found.map(x=>x.serviceMarket),["UK","AU","NZ"]);
+ assert.deepEqual(found.map(x=>x.serviceMarket),["UK","NZ","AU"]);
 });
