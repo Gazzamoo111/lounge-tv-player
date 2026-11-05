@@ -1,0 +1,29 @@
+name: Fire TV sports QA backend smoke
+on:
+  push:
+    branches: [001-live-sports-reliability]
+    paths:
+      - 'backend/supabase/functions/lounge-sports-candidates-qa/**'
+      - 'scripts/sports_qa_smoke.mjs'
+      - '.github/workflows/sports-qa-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sports-qa-backend-smoke-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  live-qa-endpoint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate QA script syntax
+        run: node --check scripts/sports_qa_smoke.mjs
+      - name: Verify Fire TV-accessible QA backend with a real sporting fixture
+        run: node scripts/sports_qa_smoke.mjs
