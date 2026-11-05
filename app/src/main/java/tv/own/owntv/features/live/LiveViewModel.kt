@@ -1908,6 +1908,7 @@ class LiveViewModel(
      *  channel. Direct-tune's background rebuild path calls this without cancelling the rebuild
      *  so the in-flight rebuild it owns isn't killed by its own play. */
     private suspend fun playChannel(channel: ChannelEntity) {
+        val traceGeneration = tuneTrace.generation
         if (excludedSportsChannel(channel)) return
         val pid = currentProfileId() ?: return
         if (!tv.own.owntv.core.content.AdultCategoryClassifier.allows(pid, channel.categoryId, profileDao, categoryDao)) return
@@ -1922,7 +1923,6 @@ class LiveViewModel(
         _catchupActive.value = false // tuning live ends any archive playback the HUD was showing
         // Core routes it (DRM, the pin, a learned panel refusal, the playlist, the setting), arms the
         // ladder and starts the engine — the same code the phone runs.
-        val traceGeneration = tuneTrace.generation
         tuneTrace.mark(traceGeneration, "resolution-start", android.os.SystemClock.elapsedRealtime())
         val source = getSource(playback.sourceId)
         if (traceGeneration != tuneTrace.generation) return

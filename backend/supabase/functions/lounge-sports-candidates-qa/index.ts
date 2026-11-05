@@ -67,14 +67,14 @@ Deno.serve(async(req)=>{
     // Never fabricate observedAt, event identity, or reviewed service status.
     const candidates=selected.map(({row,decision}:any)=>discoveryCandidate(row,decision,now));
     return Response.json({
-      contractVersion:2,eventId,generatedAtUtc:iso(now),
+      implementationId:"qa-sports-evidence-v3",contractVersion:2,eventId,generatedAtUtc:iso(now),
       catalogueRevision:latest?String(latest.poll_id):"unknown",
       importCompletedAtUtc:Number.isFinite(importMs)?iso(importMs):null,
       evidenceAsOfUtc:null,expiresAtUtc:iso(now+300000),catalogueStale,
       candidates,totalEligible:candidates.length,nextCursor:null,
     },{headers:{"Cache-Control":"private, no-store","Access-Control-Allow-Origin":"*"}});
   }catch(e){
-    console.error("SPORT_CANDIDATES_QA",e);
+    console.error("SPORT_CANDIDATES_QA unavailable");
     return Response.json({error:"sports_candidates_qa_unavailable"},{status:503});
   }
 });

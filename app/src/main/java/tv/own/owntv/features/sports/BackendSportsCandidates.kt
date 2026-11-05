@@ -14,13 +14,16 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
 
+internal const val QA_SPORTS_IMPLEMENTATION = "qa-sports-evidence-v3"
+
 internal const val BACKEND_CONFIDENCE_PREFIX = "__LTV_BACKEND__:"
 
 internal class BackendSportsCandidateProvider(
-    private val endpoint: String = "https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-sports-candidates-qa",
+    private val endpoint: String = tv.own.owntv.BuildConfig.SPORTS_CANDIDATES_URL,
     private val playbackEndpoint: String = "https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-xtream",
 ) {
     suspend fun options(match: Match, source: SourceEntity): List<WatchOption> = withContext(Dispatchers.IO) {
+        if (endpoint.isBlank()) return@withContext emptyList()
         val username = source.username?.takeIf(String::isNotBlank) ?: return@withContext emptyList()
         val password = source.password?.takeIf(String::isNotBlank) ?: return@withContext emptyList()
         val home = match.home?.team?.name.orEmpty()
@@ -51,20 +54,24 @@ internal class BackendSportsCandidateProvider(
             if (connection.responseCode !in 200..299) return@withContext emptyList()
             val body = connection.inputStream.bufferedReader().use { it.readText() }
             val response = JSONObject(body)
+            if (tv.own.owntv.BuildConfig.DEBUG &&
+                response.optString("implementationId") != QA_SPORTS_IMPLEMENTATION) return@withContext emptyList()
             val version = response.optInt("contractVersion", 1)
             val now = System.currentTimeMillis()
-            if (version !in 1..2) return@withContext emptyList()
+            if (version != 2) return@withContext emptyList()
             if (version == 2 && (response.optString("eventId") != match.key ||
                 parseUtc(response.optString("expiresAtUtc")) <= now ||
                 response.optBoolean("catalogueStale", true))) return@withContext emptyList()
             val rows = response.optJSONArray("candidates") ?: return@withContext emptyList()
             buildList {
-                for (index in 0 until rows.length()) {
+                for (index in 0 until minOf(rows.length(), 6)) {
                     val row = rows.optJSONObject(index) ?: continue
                     val providerItemId = row.optLong("providerItemId", 0L).takeIf { it > 0L } ?: continue
                     val name = row.optString("displayName", row.optString("name")).takeIf(String::isNotBlank) ?: continue
                     val evidenceValid = version == 2 && candidateEvidenceValid(row, match, now) && !response.optBoolean("catalogueStale", true)
                     if (tv.own.owntv.features.live.SportsChannelPolicy.excludedBest(providerItemId.toString(), name)) continue
+                    if (parseUtc(row.optString("expiresAtUtc")) <= now) continue
+                    if (row.optString("tier") in setOf("verified", "plausible") && !evidenceValid) continue
                     // Keep unverified catalogue discovery in the secondary alternatives only.
                     // Do not let a name/fixture guess masquerade as programme evidence.
                     val tierName = if (evidenceValid) row.optString("tier") else "unverified"
@@ -106,7 +113,8 @@ internal class BackendSportsCandidateProvider(
 internal fun mergeBackendSportsOptions(backend: List<WatchOption>, local: List<WatchOption>): List<WatchOption> =
     (backend + local)
         .sortedBy { it.tier.ordinal }
-        .distinctBy { it.channel.sourceId to (it.channel.remoteId?.removePrefix("sport-backend:") ?: it.channel.id.toString()) }
+        .distinctBy { it.channel.sourceId to (tv.own.owntv.features.live.LoungeSoccerCatalogue.reviewedService(it.channel)
+            ?: (it.facets.country.orEmpty() + ":" + it.facets.portableKey)) }
         .take(8)
 
 internal fun mergeBackendSportsOptions(match: Match, backend: List<WatchOption>, local: List<WatchOption>): List<WatchOption> {
@@ -114,8 +122,21 @@ internal fun mergeBackendSportsOptions(match: Match, backend: List<WatchOption>,
         match.leagueName.contains("football", ignoreCase = true) ||
         match.leagueName.contains("champions league", ignoreCase = true) ||
         match.leagueName.contains("premier league", ignoreCase = true)
-    val noisySoccerNetwork = Regex("\\b(?:STAN\\s+SPORT|PARAMOUNT(?:\\s*\\+|\\s+PLUS)?)\\b", RegexOption.IGNORE_CASE)
-    val cleanLocal = if (!soccer) local else local.filterNot { noisySoccerNetwork.containsMatchIn(it.channel.name) }
+    val keys = tv.own.owntv.core.sports.WatchMatcher.Keys(match)
+    val cleanLocal = local.filterNot {
+        tv.own.owntv.features.live.SportsChannelPolicy.excludedBest(it.channel.remoteId, it.channel.name)
+    }.mapNotNull { option ->
+        val guideMatches = option.tier == WatchTier.GUIDE &&
+            !tv.own.owntv.features.live.SportsChannelPolicy.guideUntrusted(option.channel.remoteId, option.channel.name) &&
+            tv.own.owntv.core.sports.WatchMatcher.isEventChannel(keys, option.guideTitle.orEmpty())
+        when {
+            guideMatches -> option
+            soccer && tv.own.owntv.features.live.LoungeSoccerCatalogue.reviewedService(option.channel) != null ->
+                option.copy(tier = WatchTier.LIKELY, guideTitle = null)
+            !soccer -> option.copy(tier = WatchTier.LIKELY, guideTitle = null)
+            else -> null
+        }
+    }
     return mergeBackendSportsOptions(backend, cleanLocal)
 }
 
@@ -139,6 +160,7 @@ private fun candidateEvidenceValid(row: JSONObject, match: Match, now: Long): Bo
     if (row.optString("sourceId") != "best" || row.optString("serviceMarket").isBlank() ||
         !row.optBoolean("identityReviewed") || parseUtc(row.optString("expiresAtUtc")) <= now) return false
     val evidence = row.optJSONArray("evidence") ?: return false
+    if ((0 until evidence.length()).any { evidence.optJSONObject(it)?.optBoolean("contentMismatch") == true }) return false
     return (0 until evidence.length()).any { i ->
         val e = evidence.optJSONObject(i) ?: return@any false
         val observed = parseUtc(e.optString("observedAtUtc"))
@@ -148,7 +170,7 @@ private fun candidateEvidenceValid(row: JSONObject, match: Match, now: Long): Bo
         val typeSupportsClaim = evidenceSupportsClaim(row.optString("tier"), e.optString("type"))
         e.optString("eventId") == match.key && e.optString("source").isNotBlank() &&
             now - observed in 0..ageLimit && start < end &&
-            start <= match.startMs + 900_000L && end > match.startMs &&
+            start <= match.startMs + 900_000L && end > match.startMs && end > now &&
             e.optString("sportId") == match.sport.path && e.optString("competitionId") == match.feed &&
             e.optString("serviceId") == row.optString("logicalServiceId") &&
             e.optString("market") == row.optString("serviceMarket") &&

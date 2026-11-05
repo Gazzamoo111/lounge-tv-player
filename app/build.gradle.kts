@@ -60,6 +60,8 @@ android {
         versionCode = (suppliedVersionCode ?: localFallbackVersionCode.toString()).toInt()
         versionName = suppliedVersionName ?: "5.2.3.1-local"
 
+        buildConfigField("String", "SPORTS_CANDIDATES_URL", "\"https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-sports-candidates-qa\"")
+
         // Opt-in local diagnostic APKs keep the rolling playback trace enabled even when they are
         // release-signed (so they can update an installed production build without changing its data).
         buildConfigField(
@@ -219,6 +221,13 @@ android {
 
     buildTypes {
         debug {
+            val sportsQaEndpoint = System.getenv("SPORTS_QA_ENDPOINT").orEmpty()
+            if (qaSigningRequired && (sportsQaEndpoint.isBlank() ||
+                !sportsQaEndpoint.startsWith("https://") ||
+                java.net.URI(sportsQaEndpoint).host == "liqocisegeqzbyuqloql.supabase.co")) {
+                throw GradleException("QA requires SPORTS_QA_ENDPOINT on an isolated host")
+            }
+            buildConfigField("String", "SPORTS_CANDIDATES_URL", "\"${sportsQaEndpoint.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
             // Keep debug builds isolated from production (different signing keys and data).
             // Draft PR builds install alongside production and stable QA, never over either.
             applicationIdSuffix = when {

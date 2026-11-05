@@ -30,4 +30,9 @@ class LoungeSoccerCatalogueTest {
   assertTrue(LoungeSoccerCatalogue.project(all,setOf(999L),emptyList(),3000).isEmpty())
  }
 
+ @Test fun nowTvInventoryAliasesCollapseWithUkService() {
+  fun row(id:Long,name:String) = ChannelEntity(id=id,sourceId=82,name=name,remoteId=id.toString(),streamUrl="https://example.invalid/$id")
+  val rows=listOf(row(1905819,"UK-NOWTV| TNT SPORT 1 FHD"),row(30567,"UK| TNT SPORTS 1 FHD"),row(1905858,"UK-NOWTV| SKY SPORTS FOOTBALL FHD"))
+  assertEquals(2,LoungeSoccerCatalogue.project(rows,setOf(82),emptyList(),3000).size)
+ }
 }

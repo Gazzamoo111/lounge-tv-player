@@ -1,7 +1,7 @@
 const INACTIVE=/NO EVENT|NO STREAM|NOT STREAMING|OFFLINE|PLACEHOLDER|####|^#+|ENDED|REPLAY|HIGHLIGHTS/i;
 const BLOCKED_ESPN1_IDS=new Set(["646974","1520168"]);
 const BLOCKED_ESPN1=/^AU\s*[|:]?\s*(?:KAYO\s*[-:]?\s*)?ESPN\s*1(?:\s|$)/i;
-const SOCCER_NOISE=/\b(?:STAN\s+SPORT|PARAMOUNT(?:\s*\+|\s+PLUS)?)\b/i;
+
 
 export const norm=v=>String(v??"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z0-9]+/g," ").trim();
 const phrase=(hay,needle)=>needle && (" "+norm(hay)+" ").includes(" "+norm(needle)+" ");
@@ -42,7 +42,7 @@ function market(name){
   return m[1]==="GB"?"UK":m[1]==="USA"?"US":m[1];
 }
 function stableSoccer(name){
-  const n=norm(name);
+  const n=norm(name).replace(/^UK NOWTV /,"UK ");
   let m=n.match(/^AU BEIN SPORTS? ([123])(?:\s|$)/);
   if(m)return {key:"AU:BEIN:"+m[1],priority:10};
   m=n.match(/^UK SKY SPORTS (FOOTBALL|PREMIER LEAGUE|MAIN EVENTS?)(?:\s|$)/);
@@ -64,39 +64,73 @@ function broadcasterHit(name,broadcasters=[]){
   const n=norm(name);
   return broadcasters.some(raw=>{
     const b=norm(raw);
-    if(b.length<4||b.includes("STAN")||b.includes("PARAMOUNT"))return false;
+    if(b.length<4)return false;
     return phrase(n,b);
   });
 }
 export function excluded(row){
-  const id=String(row.providerItemId??"");
-  return BLOCKED_ESPN1_IDS.has(id)||BLOCKED_ESPN1.test(row.name||row.displayName||"");
+  const id=String(row.providerItemId??row.provider_item_id??"");
+  const n=norm(row.name||row.displayName||"");
+  return BLOCKED_ESPN1_IDS.has(id)||BLOCKED_ESPN1.test(row.name||row.displayName||"")||
+    /^(?:(?:AU|AUS|AUSTRALIA)(?: KAYO)? ESPN(?: (?:AU|AUS|AUSTRALIA))? 1|ESPN (?:AU|AUS|AUSTRALIA) 1|ESPN 1 (?:AU|AUS|AUSTRALIA))(?: |$)/.test(n);
 }
 export function classify(event,row){
+  row=inventoryRow(row);
   const name=String(row.name||row.displayName||"");
   if(!name||INACTIVE.test(name)||excluded(row))return null;
   const soccer=isSoccer(event);
-  if(soccer&&SOCCER_NOISE.test(name))return null;
+
   const exact=sideHit(name,event.home)&&sideHit(name,event.away);
   if(exact)return {tier:"unverified",logicalServiceId:"event:"+row.providerItemId,priority:0,market:market(name),reason:"fixture-name-unconfirmed"};
   if(soccer){
     const stable=stableSoccer(name);
     if(stable)return {tier:"unverified",logicalServiceId:stable.key,priority:stable.priority,market:market(name),reason:"curated-soccer-service-unconfirmed"};
   }
-  if(stableNamed(name)&&broadcasterHit(name,event.broadcasters)){
+  if(!soccer&&stableNamed(name)&&broadcasterHit(name,event.broadcasters)){
     return {tier:"unverified",logicalServiceId:"broadcaster:"+norm(name).replace(/\b(?:4K|UHD|FHD|HD|SD|HEVC|RAW)\b/g,"").trim(),priority:45,market:market(name),reason:"fixture-broadcaster-unconfirmed"};
   }
   return null;
 }
-export function rankCandidates(event,rows,limit=6){
-  const admitted=rows.map(row=>({row,decision:classify(event,row)})).filter(x=>x.decision);
+export function inventoryRow(row){
+  return {...row,providerItemId:row.providerItemId??row.provider_item_id};
+}
+
+// Only server-owned reviewed evidence can promote a service. Client broadcaster names cannot.
+export function evidenceDecision(event,row,now){
+  const start=Date.parse(event.scheduledStartUtc),end=Date.parse(event.scheduledEndUtc);
+  if(!row.identityReviewed||!row.logicalServiceId||!row.serviceMarket||
+    !Number.isFinite(start)||!Number.isFinite(end)||end<=start||end<=now||
+    ["POST","CANCELLED","POSTPONED"].includes(event.status))return null;
+  const evidence=(row.evidence||[]).filter(e=>{
+    const at=Date.parse(e.observedAtUtc),es=Date.parse(e.startUtc),ee=Date.parse(e.endUtc);
+    return e.source&&e.eventId===event.eventId&&e.sportId===event.sportId&&
+      e.competitionId===event.competitionId&&e.serviceId===row.logicalServiceId&&
+      e.market===row.serviceMarket&&Number.isFinite(at)&&now-at>=0&&
+      now-at<=(start>now?86400000:300000)&&es<=start+900000&&ee>start&&ee>now&&es<ee;
+  });
+  if(evidence.some(e=>e.contentMismatch)||row.contentMismatch)return {reject:true};
+  const accepted=evidence.filter(e=>["programme","event-feed","assignment"].includes(e.type));
+  if(!accepted.length)return null;
+  const verified=accepted.some(e=>["programme","event-feed"].includes(e.type));
+  return {tier:verified?"verified":"plausible",logicalServiceId:row.logicalServiceId,
+    priority:verified?-20:-10,market:row.serviceMarket,reason:"current-fixture-evidence",accepted};
+}
+
+export function rankCandidates(event,rows,limit=6,now=Date.now()){
+  const admitted=rows.map(inventoryRow).map(row=>{
+    if(excluded(row)||INACTIVE.test(row.name||""))return null;
+    const proof=evidenceDecision(event,row,now);
+    if(proof?.reject)return null;
+    const decision=proof||classify(event,row);
+    return decision?{row,decision}:null;
+  }).filter(Boolean);
   admitted.sort((a,b)=>a.decision.priority-b.decision.priority || quality(b.row.name)-quality(a.row.name) || Number(a.row.providerItemId)-Number(b.row.providerItemId));
   const seen=new Set(),out=[];
   for(const item of admitted){
     const k=item.decision.logicalServiceId;
     if(seen.has(k))continue;
     seen.add(k);out.push(item);
-    if(out.length>=limit)break;
+    if(out.length>=Math.min(6,Math.max(1,limit)))break;
   }
   return out;
 }
@@ -104,18 +138,18 @@ export function rankCandidates(event,rows,limit=6){
 export function discoveryCandidate(row,decision,now){
   return {
     sourceId:"best",
-    providerItemId:Number(row.provider_item_id),
+    providerItemId:Number(row.providerItemId??row.provider_item_id),
     categoryId:String(row.category_id),
     logicalServiceId:decision.logicalServiceId,
     displayName:String(row.name),
     logoUrl:row.artwork_url||null,
     epgId:null,
     serviceMarket:decision.market,
-    identityReviewed:false,
-    tier:"unverified",
+    identityReviewed:Boolean(decision.accepted?.length),
+    tier:decision.accepted?.length?decision.tier:"unverified",
     reason:decision.reason,
     expiresAtUtc:new Date(now+300000).toISOString(),
-    evidence:[],
+    evidence:decision.accepted||[],
     playbackObservation:{status:"unknown"},
   };
 }

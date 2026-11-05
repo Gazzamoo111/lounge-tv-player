@@ -3,6 +3,8 @@ package tv.own.owntv.features.live
 /** Lounge/BEST sports policy. Saved provider records remain intact. */
 internal object SportsChannelPolicy {
     fun excludedBest(providerId: String?, name: String): Boolean =
+        Regex("^(?:(?:AU|AUS|AUSTRALIA)(?: KAYO)? ESPN(?: (?:AU|AUS|AUSTRALIA))? 1|ESPN (?:AU|AUS|AUSTRALIA) 1|ESPN 1 (?:AU|AUS|AUSTRALIA))(?: |$)", RegexOption.IGNORE_CASE)
+            .containsMatchIn(name.uppercase().replace(Regex("[^A-Z0-9]+"), " ").trim()) ||
         providerId?.substringAfterLast(":") in setOf("646974", "1520168") ||
             Regex("^AU\\s*[|:]?\\s*(?:KAYO\\s*[-:]?\\s*)?ESPN\\s*1(?:\\s|$)", RegexOption.IGNORE_CASE)
                 .containsMatchIn(name.trim())

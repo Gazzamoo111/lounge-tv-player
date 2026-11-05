@@ -9,6 +9,14 @@ class SportsChannelPolicyTest {
   assertTrue(SportsChannelPolicy.excludedBest(null,"AU| KAYO - ESPN 1"))
   for(n in listOf("AU| ESPN 2 HD","AU| ESPN 10","AU| ESPN 11","US| ESPN 1"))assertFalse(n,SportsChannelPolicy.excludedBest(null,n))
  }
+ @Test fun regionalAliasesRemainExcludedAfterProviderRenumbering() {
+  for (name in listOf("ESPN Australia 1", "ESPN AU 1", "AU ESPN 1 HD", "ESPN 1 Australia")) {
+   assertTrue(name, SportsChannelPolicy.excludedBest("999999", name))
+  }
+  for (name in listOf("ESPN Australia 2", "ESPN AU 2", "US ESPN 1 HD", "US ESPN HD")) {
+   assertFalse(name, SportsChannelPolicy.excludedBest("999999", name))
+  }
+ }
  @Test fun suppressesOnlyObservedBadBeinGuideAliases() {
   assertTrue(SportsChannelPolicy.guideUntrusted("best:646977","Renamed"))
   assertTrue(SportsChannelPolicy.guideUntrusted(null,"AU| BEIN SPORTS 3 HD"))
