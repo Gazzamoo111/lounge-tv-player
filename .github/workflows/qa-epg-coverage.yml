@@ -76,3 +76,68 @@ jobs:
             qa/epg/out/merged/merge-report.json
             qa/epg/out/merged/short/
           retention-days: 7
+
+  promote:
+    name: Publish vetted guide to epg-data
+    needs: verify
+    if: github.ref == 'refs/heads/qa-epg-repair-20261105'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout customer EPG data only
+        uses: actions/checkout@v4
+        with:
+          ref: epg-data
+          path: published
+      - name: Retrieve QA-validated guide
+        uses: actions/download-artifact@v4
+        with:
+          name: lounge-epg-qa-supplement
+          path: reviewed
+      - name: Check backup point and coverage guard
+        run: |
+          test "$(git -C published rev-parse HEAD)" = "434548940b3c7a21cd791f681e0740300aa4294d" || {
+            echo "Published EPG branch has moved since the backup. Refusing to overwrite." >&2
+            exit 1
+          }
+          test -s reviewed/merged/guide.xml.gz
+          test -s reviewed/merged/merge-report.json
+          python - <<'PY'
+          import json,gzip
+          from datetime import datetime,timezone
+          from lxml import etree
+          report=json.load(open('reviewed/merged/merge-report.json'))
+          assert report['activeRelease']=='universal-v2-nz-tv-staging',report
+          assert report['previousGuideChannelIds']==336,report
+          assert report['newGuideChannelIds']>90,report
+          assert report['newShortEpgChannels']>150,report
+          assert report['addedProgrammes']>12000,report
+          assert report['retainedCurrentProgrammes']>0,report
+          assert datetime.fromisoformat(report['mergedAtUtc']).date()==datetime.now(timezone.utc).date()
+          found=set()
+          with gzip.open('reviewed/merged/guide.xml.gz','rb') as f:
+            for _,node in etree.iterparse(f,events=('end',),tag='programme'):
+              if node.get('channel') in {'SkySport2.nz','SkySport3.nz','FoxSports3.au','beINSports1.au'}:
+                found.add(node.get('channel'))
+              node.clear()
+              while node.getprevious() is not None:del node.getparent()[0]
+          assert {'SkySport2.nz','SkySport3.nz','FoxSports3.au'}.issubset(found),found
+          print('PUBLISH_GUARD_PASS',report['addedProgrammes'],report['newShortEpgChannels'])
+          PY
+      - name: Replace only central XMLTV guide and relevant per-channel short listings
+        run: |
+          mkdir -p published/epg/short
+          cp reviewed/merged/guide.xml.gz published/epg/guide.xml.gz
+          gzip -dc reviewed/merged/guide.xml.gz > published/epg/guide.xml
+          cp reviewed/merged/short/*.json published/epg/short/
+          cp reviewed/coverage.json published/epg/coverage-epgshare-20261105.json
+          cp reviewed/merged/merge-report.json published/epg/merge-epgshare-20261105.json
+          cd published
+          git config user.name "Lounge TV EPG QA"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add epg/guide.xml epg/guide.xml.gz epg/short/ epg/coverage-epgshare-20261105.json epg/merge-epgshare-20261105.json
+          git diff --cached --quiet && { echo "No EPG changes to publish"; exit 0; }
+          git commit -m "epg: refresh verified regional listings without changing live channel catalogue"
+          git push origin HEAD:epg-data
