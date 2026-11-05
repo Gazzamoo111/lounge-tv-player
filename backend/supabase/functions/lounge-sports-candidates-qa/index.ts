@@ -1,4 +1,6 @@
 import postgres from "npm:postgres@3.4.7";
+import {XMLParser} from "npm:fast-xml-parser@4.5.3";
+import {nzProgrammeCandidates} from "./programme-evidence.mjs";
 import {rankCandidates,discoveryCandidate,linearAssignmentCandidates} from "./matcher.mjs";
 import {findIndependentBroadcasts} from "./fixture-evidence.mjs";
 
@@ -13,6 +15,24 @@ function poolUrl(raw:string){
 }
 const sql=postgres(poolUrl(rawDbUrl),{prepare:false,max:2,idle_timeout:5,connect_timeout:10});
 const iso=(ms:number)=>new Date(ms).toISOString();
+
+// Isolated QA only: 5-minute reuse avoids re-downloading a programme feed per fixture.
+const NZ_GUIDE_URL="https://raw.githubusercontent.com/matthuisman/i.mjh.nz/master/SkySportNow/epg.xml.gz";
+let nzGuideCache:{at:number,programmes:any[]}|null=null;
+async function loadNzSportsGuide(now:number){
+  if(nzGuideCache&&now-nzGuideCache.at<300_000)return nzGuideCache.programmes;
+  try{
+    const response=await fetch(NZ_GUIDE_URL,{signal:AbortSignal.timeout(7000)});
+    if(!response.ok||!response.body)return [];
+    const xml=await new Response(response.body.pipeThrough(new DecompressionStream("gzip"))).text();
+    if(xml.length>40_000_000)return [];
+    const tv=new XMLParser({ignoreAttributes:false,attributeNamePrefix:"@_",textNodeName:"#text"}).parse(xml).tv;
+    const all=Array.isArray(tv?.programme)?tv.programme:tv?.programme?[tv.programme]:[];
+    const programmes=all.filter((p:any)=>/^SkySport(?:\\d+|Select|NZ).*\\.nz$/i.test(String(p["@_channel"]||"")));
+    nzGuideCache={at:now,programmes};
+    return programmes;
+  }catch{return [];}
+}
 
 Deno.serve(async(req)=>{
   if(req.method!=="GET")return Response.json({error:"method_not_allowed"},{status:405});
@@ -56,16 +76,23 @@ Deno.serve(async(req)=>{
     const importMs=latest?.completed_at?Date.parse(latest.completed_at):NaN;
     const now=Date.now();
     const catalogueStale=!Number.isFinite(importMs)||now-importMs>86400000;
-    const independent=catalogueStale?{geo:[],source:"",status:"catalogue-stale"}:await findIndependentBroadcasts(event);
+    const [independent,programmes]=catalogueStale?
+      [{geo:[],source:"",status:"catalogue-stale"},[]]:
+      await Promise.all([findIndependentBroadcasts(event),loadNzSportsGuide(now)]);
     const assigned=catalogueStale?[]:linearAssignmentCandidates(event,rows,independent.geo,independent.source,now,limit);
+    const nzGuide=catalogueStale?[]:nzProgrammeCandidates(event,rows,programmes,now,NZ_GUIDE_URL,limit);
     const selected=catalogueStale?[]:rankCandidates(event,rows,limit,now);
     const named=selected.map(({row,decision}:any)=>discoveryCandidate(row,decision,now));
-    // Preserve provider stream variants but never promote a title match to confirmed coverage.
-    const known=new Set(assigned.map((c:any)=>c.providerItemId));
-    const candidates=[...assigned,...named.filter((c:any)=>!known.has(c.providerItemId))].slice(0,limit);
+    // Real dated guide evidence first; explicit provider event feeds next; linear TV backups last.
+    // Deduplicate only identical provider stream IDs. Never change source category membership.
+    const known=new Set();
+    const candidates=[...nzGuide,...named,...assigned].filter((c:any)=>{
+      if(known.has(c.providerItemId))return false;
+      known.add(c.providerItemId);return true;
+    }).slice(0,limit);
     const reasons=[];
     if(catalogueStale)reasons.push("catalogue-stale");
-    if(!assigned.length)reasons.push("no-independent-fixture-broadcast-assignments");
+    if(!assigned.length&&!nzGuide.length)reasons.push("no-independent-fixture-broadcast-assignments");
     if(named.length)reasons.push("provider-name-matches-unverified");
     if(candidates.length)reasons.push("playback-unverified");
     return Response.json({
@@ -76,7 +103,8 @@ Deno.serve(async(req)=>{
       candidates,totalEligible:rows.length,nextCursor:null,
       coverage:{
         minimumTarget:3,desiredTarget:5,catalogueScanned:rows.length,
-        broadcastConfirmed:new Set(assigned.map((c:any)=>c.logicalServiceId)).size,
+        broadcastConfirmed:new Set([...assigned,...nzGuide].map((c:any)=>c.logicalServiceId)).size,
+        nzProgrammeVariants:nzGuide.length,
         providerNameHints:named.length,playbackVerified:0,returned:candidates.length,
         coverageGap:true,independentFixtureStatus:independent.status,reasons,
       },
