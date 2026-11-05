@@ -91,11 +91,7 @@ export function excluded(row){
     /^(?:(?:AU|AUS|AUSTRALIA)(?: KAYO)? ESPN(?: (?:AU|AUS|AUSTRALIA))? 1|ESPN (?:AU|AUS|AUSTRALIA) 1|ESPN 1 (?:AU|AUS|AUSTRALIA))(?: |$)/.test(n);
 }
 
-/**
- * Fixture-specific BEST event feeds are evidence because the currently-present provider row itself
- * names both competitors (or the full single-event title). Generic networks, team channels and
- * same-sport feeds never pass this gate.
- */
+/** Provider item names identify investigation leads only. They never prove a broadcast or playback. */
 export function classify(event,raw,now=Date.now()){
   const row=inventoryRow(raw);
   const name=String(row.name||row.displayName||"");
@@ -107,14 +103,14 @@ export function classify(event,raw,now=Date.now()){
   const serviceMarket=market(name);
   const logicalServiceId="best-event:"+row.providerItemId;
   return {
-    tier:"verified",
+    tier:"plausible",
     logicalServiceId,
     priority:eventPriority(name),
     market:serviceMarket,
-    reason:"exact-fixture-provider-event-feed",
+    reason:"exact-fixture-provider-name-unverified",
     accepted:[{
-      type:"event-feed",
-      source:"best-live-inventory-exact-fixture",
+      type:"name-hint",
+      source:"best-live-inventory-name-only",
       eventId:event.eventId,
       sportId:event.sportId,
       competitionId:event.competitionId,
@@ -164,4 +160,51 @@ export function discoveryCandidate(raw,decision,now){
     evidence:decision.accepted,
     playbackObservation:{status:"unknown",reason:"device-acceptance-required"},
   };
+}
+
+/**
+ * Independent, event-specific ESPN regional linear TV assignments.
+ * No generic network, package subscription, or client broadcaster hint is admitted.
+ * Assignments are plausible until the exact broadcast and video decode are confirmed.
+ */
+export function linearAssignmentCandidates(event,rows,geoBroadcasts,source,now=Date.now(),limit=12){
+  const approved={
+    "ESPN":["ESPN"],"ESPN2":["ESPN 2","ESPN2"],"ESPNU":["ESPNU","ESPN U"],
+    "TNT":["TNT"],"TBS":["TBS"],"NBA TV":["NBA TV"],"NHL NETWORK":["NHL NETWORK","NHL NET"],
+    "NFL NETWORK":["NFL NETWORK"],"FS1":["FOX SPORTS 1","FS1"],"FS2":["FOX SPORTS 2","FS2"]
+  };
+  const assignments=new Set();
+  for(const b of geoBroadcasts||[]){
+    if(String(b.region||"").toLowerCase()!=="us"||b.type?.shortName!=="TV")continue;
+    const name=norm(b.media?.shortName);
+    if(approved[name])assignments.add(name);
+  }
+  const result=[];
+  for(const raw of rows){
+    const row=inventoryRow(raw),name=String(row.name||"");
+    if(!name||INACTIVE.test(name)||excluded(row))continue;
+    if(!/^US\s*[|:]\s*/i.test(name))continue;
+    const service=norm(name.replace(/^US\s*[|:]\s*/i,""))
+      .replace(/\b(?:4K|UHD|FHD|HD|SD|RAW|HEVC|H264|H265|BACKUP|BK)\b/g,"").trim();
+    const assigned=[...assignments].find(network=>approved[network].some(alias=>norm(alias)===service));
+    if(!assigned)continue;
+    const serviceId="US:"+norm(assigned).replaceAll(" ","");
+    const end=Date.parse(event.scheduledEndUtc);
+    const start=Date.parse(event.scheduledStartUtc);
+    const decision={
+      tier:"plausible",logicalServiceId:serviceId,market:"US",
+      reason:"independent-fixture-specific-linear-tv-assignment",
+      accepted:[{
+        type:"assignment",source,eventId:event.eventId,sportId:event.sportId,
+        competitionId:event.competitionId,serviceId,market:"US",
+        startUtc:new Date(start).toISOString(),
+        endUtc:new Date(Number.isFinite(end)&&end>start?end:start+6*3600000).toISOString(),
+        observedAtUtc:new Date(now).toISOString(),contentMismatch:false,
+        assignedNetwork:assigned
+      }]
+    };
+    result.push(discoveryCandidate(row,decision,now));
+  }
+  result.sort((a,b)=>quality(b.displayName)-quality(a.displayName)||a.providerItemId-b.providerItemId);
+  return result.slice(0,Math.max(1,Math.min(12,limit)));
 }
