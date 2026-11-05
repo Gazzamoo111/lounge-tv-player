@@ -8,7 +8,7 @@ import {rankCandidates,discoveryCandidate,linearAssignmentCandidates} from "../m
 const rows=[
  {provider_item_id:836373,category_id:"676",name:"Detroit Pistons vs Philadelphia 76ers @ Nov 4 7:00 PM :NBA 01"},
  {provider_item_id:1955374,category_id:"2076",name:"LIVE | DET - PISTONS VS PHI - 76ERS | US: NBA PASS PPV 2"},
- {provider_item_id:1949811,category_id:"1118",name:"US ESPN+ | 76ers vs. Pistons"},
+ {provider_item_id:1949811,category_id:"1118",name:"US ESPN+ | Basketball: 76ers vs. Pistons"},
  {provider_item_id:1955373,category_id:"2076",name:"LIVE | BOS - CELTICS VS MIL - BUCKS | US: NBA PASS PPV 3"},
  {provider_item_id:749756,category_id:"676",name:"US| NBA TV HD"},
 ];

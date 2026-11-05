@@ -41,8 +41,8 @@ test("all exact provider variants are retained instead of one logical-service re
   const rows=[
     {provider_item_id:836373,name:"Detroit Pistons vs Philadelphia 76ers @ Nov 4 7:00 PM :NBA 01"},
     {provider_item_id:1955374,name:"LIVE | DET - PISTONS VS PHI - 76ERS | US: NBA PASS PPV 2"},
-    {provider_item_id:1949811,name:"US ESPN+ | 76ers vs. Pistons"},
-    {provider_item_id:1949810,name:"US ESPN+ | 76ers vs. Pistons ESP"},
+    {provider_item_id:1949811,name:"US ESPN+ | Basketball: 76ers vs. Pistons"},
+    {provider_item_id:1949810,name:"US ESPN+ | Basketball: 76ers vs. Pistons ESP"},
   ];
   const found=rankCandidates(nba,rows,12,now);
   assert.equal(found.length,4);
