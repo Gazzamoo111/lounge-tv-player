@@ -33,14 +33,15 @@ test("only source-confirmed US TV services match, all true provider variants rem
   {provider_item_id:4,name:"AU| ESPN FHD",category_id:"4"},
   {provider_item_id:5,name:"US| TNT HD",category_id:"5"},
   {provider_item_id:6,name:"US| ESPN+ 101",category_id:"6"},
-  {provider_item_id:7,name:"MOVIES| ESPN",category_id:"7"}
+  {provider_item_id:7,name:"MOVIES| ESPN",category_id:"7"},
+  {provider_item_id:8,name:"US| ESPN ᴴᴰ ⁶⁰ᶠᵖˢ",category_id:"8"}
  ];
  const found=linearAssignmentCandidates(event,rows,geo,"https://site.api.espn.com",now);
- assert.deepEqual(found.map(x=>x.providerItemId),[1,2]);
+ assert.deepEqual(found.map(x=>x.providerItemId),[1,2,8]);
  assert.equal(found[0].tier,"plausible");
  assert.equal(found[0].evidence[0].type,"assignment");
  assert.equal(found[0].playbackObservation.status,"unknown");
- assert.deepEqual(found.map(x=>x.categoryId),["1","2"]);
+ assert.deepEqual(found.map(x=>x.categoryId),["1","2","8"]);
 });
 
 test("broadcaster hints never invent a TV assignment",()=>{
