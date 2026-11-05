@@ -1,0 +1,144 @@
+name: Lounge TV scheduled seven-day EPG | AU and 24-7 only
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/epg-rolling7-au-247.yml']
+  schedule:
+    - cron: '17 0,12 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lounge-epg-publish-au-247
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout tested EPG generator only
+        uses: actions/checkout@v4
+        with:
+          ref: 7aa9b2406eda33bcad7d07983ff68abb491a57d5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install XML parser
+        run: python -m pip install lxml==5.4.0
+      - name: Run regression suite first
+        run: python -m unittest qa/epg/test_seven_day_targeted.py -v
+      - name: Download existing guide and Australian schedules
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/lounge-epg7
+          SOURCE_HEAD="$(git ls-remote origin refs/heads/epg-data | cut -f1)"
+          test -n "$SOURCE_HEAD"
+          echo "$SOURCE_HEAD" > /tmp/lounge-epg7/source-head.txt
+          curl --fail --location --retry 3 --connect-timeout 30 --max-time 180 \
+            "https://raw.githubusercontent.com/Gazzamoo111/lounge-tv-player/$SOURCE_HEAD/epg/guide.xml.gz" \
+            -o /tmp/lounge-epg7/existing.xml.gz
+          curl --fail --location --retry 3 --connect-timeout 30 --max-time 300 \
+            https://iptv-epg.org/files/epg-au.xml.gz \
+            -o /tmp/lounge-epg7/au-primary.xml.gz || true
+          curl --fail --location --retry 3 --connect-timeout 30 --max-time 300 \
+            https://i.mjh.nz/au/Sydney/epg.xml.gz \
+            -o /tmp/lounge-epg7/au-sydney.xml.gz || true
+          curl --fail --location --retry 3 --connect-timeout 30 --max-time 300 \
+            https://xmltv.net/xml_files/Sydney.xml \
+            -o /tmp/lounge-epg7/au-xmltv-net.xml || true
+          test -s /tmp/lounge-epg7/existing.xml.gz
+      - name: Build fully scoped seven-day guide
+        run: |
+          python qa/epg/seven_day_targeted.py \
+            --manifest qa/epg/active-release.json \
+            --existing /tmp/lounge-epg7/existing.xml.gz \
+            --au primary=/tmp/lounge-epg7/au-primary.xml.gz \
+            --au sydney=/tmp/lounge-epg7/au-sydney.xml.gz \
+            --au xmltv-net=/tmp/lounge-epg7/au-xmltv-net.xml \
+            --out qa/epg/rolling7-out
+      - name: Enforce publication gate
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from datetime import datetime, timedelta
+          from lxml import etree
+          import gzip
+          r=json.loads(Path('qa/epg/rolling7-out/report.json').read_text())
+          assert r['auChannels']==38
+          assert r['loopChannels']==672
+          assert r['auChannelsWithSevenDaySource']>0
+          assert r['loopChannelsNewlyCovered']>0
+          assert r['untouchedExistingProgrammeEntries'] == r['existingProgrammeEntries']
+          assert datetime.fromisoformat(r['requiredThroughUtc']) - datetime.fromisoformat(r['generatedAtUtc']) == timedelta(days=7)
+          with gzip.open('qa/epg/rolling7-out/guide.xml.gz','rb') as file:
+            tree=etree.parse(file)
+          changed=set(r['changedEpgIds'])
+          assert len(changed)>100
+          assert all(tree.xpath('channel[@id=$cid]',cid=cid) for cid in changed)
+          print('EPG_ROLLING_7_GATE_PASS',r['auChannelsWithSevenDaySource'],r['loopChannelsNewlyCovered'])
+          PY
+      - name: Attach exact source revision for atomic compare-and-swap
+        run: cp /tmp/lounge-epg7/source-head.txt qa/epg/rolling7-out/source-head.txt
+      - name: Retain candidate for inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: rolling7-candidate
+          path: |
+            qa/epg/rolling7-out/report.json
+            qa/epg/rolling7-out/guide.xml.gz
+            qa/epg/rolling7-out/short/
+            qa/epg/rolling7-out/source-head.txt
+          retention-days: 7
+
+  publish:
+    needs: validate
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout only published EPG data
+        uses: actions/checkout@v4
+        with:
+          ref: epg-data
+          path: published
+      - name: Download validated guide
+        uses: actions/download-artifact@v4
+        with:
+          name: rolling7-candidate
+          path: reviewed
+      - name: Replace only central EPG data, never channel catalogue
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s reviewed/guide.xml.gz
+          test -s reviewed/report.json
+          SOURCE_HEAD="$(cat reviewed/source-head.txt)"
+          ACTUAL_HEAD="$(git -C published rev-parse HEAD)"
+          if [ "$SOURCE_HEAD" != "$ACTUAL_HEAD" ]; then
+            echo "EPG data changed after QA validation; refusing stale promotion"
+            exit 1
+          fi
+          cp reviewed/guide.xml.gz published/epg/guide.xml.gz
+          gzip -dc reviewed/guide.xml.gz > published/epg/guide.xml
+          mkdir -p published/epg/short
+          cp reviewed/short/*.json published/epg/short/
+          cp reviewed/report.json published/epg/rolling7-au-247-report.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('published/epg/rolling7-au-247-report.json')
+          r=json.loads(p.read_text())
+          r['previousGuideGitSha']=Path('reviewed/source-head.txt').read_text().strip()
+          p.write_text(json.dumps(r,indent=2)+chr(10))
+          PY
+          cd published
+          git config user.name 'Lounge TV EPG Automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add epg/guide.xml.gz epg/guide.xml epg/short epg/rolling7-au-247-report.json
+          git diff --cached --quiet && exit 0
+          git commit -m 'epg: refresh seven-day Australian and 24/7 programmes only'
+          git push origin HEAD:epg-data
