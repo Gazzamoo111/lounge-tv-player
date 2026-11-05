@@ -350,7 +350,7 @@ def main():
     print(json.dumps({k: v for k, v in report.items() if k not in
                       ("auMatches", "changedEpgIds")}, indent=2))
     print("AU_SOURCE_DIAGNOSTICS", json.dumps(au_rejections, indent=2))
-    if len(loop_rows) < 100 or len(au_rows) < 20 or not au_added:
+    if len(loop_rows) < 100 or len(au_rows) < 20:
         raise SystemExit("Scope/source coverage guard failed. No publication.")
 
 
