@@ -1,60 +1,202 @@
-# Lounge TV player
+<p align="center">
+  <img src="branding/locked/option4-horizontal-original.png" alt="Lounge TV" width="420">
+</p>
 
-Lounge TV is a branded, GPLv3-modified Android TV / Fire TV build of [OwnTV](https://github.com/ahXN00/OwnTV). It uses OwnTV's native playback engine and retains Lounge TV artwork and app identity. OwnTV and the Lounge TV subscription service are separate organisations/products.
+<p align="center">
+  <strong>Live TV, movies, series and sport. Built for the big screen.</strong><br>
+  <sub>A remote-first viewing experience for Fire TV, Android TV and Google TV.</sub>
+</p>
 
-## Development and source
+<p align="center">
+  <img src="https://img.shields.io/badge/platform-Fire%20TV%20%7C%20Android%20TV-0C8FCB" alt="Fire TV and Android TV">
+  <img src="https://img.shields.io/badge/language-Kotlin-7F52FF?logo=kotlin&logoColor=white" alt="Kotlin">
+  <img src="https://img.shields.io/badge/interface-Jetpack%20Compose-4285F4" alt="Jetpack Compose">
+  <img src="https://img.shields.io/badge/playback-MPV%20%2B%20ExoPlayer-1167B1" alt="MPV and ExoPlayer">
+  <img src="https://img.shields.io/badge/license-GPLv3-blue" alt="GPLv3">
+</p>
 
-The base of this fork is OwnTV `v5.2.0`. Our upstream version is tracked in `.loungetv/upstream-version`. `UPSTREAM_README.md` and `LICENSE` preserve the upstream documentation and GPLv3 licence. The corresponding source and build instructions are made available in this repository to recipients of the APK.
+<p align="center">
+  <a href="https://github.com/Gazzamoo111/lounge-tv-player/actions/workflows/ci.yml"><img src="https://github.com/Gazzamoo111/lounge-tv-player/actions/workflows/ci.yml/badge.svg" alt="QA build status"></a>
+  <a href="https://github.com/Gazzamoo111/lounge-tv-player/releases/latest"><img src="https://img.shields.io/github/v/release/Gazzamoo111/lounge-tv-player?label=latest%20release" alt="Latest release"></a>
+</p>
 
-- App ID: `com.loungetv.player`
-- Updates: Releases from `Gazzamoo111/lounge-tv-player`, **not** `ahXN00/OwnTV` and **not** the older `Gazzamoo111/lounge-tv-releases` repo.
-- CI: `.github/workflows/ci.yml` checks branding, runs JVM tests, and compiles a QA APK.
-- Sync: `.github/workflows/upstream-sync.yml` checks OwnTV daily and opens a review PR if the merge is clean; merge conflicts create an issue.
-- Release: `.github/workflows/publish.yml` is *manual only*; prepares a signed candidate, then pauses at a protected production environment before releasing that exact APK.
+<p align="center">
+  <a href="https://github.com/Gazzamoo111/lounge-tv-player/releases/latest"><strong>Download latest release</strong></a>
+  &nbsp;·&nbsp;
+  <a href="https://loungetv.nz"><strong>Website & setup</strong></a>
+  &nbsp;·&nbsp;
+  <a href="CHANGELOG.md"><strong>What's new</strong></a>
+  &nbsp;·&nbsp;
+  <a href="docs/DEVELOPMENT_AND_RELEASE.md"><strong>Developer guide</strong></a>
+</p>
 
-## Approving an update
+---
 
-1. Review the automated upstream PR and CI checks. Do not auto-merge it.
-2. Test on an actual Fire TV with the BEST test playlist, programme guide, favourites, artwork, audio, playback switching, navigation, and settings.
-3. Merge the tested PR to `main`. In Actions, run **Build and approve Lounge TV release** with a version greater than the current `5.2.2.0`, such as `5.2.2.1` (Android versionCode `5020201`).
-4. Download the **signed candidate APK** from the candidate job and test installing it over a previously signed `com.loungetv.player` version with `adb install -r`, confirming playlists/data survive. A **QA `.qa` package is a different app**, not an upgrade test.
-5. Only after passing the real-device test, **approve the pending production deployment** in GitHub Actions. Production has a required reviewer configured during bootstrap.
-6. Existing production clients can then use the built-in app updater to receive the APK from this repository and approve installation on their TV.
+## Meet Lounge TV
 
-The Android `versionCode` must always increase, even for hotfixes. The release workflow stores the code in release notes, compares the candidate with the previous release APK, and refuses a changed package, signer, or non-increasing code.
+**Lounge TV** is a branded Android TV streaming player designed around simple navigation, clear categories and a comfortable big-screen experience. Browse Live TV, movies and series from a supported account, pick up where you left off, or explore sport from one interface.
 
-## Signing and infrastructure
+This repository contains the **Android/Fire TV application**, not the Lounge TV website, customer account administration or a complete streaming service backend.
 
-**Never commit signing secrets, BEST panel credentials, provider passwords, private URLs, or provisioning tokens.** `setup-loungetv.sh` creates a new signing key at `~/Library/Application Support/LoungeTV/production-signing.keystore`, saves its password to macOS Keychain, and uploads necessary signing values into GitHub Actions Secrets. Keep an independent encrypted backup of this keystore. Losing it prevents in-place upgrades to existing customers under the same application ID.
+Lounge TV is built on the open-source [OwnTV](https://github.com/ahXN00/OwnTV) Android TV player, with additional Lounge TV branding, integrations and experience changes. The two projects are independent. The original project and its contributors are credited below.
 
-Production and QA have separate signing identities:
+## Highlights
 
-- Production uses `com.loungetv.player` and the existing production certificate. GitHub Secrets provide `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, and `KEY_PASSWORD`. The public SHA-256 certificate fingerprint is pinned in the `PRODUCTION_CERT_SHA256` repository variable.
-- QA uses `com.loungetv.player.qa` and a persistent, independent QA certificate. GitHub Secrets provide `QA_KEYSTORE_BASE64`, `QA_KEYSTORE_PASSWORD`, `QA_KEY_ALIAS`, and `QA_KEY_PASSWORD`. Its public fingerprint is pinned in `QA_CERT_SHA256` and must differ from production.
-- CI QA codes use a reserved monotonic range derived from the GitHub run number and attempt. Local QA falls back to `5020201`, one above production `5020200`.
-- A production release task refuses implicit versions, incomplete credentials, missing key files, and any code at or below `5020200`. A normal local debug build can still use Android's developer debug key, but it cannot update a CI-signed QA installation.
+### Your home screen
+- **Continue Watching** makes it easier to return to movies and series.
+- **Trending discovery** brings artwork and title information into the TV experience.
+- **Sport Lounge** brings supported fixtures and sport discovery into one place.
+- **Remote-first navigation** is designed for TV screens rather than a phone interface.
 
-Before enabling either workflow, populate and verify the matching certificate fingerprint. Fingerprints are public identifiers; keystore files and passwords remain secret. A missing secret or fingerprint fails the build instead of emitting an ambiguously signed artifact.
+### Live TV and guide
+- Browse curated TV and sports categories using a TV remote.
+- Use the electronic programme guide (EPG) where programme information is available.
+- Move between channels and view playback information from inside the player.
+- Guide coverage and programme accuracy depend on the available guide data and the connected source.
 
-The production repository deliberately does not touch the older public Lounge TV APK in `Gazzamoo111/lounge-tv-releases`. There is no automatic customer release. The bootstrap configures a required-reviewer production Environment. If GitHub refuses that step, bootstrap stops and publishing must remain disabled.
+### Movies and series
+- Browse poster-led movie and series libraries.
+- View available metadata, artwork and episode information.
+- Resume supported titles and keep track of what you have watched.
 
-### Compatible release testing
+### Profiles and personalisation
+- Keep viewing history and favourites organised by profile.
+- Use TV-focused settings and playback options.
+- Choose playback behaviour appropriate to the stream and device.
 
-```bash
-adb install -r LoungeTV.apk
-adb shell monkey -p com.loungetv.player 1
+### Playback and reliability
+- **MPV and ExoPlayer/Media3** playback paths offer compatibility across different stream formats.
+- QA builds, device testing and release checks are kept separate from production delivery.
+- Signed customer releases are published through this repository's controlled release workflow.
+
+> Lounge TV's media availability, channel lineup and guide coverage depend on the connected service, device and source. The app's documentation does not guarantee that every listing has a playable broadcast.
+
+## Screenshots
+
+Real 1920 × 1080 captures from Lounge TV running on Fire TV. No mockups.
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/home.webp" alt="Lounge TV home screen with live sports hero and trending titles" width="100%">
+      <br><sub><strong>Home</strong> · Discover what to watch</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/live-tv.png" alt="Lounge TV live channel list with preview playing" width="100%">
+      <br><sub><strong>Live TV</strong> · Channels and live preview</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/tv-guide.png" alt="Lounge TV electronic programme guide showing channel schedules" width="100%">
+      <br><sub><strong>TV Guide</strong> · Browse programme schedules</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/sport-lounge.png" alt="Lounge TV Sport Lounge with fixtures, filters and team logos" width="100%">
+      <br><sub><strong>Sport Lounge</strong> · Follow fixtures across sports</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/movies.webp" alt="Lounge TV Movies tab with artwork, synopsis and posters" width="100%">
+      <br><sub><strong>Movies</strong> · Browse a cinematic library</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/series.webp" alt="Lounge TV Series tab with artwork, description and posters" width="100%">
+      <br><sub><strong>Series</strong> · Find your next series</sub>
+    </td>
+  </tr>
+</table>
+
+The pictured programmes and fixtures are examples captured at a moment in time; availability and guide data can change.
+
+---
+
+## Install Lounge TV
+
+### Fire TV, Android TV or Google TV
+
+1. Install the **Downloader** app on your TV device.
+2. Enter Downloader code **`6742726`**, or use the direct APK link below.
+3. Install the Android TV app and follow the instructions provided with your Lounge TV account.
+4. For additional setup guidance, visit **[loungetv.nz](https://loungetv.nz)**.
+
+**[Download LoungeTV.apk](https://github.com/Gazzamoo111/lounge-tv-player/releases/latest/download/LoungeTV.apk)**
+
+The direct download URL points to the signed APK asset in the latest stable GitHub release. Other APK variants may also be available in [Releases](https://github.com/Gazzamoo111/lounge-tv-player/releases). Install only the appropriate build for your device.
+
+**Supported app platforms:** Fire TV, Android TV and Google TV. Samsung and LG televisions use separate player applications, documented on the Lounge TV website, and do not run this Android APK natively.
+
+## Project at a glance
+
+| Area | Implementation |
+| --- | --- |
+| Platforms | Android TV · Google TV · Fire TV |
+| App language | Kotlin |
+| UI | Jetpack Compose for TV |
+| Playback | MPV · ExoPlayer / Media3 |
+| Media discovery | Metadata and artwork integrations |
+| Programme guide | XMLTV/EPG support |
+| Releases | Versioned, signed APKs on GitHub |
+| Continuous integration | GitHub Actions |
+| Source licence | GPLv3 |
+
+### Repository structure
+
+```text
+app/             Android TV application
+backend/         Supporting application/backend integration code
+branding/        Approved Lounge TV brand assets
+docs/            Architecture, QA and developer documentation
+extras/          Upstream supporting assets and reference material
+scripts/         Build, QA, release and verification helpers
+services/        Service integration code
+.github/         CI, publishing and upstream-sync workflows
 ```
 
-The workflow performs an offline compatibility check against the previous release APK before it uploads a candidate. The same check can be run locally without installing either APK:
+### Developer and QA resources
+
+- [Development, signing and release guide](docs/DEVELOPMENT_AND_RELEASE.md)
+- [Changelog](CHANGELOG.md)
+- [Playback reliability QA](docs/PLAYBACK_RELIABILITY_QA.md)
+- [Sport Lounge documentation](docs/sport-lounge-v1.md)
+- [Upstream project README](UPSTREAM_README.md)
+- [Contributing](CONTRIBUTING.md)
+
+### Build from source
+
+This project requires an Android development environment and the dependencies defined by the repository. Consult the [development and release guide](docs/DEVELOPMENT_AND_RELEASE.md) before building or distributing an APK.
 
 ```bash
-python3 scripts/verify_update_compatibility.py candidate.apk \
-  --previous previous-production.apk \
-  --expected-package com.loungetv.player \
-  --expected-cert-sha256 "$PRODUCTION_CERT_SHA256" \
-  --expected-version-code 5020201
+git clone https://github.com/Gazzamoo111/lounge-tv-player.git
+cd lounge-tv-player
+./gradlew assembleDebug
 ```
 
-This proves package, signer, and Android version ordering. Preservation of real playlists, favourites, profiles, settings, and history still requires the approved `adb install -r` device test.
+Local debug APKs are **not** interchangeable with the signed production release. Do not replace an installed customer app with a QA or debug package. See the developer guide for signing and compatibility requirements.
 
-If the source has modified assets, `branding/asset-sha256.json` pins image hashes so upstream merges cannot silently overwrite those brand files. Any change requires updating the manifest intentionally and a manual visual check of the app.
+## Releases and quality control
+
+- **[Releases](https://github.com/Gazzamoo111/lounge-tv-player/releases):** signed APKs and version history.
+- **[QA workflow](https://github.com/Gazzamoo111/lounge-tv-player/actions/workflows/ci.yml):** build and test checks.
+- **[Publishing workflow](https://github.com/Gazzamoo111/lounge-tv-player/actions/workflows/publish.yml):** controlled release process.
+- **[Upstream sync](https://github.com/Gazzamoo111/lounge-tv-player/actions/workflows/upstream-sync.yml):** tracks reviewed changes from OwnTV.
+
+QA artifacts and customer releases serve different purposes. A passing build is not a substitute for a successful real-device playback and update test.
+
+## Open-source acknowledgements
+
+Lounge TV is a modified, GPLv3-licensed distribution based on **[OwnTV by ahXN00](https://github.com/ahXN00/OwnTV)**. The upstream licence, acknowledgements and supporting source references are retained. Lounge TV is not an official OwnTV release.
+
+The application also uses open-source Android and playback technologies, including [Media3 / ExoPlayer](https://github.com/androidx/media) and [MPV](https://mpv.io/). Movie and TV information may use [TMDB](https://www.themoviedb.org/), which does not endorse or certify Lounge TV.
+
+## Licence
+
+This repository is distributed under the **GNU General Public License v3.0**. See [LICENSE](LICENSE). Modified source is available here in accordance with the licence.
+
+---
+
+<p align="center">
+  <img src="branding/locked/option4-app-icon-original.png" alt="Lounge TV app icon" width="86"><br>
+  <sub>Lounge TV · Made for the big screen</sub>
+</p>
