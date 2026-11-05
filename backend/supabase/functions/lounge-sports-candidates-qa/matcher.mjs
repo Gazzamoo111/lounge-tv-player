@@ -166,29 +166,54 @@ export function discoveryCandidate(raw,decision,now){
  * No generic network, package subscription, or client broadcaster hint is admitted.
  * Assignments are plausible until the exact broadcast and video decode are confirmed.
  */
+/** Normalise exact linear-TV identities while preserving network numbers and qualifiers. */
+function networkKey(name){
+  return norm(String(name||"").replace(/[\u1d00-\u1dbf\u2070-\u209f]+/gu," "))
+    .replace(/\b(?:4K|8K|UHD|FHD|HD|SD|RAW|HEVC|H264|H265|BACKUP|BK|25FPS|30FPS|50FPS|60FPS)\b/g,"")
+    .replace(/\s+/g," ").trim();
+}
+const networkAliases={
+  "SPECTRUM SPORTS NET":["SPECTRUM SPORTSNET","SPECTRUM SPORTS NET"],
+  "SPECTRUM SPORTS NET +":["SPECTRUM SPORTSNET PLUS","SPECTRUM SPORTS NET PLUS"],
+  "MSGSN":["MSG SPORTSNET","MSGSN"],
+  "DSN":["DETROIT SPORTSNET"],
+  "NBC SPORTS PHIL":["NBC SPORTS PHILADELPHIA","NBC SPORTS PHIL"],
+  "CHSN":["CHICAGO SPORTS NETWORK"],
+  "NBA TV":["NBA TV"],
+  "NHL NETWORK":["NHL NETWORK","NHL NET"],
+  "ESPN2":["ESPN 2"],
+  "FS1":["FOX SPORTS 1"],
+  "FS2":["FOX SPORTS 2"],
+};
+function approvedServiceNames(assigned){
+  const canonical=networkKey(assigned);
+  const aliases=networkAliases[canonical]||[];
+  return new Set([canonical,...aliases.map(networkKey)]);
+}
+
+/**
+ * Only admit BEST linear networks that ESPN independently assigns to THIS fixture.
+ * Search all BEST source categories, including TV| RAW regional networks, with exact
+ * network identity, not substring/sport-wide fallback.
+ */
 export function linearAssignmentCandidates(event,rows,geoBroadcasts,source,now=Date.now(),limit=12){
-  const approved={
-    "ESPN":["ESPN"],"ESPN2":["ESPN 2","ESPN2"],"ESPNU":["ESPNU","ESPN U"],
-    "TNT":["TNT"],"TBS":["TBS"],"NBA TV":["NBA TV"],"NHL NETWORK":["NHL NETWORK","NHL NET"],
-    "NFL NETWORK":["NFL NETWORK"],"FS1":["FOX SPORTS 1","FS1"],"FS2":["FOX SPORTS 2","FS2"]
-  };
-  const assignments=new Set();
+  const assignments=[];
   for(const b of geoBroadcasts||[]){
     if(String(b.region||"").toLowerCase()!=="us"||b.type?.shortName!=="TV")continue;
-    const name=norm(b.media?.shortName);
-    if(approved[name])assignments.add(name);
+    const name=networkKey(b.media?.shortName);
+    if(!name||name.length<3)continue;
+    if(assignments.some(a=>a.name===name))continue;
+    assignments.push({name,variants:approvedServiceNames(name)});
   }
   const result=[];
   for(const raw of rows){
     const row=inventoryRow(raw),name=String(row.name||"");
     if(!name||INACTIVE.test(name)||excluded(row))continue;
-    if(!/^US\s*[|:]\s*/i.test(name))continue;
-    const service=norm(name.replace(/^US\s*[|:]\s*/i,"")
-      .replace(/[\u1d00-\u1dbf\u2070-\u209f]+/gu," "))
-      .replace(/\b(?:4K|UHD|FHD|HD|SD|RAW|HEVC|H264|H265|BACKUP|BK)\b/g,"").trim();
-    const assigned=[...assignments].find(network=>approved[network].some(alias=>norm(alias)===service));
+    if(!/^(?:US|TV)\s*[|:]\s*/i.test(name))continue;
+    const service=networkKey(name.replace(/^(?:US|TV)\s*[|:]\s*/i,""));
+    const assigned=assignments.find(a=>a.variants.has(service));
     if(!assigned)continue;
-    const serviceId="US:"+norm(assigned).replaceAll(" ","");
+    const serviceId="US:"+assigned.name.replaceAll(" ","");
     const end=Date.parse(event.scheduledEndUtc);
     const start=Date.parse(event.scheduledStartUtc);
     const decision={
@@ -200,7 +225,7 @@ export function linearAssignmentCandidates(event,rows,geoBroadcasts,source,now=D
         startUtc:new Date(start).toISOString(),
         endUtc:new Date(Number.isFinite(end)&&end>start?end:start+6*3600000).toISOString(),
         observedAtUtc:new Date(now).toISOString(),contentMismatch:false,
-        assignedNetwork:assigned
+        assignedNetwork:assigned.name
       }]
     };
     result.push(discoveryCandidate(row,decision,now));
