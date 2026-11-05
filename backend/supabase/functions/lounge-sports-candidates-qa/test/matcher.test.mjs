@@ -113,9 +113,13 @@ test("NFL and NBA show only sport-specific alternatives, never other matches",()
   {provider_item_id:836342,name:"NBA TEAM| MIAMI HEAT"},
  ],now,6);
  assert.deepEqual(nflChoices.map(c=>c.providerItemId),[45526,836261]);
- const nbaChoices=sportFallbackCandidates(nba,[
+ const clippersHeat={...nba,eventId:"basketball/nba#clippers-heat",
+  home:"LA Clippers",away:"Miami Heat",homeAliases:["LA Clippers","Clippers","LAC"],
+  awayAliases:["Miami Heat","Heat","MIA"]};
+ const nbaChoices=sportFallbackCandidates(clippersHeat,[
   {provider_item_id:836345,name:"NBA TEAM| LOS ANGELES CLIPPERS"},
   {provider_item_id:836342,name:"NBA TEAM| MIAMI HEAT"},
+  {provider_item_id:836335,name:"NBA TEAM| PHILADELPHIA 76ERS"},
   {provider_item_id:45526,name:"US| NFL NETWORK HD"},
  ],now,6);
  assert.deepEqual(nbaChoices.map(c=>c.providerItemId),[836342,836345]);
