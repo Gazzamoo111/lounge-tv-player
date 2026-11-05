@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import vm from "node:vm";
 import {stripTypeScriptTypes} from "node:module";
-import {rankCandidates,discoveryCandidate} from "../matcher.mjs";
+import {rankCandidates,discoveryCandidate,linearAssignmentCandidates} from "../matcher.mjs";
 
 const rows=[
  {provider_item_id:836373,category_id:"676",name:"Detroit Pistons vs Philadelphia 76ers @ Nov 4 7:00 PM :NBA 01"},
@@ -16,7 +16,8 @@ const source=fs.readFileSync(new URL("../index.ts",import.meta.url),"utf8");
 const code=stripTypeScriptTypes(source.slice(source.indexOf("Deno.serve")));
 async function request(query){
  let handler,calls=0;
- vm.runInNewContext(code,{Deno:{serve:h=>handler=h},URL,Response,console,rankCandidates,discoveryCandidate,
+ vm.runInNewContext(code,{Deno:{serve:h=>handler=h},URL,Response,console,rankCandidates,discoveryCandidate,linearAssignmentCandidates,
+   findIndependentBroadcasts:async()=>({geo:[],source:"",status:"fixture-source-not-configured"}),
    iso:ms=>new Date(ms).toISOString(),sql:async()=>++calls===1?rows:[{poll_id:352,completed_at:new Date().toISOString()}]});
  return handler(new Request("https://qa.invalid/?"+query));
 }
@@ -33,10 +34,11 @@ test("QA endpoint scans the internal pool and returns only exact fixture rows",a
  assert.equal(body.catalogueRevision,"352");
  assert.equal(body.totalEligible,5);
  assert.deepEqual(body.candidates.map(x=>x.providerItemId),[1955374,836373,1949811]);
- assert.equal(body.coverage.broadcastConfirmed,3);
+ assert.equal(body.coverage.broadcastConfirmed,0);
  assert.equal(body.coverage.playbackVerified,0);
- assert.equal(body.coverage.coverageGap,false);
- assert.ok(body.candidates.every(x=>x.evidence[0].type==="event-feed"&&x.playbackObservation.status==="unknown"));
+ assert.equal(body.coverage.providerNameHints,3);
+ assert.equal(body.coverage.coverageGap,true);
+ assert.ok(body.candidates.every(x=>x.evidence[0].type==="name-hint"&&x.playbackObservation.status==="unknown"));
 });
 
 test("missing participant identity fails closed",async()=>{
