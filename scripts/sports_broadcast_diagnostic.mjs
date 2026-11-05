@@ -12,7 +12,7 @@ for(const [name,url] of urls){
   const json=await res.json();
   const events=name==="cricket"?(json.sports||[]).flatMap(s=>(s.leagues||[]).flatMap(l=>l.events||[])):json.events||[];
   console.log("=== "+name+" "+events.length+" events ===");
-  for(const e of events.slice(0,12)){
+  for(const e of events.slice(0,20)){
    const c=e.competitions?.[0]||{};
    const teams=c.competitors?.map(k=>({name:k.team?.displayName||k.team?.name||k.athlete?.displayName,short:k.team?.abbreviation,homeAway:k.homeAway}))||e.competitors?.map(k=>({name:k.team?.displayName||k.team?.name}))||[];
    console.log(JSON.stringify({id:e.id,date:e.date,name:e.name||e.shortName,teams,competitionsKeys:Object.keys(c),broadcasts:c.broadcasts,geoBroadcasts:c.geoBroadcasts,notes:c.notes,status:e.status?.type?.state||e.status},null,0).slice(0,1650));
