@@ -194,11 +194,32 @@ def main():
     changed = set()
     au_added = 0
     au_status = {}
+    au_rejections = {}
     for row in au_rows:
         target = str(row.get("epgId") or row["key"]).strip()
         choice = select_feed(row, feeds, now, end)
         if not choice:
             au_status[row["name"]] = "no-seven-day-source"
+            possible = []
+            for feed_name, (ids, names, programs) in feeds.items():
+                desired = str(row.get("epgId") or "").strip()
+                match_id = None
+                if desired and desired.casefold() in ids:
+                    match_id = ids[desired.casefold()]
+                elif row["name"].upper() in ALIAS and ALIAS[row["name"].upper()].casefold() in ids:
+                    match_id = ids[ALIAS[row["name"].upper()].casefold()]
+                elif len(names.get(norm(row["name"]), [])) == 1:
+                    match_id = names[norm(row["name"])][0]
+                if match_id and programs.get(match_id):
+                    entries = programs[match_id]
+                    first = min(p[0] for p in entries)
+                    last = max(p[1] for p in entries)
+                    possible.append({
+                        "feed": feed_name, "sourceId": match_id, "programmes": len(entries),
+                        "first": first.isoformat(), "last": last.isoformat(),
+                        "daysAhead": round((last-now).total_seconds()/86400, 2),
+                    })
+            au_rejections[row["name"]] = possible
             continue
         _, _, feed, src_id, method, programs = choice
         intervals = existing[target][:]
@@ -266,6 +287,7 @@ def main():
         "sourceErrors": errors, "auChannels": len(au_rows),
         "auChannelsWithSevenDaySource": sum(isinstance(v, dict) for v in au_status.values()),
         "auProgrammesAdded": au_added, "auMatches": au_status,
+        "auRejectedCandidates": au_rejections,
         "loopChannels": len(loop_rows), "loopChannelsNewlyCovered": loop_covered,
         "loopProgrammesAdded": loop_added, "changedEpgIds": sorted(changed),
         "untouchedExistingProgrammeEntries": original_preserved,
@@ -277,6 +299,7 @@ def main():
     (out / "report.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps({k: v for k, v in report.items() if k not in
                       ("auMatches", "changedEpgIds")}, indent=2))
+    print("AU_SOURCE_DIAGNOSTICS", json.dumps(au_rejections, indent=2))
     if len(loop_rows) < 100 or len(au_rows) < 20 or not au_added:
         raise SystemExit("Scope/source coverage guard failed. No publication.")
 
