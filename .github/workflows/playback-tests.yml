@@ -49,8 +49,6 @@ jobs:
       - name: All-sport event evidence regressions
         run: node --test services/event-streams-qa/test/*.test.mjs
       - name: Collect and validate real fixtures in an isolated runtime
-        env:
-          QA_STREAM_URL_TEMPLATE: ${{ secrets.LOUNGE_SPORTS_QA_STREAM_TEMPLATE }}
         run: |
           python3 services/event-streams-qa/collect.py
           node services/event-streams-qa/src/validate.mjs > outputs/event-streams-qa/validation.log

@@ -17,7 +17,7 @@ function marketOf(row){
 }
 function serviceName(value){return norm(String(value).replace(/^(?:UK-NOWTV|[A-Z]{2,3})\s*[|:]\s*/i,''))
  .replace(/^SKY NZ (ESPN)/,'$1').replace(/^SKY SPORTS NZ (\d+)/,'SKY SPORT $1')
- .replace(/^KAYO\s+/,'').replace(/\b(?:4K|8K|UHD|FHD|HD|SD|HEVC|H264|H265|RAW|BACKUP|BK)\b/g,'').trim();}
+ .replace(/^KAYO\s+/,'').replace(/\b(?:4K|8K|UHD|FHD|HD|SD|HEVC|H264|H265|RAW|BACKUP|BK)\b/g,'').trim().replace(/^PREMIER(?: SPORTS?)? ([12])$/,'PREMIER SPORT $1');}
 const equivalent=(a,b)=>key(a)===key(b);
 function excluded(row){return ['646974','1520168'].includes(String(row.id))||/^AU\s*[|:]?\s*(?:KAYO\s*[-:]?\s*)?ESPN\s*1(?:\s|$)/i.test(row.name);}
 function identity(row,channel,guide){
@@ -70,7 +70,7 @@ export function resolveEvent(event,catalogue,dataset,health={},now=Date.now(),li
  const byService=new Map();let activeGuides=0;
  // ESPN exposes event-specific regional TV assignments. Streaming bundles are deliberately absent:
  // a Prime/Stan/Paramount subscription is not an identified linear channel in the catalogue.
- const linearAliases={'ESPN':['ESPN','ESPN 1'],'ESPN2':['ESPN2','ESPN 2'],'ESPNU':['ESPNU','ESPN U'],'ABC':['ABC'],'CBS':['CBS'],'NBC':['NBC'],'FOX':['FOX'],'TNT':['TNT'],'TBS':['TBS'],'NBA TV':['NBA TV'],'NHL NETWORK':['NHL NETWORK'],'NFL NETWORK':['NFL NETWORK']};
+ const linearAliases={'ESPN':['ESPN','ESPN 1'],'ESPN2':['ESPN2','ESPN 2'],'ESPNU':['ESPNU','ESPN U'],'ABC':['ABC'],'CBS':['CBS'],'NBC':['NBC'],'FOX':['FOX'],'TNT':['TNT'],'TBS':['TBS'],'NBA TV':['NBA TV'],'NHL NETWORK':['NHL NETWORK'],'NHL NET':['NHL NETWORK'],'NESN':['NESN'],'NFL NETWORK':['NFL NETWORK']};
  if(/^https:\/\/site\.api\.espn\.com\/apis\/site\/v2\/sports\//.test(event.fixtureSource)){
   for(const b of event.geoBroadcasts||[]){
    const aliases=linearAliases[norm(b.media?.shortName)];

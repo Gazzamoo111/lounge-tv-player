@@ -82,3 +82,8 @@ test('known nominal-service content contradictions cannot be overridden by a mat
  const r=resolveEvent(e,catalogue([{id:646977,name:'AU| BEIN SPORTS 1 HD',epg:'beINSports1.au'}]),{guides:[g]},health([646977]),now);
  assert.equal(r.coverage.broadcastConfirmed,0);assert.equal(r.coverage.rejections.knownContentMismatch,1);
 });
+test('Sky direct Premier 1 alias discovers actual UK Premier Sports variants',()=>{
+ const d=dataset('hockey');d.guides[0].market='UK';d.guides[0].channels=[{id:'1289',names:['Premier 1 HD']}];
+ const rows=[{id:163607,name:'UK| PREMIER SPORT 1 FHD',epg:'ViaplaySports1.uk'},{id:45235,name:'UK| PREMIER SPORTS 1 HD',epg:'PremierSports1.uk'}];
+ const r=resolveEvent(d.fixtures[0],catalogue(rows),d,{},now);assert.equal(r.coverage.broadcastConfirmed,1);assert.equal(r.broadcastCandidates[0].providerItemId,163607);assert.equal(r.candidates.length,0);
+});
