@@ -25,7 +25,7 @@ class BackendSportsHttpTest {
             put("status","verified");put("httpAccessible",true);put("decodedFrames",1)
             put("providerItemId",id.toString());put("serviceId","AU:BEIN:1")
             put("observedAtUtc",Instant.ofEpochMilli(now).toString());put("streamFingerprint",java.security.MessageDigest.getInstance("SHA-256")
-                .digest("liqocisegeqzbyuqloql.supabase.co|$id|AU:BEIN:1".toByteArray())
+                .digest("liqocisegeqzbyuqloql.supabase.co|/functions/v1/lounge-core-xtream/sport/_/_/$id.ts|$id|AU:BEIN:1".toByteArray())
                 .joinToString("") { "%02x".format(it) })
         })
         put("evidence",JSONArray().put(JSONObject().apply {
@@ -66,8 +66,11 @@ class BackendSportsHttpTest {
         assertTrue(request(body(JSONArray().put(row().put("expiresAtUtc","2020-01-01T00:00:00Z"))).toString()).isEmpty())
     }
     @Test fun probeOfADifferentPlaybackOriginCannotVerifyTheAppStream() {
-        val bad=row();bad.getJSONObject("playbackObservation").put("streamFingerprint","a".repeat(64))
-        assertTrue(request(body(JSONArray().put(bad)).toString()).isEmpty())
+        for (identity in listOf("different.invalid|/functions/v1/lounge-core-xtream/sport/_/_/646977.ts|646977|AU:BEIN:1", "liqocisegeqzbyuqloql.supabase.co|/different-route/646977.ts|646977|AU:BEIN:1")) {
+            val fingerprint=java.security.MessageDigest.getInstance("SHA-256").digest(identity.toByteArray()).joinToString("") { "%02x".format(it) }
+            val bad=row();bad.getJSONObject("playbackObservation").put("streamFingerprint",fingerprint)
+            assertTrue(request(body(JSONArray().put(bad)).toString()).isEmpty())
+        }
     }
     @Test fun clientBoundsUnexpectedBackendFloodAndKeepsEspn2() {
         val rows=JSONArray();for(id in 1L..100L)rows.put(row(id))

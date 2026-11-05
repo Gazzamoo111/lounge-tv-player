@@ -17,7 +17,7 @@ def probe(candidate,template):
     if parsed.scheme not in ('https','http') or not parsed.hostname:raise ValueError('invalid QA stream origin')
     # One ffmpeg process, one connection, no HEAD request, no fallback burst. Never record URL/stderr.
     observed=dt.datetime.now(dt.timezone.utc).isoformat().replace('+00:00','Z')
-    identity=hashlib.sha256((parsed.hostname+'|'+stream_id+'|'+service).encode()).hexdigest()
+    identity=hashlib.sha256((parsed.hostname+'|'+parsed.path+'|'+stream_id+'|'+service).encode()).hexdigest()
     observation={'providerItemId':stream_id,'serviceId':service,'observedAtUtc':observed,'streamFingerprint':identity,'status':'failed','decodedFrames':0,'httpAccessible':False,'engine':'ffmpeg-single-frame','contentVisuallyVerified':False}
     try:
         result=subprocess.run(['ffmpeg','-nostdin','-loglevel','error','-rw_timeout','5000000','-i',url,'-frames:v','1','-f','image2pipe','-vcodec','png','pipe:1'],stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=12)

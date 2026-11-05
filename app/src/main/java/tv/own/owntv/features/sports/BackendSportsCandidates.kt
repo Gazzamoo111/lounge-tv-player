@@ -88,8 +88,10 @@ internal class BackendSportsCandidateProvider(
 }
 
 internal fun candidatePlaybackValid(row:JSONObject,now:Long,playbackEndpoint:String):Boolean {
-    val host=runCatching { java.net.URI(playbackEndpoint).host }.getOrNull() ?: return false
-    val identity=host+"|"+row.optString("providerItemId")+"|"+row.optString("logicalServiceId")
+    val origin=runCatching { java.net.URI(playbackEndpoint) }.getOrNull() ?: return false
+    val host=origin.host ?: return false
+    val path=origin.path.trimEnd('/')+"/sport/_/_/"+row.optString("providerItemId")+".ts"
+    val identity=host+"|"+path+"|"+row.optString("providerItemId")+"|"+row.optString("logicalServiceId")
     val expected=java.security.MessageDigest.getInstance("SHA-256").digest(identity.toByteArray(Charsets.UTF_8))
         .joinToString("") { "%02x".format(it) }
     val h=row.optJSONObject("playbackObservation") ?: return false
