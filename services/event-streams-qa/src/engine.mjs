@@ -60,7 +60,7 @@ function playbackFor(row,service,health,now){
  return {...h,status:'failed'};
 }
 export function resolveEvent(event,catalogue,dataset,health={},now=Date.now(),limit=12){
- const coverage={minimumTarget:3,desiredTarget:5,catalogueScanned:catalogue.rows.length,broadcastConfirmed:0,playbackVerified:0,returned:0,coverageGap:true,reasons:[],rejections:{inactive:0,policy:0,knownContentMismatch:0,identity:0,contradiction:0,expiredGuide:0}};
+ const coverage={minimumTarget:3,desiredTarget:5,catalogueScanned:catalogue.rows.length,broadcastConfirmed:0,playbackVerified:0,returned:0,coverageGap:true,reasons:[],programmeMatches:0,unmappedProgrammeServices:[],unresolvedBroadcasters:[],namedEventHints:[],rejections:{inactive:0,policy:0,knownContentMismatch:0,identity:0,contradiction:0,expiredGuide:0}};
  const envelope={implementationId:IMPLEMENTATION_ID,contractVersion:2,eventId:event.eventId,generatedAtUtc:new Date(now).toISOString(),catalogueRevision:catalogue.revision,importCompletedAtUtc:catalogue.completedAtUtc,expiresAtUtc:new Date(now+MINUTE).toISOString(),catalogueStale:!(now-instant(catalogue.completedAtUtc)>=0&&now-instant(catalogue.completedAtUtc)<=DAY),candidates:[],broadcastCandidates:[],coverage};
  if(envelope.catalogueStale){coverage.reasons.push('catalogue-stale');return envelope;}
  const fixtureAge=now-instant(event.fixtureFetchedAtUtc),start=instant(event.scheduledStartUtc);
@@ -74,7 +74,7 @@ export function resolveEvent(event,catalogue,dataset,health={},now=Date.now(),li
  if(/^https:\/\/site\.api\.espn\.com\/apis\/site\/v2\/sports\//.test(event.fixtureSource)){
   for(const b of event.geoBroadcasts||[]){
    const aliases=linearAliases[norm(b.media?.shortName)];
-   if(b.region?.toLowerCase()!=='us'||b.type?.shortName!=='TV'||!aliases)continue;
+   if(b.region?.toLowerCase()!=='us'||b.type?.shortName!=='TV'||!aliases){coverage.unresolvedBroadcasters.push({name:b.media?.shortName,region:b.region,type:b.type?.shortName,reason:'no-reviewed-linear-service-alias'});continue;}
    const service='US:'+key(aliases[0]);
    for(const row of catalogue.rows){
     if(marketOf(row)!=='US'||!aliases.some(a=>equivalent(serviceName(row.name),a))||badName.test(row.name)||excluded(row))continue;
@@ -94,6 +94,8 @@ export function resolveEvent(event,catalogue,dataset,health={},now=Date.now(),li
   for(const channel of guide.channels){
    const current=programmesByChannel.get(channel.id)||[];
    const proof=current.filter(p=>programmeMatches(event,p));if(!proof.length)continue;
+   coverage.programmeMatches+=proof.length;
+   if(!catalogue.rows.some(row=>identity(row,channel,guide)))coverage.unmappedProgrammeServices.push({market:guide.market,names:channel.names,guideChannelId:channel.id,programme:proof[0].title});
    const service=guide.market+':'+key(serviceName(channel.names[0]||channel.id));
    const currentContradiction=current.some(p=>instant(p.startUtc)<=now&&contradiction(event,[p.title,p.description,...(p.categories||[])].join(' ')));
    for(const row of catalogue.rows){
@@ -111,6 +113,7 @@ export function resolveEvent(event,catalogue,dataset,health={},now=Date.now(),li
  }
  const broadcast=[...byService.values()].map(variants=>variants.sort((a,b)=>(b.playbackObservation.status==='verified')-(a.playbackObservation.status==='verified')||b.quality-a.quality||a.providerItemId-b.providerItemId)[0]);
  coverage.broadcastConfirmed=broadcast.length;
+ if((event.participants||[]).length===2)coverage.namedEventHints=catalogue.rows.filter(r=>!badName.test(r.name)&&!excluded(r)&&event.participants.every(p=>participantHit(p,r.name))).slice(0,12).map(r=>({providerItemId:r.id,name:r.name,reason:'catalogue-name-only; not event or playback verified'}));
  const working=broadcast.filter(c=>c.playbackObservation.status==='verified').sort((a,b)=>instant(b.playbackObservation.observedAtUtc)-instant(a.playbackObservation.observedAtUtc)||b.quality-a.quality||a.logicalServiceId.localeCompare(b.logicalServiceId));
  coverage.playbackVerified=working.length;envelope.candidates=working.slice(0,Math.min(12,Math.max(1,limit)));envelope.broadcastCandidates=broadcast;
  coverage.returned=envelope.candidates.length;coverage.coverageGap=working.length<3;

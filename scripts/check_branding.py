@@ -64,8 +64,11 @@ for theme in ['values/themes.xml', 'values-v31/themes.xml']:
     assert theme_text.count('@drawable/loungetv_system_launch_art') >= 9, f'Native splash missing on some icon styles: {theme}'
     assert '@drawable/loungetv_system_launch_logo' not in theme_text, 'Old undersized system splash is back'
 
-allowed = {'ci.yml', 'upstream-sync.yml', 'publish.yml', 'playback-hotfix-qa.yml', 'playback-tests.yml', 'db-rescue.yml'}
+allowed = {'ci.yml', 'upstream-sync.yml', 'publish.yml', 'playback-hotfix-qa.yml', 'playback-tests.yml', 'db-rescue.yml', 'event-streams-qa.yml'}
 actual = {x.name for x in (R/'.github/workflows').glob('*.yml')}
 assert actual <= allowed, f'Unexpected upstream workflows: {actual - allowed}'
+qa_workflow = (R/'.github/workflows/event-streams-qa.yml').read_text()
+assert 'contents: read' in qa_workflow, 'Event stream QA must be read-only'
+assert not __import__('re').search(r'assemble|supabase.*deploy|wrangler.*deploy|SUPABASE_SERVICE_ROLE', qa_workflow, __import__('re').I), 'Event stream QA must not build APKs or deploy production'
 assert (R/'LICENSE').exists(), 'GPLv3 license file missing'
 print('PASS: branding, app identity, protected assets, release channel and workflows')

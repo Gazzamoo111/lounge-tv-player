@@ -30,7 +30,7 @@ def instant(value):
 
 def xmltime(value):
     if not value:return None
-    for fmt in ['%Y%m%d%H%M%S %z','%Y%m%d%H%M %z']:
+    for fmt in ['%Y%m%d%H%M%S %z','%Y%m%d%H%M %z','%Y%m%d%H%M%S%z','%Y%m%d%H%M%z']:
         try:return dt.datetime.strptime(value,fmt).astimezone(dt.timezone.utc)
         except ValueError:pass
     return None
@@ -46,11 +46,15 @@ def guide(spec):
         root=ET.fromstring(gzip.decompress(raw))
         channels=[{'id':c.get('id'),'names':[n.text or '' for n in c.findall('display-name')]} for c in root.findall('channel')]
         programmes=[]
-        for p in root.findall('programme'):
+        raw_programmes=root.findall('programme')
+        parsed_starts=[];invalid_times=0
+        for p in raw_programmes:
             start,end=xmltime(p.get('start')),xmltime(p.get('stop'))
+            if start:parsed_starts.append(start)
+            if not start or not end:invalid_times+=1
             if not start or not end or end<NOW-dt.timedelta(hours=6) or start>NOW+dt.timedelta(hours=72):continue
             programmes.append({'channelId':p.get('channel'),'startUtc':ISO(start),'endUtc':ISO(end),'title':p.findtext('title',''),'description':p.findtext('desc',''),'categories':[c.text or '' for c in p.findall('category')]})
-        status.update(ok=True,revision=revision['sha'],sourceUpdatedAtUtc=updated,channels=len(channels),programmes=len(programmes),sha256=hashlib.sha256(raw).hexdigest())
+        status.update(rawProgrammes=len(raw_programmes),invalidProgrammeTimes=invalid_times,firstProgrammeUtc=ISO(min(parsed_starts)) if parsed_starts else None,lastProgrammeUtc=ISO(max(parsed_starts)) if parsed_starts else None,ok=True,revision=revision['sha'],sourceUpdatedAtUtc=updated,channels=len(channels),programmes=len(programmes),sha256=hashlib.sha256(raw).hexdigest())
         return {'source':name,'market':market,'url':url,'sourceUpdatedAtUtc':updated,'fetchedAtUtc':status['fetchedAtUtc'],'channels':channels,'programmes':programmes},status
     except Exception as e:
         status.update(ok=False,error=type(e).__name__+': '+str(e).split('?')[0][:180])
