@@ -1,0 +1,87 @@
+name: Lounge TV 7-day AU and 24-7 QA
+on:
+  pull_request:
+    branches: [qa-epg-repair-20261105]
+  push:
+    branches: [qa-epg-7day-au-247-20261105]
+    paths:
+      - '.github/workflows/qa-epg-7day-au-247.yml'
+      - 'qa/epg/seven_day_targeted.py'
+      - 'qa/epg/test_seven_day_targeted.py'
+      - 'qa/epg/active-release.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lounge-epg-seven-day-qa
+  cancel-in-progress: true
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install XML parser
+        run: python -m pip install lxml==5.4.0
+      - name: Run isolated seven-day EPG regressions
+        run: python -m unittest qa/epg/test_seven_day_targeted.py -v
+      - name: Fetch existing guide and fresh Australian feeds
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/lounge-targeted
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 180 \
+            https://raw.githubusercontent.com/Gazzamoo111/lounge-tv-player/epg-data/epg/guide.xml.gz \
+            -o /tmp/lounge-targeted/published.xml.gz
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 300 \
+            https://iptv-epg.org/files/epg-au.xml.gz \
+            -o /tmp/lounge-targeted/au-primary.xml.gz || true
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 300 \
+            https://i.mjh.nz/au/Sydney/epg.xml.gz \
+            -o /tmp/lounge-targeted/au-sydney.xml.gz || true
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 300 \
+            https://xmltv.net/xml_files/Sydney.xml \
+            -o /tmp/lounge-targeted/au-xmltv-net.xml || true
+          test -s /tmp/lounge-targeted/published.xml.gz
+          ls -lh /tmp/lounge-targeted/
+      - name: Generate Australian and 24-7 seven-day additions
+        run: |
+          python qa/epg/seven_day_targeted.py \
+            --manifest qa/epg/active-release.json \
+            --existing /tmp/lounge-targeted/published.xml.gz \
+            --au primary=/tmp/lounge-targeted/au-primary.xml.gz \
+            --au sydney=/tmp/lounge-targeted/au-sydney.xml.gz \
+            --au xmltv-net=/tmp/lounge-targeted/au-xmltv-net.xml \
+            --out qa/epg/rolling7-out
+      - name: Check scope and horizon, leave publication closed
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from datetime import datetime
+          r=json.loads(Path('qa/epg/rolling7-out/report.json').read_text())
+          assert r['auChannels']==38,r
+          assert r['loopChannels']==672,r
+          assert r['auChannelsWithSevenDaySource']>0,r
+          assert r['auProgrammesAdded']>0,r
+          assert r['loopChannelsNewlyCovered']>=100,r
+          assert r['untouchedExistingProgrammeEntries']>0,r
+          assert datetime.fromisoformat(r['requiredThroughUtc']) > datetime.fromisoformat(r['generatedAtUtc']),r
+          print('ROLLING_7_DAY_QA_PASS',{
+            k:r[k] for k in ('auChannelsWithSevenDaySource','auProgrammesAdded',
+              'loopChannelsNewlyCovered','loopProgrammesAdded','shortFilesUpdated')})
+          PY
+      - name: Upload QA artifacts, never customer EPG
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lounge-epg-seven-day-au-247-qa
+          path: |
+            qa/epg/rolling7-out/report.json
+            qa/epg/rolling7-out/guide.xml.gz
+            qa/epg/rolling7-out/short/
+          if-no-files-found: warn
+          retention-days: 7
