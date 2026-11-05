@@ -281,6 +281,16 @@ export function sportFallbackCandidates(event,rows,now=Date.now(),limit=6){
     const row=inventoryRow(raw),name=String(row.name||"");
     if(!name||INACTIVE.test(name)||excluded(row))continue;
     const n=norm(name);
+    // A team-branded station can be a backup only for a participant in THIS
+    // fixture. Otherwise the first six NBA/NFL team channels would be random teams.
+    if(/\b(?:NBA TEAM|NFL TEAMS?|NHL TEAM|MLB TEAM)\b/.test(n)){
+      const nicknames=[event.home,event.away].map(norm)
+        .filter(Boolean).map(team=>team.split(" ").at(-1))
+        .filter(nick=>nick&&nick.length>=3);
+      if(!nicknames.some(nick=>phrase(n,nick)))continue;
+    }
+    // Hundreds of city-labelled NFL Network repeats are not distinct backups.
+    if(/\bNFL NETWORK N\d{3,4}\b/.test(n))continue;
     // Prevent different live fixture or replay channels from being offered as backups.
     if(/\b(?:VS|VERSUS| AT |REPLAY|ENDED|NEXT)\b/.test(n))continue;
     if(!rule.test(n))continue;
