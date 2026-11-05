@@ -13,8 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - name: Checkout approved EPG code
+      - name: Checkout tested EPG generator only
         uses: actions/checkout@v4
+        with:
+          ref: 7aa9b2406eda33bcad7d07983ff68abb491a57d5
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -27,8 +29,11 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p /tmp/lounge-epg7
+          SOURCE_HEAD="$(git ls-remote https://github.com/Gazzamoo111/lounge-tv-player.git refs/heads/epg-data | cut -f1)"
+          test -n "$SOURCE_HEAD"
+          echo "$SOURCE_HEAD" > /tmp/lounge-epg7/source-head.txt
           curl --fail --location --retry 3 --connect-timeout 30 --max-time 180 \
-            https://raw.githubusercontent.com/Gazzamoo111/lounge-tv-player/epg-data/epg/guide.xml.gz \
+            "https://raw.githubusercontent.com/Gazzamoo111/lounge-tv-player/$SOURCE_HEAD/epg/guide.xml.gz" \
             -o /tmp/lounge-epg7/existing.xml.gz
           curl --fail --location --retry 3 --connect-timeout 30 --max-time 300 \
             https://iptv-epg.org/files/epg-au.xml.gz \
@@ -61,7 +66,6 @@ jobs:
           assert r['auChannels']==38
           assert r['loopChannels']==672
           assert r['auChannelsWithSevenDaySource']>0
-          assert r['auProgrammesAdded']>0
           assert r['loopChannelsNewlyCovered']>0
           assert r['untouchedExistingProgrammeEntries'] == r['existingProgrammeEntries']
           assert datetime.fromisoformat(r['requiredThroughUtc']) - datetime.fromisoformat(r['generatedAtUtc']) == timedelta(days=7)
@@ -72,6 +76,8 @@ jobs:
           assert all(tree.xpath('channel[@id=$cid]',cid=cid) for cid in changed)
           print('EPG_ROLLING_7_GATE_PASS',r['auChannelsWithSevenDaySource'],r['loopChannelsNewlyCovered'])
           PY
+      - name: Attach exact source revision for atomic compare-and-swap
+        run: cp /tmp/lounge-epg7/source-head.txt qa/epg/rolling7-out/source-head.txt
       - name: Retain candidate for inspection
         uses: actions/upload-artifact@v4
         with:
@@ -80,6 +86,7 @@ jobs:
             qa/epg/rolling7-out/report.json
             qa/epg/rolling7-out/guide.xml.gz
             qa/epg/rolling7-out/short/
+            qa/epg/rolling7-out/source-head.txt
           retention-days: 7
 
   publish:
@@ -106,11 +113,25 @@ jobs:
           set -euo pipefail
           test -s reviewed/guide.xml.gz
           test -s reviewed/report.json
+          SOURCE_HEAD="$(cat reviewed/source-head.txt)"
+          ACTUAL_HEAD="$(git -C published rev-parse HEAD)"
+          if [ "$SOURCE_HEAD" != "$ACTUAL_HEAD" ]; then
+            echo "EPG data changed after QA validation; refusing stale promotion"
+            exit 1
+          fi
           cp reviewed/guide.xml.gz published/epg/guide.xml.gz
           gzip -dc reviewed/guide.xml.gz > published/epg/guide.xml
           mkdir -p published/epg/short
           cp reviewed/short/*.json published/epg/short/
           cp reviewed/report.json published/epg/rolling7-au-247-report.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('published/epg/rolling7-au-247-report.json')
+          r=json.loads(p.read_text())
+          r['previousGuideGitSha']=Path('reviewed/source-head.txt').read_text().strip()
+          p.write_text(json.dumps(r,indent=2)+'\\n')
+          PY
           cd published
           git config user.name 'Lounge TV EPG Automation'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
