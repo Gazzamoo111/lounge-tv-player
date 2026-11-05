@@ -121,6 +121,8 @@ class SearchViewModel(
     /** The core SearchReader already respects persisted category and item hides.
      *  Also filter unambiguous provider language prefixes in search and curated rows. */
     private fun englishOnly(result: SearchResults): SearchResults = result.copy(
+        channels = result.channels.filterNot { tv.own.owntv.features.live.SportsChannelPolicy.excludedBest(it.channel.remoteId, it.channel.name) },
+        programmes = result.programmes.filterNot { tv.own.owntv.features.live.SportsChannelPolicy.excludedBest(it.channel.remoteId, it.channel.name) },
         movies = result.movies.filter { LoungeVodCatalogueCleanup.visibleEnglish(it.name, it.providerLanguage) },
         series = result.series.filter { LoungeVodCatalogueCleanup.visibleEnglish(it.name, it.providerLanguage) },
     )

@@ -998,6 +998,7 @@ class EpgViewModel(
         // the main thread (#3/#5) so a 50k-channel playlist never freezes the UI building the guide list.
         val channels = withContext(Dispatchers.Default) {
             val auto = rawChannels
+                .filterNot { SportsChannelPolicy.excludedBest(it.remoteId, it.name) }
                 .filter { ch ->
                     !shouldHideBestNzChannel(
                         providerTypes[ch.sourceId],

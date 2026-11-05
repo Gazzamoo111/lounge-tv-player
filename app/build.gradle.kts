@@ -1,5 +1,6 @@
 import java.io.ByteArrayOutputStream
 import java.util.Properties
+import java.net.URI
 import javax.inject.Inject
 import org.gradle.process.ExecOperations
 
@@ -224,7 +225,7 @@ android {
             val sportsQaEndpoint = System.getenv("SPORTS_QA_ENDPOINT").orEmpty()
             if (qaSigningRequired && (sportsQaEndpoint.isBlank() ||
                 !sportsQaEndpoint.startsWith("https://") ||
-                java.net.URI(sportsQaEndpoint).host == "liqocisegeqzbyuqloql.supabase.co")) {
+                URI(sportsQaEndpoint).host == "liqocisegeqzbyuqloql.supabase.co")) {
                 throw GradleException("QA requires SPORTS_QA_ENDPOINT on an isolated host")
             }
             buildConfigField("String", "SPORTS_CANDIDATES_URL", "\"${sportsQaEndpoint.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
