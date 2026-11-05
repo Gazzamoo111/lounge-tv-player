@@ -111,3 +111,28 @@ test("explicit non-US regional TV assignments find AU, NZ and UK variants withou
  assert.ok(found.every(x=>x.tier==="plausible"&&x.evidence[0].type==="assignment"));
  assert.deepEqual(found.map(x=>x.serviceMarket),["UK","NZ","AU"]);
 });
+
+test("ESPN 403 falls back only to fresh exact-fixture TV assignments collected on the GitHub runner",async()=>{
+ const snapshot={
+  contractVersion:1,collectedAtUtc:new Date(Date.now()-30000).toISOString(),
+  expiresAtUtc:new Date(Date.now()+7200000).toISOString(),
+  fixtures:[{eventId:event.eventId,competitionId:event.competitionId,scheduledStartUtc:event.scheduledStartUtc,
+    participants:[{name:"Philadelphia 76ers",aliases:["76ers"]},{name:"Detroit Pistons",aliases:["Pistons"]}],
+    geoBroadcasts:geo}]
+ };
+ const requester=async(url)=>url.includes("site.api.espn.com")
+   ?{ok:false,status:403}:{ok:true,json:async()=>snapshot};
+ const found=await findIndependentBroadcasts(event,requester);
+ assert.equal(found.status,"fixture-confirmed-ci-snapshot");
+ assert.deepEqual(found.geo,geo);
+ assert.match(found.source,/raw\.githubusercontent\.com/);
+ for(const bad of [
+  {...snapshot,expiresAtUtc:new Date(Date.now()-10000).toISOString()},
+  {...snapshot,fixtures:[{...snapshot.fixtures[0],eventId:"basketball/nba#401111111"}]},
+  {...snapshot,fixtures:[{...snapshot.fixtures[0],participants:[{name:"Orlando Magic"},{name:"Phoenix Suns"}]}]}
+ ]){
+  const blocked=await findIndependentBroadcasts(event,async(url)=>url.includes("site.api.espn.com")
+    ?{ok:false,status:403}:{ok:true,json:async()=>bad});
+  assert.equal(blocked.geo.length,0);
+ }
+});
