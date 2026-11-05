@@ -61,7 +61,7 @@ jobs:
       # PRs compile with an isolated ephemeral debug signer. Stable QA signing remains
       # mandatory for main/workflow_dispatch and is never supplied to untrusted PR code.
       - name: Decode persistent QA signing key
-        if: github.event_name == 'workflow_dispatch' || github.ref_name == '001-live-sports-reliability'
+        if: github.event_name == 'workflow_dispatch'
         env:
           QA_KEYSTORE_BASE64: ${{ secrets.QA_KEYSTORE_BASE64 }}
           QA_KEYSTORE_PASSWORD: ${{ secrets.QA_KEYSTORE_PASSWORD }}
@@ -85,7 +85,7 @@ jobs:
           QA_KEYSTORE_PASSWORD: ${{ secrets.QA_KEYSTORE_PASSWORD }}
           QA_KEY_ALIAS: ${{ secrets.QA_KEY_ALIAS }}
           QA_KEY_PASSWORD: ${{ secrets.QA_KEY_PASSWORD }}
-          QA_SIGNING_REQUIRED: ${{ github.event_name == 'workflow_dispatch' || github.ref_name == '001-live-sports-reliability' }}
+          QA_SIGNING_REQUIRED: ${{ github.event_name == 'workflow_dispatch' }}
           EXPECTED_QA_CERT_SHA256: ${{ vars.QA_CERT_SHA256 }}
         run: |
           set -euo pipefail
@@ -97,13 +97,8 @@ jobs:
               --expected-package com.loungetv.player.qa \
               --expected-cert-sha256 "$EXPECTED_QA_CERT_SHA256" \
               --expected-version-code "$VERSION_CODE"
-          elif [ "$GITHUB_REF_NAME" = "001-live-sports-reliability" ]; then
-            python3 scripts/verify_update_compatibility.py "$QA_APK" \
-              --expected-package com.loungetv.player.auditqa \
-              --expected-cert-sha256 "$EXPECTED_QA_CERT_SHA256" \
-              --expected-version-code "$VERSION_CODE"
           else
-            # Other automated checks use an isolated ephemeral debug signer.
+            # Automated branch checks use an isolated ephemeral debug signer.
             AAPT=$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)
             APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)
             APK_BADGING=$("$AAPT" dump badging "$QA_APK")
