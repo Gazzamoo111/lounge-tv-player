@@ -105,3 +105,52 @@ console.log(JSON.stringify({
   playbackVerified:0,
   note:"Remote QA API relevance gate only. Actual decoded game content still requires Fire TV acceptance testing."
 },null,2));
+
+
+// NHL-and-cricket real inventory acceptance. These are fixture-specific sources,
+// never general NHL Network/Willow guesses or claims of decoded video playback.
+const cases=[
+ {eventId:"hockey/nhl#401892654",sportId:"hockey",competitionId:"hockey/nhl",
+  scheduledStartUtc:"2026-11-06T00:00:00Z",status:"PRE",
+  home:"Boston Bruins",away:"Pittsburgh Penguins",expected:[45528,1479774],
+  title:"Pittsburgh Penguins at Boston Bruins",source:"ESPN NHL scoreboard"},
+ {eventId:"hockey/nhl#401892649",sportId:"hockey",competitionId:"hockey/nhl",
+  scheduledStartUtc:"2026-11-06T00:00:00Z",status:"PRE",
+  home:"Vegas Golden Knights",away:"Detroit Red Wings",expected:[2153431],
+  title:"Detroit Red Wings at Vegas Golden Knights",source:"ESPN NHL scoreboard"},
+ {eventId:"cricket/odi#NZ-IND-20261107",sportId:"cricket",competitionId:"cricket/odi",
+  scheduledStartUtc:"2026-11-07T02:00:00Z",status:"PRE",
+  home:"New Zealand",away:"India",expected:[1960720],
+  title:"New Zealand vs India 2nd ODI",
+  source:"New Zealand Cricket official 2026-27 home summer fixture schedule; 7 Nov 2026 3pm NZDT"},
+];
+const multiSport=[];
+for(const fixture of cases){
+ const params=new URLSearchParams({
+   contractVersion:"2",eventId:fixture.eventId,sportId:fixture.sportId,
+   competitionId:fixture.competitionId,scheduledStartUtc:fixture.scheduledStartUtc,
+   status:fixture.status,title:fixture.title,home:fixture.home,away:fixture.away,
+   homeAliases:fixture.home,awayAliases:fixture.away,limit:"12",
+ });
+ const response=await fetch(endpoint+"?"+params.toString(),
+   {signal:AbortSignal.timeout(25000),headers:{Accept:"application/json"}});
+ assert.equal(response.status,200,fixture.title+": QA endpoint HTTP "+response.status);
+ const payload=await response.json();
+ assert.equal(payload.catalogueStale,false,fixture.title+": current BEST inventory required");
+ assert.equal(payload.coverage.catalogueScanned,16140,fixture.title+": full inventory expected");
+ const ids=payload.candidates.map(c=>c.providerItemId);
+ multiSport.push({fixture:fixture.title,ids,expected:fixture.expected,
+   fixtureSourceStatus:payload.coverage.independentFixtureStatus,
+   confirmedVariants:payload.coverage.independentlyAssignedVariants,
+   playbackVerified:payload.coverage.playbackVerified,
+   evidence:payload.candidates.map(c=>({id:c.providerItemId,type:c.evidence[0]?.type,tier:c.tier}))});
+ for(const id of fixture.expected){
+   assert.ok(ids.includes(id),fixture.title+" missing explicitly expected BEST stream "+id+
+     ": "+JSON.stringify(multiSport.at(-1)));
+ }
+ assert.ok(payload.candidates.length<=12,fixture.title+": no hundreds of alternatives");
+ assert.ok(payload.candidates.every(c=>c.tier==="plausible"&&
+   candidateHasFixtureEvidence(c,fixture.eventId,fixture.sportId,fixture.competitionId)),
+   fixture.title+": only scoped evidence and unverified candidate labels");
+}
+console.log("MULTISPORT_QA "+JSON.stringify(multiSport,null,2));
