@@ -5,6 +5,7 @@ import org.junit.Test
 import tv.own.owntv.core.database.entity.ChannelEntity
 import tv.own.owntv.core.sports.WatchOption
 import tv.own.owntv.core.sports.WatchTier
+import tv.own.owntv.core.sports.model.*
 
 class BackendSportsCandidatesTest {
     private fun option(id: Long, tier: WatchTier, marker: String? = null) = WatchOption(
@@ -33,5 +34,26 @@ class BackendSportsCandidatesTest {
     @Test fun `recommendations are bounded to eight`() {
         val merged=mergeBackendSportsOptions((1L..20L).map{option(it,WatchTier.LIKELY)}, emptyList())
         assertEquals(8,merged.size)
+    }
+
+    private fun soccerMatch() = Match(
+        "regression", Sport.SOCCER, "soccer/uefa.champions", "uefa.champions", "UEFA Champions League",
+        1_000_000, MatchState.IN, "IN", "Liverpool v Real Madrid", competitors=listOf(
+            Competitor(Team("1","Liverpool"),true,null,null),
+            Competitor(Team("2","Real Madrid"),false,null,null),
+        ),
+    )
+    @Test fun `generic networks cannot flood local merge but supported Stan guide survives`() {
+        val generic=(1L..200L).map { option(it,WatchTier.LIKELY).let { o -> o.copy(channel=o.channel.copy(name="US| PARAMOUNT PLUS $it")) } }
+        val stan=option(500,WatchTier.GUIDE,"Liverpool v Real Madrid").let { it.copy(channel=it.channel.copy(name="AU| STAN SPORT 1 HD")) }
+        val merged=mergeBackendSportsOptions(soccerMatch(),emptyList(),generic+stan)
+        assertEquals(listOf(500L),merged.map{it.channel.id})
+        assertEquals(WatchTier.GUIDE,merged.single().tier)
+    }
+    @Test fun `valid local soccer alternative survives failed backend without trusting contradictory guide`() {
+        val bein=option(501,WatchTier.GUIDE,"ATP Masters 1000").let { it.copy(channel=it.channel.copy(name="AU| BEIN SPORTS 1 HD",remoteId="646977")) }
+        val merged=mergeBackendSportsOptions(soccerMatch(),emptyList(),listOf(bein))
+        assertEquals(501L,merged.single().channel.id);assertEquals(WatchTier.LIKELY,merged.single().tier)
+        assertNull(merged.single().guideTitle)
     }
 }
