@@ -1,0 +1,801 @@
+{
+  "generatedAtUtc": "2026-11-05T08:17:16.365620+00:00",
+  "release": "universal-v2-nz-tv-staging",
+  "sourceChannels": 28178,
+  "releaseRows": 2205,
+  "eligibleRows": 953,
+  "matchingMethods": {
+    "excluded-nonscheduled": 1252,
+    "exact-name-region": 76,
+    "wrong-or-missing-region": 529,
+    "exact-id": 20,
+    "normalized-id": 37,
+    "reviewed-au-network": 4,
+    "too-short": 47,
+    "ambiguous-or-missing": 149,
+    "unique-fast-brand": 4,
+    "ambiguous-region": 1,
+    "us-fast-brand": 86
+  },
+  "matchedTargets": 217,
+  "baselineWithUpcoming": 15,
+  "targetsNeedingSupplement": 202,
+  "supplementedChannels": 183,
+  "supplementedProgrammes": 14847,
+  "earliestProgrammeUtc": "2026-11-04T21:00:00+00:00",
+  "latestProgrammeUtc": "2026-11-08T11:30:00+00:00",
+  "unmatchedExamples": [
+    {
+      "name": "Te Reo",
+      "category": "New Zealand",
+      "epgId": "mjh-te-reo"
+    },
+    {
+      "name": "ESPN Australia",
+      "category": "Australia",
+      "epgId": null
+    },
+    {
+      "name": "ESPN2 Australia",
+      "category": "Australia",
+      "epgId": null
+    },
+    {
+      "name": "10 BOLD",
+      "category": "Australia",
+      "epgId": "10Bold.au"
+    },
+    {
+      "name": "10 Peach",
+      "category": "Australia",
+      "epgId": "10Peach.au"
+    },
+    {
+      "name": "10 Shake",
+      "category": "Australia",
+      "epgId": null
+    },
+    {
+      "name": "7flix",
+      "category": "Australia",
+      "epgId": "7Flix.au"
+    },
+    {
+      "name": "7mate",
+      "category": "Australia",
+      "epgId": "7Mate.au"
+    },
+    {
+      "name": "7two",
+      "category": "Australia",
+      "epgId": "7TWO.au"
+    },
+    {
+      "name": "9Gem",
+      "category": "Australia",
+      "epgId": null
+    },
+    {
+      "name": "9Go!",
+      "category": "Australia",
+      "epgId": null
+    },
+    {
+      "name": "9Life",
+      "category": "Australia",
+      "epgId": null
+    },
+    {
+      "name": "9Rush",
+      "category": "Australia",
+      "epgId": null
+    },
+    {
+      "name": "ABC",
+      "category": "Australia",
+      "epgId": "ABC.au"
+    },
+    {
+      "name": "ABC Comedy",
+      "category": "Australia",
+      "epgId": "ABCComedy.au"
+    },
+    {
+      "name": "ABC Kids",
+      "category": "Australia",
+      "epgId": "ABC Kids"
+    },
+    {
+      "name": "ABC ME",
+      "category": "Australia",
+      "epgId": "ABCME.au"
+    },
+    {
+      "name": "Channel 9",
+      "category": "Australia",
+      "epgId": "Channel9.au"
+    },
+    {
+      "name": "Red Bull TV",
+      "category": "Australia",
+      "epgId": null
+    },
+    {
+      "name": "SBS",
+      "category": "Australia",
+      "epgId": "SBS.au"
+    },
+    {
+      "name": "SBS Food",
+      "category": "Australia",
+      "epgId": "SBSFood.au"
+    },
+    {
+      "name": "SBS Viceland",
+      "category": "Australia",
+      "epgId": "SBSViceland.au"
+    },
+    {
+      "name": "SBS World Movies",
+      "category": "Australia",
+      "epgId": "SBSWorldMovies.au"
+    },
+    {
+      "name": "Seven",
+      "category": "Australia",
+      "epgId": null
+    },
+    {
+      "name": "EFC 139: Mkhwanazi vs. Hinda",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "SKY NEWS",
+      "category": "Australia",
+      "epgId": "SKYNewsLive.au"
+    },
+    {
+      "name": "Media Fight Night 2026",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "SKY NEWS AUSTRALIA",
+      "category": "Australia",
+      "epgId": null
+    },
+    {
+      "name": "UFC Fight Night: English",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "UFC Press Conference",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "UFC Weigh_In Desk Show",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "UFC Ceremonial Weigh_In em Portugu\u00eas",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "Ten",
+      "category": "Australia",
+      "epgId": "10Bold.au"
+    },
+    {
+      "name": "DAZN RINGSIDE",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "FIGHT NETWORK",
+      "category": "Sports",
+      "epgId": "us.The Fight Network (United States) SDTV"
+    },
+    {
+      "name": "UFC",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "UFC TV (Events2)",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "WWE",
+      "category": "Sports",
+      "epgId": "WWE.us"
+    },
+    {
+      "name": "F1",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "MOTOGP OB1",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "SKY SPORTS F1",
+      "category": "Sports",
+      "epgId": "SkySportsF1.uk"
+    },
+    {
+      "name": "SKY SPORTS F1 UHD/4K",
+      "category": "Sports",
+      "epgId": "SkySportsF1.uk"
+    },
+    {
+      "name": "GOLF CHANNEL",
+      "category": "Sports",
+      "epgId": "GolfChannel.us"
+    },
+    {
+      "name": "NBC GOLF",
+      "category": "Sports",
+      "epgId": "US| NBC GOLF"
+    },
+    {
+      "name": "SKY SPORTS GOLF",
+      "category": "Sports",
+      "epgId": "SkySportsGolf.uk"
+    },
+    {
+      "name": "ACC NETWORK",
+      "category": "Sports",
+      "epgId": "ACCNetwork.us"
+    },
+    {
+      "name": "TENNIS",
+      "category": "Sports",
+      "epgId": "US-The Tennis Channel"
+    },
+    {
+      "name": "AFN SPORT",
+      "category": "Sports",
+      "epgId": "AFNSports.us"
+    },
+    {
+      "name": "TENNIS CHANNEL",
+      "category": "Sports",
+      "epgId": "TennisChannel.us"
+    },
+    {
+      "name": "ALL WOMEN'S SPORTS",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "ALTITUDE SPORTS",
+      "category": "Sports",
+      "epgId": "AltitudeSports.us"
+    },
+    {
+      "name": "ALTITUDE SPORTS 2",
+      "category": "Sports",
+      "epgId": "AltitudeSports.us"
+    },
+    {
+      "name": "ALTITUDE SPORTS ALTERNATE",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "AT&T SPORTSNET ROCKY MOUNTAIN",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "AT&T SPORTSNET SOUTHWEST",
+      "category": "Sports",
+      "epgId": "ATTSportsNetHouston.us"
+    },
+    {
+      "name": "BEIN SPORTS",
+      "category": "Sports",
+      "epgId": "beINSports.us"
+    },
+    {
+      "name": "BEIN SPORTS 2",
+      "category": "Sports",
+      "epgId": "liga"
+    },
+    {
+      "name": "BEIN SPORTS 4",
+      "category": "Sports",
+      "epgId": "beINSports4.us"
+    },
+    {
+      "name": "BEIN SPORTS 5",
+      "category": "Sports",
+      "epgId": "beINSports5.us"
+    },
+    {
+      "name": "BEIN SPORTS 6",
+      "category": "Sports",
+      "epgId": "beINSports6.us"
+    },
+    {
+      "name": "BEIN SPORTS 7",
+      "category": "Sports",
+      "epgId": "beINSports7.us"
+    },
+    {
+      "name": "BEIN SPORTS 8",
+      "category": "Sports",
+      "epgId": "beINSports8.us"
+    },
+    {
+      "name": "BEIN SPORTS XTRA",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "BIG TEN NETWORK",
+      "category": "Sports",
+      "epgId": "BigTenNetwork.us"
+    },
+    {
+      "name": "MLB NETWORK",
+      "category": "Sports",
+      "epgId": "MLBNetwork.us"
+    },
+    {
+      "name": "NBA \u2022 Orlando Magic @ Phoenix Suns",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "MLB STRIKE ZONE",
+      "category": "Sports",
+      "epgId": "MLB Strike Zone - MLBSZ1"
+    },
+    {
+      "name": "NBA \u2022 Miami Heat @ Golden State Warriors",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "CBS Sports Golazo Network",
+      "category": "Sports",
+      "epgId": "CBSSportsGolazo.us"
+    },
+    {
+      "name": "NBA \u2022 Washington Wizards @ Atlanta Hawks",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "NHL NETWORK",
+      "category": "Sports",
+      "epgId": "NHLNetwork.us"
+    },
+    {
+      "name": "CBS SPORTS NETWORK",
+      "category": "Sports",
+      "epgId": "US-CBS Sports Network USA"
+    },
+    {
+      "name": "NBA \u2022 Boston Celtics @ Charlotte Hornets",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "CHICAGO SPORTS NETWORK",
+      "category": "Sports",
+      "epgId": "US-NBC Sports Chicago"
+    },
+    {
+      "name": "NBA \u2022 Philadelphia 76ers @ Cleveland Cavaliers",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "NESN PLUS",
+      "category": "Sports",
+      "epgId": "US-New England Sports Network Plus"
+    },
+    {
+      "name": "CHICAGO SPORTS NETWORK PLUS",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "NBA \u2022 Utah Jazz @ Dallas Mavericks",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "SPORTSNET LA DODGERS",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "COWBOY CHANNEL",
+      "category": "Sports",
+      "epgId": "TheCowboyChannel.us"
+    },
+    {
+      "name": "NBA \u2022 Oklahoma City Thunder @ Memphis Grizzlies",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "SPORTSNET NEW YORK",
+      "category": "Sports",
+      "epgId": "us.SNY Sportsnet NY"
+    },
+    {
+      "name": "CSN BOSTON",
+      "category": "Sports",
+      "epgId": "US-NBC Sports Boston"
+    },
+    {
+      "name": "NBA \u2022 Toronto Raptors @ Milwaukee Bucks",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "SPORTSNET PITTSBURGH",
+      "category": "Sports",
+      "epgId": "ATTSportsNetPittsburgh.us"
+    },
+    {
+      "name": "CSN CALIFORNIA",
+      "category": "Sports",
+      "epgId": "US-NBC Sports California"
+    },
+    {
+      "name": "NBA \u2022 Minnesota Timberwolves @ New Orleans Pelicans",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "SPORTSNET PITTSBURGH ALTERNATE",
+      "category": "Sports",
+      "epgId": null
+    },
+    {
+      "name": "CSN PHILADELPHIA",
+      "category": "Sports",
+      "epgId": "US-NBC Sports Philadelphia"
+    },
+    {
+      "name": "NBA \u2022 Portland Trail Blazers @ Los Angeles Lakers",
+      "category": "Sports",
+      "epgId": null
+    }
+  ],
+  "supplementSamples": [
+    {
+      "source": "ABCNewsSydney.au",
+      "method": "exact-name-region",
+      "name": "ABC NEWS SYDNEY",
+      "category": "Australia",
+      "target": "live:abc-news-sydney",
+      "programmeCount": 121
+    },
+    {
+      "source": "FoxCricket.au",
+      "method": "normalized-id",
+      "name": "FOX CRICKET",
+      "category": "Australia",
+      "target": "FOXCricket.au",
+      "programmeCount": 77
+    },
+    {
+      "source": "FoxCricket.au",
+      "method": "reviewed-au-network",
+      "name": "FOX SPORTS 501",
+      "category": "Australia",
+      "target": "live:au-fox-sports-501",
+      "programmeCount": 77
+    },
+    {
+      "source": "FoxLeague.au",
+      "method": "reviewed-au-network",
+      "name": "FOX SPORTS 502",
+      "category": "Australia",
+      "target": "live:au-fox-sports-502",
+      "programmeCount": 74
+    },
+    {
+      "source": "FoxSports503.au",
+      "method": "exact-name-region",
+      "name": "FOX SPORTS 503",
+      "category": "Australia",
+      "target": "FoxSports3.au",
+      "programmeCount": 37
+    },
+    {
+      "source": "FoxFooty.au",
+      "method": "reviewed-au-network",
+      "name": "FOX SPORTS 504",
+      "category": "Australia",
+      "target": "live:au-fox-sports-504",
+      "programmeCount": 99
+    },
+    {
+      "source": "FoxSports505.au",
+      "method": "exact-name-region",
+      "name": "FOX SPORTS 505",
+      "category": "Australia",
+      "target": "FoxSports5.au",
+      "programmeCount": 63
+    },
+    {
+      "source": "FoxSports506.au",
+      "method": "exact-name-region",
+      "name": "FOX SPORTS 506",
+      "category": "Australia",
+      "target": "FoxSports6.au",
+      "programmeCount": 72
+    },
+    {
+      "source": "FoxSportsMore.au",
+      "method": "reviewed-au-network",
+      "name": "FOX SPORTS 507",
+      "category": "Australia",
+      "target": "live:au-fox-sports-507",
+      "programmeCount": 49
+    },
+    {
+      "source": "FoxSportsNews.au",
+      "method": "exact-id",
+      "name": "Fox Sports News Australia",
+      "category": "Australia",
+      "target": "FoxSportsNews.au",
+      "programmeCount": 140
+    },
+    {
+      "source": "Fox.Weather.us",
+      "method": "exact-name-region",
+      "name": "FOX WEATHER",
+      "category": "Entertainment",
+      "target": "live:fox-weather",
+      "programmeCount": 50
+    },
+    {
+      "source": "FanDuel.TV.us",
+      "method": "exact-name-region",
+      "name": "FANDUEL TV",
+      "category": "Sports",
+      "target": "Fanduel.us",
+      "programmeCount": 15
+    },
+    {
+      "source": "plex.tv.The.Walking.Dead.Universe.plex",
+      "method": "us-fast-brand",
+      "name": "THE WALKING DEAD UNIVERSE",
+      "category": "Entertainment",
+      "target": "live:the-walking-dead-universe",
+      "programmeCount": 76
+    },
+    {
+      "source": "plex.tv.Acorn.TV.Mysteries.plex",
+      "method": "us-fast-brand",
+      "name": "ACORN TV MYSTERIES",
+      "category": "Entertainment",
+      "target": "live:acorn-tv-mysteries",
+      "programmeCount": 81
+    },
+    {
+      "source": "plex.tv.SNL.Vault.plex",
+      "method": "us-fast-brand",
+      "name": "SNL VAULT",
+      "category": "Entertainment",
+      "target": "live:snl-vault",
+      "programmeCount": 78
+    },
+    {
+      "source": "plex.tv.Anger.Management.plex",
+      "method": "us-fast-brand",
+      "name": "ANGER MANAGEMENT",
+      "category": "Entertainment",
+      "target": "live:anger-management",
+      "programmeCount": 169
+    },
+    {
+      "source": "plex.tv.MythBusters.plex",
+      "method": "us-fast-brand",
+      "name": "MYTHBUSTERS",
+      "category": "Entertainment",
+      "target": "live:mythbusters",
+      "programmeCount": 87
+    },
+    {
+      "source": "plex.tv.Real.Housewives.Vault.plex",
+      "method": "us-fast-brand",
+      "name": "REAL HOUSEWIVES VAULT",
+      "category": "Entertainment",
+      "target": "live:real-housewives-vault",
+      "programmeCount": 87
+    },
+    {
+      "source": "plex.tv.Bravo.Vault.plex",
+      "method": "us-fast-brand",
+      "name": "BRAVO VAULT",
+      "category": "Entertainment",
+      "target": "live:bravo-vault",
+      "programmeCount": 84
+    },
+    {
+      "source": "plex.tv.MOVIESPHERE.plex",
+      "method": "us-fast-brand",
+      "name": "MOVIESPHERE",
+      "category": "Entertainment",
+      "target": "live:moviesphere",
+      "programmeCount": 37
+    },
+    {
+      "source": "plex.tv.America\u2019s.Funniest.Home.Videos.plex",
+      "method": "us-fast-brand",
+      "name": "AMERICA'S FUNNIEST HOME VIDEOS",
+      "category": "Entertainment",
+      "target": "live:america-s-funniest-home-videos",
+      "programmeCount": 113
+    },
+    {
+      "source": "plex.tv.Portlandia.plex",
+      "method": "us-fast-brand",
+      "name": "PORTLANDIA",
+      "category": "Entertainment",
+      "target": "live:portlandia",
+      "programmeCount": 164
+    },
+    {
+      "source": "plex.tv.Are.We.There.Yet?.plex",
+      "method": "us-fast-brand",
+      "name": "ARE WE THERE YET",
+      "category": "Entertainment",
+      "target": "live:are-we-there-yet",
+      "programmeCount": 178
+    },
+    {
+      "source": "plex.tv.At.the.Movies.plex",
+      "method": "us-fast-brand",
+      "name": "AT THE MOVIES",
+      "category": "Entertainment",
+      "target": "live:at-the-movies",
+      "programmeCount": 38
+    },
+    {
+      "source": "plex.tv.Primetime.Soaps.plex",
+      "method": "us-fast-brand",
+      "name": "PRIMETIME SOAPS",
+      "category": "Entertainment",
+      "target": "live:primetime-soaps",
+      "programmeCount": 80
+    },
+    {
+      "source": "plex.tv.Oxygen.True.Crime.Archives.plex",
+      "method": "us-fast-brand",
+      "name": "OXYGEN TRUE CRIME ARCHIVES",
+      "category": "Entertainment",
+      "target": "live:oxygen-true-crime-archives",
+      "programmeCount": 87
+    },
+    {
+      "source": "plex.tv.Living.With.Evil.plex",
+      "method": "us-fast-brand",
+      "name": "LIVING WITH EVIL",
+      "category": "Entertainment",
+      "target": "live:living-with-evil",
+      "programmeCount": 88
+    },
+    {
+      "source": "plex.tv.Mysterious.Worlds.plex",
+      "method": "us-fast-brand",
+      "name": "MYSTERIOUS WORLDS",
+      "category": "Entertainment",
+      "target": "live:mysterious-worlds",
+      "programmeCount": 89
+    },
+    {
+      "source": "plex.tv.Say.Yes.to.the.Dress.plex",
+      "method": "us-fast-brand",
+      "name": "SAY YES TO THE DRESS",
+      "category": "Entertainment",
+      "target": "live:say-yes-to-the-dress",
+      "programmeCount": 173
+    },
+    {
+      "source": "plex.tv.E!.Keeping.Up.plex",
+      "method": "us-fast-brand",
+      "name": "E! KEEPING UP",
+      "category": "Entertainment",
+      "target": "live:e-keeping-up",
+      "programmeCount": 101
+    },
+    {
+      "source": "plex.tv.Ghosts.Are.Real.plex",
+      "method": "us-fast-brand",
+      "name": "GHOSTS ARE REAL",
+      "category": "Entertainment",
+      "target": "live:ghosts-are-real",
+      "programmeCount": 90
+    },
+    {
+      "source": "plex.tv.UnXplained.Zone.plex",
+      "method": "us-fast-brand",
+      "name": "UNXPLAINED ZONE",
+      "category": "Entertainment",
+      "target": "live:unxplained-zone",
+      "programmeCount": 84
+    },
+    {
+      "source": "plex.tv.All.Reality.We.TV.plex",
+      "method": "us-fast-brand",
+      "name": "ALL REALITY WETV",
+      "category": "Entertainment",
+      "target": "live:all-reality-wetv",
+      "programmeCount": 84
+    },
+    {
+      "source": "plex.tv.Million.Dollar.Listing.Vault.plex",
+      "method": "us-fast-brand",
+      "name": "MILLION DOLLAR LISTING VAULT",
+      "category": "Entertainment",
+      "target": "live:million-dollar-listing-vault",
+      "programmeCount": 87
+    },
+    {
+      "source": "plex.tv.Alien.Nation.by.DUST.plex",
+      "method": "us-fast-brand",
+      "name": "ALIEN NATION BY DUST",
+      "category": "Entertainment",
+      "target": "live:alien-nation-by-dust",
+      "programmeCount": 76
+    },
+    {
+      "source": "plex.tv.Always.Funny.plex",
+      "method": "us-fast-brand",
+      "name": "ALWAYS FUNNY",
+      "category": "Entertainment",
+      "target": "live:always-funny",
+      "programmeCount": 137
+    },
+    {
+      "source": "plex.tv.History.&.Warfare.plex",
+      "method": "unique-fast-brand",
+      "name": "HISTORY & WARFARE",
+      "category": "Documentaries & Lifestyle",
+      "target": "live:history-warfare",
+      "programmeCount": 72
+    },
+    {
+      "source": "plex.tv.How.To.plex",
+      "method": "us-fast-brand",
+      "name": "HOW TO",
+      "category": "Entertainment",
+      "target": "live:how-to",
+      "programmeCount": 170
+    },
+    {
+      "source": "plex.tv.Bizarre.Foods.with.Andrew.Zimmern.plex",
+      "method": "us-fast-brand",
+      "name": "BIZARRE FOODS WITH ANDREW ZIMMERN",
+      "category": "Entertainment",
+      "target": "live:bizarre-foods-with-andrew-zimmern",
+      "programmeCount": 89
+    },
+    {
+      "source": "plex.tv.Ice.Road.Truckers.plex",
+      "method": "us-fast-brand",
+      "name": "ICE ROAD TRUCKERS",
+      "category": "Entertainment",
+      "target": "live:ice-road-truckers",
+      "programmeCount": 85
+    }
+  ]
+}
