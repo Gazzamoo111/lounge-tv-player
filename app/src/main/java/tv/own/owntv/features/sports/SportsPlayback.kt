@@ -43,6 +43,7 @@ class SportsPlayback(
     private val sourceDao: SourceDao,
     private val repository: SportsRepository,
     private val watchReader: WatchReader,
+    private val eventStreams: EventStreamResolver,
 ) {
     private val _session = MutableStateFlow<SportsSession?>(null)
     val session: StateFlow<SportsSession?> = _session.asStateFlow()
@@ -95,7 +96,7 @@ class SportsPlayback(
      */
     suspend fun channelsFor(match: Match): List<WatchOption> {
         val config = settings.activeSportsConfig.first()
-        val options = watchReader.found(match) { SportsMemory.rememberedFor(config, it) } ?: return emptyList()
+        val options = eventStreams.resolve(match).options
         val liveSources = activeProfileSources(settings, sourceDao).first().liveSourceIds
         return WatchList.of(options, WatchFilter.from(config, Locale.getDefault().language, liveSources)).shown
     }

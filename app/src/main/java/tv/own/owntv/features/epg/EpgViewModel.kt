@@ -7,6 +7,7 @@ import tv.own.owntv.features.live.shouldHideBestNzChannel
 import tv.own.owntv.features.live.isAllowedBestNzSportsCategory
 import tv.own.owntv.features.live.LoungeLiveCatalogueCleanup
 import tv.own.owntv.features.live.LoungeLiveDuplicates
+import tv.own.owntv.features.live.SportsChannelPolicy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.FlowPreview
@@ -935,13 +936,23 @@ class EpgViewModel(
                 // Supplement only the two approved NZ Sky Sport groups when their provider
                 // fails to supply EPG data. Do NOT load thousands of empty-guide channels.
                 val sports = mutableListOf<ChannelEntity>()
+                val foxAu = mutableListOf<ChannelEntity>()
                 for (cat in categories) {
-                    if (!isAllowedBestNzSportsCategory(providerTypes[cat.sourceId], cat.name)) continue
-                    sports += channelDao.snapshotByCategoryManual(
-                        cat.id, pid, CustomizeKeys.category(cat), MAX_NZ_SPORT_CHANNELS,
-                    ).filter { ch -> q.isBlank() || ch.name.contains(q, ignoreCase = true) }
+                    if (isAllowedBestNzSportsCategory(providerTypes[cat.sourceId], cat.name)) {
+                        sports += channelDao.snapshotByCategoryManual(
+                            cat.id, pid, CustomizeKeys.category(cat), MAX_NZ_SPORT_CHANNELS,
+                        ).filter { ch -> q.isBlank() || ch.name.contains(q, ignoreCase = true) }
+                    }
+                    if (cat.name.startsWith("AU", ignoreCase = true)) {
+                        foxAu += channelDao.snapshotByCategoryManual(
+                            cat.id, pid, CustomizeKeys.category(cat), MAX_CHANNELS,
+                        ).filter { ch ->
+                            SportsChannelPolicy.foxGuideId(ch.remoteId, ch.name) != null &&
+                                (q.isBlank() || ch.name.contains(q, ignoreCase = true))
+                        }
+                    }
                 }
-                (withGuide + sports).distinctBy { it.id }
+                (withGuide + sports + foxAu).distinctBy { it.id }
             }
         }
         val favoriteIds = favoriteDao.observeFavoriteIds(pid, MediaType.LIVE).first().toSet()
@@ -987,6 +998,7 @@ class EpgViewModel(
         // the main thread (#3/#5) so a 50k-channel playlist never freezes the UI building the guide list.
         val channels = withContext(Dispatchers.Default) {
             val auto = rawChannels
+                .filterNot { SportsChannelPolicy.excludedBest(it.remoteId, it.name) }
                 .filter { ch ->
                     !shouldHideBestNzChannel(
                         providerTypes[ch.sourceId],
@@ -1003,6 +1015,12 @@ class EpgViewModel(
                     memberIds != null || it.categoryId == null || it.categoryId !in hiddenCatIds
                 }
                 .map { ch -> cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
+                .filterNot { SportsChannelPolicy.guideUntrusted(it.remoteId, it.name) }
+                .map { ch ->
+                    SportsChannelPolicy.foxGuideId(ch.remoteId, ch.name)
+                        ?.let { ch.copy(epgChannelId = it) }
+                        ?: ch
+                }
             val matched = applyEpgMatches(auto, cust, playlistIds, q)
             // The Order menu: Provider (also the old stored LIVE_TV value), A–Z,
             // Catch-up first, Favourites first. The last two only float those channels to the top.

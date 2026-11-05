@@ -70,3 +70,9 @@ replay_pid*.log
 .env
 .env.*
 local.properties
+
+__pycache__/
+*.pyc
+
+# Isolated QA observations and raw guide downloads stay in CI artifacts.
+/outputs/event-streams-qa/

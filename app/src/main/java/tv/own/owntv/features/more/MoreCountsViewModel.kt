@@ -149,6 +149,7 @@ class MoreCountsViewModel(
         if (c.profileId < 0) return FavouriteLists()
         val key = ContentOrderEntity.FAV_CONTEXT
         val live = channelDao.snapshotFavoritesManual(c.profileId, key, ids(c, MediaType.LIVE), LIST_LIMIT)
+            .filterNot { tv.own.owntv.features.live.SportsChannelPolicy.excludedBest(it.remoteId, it.name) }
         val now = System.currentTimeMillis()
         val onNow = if (live.isEmpty()) emptyMap() else guide.onNow(
             channels = live,
@@ -171,7 +172,9 @@ class MoreCountsViewModel(
         val pid = c.profileId
         if (pid < 0) return HistoryLists()
         fun watched(type: MediaType) = suspend { historyDao.getForProfileType(pid, type).associate { it.itemId to it.watchedAt } }
-        val live = channelDao.recentlyWatchedWithTimestampFiltered(pid, ids(c, MediaType.LIVE), LIST_LIMIT).first().map {
+        val live = channelDao.recentlyWatchedWithTimestampFiltered(pid, ids(c, MediaType.LIVE), LIST_LIMIT).first().filterNot {
+            tv.own.owntv.features.live.SportsChannelPolicy.excludedBest(it.channel.remoteId, it.channel.name)
+        }.map {
             HistoryEntry(MediaType.LIVE, it.channel.id, it.channel.name, null, it.channel, null, null, it.watchedAt, 0L, 0L)
         }
         val movieAt = watched(MediaType.MOVIE)()

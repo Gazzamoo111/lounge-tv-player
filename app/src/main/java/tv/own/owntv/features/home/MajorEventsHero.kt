@@ -76,16 +76,22 @@ internal fun MajorEventsHero(
     modifier: Modifier = Modifier,
     editorialByEvent: Map<String, SportEventEditorial> = emptyMap(),
 ) {
-    var selected by remember { mutableIntStateOf(0) }
+    var selectedKey by remember { mutableStateOf<String?>(null) }
+    var previousKeys by remember { mutableStateOf(emptyList<String>()) }
+    var interacting by remember { mutableStateOf(false) }
+    val keys = events.map { it.key }
+    val currentKey = retainedHeroKey(selectedKey, previousKeys, keys)
+    val selected = events.indexOfFirst { it.key == currentKey }.coerceAtLeast(0)
     var progress by remember { mutableFloatStateOf(0f) }
     var resetClock by remember { mutableIntStateOf(0) }
     val currentIndex = selected.coerceIn(0, (events.size - 1).coerceAtLeast(0))
     val event = events.getOrNull(currentIndex)
+    LaunchedEffect(keys) { selectedKey = currentKey; previousKeys = keys }
     val editorialCopy = event?.let { MajorEventEditorial.forMatch(it, editorialByEvent[it.key]) }
 
     // Same ten-second carousel and focusable progress pager as the original Home hero.
-    LaunchedEffect(events.map { it.key }, currentIndex, resetClock) {
-        if (events.size < 2) return@LaunchedEffect
+    LaunchedEffect(keys, currentIndex, resetClock, interacting) {
+        if (events.size < 2 || interacting) return@LaunchedEffect
         val started = System.nanoTime()
         while (true) {
             val elapsed = (System.nanoTime() - started) / 1_000_000L
@@ -94,10 +100,10 @@ internal fun MajorEventsHero(
             delay(120L)
         }
         progress = 0f
-        selected = (currentIndex + 1) % events.size
+        selectedKey = events[(currentIndex + 1) % events.size].key
     }
     val navigate: (Int) -> Unit = { index ->
-        selected = index
+        selectedKey = events.getOrNull(index)?.key
         progress = 0f
         resetClock++
     }
@@ -112,6 +118,7 @@ internal fun MajorEventsHero(
                     listOf(Color(0xFF111F39), Color(0xFF142E4B), Color(0xFF122039))
                 )
             )
+            .onFocusChanged { interacting = it.hasFocus }
             .focusGroup()
     ) {
         if (event == null) {
@@ -181,7 +188,7 @@ internal fun MajorEventsHero(
                         else R.string.lounge_major_events_view
                     ),
                     icon = OwnTVIcon.PLAY,
-                    onClick = { onViewEvent(event) },
+                    onClick = { events.firstOrNull { it.key == event.key }?.let(onViewEvent) },
                     modifier = Modifier
                         .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
                         .onFocusChanged { if (it.hasFocus) onFocused() }

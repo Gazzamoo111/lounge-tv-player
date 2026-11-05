@@ -1,0 +1,1254 @@
+{
+  "pollId": 352,
+  "completedAt": "2026-11-05T00:44:00.098732Z",
+  "rows": [
+    {
+      "provider_item_id": 646977,
+      "name": "AU| BEIN SPORTS 1 HD",
+      "epg_channel_id": "beINSports1.au",
+      "category_id": "384"
+    },
+    {
+      "provider_item_id": 646976,
+      "name": "AU| BEIN SPORTS 2 HD",
+      "epg_channel_id": "beINSports2.au",
+      "category_id": "384"
+    },
+    {
+      "provider_item_id": 646975,
+      "name": "AU| BEIN SPORTS 3 HD",
+      "epg_channel_id": "beINSports3.au",
+      "category_id": "384"
+    },
+    {
+      "provider_item_id": 646974,
+      "name": "AU| ESPN 1 HD",
+      "epg_channel_id": null,
+      "category_id": "384"
+    },
+    {
+      "provider_item_id": 646973,
+      "name": "AU| ESPN 2 HD",
+      "epg_channel_id": null,
+      "category_id": "384"
+    },
+    {
+      "provider_item_id": 646971,
+      "name": "AU| FOX SPORTS 501 HD",
+      "epg_channel_id": null,
+      "category_id": "384"
+    },
+    {
+      "provider_item_id": 646970,
+      "name": "AU| FOX SPORTS 502 HD",
+      "epg_channel_id": null,
+      "category_id": "384"
+    },
+    {
+      "provider_item_id": 646969,
+      "name": "AU| FOX SPORTS 503 HD",
+      "epg_channel_id": "FoxSports3.au",
+      "category_id": "384"
+    },
+    {
+      "provider_item_id": 646968,
+      "name": "AU| FOX SPORTS 504 HD",
+      "epg_channel_id": null,
+      "category_id": "384"
+    },
+    {
+      "provider_item_id": 646967,
+      "name": "AU| FOX SPORTS 505 HD",
+      "epg_channel_id": "FoxSports5.au",
+      "category_id": "384"
+    },
+    {
+      "provider_item_id": 646966,
+      "name": "AU| FOX SPORTS 506 HD",
+      "epg_channel_id": "FoxSports6.au",
+      "category_id": "384"
+    },
+    {
+      "provider_item_id": 646965,
+      "name": "AU| FOX SPORTS 507 HD",
+      "epg_channel_id": null,
+      "category_id": "384"
+    },
+    {
+      "provider_item_id": 1520168,
+      "name": "AU| KAYO - ESPN 1",
+      "epg_channel_id": null,
+      "category_id": "384"
+    },
+    {
+      "provider_item_id": 1520167,
+      "name": "AU| KAYO - ESPN 2",
+      "epg_channel_id": null,
+      "category_id": "384"
+    },
+    {
+      "provider_item_id": 1520176,
+      "name": "AU| KAYO - FOX SPORTS 501 CRICKET",
+      "epg_channel_id": null,
+      "category_id": "384"
+    },
+    {
+      "provider_item_id": 1520171,
+      "name": "AU| KAYO - FOX SPORTS 502 LEAUGE",
+      "epg_channel_id": null,
+      "category_id": "384"
+    },
+    {
+      "provider_item_id": 1520175,
+      "name": "AU| KAYO - FOX SPORTS 503",
+      "epg_channel_id": null,
+      "category_id": "384"
+    },
+    {
+      "provider_item_id": 1520170,
+      "name": "AU| KAYO - FOX SPORTS 504 FOTTY",
+      "epg_channel_id": null,
+      "category_id": "384"
+    },
+    {
+      "provider_item_id": 1520174,
+      "name": "AU| KAYO - FOX SPORTS 505",
+      "epg_channel_id": "FoxSports5.au",
+      "category_id": "384"
+    },
+    {
+      "provider_item_id": 1520169,
+      "name": "AU| KAYO - FOX SPORTS 506",
+      "epg_channel_id": "FoxSports6.au",
+      "category_id": "384"
+    },
+    {
+      "provider_item_id": 1520173,
+      "name": "AU| KAYO - FOX SPORTS 507",
+      "epg_channel_id": null,
+      "category_id": "384"
+    },
+    {
+      "provider_item_id": 1905858,
+      "name": "UK-NOWTV| SKY SPORTS FOOTBALL FHD",
+      "epg_channel_id": "SkySportsFootball.uk",
+      "category_id": "2213"
+    },
+    {
+      "provider_item_id": 1905856,
+      "name": "UK-NOWTV| SKY SPORTS FOOTBALL HD",
+      "epg_channel_id": "SkySportsFootball.uk",
+      "category_id": "2213"
+    },
+    {
+      "provider_item_id": 1905857,
+      "name": "UK-NOWTV| SKY SPORTS FOOTBALL HD",
+      "epg_channel_id": "SkySportsFootball.uk",
+      "category_id": "2213"
+    },
+    {
+      "provider_item_id": 1905820,
+      "name": "UK-NOWTV| TNT SPORT (UHD/4K)",
+      "epg_channel_id": "TNTSports1.uk",
+      "category_id": "2213"
+    },
+    {
+      "provider_item_id": 1905819,
+      "name": "UK-NOWTV| TNT SPORT 1 FHD",
+      "epg_channel_id": "TNTSports1.uk",
+      "category_id": "2213"
+    },
+    {
+      "provider_item_id": 1905818,
+      "name": "UK-NOWTV| TNT SPORT 1 HD",
+      "epg_channel_id": "TNTSports1.uk",
+      "category_id": "2213"
+    },
+    {
+      "provider_item_id": 1905817,
+      "name": "UK-NOWTV| TNT SPORT 1 HD",
+      "epg_channel_id": "TNTSports1.uk",
+      "category_id": "2213"
+    },
+    {
+      "provider_item_id": 1905816,
+      "name": "UK-NOWTV| TNT SPORT 2 FHD",
+      "epg_channel_id": "TNTSports2.uk",
+      "category_id": "2213"
+    },
+    {
+      "provider_item_id": 1905815,
+      "name": "UK-NOWTV| TNT SPORT 2 HD",
+      "epg_channel_id": "TNTSports2.uk",
+      "category_id": "2213"
+    },
+    {
+      "provider_item_id": 1905814,
+      "name": "UK-NOWTV| TNT SPORT 2 HD",
+      "epg_channel_id": "TNTSports2.uk",
+      "category_id": "2213"
+    },
+    {
+      "provider_item_id": 1905813,
+      "name": "UK-NOWTV| TNT SPORT 3 FHD",
+      "epg_channel_id": "TNTSports3.uk",
+      "category_id": "2213"
+    },
+    {
+      "provider_item_id": 1905811,
+      "name": "UK-NOWTV| TNT SPORT 3 HD",
+      "epg_channel_id": "TNTSports3.uk",
+      "category_id": "2213"
+    },
+    {
+      "provider_item_id": 1905812,
+      "name": "UK-NOWTV| TNT SPORT 3 HD",
+      "epg_channel_id": "TNTSports3.uk",
+      "category_id": "2213"
+    },
+    {
+      "provider_item_id": 1905810,
+      "name": "UK-NOWTV| TNT SPORTS 4 FHD",
+      "epg_channel_id": "TNTSports4.uk",
+      "category_id": "2213"
+    },
+    {
+      "provider_item_id": 1905808,
+      "name": "UK-NOWTV| TNT SPORTS 4 HD",
+      "epg_channel_id": "TNTSports4.uk",
+      "category_id": "2213"
+    },
+    {
+      "provider_item_id": 1905809,
+      "name": "UK-NOWTV| TNT SPORTS 4 HD",
+      "epg_channel_id": "TNTSports4.uk",
+      "category_id": "2213"
+    },
+    {
+      "provider_item_id": 483921,
+      "name": "UK| BEIN SPORT 1 EN FHD",
+      "epg_channel_id": "BeinSports1EnEn.qa",
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 49226,
+      "name": "UK| BEIN SPORT 1 EN HD",
+      "epg_channel_id": "beINSports1En.qa",
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 483920,
+      "name": "UK| BEIN SPORT 2 EN FHD",
+      "epg_channel_id": "beINSports2En.qa",
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 49225,
+      "name": "UK| BEIN SPORT 2 EN HD",
+      "epg_channel_id": "beINSports2En.qa",
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 735946,
+      "name": "UK| BEIN SPORTS 1 EN SD",
+      "epg_channel_id": "BeinSports1EnEn.qa",
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 238265,
+      "name": "UK| BEIN SPORTS 1 HD",
+      "epg_channel_id": "beINSports5En.qa",
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 238261,
+      "name": "UK| BEIN SPORTS 1 PREMIUM HD",
+      "epg_channel_id": "beINSports1En.qa",
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 735945,
+      "name": "UK| BEIN SPORTS 2 EN SD",
+      "epg_channel_id": "beINSports3En.qa",
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 238264,
+      "name": "UK| BEIN SPORTS 2 HD",
+      "epg_channel_id": "beINSports4En.qa",
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 238262,
+      "name": "UK| BEIN SPORTS 2 PREMIUM HD",
+      "epg_channel_id": "beINSports2En.qa",
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 735944,
+      "name": "UK| BEIN SPORTS 3 EN SD",
+      "epg_channel_id": "beINSports1En.qa",
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 238266,
+      "name": "UK| BEIN SPORTS 3 HD",
+      "epg_channel_id": "beINSports6En.qa",
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 238263,
+      "name": "UK| BEIN SPORTS 3 PREMIUM HD",
+      "epg_channel_id": "beINSports3En.qa",
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 238267,
+      "name": "UK| BEIN SPORTS 4 HD",
+      "epg_channel_id": "beINSports7En.qa",
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 238268,
+      "name": "UK| BEIN SPORTS 5 HD",
+      "epg_channel_id": "beINSports8En.qa",
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 238269,
+      "name": "UK| BEIN SPORTS 6 HD",
+      "epg_channel_id": "beINSports6En.qa",
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 238270,
+      "name": "UK| BEIN SPORTS 7 HD",
+      "epg_channel_id": "beINSports7En.qa",
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 923432,
+      "name": "UK| BEIN SPORTS ASIA 1",
+      "epg_channel_id": "BeinSports1EnEn.qa",
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 1348093,
+      "name": "UK| BEIN SPORTS AU 1",
+      "epg_channel_id": null,
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 1348102,
+      "name": "UK| BEIN SPORTS AU 2",
+      "epg_channel_id": null,
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 1348103,
+      "name": "UK| BEIN SPORTS AU 3",
+      "epg_channel_id": null,
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 79478,
+      "name": "UK| SKY SPORTS FOOTBALL",
+      "epg_channel_id": "SkySportsFootball.uk",
+      "category_id": "401"
+    },
+    {
+      "provider_item_id": 30498,
+      "name": "UK| SKY SPORTS FOOTBALL FHD",
+      "epg_channel_id": "SkySportsFootball.uk",
+      "category_id": "401"
+    },
+    {
+      "provider_item_id": 83452,
+      "name": "UK| SKY SPORTS FOOTBALL HD",
+      "epg_channel_id": "SkySportsFootball.uk",
+      "category_id": "401"
+    },
+    {
+      "provider_item_id": 1458674,
+      "name": "UK| SKY SPORTS FOOTBALL HEVC FHD",
+      "epg_channel_id": "SkySportsFootball.uk",
+      "category_id": "1661"
+    },
+    {
+      "provider_item_id": 1458660,
+      "name": "UK| SKY SPORTS FOOTBALL HEVC HD",
+      "epg_channel_id": "SkySportsFootball.uk",
+      "category_id": "1661"
+    },
+    {
+      "provider_item_id": 1917626,
+      "name": "UK| TNT SPORT 1",
+      "epg_channel_id": null,
+      "category_id": "2243"
+    },
+    {
+      "provider_item_id": 1917625,
+      "name": "UK| TNT SPORT 2",
+      "epg_channel_id": null,
+      "category_id": "2243"
+    },
+    {
+      "provider_item_id": 1917624,
+      "name": "UK| TNT SPORT 3",
+      "epg_channel_id": null,
+      "category_id": "2243"
+    },
+    {
+      "provider_item_id": 1917623,
+      "name": "UK| TNT SPORT 4",
+      "epg_channel_id": null,
+      "category_id": "2243"
+    },
+    {
+      "provider_item_id": 30567,
+      "name": "UK| TNT SPORTS 1 FHD",
+      "epg_channel_id": "TNT.Sports.1.HD.uk",
+      "category_id": "401"
+    },
+    {
+      "provider_item_id": 79486,
+      "name": "UK| TNT SPORTS 1 HD",
+      "epg_channel_id": "TNT.Sports.1.HD.uk",
+      "category_id": "401"
+    },
+    {
+      "provider_item_id": 1261564,
+      "name": "UK| TNT SPORTS 1 HD ◉",
+      "epg_channel_id": "TNTSports1.uk",
+      "category_id": "401"
+    },
+    {
+      "provider_item_id": 1458678,
+      "name": "UK| TNT SPORTS 1 HEVC FHD",
+      "epg_channel_id": "TNT.Sports.1.HD.uk",
+      "category_id": "1661"
+    },
+    {
+      "provider_item_id": 1458667,
+      "name": "UK| TNT SPORTS 1 HEVC FHD",
+      "epg_channel_id": "TNT.Sports.1.HD.uk",
+      "category_id": "1661"
+    },
+    {
+      "provider_item_id": 1458654,
+      "name": "UK| TNT SPORTS 1 HEVC HD",
+      "epg_channel_id": "uk.413 BT Sport 1",
+      "category_id": "1661"
+    },
+    {
+      "provider_item_id": 1047260,
+      "name": "UK| TNT SPORTS 1 SD",
+      "epg_channel_id": "TNT.Sports.1.HD.uk",
+      "category_id": "401"
+    },
+    {
+      "provider_item_id": 30566,
+      "name": "UK| TNT SPORTS 2 FHD",
+      "epg_channel_id": "TNT.Sports.2.HD.uk",
+      "category_id": "401"
+    },
+    {
+      "provider_item_id": 79485,
+      "name": "UK| TNT SPORTS 2 HD",
+      "epg_channel_id": "TNT.Sports.2.HD.uk",
+      "category_id": "401"
+    },
+    {
+      "provider_item_id": 1458666,
+      "name": "UK| TNT SPORTS 2 HEVC FHD",
+      "epg_channel_id": "uk.868 BT Sport 2 HD",
+      "category_id": "1661"
+    },
+    {
+      "provider_item_id": 1458653,
+      "name": "UK| TNT SPORTS 2 HEVC HD",
+      "epg_channel_id": "uk.414 BT Sport 2",
+      "category_id": "1661"
+    },
+    {
+      "provider_item_id": 1047261,
+      "name": "UK| TNT SPORTS 2 SD",
+      "epg_channel_id": "TNT.Sports.2.HD.uk",
+      "category_id": "401"
+    },
+    {
+      "provider_item_id": 30565,
+      "name": "UK| TNT SPORTS 3 FHD",
+      "epg_channel_id": "TNT.Sports.3.HD.uk",
+      "category_id": "401"
+    },
+    {
+      "provider_item_id": 79484,
+      "name": "UK| TNT SPORTS 3 HD",
+      "epg_channel_id": "TNT.Sports.3.HD.uk",
+      "category_id": "401"
+    },
+    {
+      "provider_item_id": 1458665,
+      "name": "UK| TNT SPORTS 3 HEVC FHD",
+      "epg_channel_id": "uk.869 BT Sport 3 HD",
+      "category_id": "1661"
+    },
+    {
+      "provider_item_id": 1458652,
+      "name": "UK| TNT SPORTS 3 HEVC HD",
+      "epg_channel_id": "uk.417 BT Sport 3",
+      "category_id": "1661"
+    },
+    {
+      "provider_item_id": 1047262,
+      "name": "UK| TNT SPORTS 3 SD",
+      "epg_channel_id": "TNT.Sports.3.HD.uk",
+      "category_id": "401"
+    },
+    {
+      "provider_item_id": 1019935,
+      "name": "UK| TNT SPORTS 4 FHD",
+      "epg_channel_id": "TNT.Sports.4.HD.uk",
+      "category_id": "401"
+    },
+    {
+      "provider_item_id": 1002857,
+      "name": "UK| TNT SPORTS 4 HD",
+      "epg_channel_id": "TNT.Sports.4.HD.uk",
+      "category_id": "401"
+    },
+    {
+      "provider_item_id": 1458815,
+      "name": "UK| TNT SPORTS 4 HEVC FHD",
+      "epg_channel_id": null,
+      "category_id": "1661"
+    },
+    {
+      "provider_item_id": 1458651,
+      "name": "UK| TNT SPORTS 4 HEVC HD",
+      "epg_channel_id": null,
+      "category_id": "1661"
+    },
+    {
+      "provider_item_id": 1047263,
+      "name": "UK| TNT SPORTS 4 SD",
+      "epg_channel_id": "TNT.Sports.4.HD.uk",
+      "category_id": "401"
+    },
+    {
+      "provider_item_id": 1004550,
+      "name": "UK| TNT SPORTS 5",
+      "epg_channel_id": "TNT.Sports.5.HD.uk",
+      "category_id": "401"
+    },
+    {
+      "provider_item_id": 1004548,
+      "name": "UK| TNT SPORTS 5 FHD",
+      "epg_channel_id": "TNT.Sports.5.HD.uk",
+      "category_id": "401"
+    },
+    {
+      "provider_item_id": 1004549,
+      "name": "UK| TNT SPORTS 5 HD",
+      "epg_channel_id": "TNT.Sports.5.HD.uk",
+      "category_id": "401"
+    },
+    {
+      "provider_item_id": 1458650,
+      "name": "UK| TNT SPORTS BOX OFFICE HEVC",
+      "epg_channel_id": null,
+      "category_id": "1661"
+    },
+    {
+      "provider_item_id": 30564,
+      "name": "UK| TNT SPORTS ESPN FHD",
+      "epg_channel_id": "BTSport4ESPN.uk",
+      "category_id": "401"
+    },
+    {
+      "provider_item_id": 923431,
+      "name": "UK| UK| BEIN SPORTS ASIA 2",
+      "epg_channel_id": "beIN_SPORTS2_ENGLISH",
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 923430,
+      "name": "UK| UK| BEIN SPORTS ASIA 3",
+      "epg_channel_id": "beIN_SPORTS3_ENGLISH",
+      "category_id": "1309"
+    },
+    {
+      "provider_item_id": 1910741,
+      "name": "US (Paramount 001) | Rennes vs. Olympiacos (2026-11-04 11:20:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910740,
+      "name": "US (Paramount 002) | AEK Athens vs. Real Madrid (2026-11-04 13:00:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910739,
+      "name": "US (Paramount 003) | Fenerbahçe vs. Liverpool (2026-11-04 13:00:05)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910738,
+      "name": "US (Paramount 004) | RB Leipzig vs. Man. City (2026-11-04 15:00:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910736,
+      "name": "US (Paramount 006) | The Golazo Show (2026-11-04 15:00:10)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910735,
+      "name": "US (Paramount 007) | Porto vs. Napoli (2026-11-04 15:00:15)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910734,
+      "name": "US (Paramount 008) | Dortmund vs. Real Betis (2026-11-04 15:00:20)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910733,
+      "name": "US (Paramount 009) | Lens vs. Como (2026-11-04 15:00:25)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910732,
+      "name": "US (Paramount 010) | PSV vs. Club Brugge (2026-11-04 15:00:30)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910731,
+      "name": "US (Paramount 011) | Viking vs. Sabah (2026-11-04 15:00:35)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910730,
+      "name": "US (Paramount 012) | Wrexham vs. Middlesbrough (2026-11-04 15:35:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910729,
+      "name": "US (Paramount 013) | Cardiff City vs. West Ham United (2026-11-04 15:35:05)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910728,
+      "name": "US (Paramount 014) | Bristol City vs. Wolves (2026-11-04 15:50:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910727,
+      "name": "US (Paramount 015) | Milan vs. Ferencváros (2026-11-05 13:00:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910726,
+      "name": "US (Paramount 016) | Real Sociedad vs. Lyon (2026-11-05 13:00:05)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910725,
+      "name": "US (Paramount 017) | Crystal Palace vs. Hoffenheim (2026-11-05 13:00:10)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910724,
+      "name": "US (Paramount 018) | The Golazo Show (2026-11-05 13:00:15)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910723,
+      "name": "US (Paramount 019) | Anderlecht vs. RB Salzburg (2026-11-05 13:00:20)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910722,
+      "name": "US (Paramount 020) | Lillestrøm vs. Viktoria Plzeň (2026-11-05 13:00:25)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910721,
+      "name": "US (Paramount 021) | Levski Sofia vs. Jagiellonia Białystok (2026-11-05 13:00:30)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910720,
+      "name": "US (Paramount 022) | NEC Nijmegen vs. Omonia (2026-11-05 13:00:35)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910719,
+      "name": "US (Paramount 023) | Sparta Praha vs. AFC Bournemouth (2026-11-05 13:00:40)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910718,
+      "name": "US (Paramount 024) | Atalanta vs. Kairat Almaty (2026-11-05 13:00:45)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910717,
+      "name": "US (Paramount 025) | Trabzonspor vs. Freiburg (2026-11-05 13:00:50)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910716,
+      "name": "US (Paramount 026) | FC Midtjylland vs. Ajax (2026-11-05 13:00:55)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910715,
+      "name": "US (Paramount 027) | AGF Aarhus vs. Braga (2026-11-05 13:01:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910714,
+      "name": "US (Paramount 028) | FC Thun vs. Heart of Midlothian (2026-11-05 13:01:05)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910713,
+      "name": "US (Paramount 029) | Crvena Zvezda vs. Inter Escaldes (2026-11-05 13:01:10)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910712,
+      "name": "US (Paramount 030) | KuPS Kuopio vs. KAA Gent (2026-11-05 13:01:15)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910711,
+      "name": "US (Paramount 031) | L. Red Imps vs. Hajduk Split (2026-11-05 13:01:20)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910710,
+      "name": "US (Paramount 032) | Mjällby vs. FK Borac (2026-11-05 13:01:25)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910709,
+      "name": "US (Paramount 033) | Bayer Leverkusen vs. Marseille (2026-11-05 15:50:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910708,
+      "name": "US (Paramount 034) | Sunderland vs. Dinamo Zagreb (2026-11-05 15:50:05)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910707,
+      "name": "US (Paramount 035) | AZ Alkmaar vs. Juventus (2026-11-05 15:50:10)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910706,
+      "name": "US (Paramount 036) | Celtic vs. Beşiktaş (2026-11-05 15:50:15)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910705,
+      "name": "US (Paramount 037) | Benfica vs. Lech Poznań (2026-11-05 15:50:20)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910704,
+      "name": "US (Paramount 038) | Celta Vigo vs. Union Saint_Gilloise (2026-11-05 15:50:25)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910703,
+      "name": "US (Paramount 039) | Hapoel Beer_Sheva vs. OFI Crete (2026-11-05 15:50:30)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910702,
+      "name": "US (Paramount 040) | Torreense vs. Ararat_Armenia (2026-11-05 15:50:35)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910701,
+      "name": "US (Paramount 041) | Sturm Graz vs. Celje (2026-11-05 15:50:40)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910700,
+      "name": "US (Paramount 042) | Getafe vs. Brighton (2026-11-05 15:50:45)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910699,
+      "name": "US (Paramount 043) | Monaco vs. FC Nordsjælland (2026-11-05 15:50:50)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910698,
+      "name": "US (Paramount 044) | Copenhagen vs. FC Iberia Tbilisi (2026-11-05 15:50:55)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910697,
+      "name": "US (Paramount 045) | FC Lugano vs. Kauno Žalgiris (2026-11-05 15:51:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910696,
+      "name": "US (Paramount 046) | FC Twente vs. Pafos (2026-11-05 15:51:05)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910695,
+      "name": "US (Paramount 047) | K. Sint_Truidense vs. Brann (2026-11-05 15:51:10)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910694,
+      "name": "US (Paramount 048) | Panathinaikos vs. CSKA Sofia (2026-11-05 15:51:15)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910693,
+      "name": "US (Paramount 049) | Riga FC vs. Jablonec (2026-11-05 15:51:20)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910737,
+      "name": "US (Paramount 05) | Washington Spirit vs. Vancouver Rise FC Academy (2025-09-03 17:50:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910692,
+      "name": "US (Paramount 050) | Craiova vs. Egnatia (2026-11-05 15:51:25)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910691,
+      "name": "US (Paramount 051) | Venezia vs. Udinese (2026-11-06 15:35:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910690,
+      "name": "US (Paramount 052) | UFC Fight Night Preview Show: Cortes Acosta vs. Walker (2026-11-06 19:00:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910689,
+      "name": "US (Paramount 053) | Cagliari vs. Frosinone (2026-11-07 09:50:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910688,
+      "name": "US (Paramount 054) | Torino vs. Lecce (2026-11-07 09:50:05)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910687,
+      "name": "US (Paramount 055) | Parma vs. Bologna (2026-11-07 12:50:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910686,
+      "name": "US (Paramount 056) | Roma vs. Sassuolo (2026-11-07 15:00:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910685,
+      "name": "US (Paramount 057) | UFC Fight Night: English (2026-11-07 17:00:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910684,
+      "name": "US (Paramount 058) | UFC Fight Night em Português (2026-11-07 17:00:05)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910683,
+      "name": "US (Paramount 059) | UFC Fight Night en Español (2026-11-07 17:00:10)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910682,
+      "name": "US (Paramount 060) | UFC Fight Night: Multiview (2026-11-07 22:00:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910681,
+      "name": "US (Paramount 061) | Napoli vs. Lazio (2026-11-08 07:20:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910680,
+      "name": "US (Paramount 062) | Genoa vs. Milan (2026-11-08 09:50:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910679,
+      "name": "US (Paramount 063) | Monza vs. Atalanta (2026-11-08 09:50:05)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910678,
+      "name": "US (Paramount 064) | Inter vs. Como (2026-11-08 12:30:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910677,
+      "name": "US (Paramount 065) | Fiorentina vs. Juventus (2026-11-08 15:00:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910676,
+      "name": "US (Paramount 066) | UFC 334: Press Conference (2026-11-12 19:00:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910675,
+      "name": "US (Paramount 067) | UFC 334: Press Conference em Português (2026-11-12 19:00:05)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910674,
+      "name": "US (Paramount 068) | UFC 334: Weigh_In Desk Show (2026-11-13 09:50:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910673,
+      "name": "US (Paramount 069) | UFC 334: Ceremonial Weigh_In (2026-11-13 18:00:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910672,
+      "name": "US (Paramount 070) | UFC 334: Ceremonial Weigh_In em Português (2026-11-13 18:00:05)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910671,
+      "name": "US (Paramount 071) | UFC 334: English (2026-11-14 17:00:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910670,
+      "name": "US (Paramount 072) | UFC 334 em Português (2026-11-14 17:00:05)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910669,
+      "name": "US (Paramount 073) | UFC 334 en Español (2026-11-14 17:00:10)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910668,
+      "name": "US (Paramount 074) | UFC 334: Multiview (2026-11-14 22:00:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910667,
+      "name": "US (Paramount 075) | Como vs. Cagliari (2026-11-21 09:50:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910666,
+      "name": "US (Paramount 076) | Lazio vs. Lecce (2026-11-21 09:50:05)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910665,
+      "name": "US (Paramount 077) | Parma vs. Roma (2026-11-21 12:50:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910664,
+      "name": "US (Paramount 078) | Napoli vs. Torino (2026-11-21 15:35:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910663,
+      "name": "US (Paramount 079) | Juventus vs. Venezia (2026-11-22 07:20:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910662,
+      "name": "US (Paramount 080) | Bologna vs. Udinese (2026-11-22 09:50:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910661,
+      "name": "US (Paramount 081) | Sassuolo vs. Genoa (2026-11-22 09:50:05)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910660,
+      "name": "US (Paramount 082) | Milan vs. Frosinone (2026-11-22 12:50:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910659,
+      "name": "US (Paramount 083) | Atalanta vs. Inter (2026-11-22 15:35:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910658,
+      "name": "US (Paramount 084) | Monza vs. Fiorentina (2026-11-23 15:35:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910657,
+      "name": "US (Paramount 085) | Galatasaray vs. Aston Villa (2026-11-24 13:00:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910656,
+      "name": "US (Paramount 086) | Bodø/Glimt vs. LASK (2026-11-24 13:00:05)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910655,
+      "name": "US (Paramount 087) | Feyenoord vs. Porto (2026-11-24 15:00:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910654,
+      "name": "US (Paramount 088) | Man. City vs. Napoli (2026-11-24 15:00:05)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910653,
+      "name": "US (Paramount 089) | The Golazo Show (2026-11-24 15:00:10)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910652,
+      "name": "US (Paramount 090) | Como vs. AEK Athens (2026-11-24 15:00:15)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910651,
+      "name": "US (Paramount 091) | RB Leipzig vs. Lens (2026-11-24 15:00:20)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910650,
+      "name": "US (Paramount 092) | Arsenal vs. Dortmund (2026-11-24 15:00:25)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910649,
+      "name": "US (Paramount 093) | Slovan Bratislava vs. Real Betis (2026-11-24 15:00:30)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910648,
+      "name": "US (Paramount 094) | Real Madrid vs. PSV (2026-11-24 15:00:35)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910647,
+      "name": "US (Paramount 095) | Sabah vs. Barcelona (2026-11-25 13:00:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910646,
+      "name": "US (Paramount 096) | Slavia Praha vs. Villarreal (2026-11-25 13:00:05)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910645,
+      "name": "US (Paramount 097) | The Golazo Show (2026-11-25 15:00:00)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910644,
+      "name": "US (Paramount 098) | Inter vs. Stuttgart (2026-11-25 15:00:05)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910643,
+      "name": "US (Paramount 099) | Lille vs. Bayern (2026-11-25 15:00:10)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 1910642,
+      "name": "US (Paramount 100) | Shakhtar Donetsk vs. Fenerbahçe (2026-11-25 15:00:15)",
+      "epg_channel_id": null,
+      "category_id": "2224"
+    },
+    {
+      "provider_item_id": 45500,
+      "name": "US| PARAMOUNT HD",
+      "epg_channel_id": "US-Paramount Network USA - Eastern Feed",
+      "category_id": "672"
+    },
+    {
+      "provider_item_id": 1095583,
+      "name": "US| PARAMOUNT+ ORIGINAL 1 ᴴᴰ",
+      "epg_channel_id": null,
+      "category_id": "1347"
+    },
+    {
+      "provider_item_id": 1095574,
+      "name": "US| PARAMOUNT+ ORIGINAL 10 ᴴᴰ",
+      "epg_channel_id": null,
+      "category_id": "1347"
+    },
+    {
+      "provider_item_id": 1095582,
+      "name": "US| PARAMOUNT+ ORIGINAL 2 ᴴᴰ",
+      "epg_channel_id": null,
+      "category_id": "1347"
+    },
+    {
+      "provider_item_id": 1095581,
+      "name": "US| PARAMOUNT+ ORIGINAL 3 ᴴᴰ",
+      "epg_channel_id": null,
+      "category_id": "1347"
+    },
+    {
+      "provider_item_id": 1095580,
+      "name": "US| PARAMOUNT+ ORIGINAL 4 ᴴᴰ",
+      "epg_channel_id": null,
+      "category_id": "1347"
+    },
+    {
+      "provider_item_id": 1095579,
+      "name": "US| PARAMOUNT+ ORIGINAL 5 ᴴᴰ",
+      "epg_channel_id": null,
+      "category_id": "1347"
+    },
+    {
+      "provider_item_id": 1095578,
+      "name": "US| PARAMOUNT+ ORIGINAL 6 ᴴᴰ",
+      "epg_channel_id": null,
+      "category_id": "1347"
+    },
+    {
+      "provider_item_id": 1095577,
+      "name": "US| PARAMOUNT+ ORIGINAL 7 ᴴᴰ",
+      "epg_channel_id": null,
+      "category_id": "1347"
+    },
+    {
+      "provider_item_id": 1095576,
+      "name": "US| PARAMOUNT+ ORIGINAL 8 ᴴᴰ",
+      "epg_channel_id": null,
+      "category_id": "1347"
+    },
+    {
+      "provider_item_id": 1095575,
+      "name": "US| PARAMOUNT+ ORIGINAL 9 ᴴᴰ",
+      "epg_channel_id": null,
+      "category_id": "1347"
+    },
+    {
+      "provider_item_id": 1095584,
+      "name": "US| PARAMOUNT+ ORIGINAL INFO ᴴᴰ",
+      "epg_channel_id": null,
+      "category_id": "1347"
+    }
+  ]
+}
