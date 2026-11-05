@@ -173,6 +173,15 @@ def main():
     au_rows = [x for x in rows if x.get("category") == "Australia"]
     loop_rows = [x for x in rows if x.get("category") == "24/7"]
     root = read_xml(args.existing)
+    # Prune only expired synthetic loop markers; preserve all real programme listings.
+    loop_ids = {str(r.get("epgId") or r["key"]).strip() for r in loop_rows}
+    for p in list(root.findall("programme")):
+        if p.get("channel") not in loop_ids:
+            continue
+        stop = dt(p.get("stop"))
+        if (stop and stop < now - timedelta(hours=4) and
+                (p.findtext("title") or "").startswith("24/7 • ")):
+            root.remove(p)
     before = {etree.tostring(p) for p in root.findall("programme")}
     existing_channels = {c.get("id") for c in root.findall("channel")}
     existing = defaultdict(list)
@@ -249,16 +258,24 @@ def main():
     loop_covered = 0
     for row in loop_rows:
         cid = str(row.get("epgId") or row["key"]).strip()
-        if existing[cid]:
-            continue  # Preserve any real guide rather than replace it with a placeholder.
+        future_actual = any(
+            p.get("channel") == cid and
+            not (p.findtext("title") or "").startswith("24/7 • ") and
+            (dt(p.get("stop")) or now) > now
+            for p in root.findall("programme")
+        )
+        if future_actual:
+            continue  # Never replace genuine schedules with continuous markers.
+        start = max([now] + [stop for _, stop in existing[cid]])
+        if start >= end:
+            continue
         if cid not in existing_channels:
             c = etree.Element("channel", id=cid)
             etree.SubElement(c, "display-name").text = row["name"]
             root.insert(0, c)
             existing_channels.add(cid)
-        for d in range(DAYS):
-            start = now + timedelta(days=d)
-            stop = start + timedelta(days=1)
+        while start < end:
+            stop = min(start + timedelta(days=1), end)
             el = etree.SubElement(root, "programme", {
                 "start": start.strftime("%Y%m%d%H%M%S +0000"),
                 "stop": stop.strftime("%Y%m%d%H%M%S +0000"), "channel": cid})
@@ -266,6 +283,7 @@ def main():
             etree.SubElement(el, "desc", lang="en").text = (
                 "Continuous stream. Individual movie and episode times are not published.")
             loop_added += 1
+            start = stop
         loop_covered += 1
         changed.add(cid)
 
