@@ -154,3 +154,58 @@ for(const fixture of cases){
    fixture.title+": only scoped evidence and unverified candidate labels");
 }
 console.log("MULTISPORT_QA "+JSON.stringify(multiSport,null,2));
+
+
+// System-wide QA regression: no sport may disappear merely because an external
+// fixture feed has no network assignment. These synthetic lookups establish
+// discoverability only, NEVER that any feed is broadcasting or decoding a game.
+const futureUtc=new Date(Date.now()+45*60_000).toISOString();
+const discoveryCases=[
+  {
+    key:"wta",eventId:"tennis/wta#qa-discovery-coverage",sportId:"tennis",
+    competitionId:"tennis/wta",home:"QA Player One",away:"QA Player Two",
+    minimum:3,kind:/\bTENNIS\b/,
+  },
+  {
+    key:"nba",eventId:"basketball/nba#qa-discovery-coverage",sportId:"basketball",
+    competitionId:"basketball/nba",home:"LA Clippers",away:"Miami Heat",
+    minimum:2,expectedIds:[836342,836345],kind:/\bNBA\b/,
+  },
+  {
+    key:"nfl",eventId:"football/nfl#qa-discovery-coverage",sportId:"football",
+    competitionId:"football/nfl",home:"Baltimore Ravens",away:"Jacksonville Jaguars",
+    minimum:2,expectedIds:[836261,836265],kind:/\bNFL\b/,
+  },
+];
+const discovery=[];
+for(const spec of discoveryCases){
+  const params=new URLSearchParams({
+    contractVersion:"2",eventId:spec.eventId,sportId:spec.sportId,
+    competitionId:spec.competitionId,scheduledStartUtc:futureUtc,
+    status:"PRE",title:spec.home+" vs "+spec.away,
+    home:spec.home,away:spec.away,homeAliases:spec.home,
+    awayAliases:spec.away,limit:"12",
+  });
+  const response=await fetch(endpoint+"?"+params,{
+    signal:AbortSignal.timeout(25_000),headers:{Accept:"application/json"}});
+  assert.equal(response.status,200,spec.key+": QA backend HTTP "+response.status);
+  const body=await response.json();
+  assert.ok(body.coverage.catalogueScanned>=10000,spec.key+": complete BEST inventory");
+  const sportOptions=body.candidates.filter(c=>c.reason==="sport-specific-unverified");
+  assert.ok(sportOptions.length>=spec.minimum,
+    spec.key+": only "+sportOptions.length+" sport-specific alternatives");
+  assert.ok(sportOptions.every(c=>c.evidence?.[0]?.type==="sport-option"&&
+    c.playbackObservation?.status==="unknown"&&
+    spec.kind.test(c.displayName.toUpperCase())),
+    spec.key+": sport fallback must be scoped and explicitly unverified");
+  const ids=body.candidates.map(c=>c.providerItemId);
+  for(const id of spec.expectedIds||[]){
+    assert.ok(ids.includes(id),spec.key+": missing participating-team provider id "+id);
+  }
+  assert.equal(body.coverage.playbackVerified,0,spec.key+": no fake video verification");
+  assert.equal(body.coverage.coverageGap,true,spec.key+": no guaranteed streams");
+  discovery.push({sport:spec.key,options:sportOptions.map(c=>({
+    id:c.providerItemId,name:c.displayName,reason:c.reason
+  })),confirmed:body.coverage.broadcastConfirmed,playbackVerified:body.coverage.playbackVerified});
+}
+console.log("SYSTEMIC_SPORT_DISCOVERY_QA "+JSON.stringify(discovery,null,2));
