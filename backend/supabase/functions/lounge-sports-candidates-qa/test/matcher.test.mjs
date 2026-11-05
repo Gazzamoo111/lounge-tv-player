@@ -1,6 +1,6 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
-import {classify,rankCandidates,discoveryCandidate} from "../matcher.mjs";
+import {classify,rankCandidates,discoveryCandidate,sportFallbackCandidates} from "../matcher.mjs";
 
 const nba={
   eventId:"basketball/nba#det-phi",
@@ -81,4 +81,42 @@ test("dated event hints from an old fixture cannot be recycled for a current cri
   home:"England",away:"India",homeAliases:["England"],awayAliases:["India"]};
  assert.equal(classify(cricket,{provider_item_id:1,name:"FLSP | cricket: England vs India (2026-09-04 03:10:00)"},now),null);
  assert.equal(classify(cricket,{provider_item_id:2,name:"FLSP | cricket: England vs India (2026-11-05 03:10:00)"},now)?.tier,"plausible");
+});
+
+
+test("WTA finds tennis-specific channel choices from otherwise hidden BEST categories",()=>{
+ const wta={...nba,eventId:"tennis/wta#12345",sportId:"tennis",competitionId:"tennis/wta",
+  title:"WTA singles match",home:"Player A",away:"Player B",
+  scheduledStartUtc:"2026-11-05T00:20:00Z",scheduledEndUtc:"2026-11-05T03:00:00Z"};
+ const rows=[
+  {provider_item_id:1458813,name:"UK| SKY SPORTS TENNIS HEVC FHD"},
+  {provider_item_id:1458814,name:"UK| SKY SPORTS TENNIS HEVC HD"},
+  {provider_item_id:2151527,name:"TV| TENNIS CHANNEL RAW"},
+  {provider_item_id:1955374,name:"LIVE | NBA PISTONS VS 76ERS"},
+  {provider_item_id:2062108,name:"Live | Centre Court-Tennis: different players vs someone"},
+ ];
+ const choices=sportFallbackCandidates(wta,rows,now,6);
+ assert.deepEqual(choices.map(c=>c.providerItemId),[1458813,2151527]);
+ assert.ok(choices.every(c=>c.reason==="sport-specific-unverified"&&c.evidence[0].type==="sport-option"));
+ assert.ok(choices.every(c=>c.playbackObservation.status==="unknown"));
+ assert.equal(choices.length,2,"Unrelated fixtures or duplicate quality variants cannot pad the results");
+});
+
+test("NFL and NBA show only sport-specific alternatives, never other matches",()=>{
+ const nfl={...nba,eventId:"football/nfl#401873037",sportId:"football",competitionId:"football/nfl",
+  title:"Jacksonville Jaguars at Baltimore Ravens",home:"Baltimore Ravens",away:"Jacksonville Jaguars",
+  scheduledStartUtc:"2026-11-05T01:15:00Z",scheduledEndUtc:"2026-11-05T05:00:00Z"};
+ const nflChoices=sportFallbackCandidates(nfl,[
+  {provider_item_id:45526,name:"US| NFL NETWORK HD"},
+  {provider_item_id:45524,name:"US| NFL REDZONE HD"},
+  {provider_item_id:836261,name:"NFL TEAMS| CBS RAVENS BALTIMORE MD"},
+  {provider_item_id:836342,name:"NBA TEAM| MIAMI HEAT"},
+ ],now,6);
+ assert.deepEqual(nflChoices.map(c=>c.providerItemId),[45526,836261]);
+ const nbaChoices=sportFallbackCandidates(nba,[
+  {provider_item_id:836345,name:"NBA TEAM| LOS ANGELES CLIPPERS"},
+  {provider_item_id:836342,name:"NBA TEAM| MIAMI HEAT"},
+  {provider_item_id:45526,name:"US| NFL NETWORK HD"},
+ ],now,6);
+ assert.deepEqual(nbaChoices.map(c=>c.providerItemId),[836342,836345]);
 });
