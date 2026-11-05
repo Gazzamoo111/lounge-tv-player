@@ -21,9 +21,8 @@ jobs:
   # Build and full regression checks run in parallel. A separate gate publishes
   # the installable QA artifact only when BOTH jobs have succeeded.
   test:
-    # Hold Fire TV APK construction while PR #64's isolated broadcast backend is under validation.
-    # Explicit workflow_dispatch is the only way to build the next candidate after acceptance gates pass.
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.ref_name != '001-live-sports-reliability' && github.head_ref != '001-live-sports-reliability') }}
+    # Compile only after all backend, Android and live-fixture regression gates pass.
+    needs: [tests]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -83,6 +82,8 @@ jobs:
           [ "$qa_cert" != "$production_cert" ] || { echo "QA and production certificates must be different"; exit 1; }
           printf '%s' "$QA_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/loungetv-qa.keystore"
           echo "QA_KEYSTORE_FILE=$RUNNER_TEMP/loungetv-qa.keystore" >> "$GITHUB_ENV"
+      - name: Require live NBA, NHL and cricket backend evidence before building the Fire TV candidate
+        run: node scripts/sports_qa_smoke.mjs
       - name: Compile QA APK
         env:
           QA_KEYSTORE_PASSWORD: ${{ secrets.QA_KEYSTORE_PASSWORD }}
