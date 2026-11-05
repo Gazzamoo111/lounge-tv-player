@@ -89,3 +89,11 @@ test('Sky direct Premier 1 alias discovers actual UK Premier Sports variants',()
  d.guides[0].programmes[0].channelId='1289';
  const r=resolveEvent(d.fixtures[0],catalogue(rows),d,{},now);assert.equal(r.coverage.broadcastConfirmed,1);assert.equal(r.broadcastCandidates[0].providerItemId,163607);assert.equal(r.candidates.length,0);
 });
+test('a live multi-day event cannot promote tomorrow\'s television window as airing now',()=>{
+ const e=fixture('golf');e.title='World Wide Technology Championship';e.scheduledStartUtc=iso(now-3_600_000);e.scheduledEndUtc=iso(now+86_400_000);e.participants=[];
+ const g=guide('golf');g.programmes=[{...programme('golf'),startUtc:iso(now+3_600_000),endUtc:iso(now+7_200_000),title:'Live Golf: World Wide Technology Championship'}];
+ assert.equal(programmeMatches(e,g.programmes[0]),true);
+ assert.equal(resolveEvent(e,catalogue([row()]),{guides:[g]},health(),now).coverage.broadcastConfirmed,0);
+ g.programmes[0].startUtc=iso(now-1_800_000);
+ assert.equal(resolveEvent(e,catalogue([row()]),{guides:[g]},health(),now).candidates.length,1);
+});

@@ -93,7 +93,7 @@ export function resolveEvent(event,catalogue,dataset,health={},now=Date.now(),li
   for(const p of guide.programmes){if(instant(p.endUtc)<=now)continue;const list=programmesByChannel.get(p.channelId)||[];list.push(p);programmesByChannel.set(p.channelId,list);}
   for(const channel of guide.channels){
    const current=programmesByChannel.get(channel.id)||[];
-   const proof=current.filter(p=>programmeMatches(event,p));if(!proof.length)continue;
+   const proof=current.filter(p=>programmeMatches(event,p)&&(event.status!=='IN'||instant(p.startUtc)<=now));if(!proof.length)continue;
    coverage.programmeMatches+=proof.length;
    if(!catalogue.rows.some(row=>identity(row,channel,guide)))coverage.unmappedProgrammeServices.push({market:guide.market,names:channel.names,guideChannelId:channel.id,programme:proof[0].title});
    const service=guide.market+':'+key(serviceName(channel.names[0]||channel.id));
