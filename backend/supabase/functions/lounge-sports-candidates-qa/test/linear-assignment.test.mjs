@@ -51,3 +51,14 @@ test("broadcaster hints never invent a TV assignment",()=>{
  assert.equal(linearAssignmentCandidates(event,rows,[{region:"us",type:{shortName:"Streaming"},media:{shortName:"ESPN"}}],source,now).length,0);
  assert.equal(linearAssignmentCandidates(event,rows,[{region:"au",type:{shortName:"TV"},media:{shortName:"ESPN"}}],source,now).length,0);
 });
+
+
+test("conflicting ESPN live TV assignments are withheld across simultaneous NBA fixtures",async()=>{
+ const other={...fixture,id:"401888888",competitions:[{
+  competitors:[{team:{displayName:"Orlando Magic"}},{team:{displayName:"Phoenix Suns"}}],
+  geoBroadcasts:geo
+ }]};
+ const outcome=await findIndependentBroadcasts(event,request([fixture,other]));
+ assert.equal(outcome.geo.length,0);
+ assert.equal(outcome.status,"broadcast-assignments-absent-or-conflicted");
+});
