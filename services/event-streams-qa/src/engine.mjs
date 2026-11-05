@@ -99,7 +99,7 @@ export function resolveEvent(event,catalogue,dataset,health={},now=Date.now(),li
    coverage.programmeMatches+=proof.length;
    if(!catalogue.rows.some(row=>identity(row,channel,guide)))coverage.unmappedProgrammeServices.push({market:guide.market,names:channel.names,guideChannelId:channel.id,programme:proof[0].title});
    const service=guide.market+':'+key(serviceName(channel.names[0]||channel.id));
-   const currentContradiction=current.some(p=>{const text=[p.title,p.description,...(p.categories||[])].join(' ');return instant(p.startUtc)<=now&&(contradiction(event,text)||(sportHit(event,text)&&/\s(?:vs?\.?|at|@)\s/i.test(text)&&!programmeMatches(event,p)));});
+   const currentContradiction=proof.some(target=>{const checkAt=event.status==='IN'?now:Math.max(start,instant(target.startUtc));return current.some(p=>{const text=[p.title,p.description,...(p.categories||[])].join(' ');return instant(p.startUtc)<=checkAt&&instant(p.endUtc)>checkAt&&(contradiction(event,text)||(sportHit(event,text)&&/\s(?:vs?\.?|at|@)\s/i.test(text)&&!programmeMatches(event,p)));});});
    for(const row of catalogue.rows){
     if(!identity(row,channel,guide))continue;
     if(badName.test(row.name)){coverage.rejections.inactive++;continue;}

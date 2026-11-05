@@ -107,3 +107,10 @@ test('conflicting simultaneous games in one guide cannot both verify the same se
  const d=dataset();d.guides[0].programmes.push({...programme(),title:'Live Basketball: Other Athletic v Another United'});
  const r=resolveEvent(d.fixtures[0],catalogue([row()]),d,health(),now);assert.equal(r.candidates.length,0);assert.equal(r.coverage.rejections.contradiction,1);
 });
+test('a different programme now cannot disqualify a confirmed upcoming fixture later',()=>{
+ const d=dataset();d.fixtures[0].status='PRE';d.fixtures[0].scheduledStartUtc=iso(now+3_600_000);
+ d.guides[0].programmes=[{...programme(),startUtc:iso(now+3_600_000),endUtc:iso(now+7_200_000)}, {...programme('tennis'),endUtc:iso(now+1_800_000)}];
+ assert.equal(resolveEvent(d.fixtures[0],catalogue([row()]),d,{},now).coverage.broadcastConfirmed,1);
+ d.guides[0].programmes.push({...programme(),title:'Live Basketball: Other Athletic v Another United',startUtc:iso(now+3_600_000),endUtc:iso(now+7_200_000)});
+ assert.equal(resolveEvent(d.fixtures[0],catalogue([row()]),d,{},now).coverage.broadcastConfirmed,0);
+});
