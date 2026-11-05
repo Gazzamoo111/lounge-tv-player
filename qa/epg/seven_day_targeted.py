@@ -29,6 +29,19 @@ ALIAS = {
     "FOX SPORTS 506": "FoxSports506.au",
     "FOX SPORTS 507": "FoxSportsMore.au",
 }
+# Reviewed Australian broadcaster renames and Sydney guide identifiers.
+# The stream names and customer catalogue are not changed.
+AU_REVIEWED_IDS = {
+    "SBS": ("xmltv-net", "251831auepg.com.au"),
+    "SBS Viceland": ("xmltv-net", "431775auepg.com.au"),  # SBS2 since Aug 2026
+    "SBS World Movies": ("xmltv-net", "432033auepg.com.au"),
+    "SBS Food": ("xmltv-net", "431491auepg.com.au"),
+    "10 BOLD": ("xmltv-net", "388609auepg.com.au"),  # 10 Drama since 2025
+    "10 Peach": ("xmltv-net", "403769auepg.com.au"), # 10 Comedy since 2025
+    "ABC": ("xmltv-net", "431733auepg.com.au"),
+    "ABC Comedy": ("xmltv-net", "411316auepg.com.au"),
+    "ABC NEWS SYDNEY": ("xmltv-net", "391135auepg.com.au"),
+}
 IGNORED = re.compile(r"\b(?:4k|uhd|fhd|hevc|hd|sd|50fps|60fps)\b", re.I)
 
 
@@ -74,9 +87,14 @@ def source_index(root, now, end):
         labels = [x.text.strip() for x in c.findall("display-name") if x.text]
         channels[cid.casefold()] = cid
         for label in labels:
-            key = norm(label)
-            if key and cid not in names[key]:
-                names[key].append(cid)
+            keys = {norm(label)}
+            # Region suffixes from Sydney guides should not defeat an exact
+            # broadcaster match. Never apply this to sports feed variants.
+            if re.search(r"\s+(Sydney|NSW)$", label, re.I):
+                keys.add(norm(re.sub(r"\s+(Sydney|NSW)$", "", label, flags=re.I)))
+            for key in keys:
+                if key and cid not in names[key]:
+                    names[key].append(cid)
     programs = defaultdict(list)
     for p in root.findall("programme"):
         st, stop = dt(p.get("start")), dt(p.get("stop"))
@@ -92,7 +110,10 @@ def select_feed(row, feeds, now, end):
     for feed_name, (ids, names, programs) in feeds.items():
         cid = None
         method = None
-        if desired and desired.casefold() in ids:
+        reviewed = AU_REVIEWED_IDS.get(name)
+        if reviewed and feed_name == reviewed[0] and reviewed[1].casefold() in ids:
+            cid, method = ids[reviewed[1].casefold()], "official-rename-reviewed-id"
+        elif desired and desired.casefold() in ids:
             cid, method = ids[desired.casefold()], "exact-id"
         elif name.upper() in ALIAS and ALIAS[name.upper()].casefold() in ids:
             cid, method = ids[ALIAS[name.upper()].casefold()], "reviewed-alias"
@@ -208,7 +229,7 @@ def main():
             "sample": [{
                 "sourceId": cid, "names": [k for k, v in names.items() if cid in v][:2],
                 "end": max((p[1] for p in programmes.get(cid, [])), default=now).isoformat()
-            } for cid in list(ids.values())[:20]]
+            } for cid in list(ids.values())[:100]]
         }))
 
     changed = set()
