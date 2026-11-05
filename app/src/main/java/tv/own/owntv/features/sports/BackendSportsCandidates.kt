@@ -148,7 +148,7 @@ internal fun validatedBackendTier(version: Int, tier: String, evidenceValid: Boo
 /** An assignment alone can only make a channel plausible, never fixture-verified. */
 internal fun evidenceSupportsClaim(tier: String, evidenceType: String): Boolean = when (tier) {
     "verified" -> evidenceType in setOf("programme", "event-feed")
-    "plausible" -> evidenceType in setOf("programme", "event-feed", "assignment")
+    "plausible" -> evidenceType in setOf("programme", "event-feed", "assignment", "name-hint")
     else -> false
 }
 
