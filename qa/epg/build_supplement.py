@@ -13,6 +13,13 @@ import unicodedata
 from lxml import etree
 
 REGIONS = {"New Zealand":"nz", "Australia":"au"}
+# Only well-established Australian network numbering; never infer a fixture from a channel name.
+AU_NETWORK_ALIASES = {
+    "FOX SPORTS 501": "FoxCricket.au",
+    "FOX SPORTS 502": "FoxLeague.au",
+    "FOX SPORTS 504": "FoxFooty.au",
+    "FOX SPORTS 507": "FoxSportsMore.au",
+}
 SKIP_CATEGORIES = {"24/7", "Streaming", "PPV"}
 BAD_SUBCATEGORIES = {"Sky Store", "CINEMANIA TV SHOWS"}
 BAD_NAME = re.compile(r"\b(?:replay|nonstop|24/7)\b", re.I)
@@ -47,7 +54,7 @@ def scan_source_channels(path):
                                          recover=True,huge_tree=True):
             if node.tag=="programme":break
             cid=node.get("id")
-            if cid:
+            if cid and ".dummy." not in cid.casefold():
                 label=next((n.text for n in node.iter("display-name") if n.text),"")
                 channels[cid]=label
             node.clear()
@@ -66,6 +73,11 @@ def match(row,channels,ids,names,names_region):
     target=str(row.get("epgId") or "").strip()
     if target and target in channels:return target,"exact-id"
     region=region_for(row)
+    # Explicit Australian network-number equivalences have been checked separately.
+    named=str(row.get("name") or "").strip().upper()
+    if region=="au" and named in AU_NETWORK_ALIASES:
+        cid=AU_NETWORK_ALIASES[named]
+        if cid in channels:return cid,"reviewed-au-network"
     if target:
         choices=ids.get(normalize(target),[])
         choices=[x for x in choices if not region or x.rsplit(".",1)[-1].lower()==region]
@@ -76,8 +88,18 @@ def match(row,channels,ids,names,names_region):
         choices=names_region.get((region,name),[])
         if len(choices)==1:return choices[0],"exact-name-region"
         if len(choices)>1:return None,"ambiguous-region"
+        # Named FAST services often use their own service namespace, such as .plex.
+        if region=="us" and (row.get("subcategory") or "")=="US FAST TV":
+            choices=names.get(name,[])
+            safe=[cid for cid in choices if cid.rsplit(".",1)[-1].lower() in
+                  {"plex","us","us2","us_locals1","pluto","samsung"}]
+            if len(safe)==1:return safe[0],"us-fast-brand"
+        return None,"wrong-or-missing-region"
+    # Do not reuse country-specific linear networks without a known market.
+    # Regionless, exact-brand FAST channels alone may safely use an independent namespace.
     choices=names.get(name,[])
-    if len(choices)==1:return choices[0],"unique-name"
+    if len(choices)==1 and choices[0].rsplit(".",1)[-1].lower() in {"plex","pluto","samsung"}:
+        return choices[0],"unique-fast-brand"
     return None,"ambiguous-or-missing"
 
 def baseline_schedule(path,targets,now,horizon):
