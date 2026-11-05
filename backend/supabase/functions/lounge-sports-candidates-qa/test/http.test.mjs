@@ -4,6 +4,7 @@ import fs from "node:fs";
 import vm from "node:vm";
 import {stripTypeScriptTypes} from "node:module";
 import {rankCandidates,discoveryCandidate,linearAssignmentCandidates} from "../matcher.mjs";
+import {nzProgrammeCandidates} from "../programme-evidence.mjs";
 
 const rows=[
  {provider_item_id:836373,category_id:"676",name:"Detroit Pistons vs Philadelphia 76ers @ Nov 4 7:00 PM :NBA 01"},
@@ -18,6 +19,7 @@ async function request(query){
  let handler,calls=0;
  vm.runInNewContext(code,{Deno:{serve:h=>handler=h},URL,Response,console,rankCandidates,discoveryCandidate,linearAssignmentCandidates,
    findIndependentBroadcasts:async()=>({geo:[],source:"",status:"fixture-source-not-configured"}),
+   loadNzSportsGuide:async()=>[], NZ_GUIDE_URL:"https://qa.invalid/skyguide", nzProgrammeCandidates,
    iso:ms=>new Date(ms).toISOString(),sql:async()=>++calls===1?rows:[{poll_id:352,completed_at:new Date().toISOString()}]});
  return handler(new Request("https://qa.invalid/?"+query));
 }
