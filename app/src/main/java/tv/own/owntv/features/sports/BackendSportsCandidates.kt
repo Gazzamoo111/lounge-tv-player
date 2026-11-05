@@ -70,12 +70,15 @@ internal class BackendSportsCandidateProvider(
                     val name=row.optString("displayName").takeIf(String::isNotBlank) ?: continue
                     val tier=row.optString("tier")
                     if (tier !in setOf("verified","plausible") || !candidateEvidenceValid(row,match,now)) continue
+                    // A sport-channel backup is never evidence of this fixture airing.
+                    val sportOnly=row.optString("reason")=="sport-specific-unverified"
                     if (tv.own.owntv.features.live.SportsChannelPolicy.excludedBest(id.toString(),name)) continue
                     val streamUrl=playbackEndpoint+"/sport/_/_/"+id+".ts?username="+q(username)+"&password="+q(password)
                     add(WatchOption(channel=ChannelEntity(id=-(8_000_000_000L+id),sourceId=source.id,name=name,
                         streamUrl=streamUrl,epgChannelId=row.optString("epgId").takeIf { !row.isNull("epgId")&&it.isNotBlank() },
-                        remoteId="sport-backend:"+id,sortOrder=index),tier=validatedBackendTier(2,tier,true),
-                        guideTitle=BACKEND_CONFIDENCE_PREFIX+tier))
+                        remoteId="sport-backend:"+id,sortOrder=index),
+                        tier=if(sportOnly) WatchTier.LIKELY else validatedBackendTier(2,tier,true),
+                        guideTitle=BACKEND_CONFIDENCE_PREFIX+(if(sportOnly) "sport-option" else tier)))
                 }
             }
             val c=response.optJSONObject("coverage")
@@ -148,7 +151,7 @@ internal fun validatedBackendTier(version: Int, tier: String, evidenceValid: Boo
 /** An assignment alone can only make a channel plausible, never fixture-verified. */
 internal fun evidenceSupportsClaim(tier: String, evidenceType: String): Boolean = when (tier) {
     "verified" -> evidenceType in setOf("programme", "event-feed")
-    "plausible" -> evidenceType in setOf("programme", "event-feed", "assignment", "name-hint")
+    "plausible" -> evidenceType in setOf("programme", "event-feed", "assignment", "name-hint", "sport-option")
     else -> false
 }
 
