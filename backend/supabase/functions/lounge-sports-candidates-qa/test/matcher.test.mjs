@@ -23,7 +23,7 @@ test("exact NBA fixture feeds match while another NBA game does not",()=>{
     {provider_item_id:1955374,name:"LIVE | DET - PISTONS VS PHI - 76ERS | Wed 04 Nov 18:00 EST (US) | US: NBA PASS PPV 2"},
     {provider_item_id:1949811,name:"US (ESPN+ 101) | Basketball: 76ers vs. Pistons (76ers vs. Pistons)"},
   ];
-  for(const row of exact)assert.equal(classify(nba,row,now)?.tier,"verified");
+  for(const row of exact)assert.equal(classify(nba,row,now)?.tier,"plausible");
   assert.equal(classify(nba,{provider_item_id:1955373,name:"LIVE | BOS - CELTICS VS MIL - BUCKS | US: NBA PASS PPV 3"},now),null);
   assert.equal(classify(nba,{provider_item_id:1949790,name:"US ESPN+ | NCAA Football: PHI vs. DET • CMU vs. EMU"},now),null);
 });
@@ -49,13 +49,13 @@ test("all exact provider variants are retained instead of one logical-service re
   assert.equal(new Set(found.map(x=>x.row.providerItemId)).size,4);
 });
 
-test("candidate evidence is exact-fixture event-feed evidence and playback stays unclaimed",()=>{
+test("provider-title evidence remains unverified and playback stays unclaimed",()=>{
   const row={provider_item_id:1955374,category_id:"2076",name:"LIVE | DET - PISTONS VS PHI - 76ERS | US: NBA PASS PPV 2"};
   const decision=classify(nba,row,now);
   const candidate=discoveryCandidate(row,decision,now);
   assert.equal(candidate.identityReviewed,true);
-  assert.equal(candidate.tier,"verified");
-  assert.equal(candidate.evidence[0].type,"event-feed");
+  assert.equal(candidate.tier,"plausible");
+  assert.equal(candidate.evidence[0].type,"name-hint");
   assert.equal(candidate.evidence[0].eventId,nba.eventId);
   assert.equal(candidate.playbackObservation.status,"unknown");
 });
