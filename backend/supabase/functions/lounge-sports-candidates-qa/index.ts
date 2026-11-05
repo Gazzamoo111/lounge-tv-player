@@ -1,7 +1,7 @@
 import postgres from "npm:postgres@3.4.7";
 import {XMLParser} from "npm:fast-xml-parser@4.5.3";
 import {nzProgrammeCandidates} from "./programme-evidence.mjs";
-import {rankCandidates,discoveryCandidate,linearAssignmentCandidates} from "./matcher.mjs";
+import {rankCandidates,discoveryCandidate,linearAssignmentCandidates,sportFallbackCandidates} from "./matcher.mjs";
 import {findIndependentBroadcasts} from "./fixture-evidence.mjs";
 
 const rawDbUrl=Deno.env.get("SUPABASE_DB_URL");
@@ -86,10 +86,13 @@ Deno.serve(async(req)=>{
     const nzGuide=catalogueStale?[]:nzProgrammeCandidates(event,rows,programmes,now,NZ_GUIDE_URL,discoveryLimit);
     const selected=catalogueStale?[]:rankCandidates(event,rows,discoveryLimit,now);
     const named=selected.map(({row,decision}:any)=>discoveryCandidate(row,decision,now));
-    // Independently sourced, exact-fixture broadcaster assignments precede provider-name hints.
-    // Deduplicate only identical provider stream IDs. Never change source category membership.
+    // Separately expose a small number of sport-specific channels when exact-fixture
+    // sources are thin. These are NOT proof of coverage and never count as confirmed.
+    const sportOptions=catalogueStale?[]:sportFallbackCandidates(event,rows,now,6);
+    // Independently sourced broadcaster assignments and exact fixture names rank first.
+    // Sport-only alternatives come last, tagged so the Fire TV cannot claim verification.
     const known=new Set();
-    const candidates=[...nzGuide,...assigned,...named].filter((c:any)=>{
+    const candidates=[...nzGuide,...assigned,...named,...sportOptions].filter((c:any)=>{
       if(known.has(c.providerItemId))return false;
       known.add(c.providerItemId);return true;
     }).slice(0,limit);
@@ -97,6 +100,7 @@ Deno.serve(async(req)=>{
     if(catalogueStale)reasons.push("catalogue-stale");
     if(!assigned.length&&!nzGuide.length)reasons.push("no-independent-fixture-broadcast-assignments");
     if(named.length)reasons.push("provider-name-matches-unverified");
+    if(sportOptions.length)reasons.push("sport-specific-backups-not-fixture-confirmed");
     if(candidates.length)reasons.push("playback-unverified");
     return Response.json({
       implementationId:"qa-event-streams-v5",contractVersion:2,eventId,generatedAtUtc:iso(now),
@@ -110,7 +114,7 @@ Deno.serve(async(req)=>{
         nzProgrammeVariants:nzGuide.length,
         independentlyAssignedVariants:assigned.length,
         independentlyAssignedServices:new Set(assigned.map((c:any)=>c.logicalServiceId)).size,
-        providerNameHints:named.length,playbackVerified:0,returned:candidates.length,
+        providerNameHints:named.length,sportFallbackOptions:sportOptions.length,playbackVerified:0,returned:candidates.length,
         coverageGap:true,independentFixtureStatus:independent.status,reasons,
       },
     },{headers:{"Cache-Control":"private, no-store","Access-Control-Allow-Origin":"*"}});
