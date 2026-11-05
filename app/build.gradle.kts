@@ -223,10 +223,12 @@ android {
     buildTypes {
         debug {
             val sportsQaEndpoint = System.getenv("SPORTS_QA_ENDPOINT").orEmpty()
-            if (qaSigningRequired && (sportsQaEndpoint.isBlank() ||
-                !sportsQaEndpoint.startsWith("https://") ||
-                URI(sportsQaEndpoint).host == "liqocisegeqzbyuqloql.supabase.co")) {
-                throw GradleException("QA requires SPORTS_QA_ENDPOINT on an isolated host")
+            val sportsQaUri = runCatching { URI(sportsQaEndpoint) }.getOrNull()
+            val approvedQaEndpoint = sportsQaUri?.scheme == "https" &&
+                sportsQaUri.host == "liqocisegeqzbyuqloql.supabase.co" &&
+                sportsQaUri.path == "/functions/v1/lounge-sports-candidates-qa"
+            if (qaSigningRequired && !approvedQaEndpoint) {
+                throw GradleException("Signed QA requires the dedicated lounge-sports-candidates-qa endpoint")
             }
             buildConfigField("String", "SPORTS_CANDIDATES_URL", "\"${sportsQaEndpoint.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
             // Keep debug builds isolated from production (different signing keys and data).

@@ -15,7 +15,10 @@ import tv.own.owntv.core.sports.model.*
 
 class BackendSportsHttpTest {
     private val now = System.currentTimeMillis()
-    private val match = Match("http-regression", Sport.SOCCER, "soccer/uefa.champions", "uefa.champions", "UEFA Champions League", now - 60_000, MatchState.IN, "IN", "Liverpool v Real Madrid")
+    private val match = Match("http-regression", Sport.SOCCER, "soccer/uefa.champions", "uefa.champions", "UEFA Champions League", now - 60_000, MatchState.IN, "IN", "Liverpool v Real Madrid", competitors=listOf(
+        Competitor(Team("1","Liverpool","Liverpool","LIV"),true,null,null),
+        Competitor(Team("2","Real Madrid","Real Madrid","RMA"),false,null,null),
+    ))
     private val source = SourceEntity(id=1, name="QA", type=SourceType.XTREAM, url="https://example.invalid", username="test", password="test")
     private fun row(id: Long = 646977) = JSONObject().apply {
         put("providerItemId",id);put("displayName","AU| BEIN SPORTS 1 HD");put("sourceId","best")
@@ -44,6 +47,10 @@ class BackendSportsHttpTest {
         server.createContext("/candidates") { exchange ->
             assertTrue(exchange.requestURI.rawQuery.contains("contractVersion=2"))
             assertTrue(exchange.requestURI.rawQuery.contains("eventId="))
+            assertTrue(exchange.requestURI.rawQuery.contains("home=Liverpool"))
+            assertTrue(exchange.requestURI.rawQuery.contains("away=Real+Madrid") || exchange.requestURI.rawQuery.contains("away=Real%20Madrid"))
+            assertTrue(exchange.requestURI.rawQuery.contains("homeAliases="))
+            assertTrue(exchange.requestURI.rawQuery.contains("awayAliases="))
             val bytes=payload.toByteArray();exchange.sendResponseHeaders(200,bytes.size.toLong())
             exchange.responseBody.use { it.write(bytes) }
         }
@@ -65,16 +72,15 @@ class BackendSportsHttpTest {
         assertTrue(request(body(JSONArray().put(bad)).toString()).isEmpty())
         assertTrue(request(body(JSONArray().put(row().put("expiresAtUtc","2020-01-01T00:00:00Z"))).toString()).isEmpty())
     }
-    @Test fun probeOfADifferentPlaybackOriginCannotVerifyTheAppStream() {
-        for (identity in listOf("different.invalid|/functions/v1/lounge-core-xtream/sport/_/_/646977.ts|646977|AU:BEIN:1", "liqocisegeqzbyuqloql.supabase.co|/different-route/646977.ts|646977|AU:BEIN:1")) {
-            val fingerprint=java.security.MessageDigest.getInstance("SHA-256").digest(identity.toByteArray()).joinToString("") { "%02x".format(it) }
-            val bad=row();bad.getJSONObject("playbackObservation").put("streamFingerprint",fingerprint)
-            assertTrue(request(body(JSONArray().put(bad)).toString()).isEmpty())
-        }
+    @Test fun playbackProbeIsDiagnosticNotAGateForFixtureEvidence() {
+        val unprobed=row();unprobed.put("playbackObservation",JSONObject().put("status","unknown"))
+        val result=request(body(JSONArray().put(unprobed)).toString())
+        assertEquals(1,result.size)
+        assertFalse(candidatePlaybackValid(unprobed,now,"https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-xtream"))
     }
     @Test fun clientBoundsUnexpectedBackendFloodAndKeepsEspn2() {
         val rows=JSONArray();for(id in 1L..100L)rows.put(row(id))
-        assertEquals(1,request(body(rows).toString()).size)
+        assertEquals(12,request(body(rows).toString()).size)
         val espn2=row(646973).put("displayName","AU| ESPN 2 HD")
         val espn1=row(646974).put("displayName","renamed")
         assertEquals(listOf("sport-backend:646973"),request(body(JSONArray().put(espn1).put(espn2)).toString()).map{it.channel.remoteId})

@@ -14,7 +14,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
 
-internal const val QA_SPORTS_IMPLEMENTATION = "qa-event-streams-v4"
+internal const val QA_SPORTS_IMPLEMENTATION = "qa-event-streams-v5"
 
 internal const val BACKEND_CONFIDENCE_PREFIX = "__LTV_BACKEND__:"
 
@@ -38,10 +38,18 @@ internal class BackendSportsCandidateProvider(
         if (endpoint.isBlank()) return@withContext unavailable("qa-endpoint-not-configured")
         val username = source.username?.takeIf(String::isNotBlank) ?: return@withContext unavailable("source-not-configured")
         val password = source.password?.takeIf(String::isNotBlank) ?: return@withContext unavailable("source-not-configured")
+        val home = match.home?.team
+        val away = match.away?.team
+        fun aliases(team: tv.own.owntv.core.sports.model.Team?) = listOfNotNull(
+            team?.name, team?.shortName, team?.abbreviation, team?.location,
+        ).filter(String::isNotBlank).distinct().joinToString("|")
         val params = linkedMapOf(
             "contractVersion" to "2", "eventId" to match.key, "sportId" to match.sport.path,
             "competitionId" to match.feed, "scheduledStartUtc" to Instant.ofEpochMilli(match.startMs).toString(),
-            "status" to match.state.name, "limit" to "12",
+            "status" to match.state.name, "limit" to "12", "title" to match.title,
+            "home" to home?.name.orEmpty(), "away" to away?.name.orEmpty(),
+            "homeAliases" to aliases(home), "awayAliases" to aliases(away),
+            "broadcasters" to match.broadcasts.joinToString("|") { it.name },
         )
         val query = params.entries.joinToString("&") { (k,v) -> q(k)+"="+q(v) }
         val connection = (URL(endpoint+"?"+query).openConnection() as HttpURLConnection).apply {
@@ -55,16 +63,14 @@ internal class BackendSportsCandidateProvider(
                 response.optString("eventId") != match.key || parseUtc(response.optString("expiresAtUtc")) <= now ||
                 response.optBoolean("catalogueStale",true)) return@withContext unavailable("backend-contract-or-freshness-failed")
             val rows=response.optJSONArray("candidates") ?: return@withContext unavailable("malformed-candidates")
-            val services=hashSetOf<String>()
             val options=buildList {
                 for (index in 0 until minOf(rows.length(),12)) {
                     val row=rows.optJSONObject(index) ?: continue
                     val id=row.optLong("providerItemId",0).takeIf { it>0 } ?: continue
                     val name=row.optString("displayName").takeIf(String::isNotBlank) ?: continue
                     val tier=row.optString("tier")
-                    if (tier !in setOf("verified","plausible") || !candidateEvidenceValid(row,match,now) || !candidatePlaybackValid(row,now,playbackEndpoint)) continue
+                    if (tier !in setOf("verified","plausible") || !candidateEvidenceValid(row,match,now)) continue
                     if (tv.own.owntv.features.live.SportsChannelPolicy.excludedBest(id.toString(),name)) continue
-                    if (!services.add(row.optString("logicalServiceId"))) continue
                     val streamUrl=playbackEndpoint+"/sport/_/_/"+id+".ts?username="+q(username)+"&password="+q(password)
                     add(WatchOption(channel=ChannelEntity(id=-(8_000_000_000L+id),sourceId=source.id,name=name,
                         streamUrl=streamUrl,epgChannelId=row.optString("epgId").takeIf { !row.isNull("epgId")&&it.isNotBlank() },
@@ -76,8 +82,8 @@ internal class BackendSportsCandidateProvider(
             val reasons=c?.optJSONArray("reasons")
             EventStreamResolution(options,SportsStreamCoverage(
                 broadcastConfirmed=c?.optInt("broadcastConfirmed",0) ?: 0,
-                playbackVerified=options.size,
-                coverageGap=options.size<3,
+                playbackVerified=c?.optInt("playbackVerified",0) ?: 0,
+                coverageGap=c?.optBoolean("coverageGap",options.size<3) ?: (options.size<3),
                 reasons=if(reasons==null) emptyList() else (0 until reasons.length()).map { reasons.optString(it) },
             ))
         } catch (cancelled: CancellationException) { throw cancelled

@@ -24,30 +24,26 @@ Deno.serve(async(req)=>{
     const scheduledStartUtc=u.searchParams.get("scheduledStartUtc")||"";
     const start=Date.parse(scheduledStartUtc);
     if(!eventId||!sportId||!competitionId||!Number.isFinite(start))return Response.json({error:"missing_event_identity"},{status:400});
-    const limit=Math.min(6,Math.max(1,Number(u.searchParams.get("limit")||6)||6));
+    const home=u.searchParams.get("home")||"";
+    const away=u.searchParams.get("away")||"";
+    const title=u.searchParams.get("title")||"";
+    if(!((home&&away)||title))return Response.json({error:"missing_fixture_participants"},{status:400});
+    const limit=Math.min(12,Math.max(1,Number(u.searchParams.get("limit")||12)||12));
     const event={
       eventId,sportId,competitionId,scheduledStartUtc,
       scheduledEndUtc:u.searchParams.get("scheduledEndUtc")||"",
       status:u.searchParams.get("status")||"",
-      sport:u.searchParams.get("sport")||"",
-      league:u.searchParams.get("league")||"",
-      title:u.searchParams.get("title")||"",
-      home:u.searchParams.get("home")||"",
-      away:u.searchParams.get("away")||"",
-      broadcasters:(u.searchParams.get("broadcasters")||"").split("|").filter(Boolean),
+      title,home,away,
+      homeAliases:(u.searchParams.get("homeAliases")||home).split("|").filter(Boolean),
+      awayAliases:(u.searchParams.get("awayAliases")||away).split("|").filter(Boolean),
     };
+
+    // Internal QA broadcast pool: scan the full current, non-adult BEST live inventory.
+    // This is independent of Lounge TV customer-facing categories, ordering and curation.
     const rows=await sql`
-      select provider_item_id,category_id,name,artwork_url,epg_channel_id
+      select provider_item_id,category_id,name,artwork_url,epg_channel_id,last_seen_at,last_changed_at
       from lounge_sync.best_inventory_items
-      where kind='live' and is_present=true
-        and name !~* '(NO EVENT|NO STREAM|NOT STREAMING|OFFLINE|PLACEHOLDER|REPLAY|HIGHLIGHTS)'
-        and (
-          name ~* '(BEIN|SKY SPORTS|TNT SPORTS?|PREMIER SPORTS?|STAN SPORT|PARAMOUNT|PPV|EVENT|LIVE|ESPN|FOX SPORT)'
-          or category_id in (
-            select category_id from lounge_sync.best_categories
-            where kind='live' and is_present=true and category_name ~* '(sport|ppv|football|soccer|champions|premier)'
-          )
-        )
+      where kind='live' and is_present=true and coalesce(is_adult,false)=false
     `;
     const imports=await sql`
       select poll_id,completed_at
@@ -59,22 +55,26 @@ Deno.serve(async(req)=>{
     const importMs=latest?.completed_at?Date.parse(latest.completed_at):NaN;
     const now=Date.now();
     const catalogueStale=!Number.isFinite(importMs)||now-importMs>86400000;
-    const parsedEnd=Date.parse(event.scheduledEndUtc);
-    const end=Number.isFinite(parsedEnd)&&parsedEnd>start?parsedEnd:start+4*60*60*1000;
-    const selected=rankCandidates(event,rows,limit);
-    // Catalogue names and client-supplied fixture metadata are discovery hints only.
-    // No programme/assignment evidence producer is connected to this QA endpoint.
-    // Never fabricate observedAt, event identity, or reviewed service status.
+    const selected=catalogueStale?[]:rankCandidates(event,rows,limit,now);
     const candidates=selected.map(({row,decision}:any)=>discoveryCandidate(row,decision,now));
+    const reasons=[];
+    if(catalogueStale)reasons.push("catalogue-stale");
+    if(!catalogueStale&&!candidates.length)reasons.push("no-exact-fixture-provider-feed");
+    if(candidates.length)reasons.push("playback-device-acceptance-required");
     return Response.json({
-      implementationId:"qa-sports-evidence-v3",contractVersion:2,eventId,generatedAtUtc:iso(now),
+      implementationId:"qa-event-streams-v5",contractVersion:2,eventId,generatedAtUtc:iso(now),
       catalogueRevision:latest?String(latest.poll_id):"unknown",
       importCompletedAtUtc:Number.isFinite(importMs)?iso(importMs):null,
-      evidenceAsOfUtc:null,expiresAtUtc:iso(now+300000),catalogueStale,
-      candidates,totalEligible:candidates.length,nextCursor:null,
+      evidenceAsOfUtc:iso(now),expiresAtUtc:iso(now+300000),catalogueStale,
+      candidates,totalEligible:rows.length,nextCursor:null,
+      coverage:{
+        minimumTarget:3,desiredTarget:5,catalogueScanned:rows.length,
+        broadcastConfirmed:candidates.length,playbackVerified:0,returned:candidates.length,
+        coverageGap:candidates.length<3,reasons,
+      },
     },{headers:{"Cache-Control":"private, no-store","Access-Control-Allow-Origin":"*"}});
   }catch(e){
-    console.error("SPORT_CANDIDATES_QA unavailable");
+    console.error("SPORT_CANDIDATES_QA unavailable",e instanceof Error?e.name:"error");
     return Response.json({error:"sports_candidates_qa_unavailable"},{status:503});
   }
 });

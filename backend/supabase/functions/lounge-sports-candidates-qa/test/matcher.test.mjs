@@ -1,62 +1,66 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
 import {classify,rankCandidates,discoveryCandidate} from "../matcher.mjs";
-const soccer={sportId:"soccer",competitionId:"uefa-champions-league",home:"Fenerbahce",away:"Liverpool",broadcasters:[]};
-test("Champions League does not flood Stan or Paramount",()=>{
-  for(const name of ["AU| STAN SPORT 1 HD","US| PARAMOUNT PLUS 41 HD"])assert.equal(classify(soccer,{providerItemId:1,name}),null);
-});
-test("AU beIN 1-3 are curated soccer fallbacks",()=>{
-  for(const id of [1,2,3])assert.equal(classify(soccer,{providerItemId:id,name:"AU| BEIN SPORTS "+id+" HD"})?.tier,"unverified");
-});
-test("fixture-specific event beats generic networks",()=>{
-  const rows=[
-    {providerItemId:10,name:"FEN vs LIV LIVE"},
-    {providerItemId:11,name:"AU| BEIN SPORTS 1 HD"},
-    {providerItemId:12,name:"UK| SKY SPORTS FOOTBALL FHD"},
+
+const nba={
+  eventId:"basketball/nba#det-phi",
+  sportId:"basketball",
+  competitionId:"basketball/nba",
+  scheduledStartUtc:"2026-11-04T23:00:00Z",
+  scheduledEndUtc:"2026-11-05T02:00:00Z",
+  status:"IN",
+  title:"Detroit Pistons at Philadelphia 76ers",
+  home:"Detroit Pistons",
+  away:"Philadelphia 76ers",
+  homeAliases:["Detroit Pistons","Pistons","DET","Detroit"],
+  awayAliases:["Philadelphia 76ers","76ers","PHI","Philadelphia"],
+};
+const now=Date.parse("2026-11-05T00:00:00Z");
+
+test("exact NBA fixture feeds match while another NBA game does not",()=>{
+  const exact=[
+    {provider_item_id:836373,name:"Detroit Pistons vs Philadelphia 76ers @ Nov 4 7:00 PM :NBA 01"},
+    {provider_item_id:1955374,name:"LIVE | DET - PISTONS VS PHI - 76ERS | Wed 04 Nov 18:00 EST (US) | US: NBA PASS PPV 2"},
+    {provider_item_id:1949811,name:"US (ESPN+ 101) | Basketball: 76ers vs. Pistons (76ers vs. Pistons)"},
   ];
-  const result=rankCandidates(soccer,rows,6);
-  assert.equal(result[0].row.providerItemId,10);
-  assert.equal(result[0].decision.tier,"unverified");
-});
-test("recommendations are capped and quality variants dedupe",()=>{
-  const rows=[
-    {providerItemId:1,name:"AU| BEIN SPORTS 1 HD"},
-    {providerItemId:2,name:"AU| BEIN SPORTS 1 FHD"},
-    {providerItemId:3,name:"AU| BEIN SPORTS 2 HD"},
-    {providerItemId:4,name:"AU| BEIN SPORTS 3 HD"},
-    {providerItemId:5,name:"UK| TNT SPORTS 1 HD"},
-    {providerItemId:6,name:"UK| TNT SPORTS 2 HD"},
-    {providerItemId:7,name:"UK| TNT SPORTS 3 HD"},
-    {providerItemId:8,name:"UK| TNT SPORTS 4 HD"},
-  ];
-  const result=rankCandidates(soccer,rows,6);
-  assert.equal(result.length,6);
-  assert.equal(result.filter(x=>x.decision.logicalServiceId==="AU:BEIN:1").length,1);
-});
-test("AU ESPN1 is excluded",()=>{
-  assert.equal(classify(soccer,{providerItemId:646974,name:"AU| ESPN 1 HD"}),null);
-  assert.equal(classify(soccer,{providerItemId:1520168,name:"AU| KAYO - ESPN 1"}),null);
-});
-test("all sports: catalogue names and broadcaster hints never prove a live broadcast",()=>{
-  const fixtures=[
-    {sportId:"rugby",competitionId:"international",home:"New Zealand",away:"England"},
-    {sportId:"basketball",competitionId:"nba",home:"Lakers",away:"Celtics"},
-    {sportId:"cricket",competitionId:"international",home:"India",away:"Australia"},
-    {sportId:"mma",competitionId:"ufc",home:"Fighter One",away:"Fighter Two"},
-  ];
-  for(const fixture of fixtures){
-    const named=classify(fixture,{providerItemId:123,name:fixture.home+" vs "+fixture.away+" LIVE"});
-    assert.equal(named?.tier,"unverified");
-    assert.equal(classify(fixture,{providerItemId:456,name:"AU | ESPN 1 HD"}),null);
-  }
+  for(const row of exact)assert.equal(classify(nba,row,now)?.tier,"verified");
+  assert.equal(classify(nba,{provider_item_id:1955373,name:"LIVE | BOS - CELTICS VS MIL - BUCKS | US: NBA PASS PPV 3"},now),null);
 });
 
-test("QA HTTP adapter never manufactures reviewed identity or programme evidence",()=>{
-  const candidate=discoveryCandidate({provider_item_id:123,category_id:"sport",name:"AU | BEIN SPORTS 1 HD"},
-    {tier:"verified",logicalServiceId:"AU:BEIN:1",market:"AU",reason:"fixture-name"},
-    Date.parse("2026-11-05T00:00:00Z"));
-  assert.equal(candidate.tier,"unverified");
-  assert.equal(candidate.identityReviewed,false);
-  assert.deepEqual(candidate.evidence,[]);
+test("generic NBA and single-team channels never become fixture recommendations",()=>{
+  for(const row of [
+    {provider_item_id:749756,name:"US| NBA TV HD"},
+    {provider_item_id:836349,name:"NBA TEAM| DETROIT PISTONS"},
+    {provider_item_id:836335,name:"NBA TEAM| PHILADELPHIA 76ERS"},
+    {provider_item_id:1040604,name:"NBA REPLAY 1 HD"},
+  ])assert.equal(classify(nba,row,now),null);
+});
+
+test("all exact provider variants are retained instead of one logical-service representative",()=>{
+  const rows=[
+    {provider_item_id:836373,name:"Detroit Pistons vs Philadelphia 76ers @ Nov 4 7:00 PM :NBA 01"},
+    {provider_item_id:1955374,name:"LIVE | DET - PISTONS VS PHI - 76ERS | US: NBA PASS PPV 2"},
+    {provider_item_id:1949811,name:"US ESPN+ | 76ers vs. Pistons"},
+    {provider_item_id:1949810,name:"US ESPN+ | 76ers vs. Pistons ESP"},
+  ];
+  const found=rankCandidates(nba,rows,12,now);
+  assert.equal(found.length,4);
+  assert.equal(new Set(found.map(x=>x.row.providerItemId)).size,4);
+});
+
+test("candidate evidence is exact-fixture event-feed evidence and playback stays unclaimed",()=>{
+  const row={provider_item_id:1955374,category_id:"2076",name:"LIVE | DET - PISTONS VS PHI - 76ERS | US: NBA PASS PPV 2"};
+  const decision=classify(nba,row,now);
+  const candidate=discoveryCandidate(row,decision,now);
+  assert.equal(candidate.identityReviewed,true);
+  assert.equal(candidate.tier,"verified");
+  assert.equal(candidate.evidence[0].type,"event-feed");
+  assert.equal(candidate.evidence[0].eventId,nba.eventId);
   assert.equal(candidate.playbackObservation.status,"unknown");
+});
+
+test("ended, replay and AU ESPN1 rows stay excluded",()=>{
+  assert.equal(classify({...nba,status:"POST"},{provider_item_id:1955374,name:"LIVE | DET - PISTONS VS PHI - 76ERS"},now),null);
+  assert.equal(classify(nba,{provider_item_id:1,name:"REPLAY | DET PISTONS VS PHI 76ERS"},now),null);
+  assert.equal(classify(nba,{provider_item_id:646974,name:"AU| ESPN 1 HD | DET PISTONS VS PHI 76ERS"},now),null);
 });

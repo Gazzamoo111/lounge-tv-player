@@ -1,7 +1,7 @@
 name: Lounge TV QA
 on:
   push:
-    branches: [main, fix/vod-english-hero-20261103, fix/loungetv-player-defaults-20261103, feature/lounge-major-events-home-20261103]
+    branches: [main, fix/vod-english-hero-20261103, fix/loungetv-player-defaults-20261103, feature/lounge-major-events-home-20261103, 001-live-sports-reliability]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -14,6 +14,7 @@ env:
   ISOLATED_EVENT_QA: ${{ github.event_name != 'workflow_dispatch' }}
   RELIABILITY_AUDIT_QA: ${{ github.event_name != 'workflow_dispatch' }}
   LOUNGE_CORE_QA: ${{ startsWith(github.head_ref, 'core-qa/') || startsWith(github.ref_name, 'core-qa/') }}
+  SPORTS_QA_ENDPOINT: https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-sports-candidates-qa
 jobs:
   tests:
     uses: ./.github/workflows/playback-tests.yml
@@ -60,7 +61,7 @@ jobs:
       # PRs compile with an isolated ephemeral debug signer. Stable QA signing remains
       # mandatory for main/workflow_dispatch and is never supplied to untrusted PR code.
       - name: Decode persistent QA signing key
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'workflow_dispatch' || github.ref_name == '001-live-sports-reliability'
         env:
           QA_KEYSTORE_BASE64: ${{ secrets.QA_KEYSTORE_BASE64 }}
           QA_KEYSTORE_PASSWORD: ${{ secrets.QA_KEYSTORE_PASSWORD }}
@@ -84,15 +85,25 @@ jobs:
           QA_KEYSTORE_PASSWORD: ${{ secrets.QA_KEYSTORE_PASSWORD }}
           QA_KEY_ALIAS: ${{ secrets.QA_KEY_ALIAS }}
           QA_KEY_PASSWORD: ${{ secrets.QA_KEY_PASSWORD }}
-          QA_SIGNING_REQUIRED: ${{ github.event_name == 'workflow_dispatch' }}
+          QA_SIGNING_REQUIRED: ${{ github.event_name == 'workflow_dispatch' || github.ref_name == '001-live-sports-reliability' }}
           EXPECTED_QA_CERT_SHA256: ${{ vars.QA_CERT_SHA256 }}
         run: |
           set -euo pipefail
           ./gradlew :app:assembleStandardDebug -Powntv.corePath="$GITHUB_WORKSPACE/shared-core" --stacktrace
           QA_APK=$(find app/build/outputs/apk/standard/debug -maxdepth 1 -name '*.apk' -print -quit)
           [ -n "$QA_APK" ] || { echo "QA APK was not produced"; exit 1; }
-          if [ "$GITHUB_EVENT_NAME" != "workflow_dispatch" ]; then
-            # Automated checks use an isolated ephemeral debug signer and never require QA secrets.
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            python3 scripts/verify_update_compatibility.py "$QA_APK" \
+              --expected-package com.loungetv.player.qa \
+              --expected-cert-sha256 "$EXPECTED_QA_CERT_SHA256" \
+              --expected-version-code "$VERSION_CODE"
+          elif [ "$GITHUB_REF_NAME" = "001-live-sports-reliability" ]; then
+            python3 scripts/verify_update_compatibility.py "$QA_APK" \
+              --expected-package com.loungetv.player.auditqa \
+              --expected-cert-sha256 "$EXPECTED_QA_CERT_SHA256" \
+              --expected-version-code "$VERSION_CODE"
+          else
+            # Other automated checks use an isolated ephemeral debug signer.
             AAPT=$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)
             APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)
             APK_BADGING=$("$AAPT" dump badging "$QA_APK")
@@ -110,11 +121,6 @@ jobs:
               esac
             fi
             "$APKSIGNER" verify "$QA_APK"
-          else
-            python3 scripts/verify_update_compatibility.py "$QA_APK" \
-              --expected-package com.loungetv.player.qa \
-              --expected-cert-sha256 "$EXPECTED_QA_CERT_SHA256" \
-              --expected-version-code "$VERSION_CODE"
           fi
       - name: Stage QA candidate (not yet regression-approved)
         uses: actions/upload-artifact@v4

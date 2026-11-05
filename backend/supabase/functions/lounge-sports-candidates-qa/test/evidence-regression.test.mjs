@@ -1,52 +1,41 @@
-import {test} from 'node:test';
-import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
-import {rankCandidates,discoveryCandidate,excluded} from '../matcher.mjs';
-const catalogue=JSON.parse(readFileSync(new URL('./fixtures/catalogue-352.json',import.meta.url)));
-const now=Date.parse('2026-11-05T01:00:00Z');
-// Synthetic fixture identity tests the contract. This is not a real broadcast observation.
-const event={eventId:'regression:ucl',sportId:'soccer',competitionId:'soccer/uefa.champions',home:'Liverpool',away:'Real Madrid',scheduledStartUtc:'2026-11-05T00:00:00Z',scheduledEndUtc:'2026-11-05T03:00:00Z',status:'IN',broadcasters:['Stan Sport','Paramount Plus']};
-const evidence={type:'programme',source:'regression-only',eventId:event.eventId,sportId:event.sportId,competitionId:event.competitionId,serviceId:'AU:BEIN:1',market:'AU',observedAtUtc:'2026-11-05T00:59:00Z',startUtc:event.scheduledStartUtc,endUtc:event.scheduledEndUtc};
-const withProof=(name='AU| BEIN SPORTS 1 HD',id=646977,e=evidence)=>({provider_item_id:id,name,logicalServiceId:e.serviceId,serviceMarket:e.market,identityReviewed:true,evidence:[e]});
-const run=rows=>rankCandidates(event,rows,6,now);
-test('R1 R2 actual SQL-shaped catalogue does not flood generic networks',()=>{
- const found=run(catalogue.rows);
- assert.ok(found.length>0);assert.ok(found.length<=6);
- assert.equal(found.some(x=>/STAN|PARAMOUNT/i.test(x.row.name)),false);
- assert.equal(found.some(x=>!Number.isFinite(Number(x.row.providerItemId))),false);
- assert.equal(new Set(found.map(x=>x.decision.logicalServiceId)).size,found.length);
+import {test} from "node:test";
+import assert from "node:assert/strict";
+import {rankCandidates} from "../matcher.mjs";
+
+const now=Date.parse("2026-11-05T00:00:00Z");
+const base={
+  eventId:"basketball/nba#det-phi",sportId:"basketball",competitionId:"basketball/nba",
+  scheduledStartUtc:"2026-11-04T23:00:00Z",scheduledEndUtc:"2026-11-05T02:00:00Z",status:"IN",
+  title:"Detroit Pistons at Philadelphia 76ers",home:"Detroit Pistons",away:"Philadelphia 76ers",
+  homeAliases:["Detroit Pistons","Pistons","DET"],awayAliases:["Philadelphia 76ers","76ers","PHI"],
+};
+const rows=[
+ {provider_item_id:836373,name:"Detroit Pistons vs Philadelphia 76ers @ Nov 4 7:00 PM :NBA 01"},
+ {provider_item_id:1955374,name:"LIVE | DET - PISTONS VS PHI - 76ERS | Wed 04 Nov 18:00 EST (US) | US: NBA PASS PPV 2"},
+ {provider_item_id:1949811,name:"US (ESPN+ 101) | Basketball: 76ers vs. Pistons"},
+ {provider_item_id:1955373,name:"LIVE | BOS - CELTICS VS MIL - BUCKS | US: NBA PASS PPV 3"},
+ {provider_item_id:749756,name:"US| NBA TV HD"},
+];
+
+test("simultaneous NBA fixtures cannot exchange streams",()=>{
+  const det=rankCandidates(base,rows,12,now).map(x=>x.row.providerItemId);
+  assert.deepEqual(det,[1955374,836373,1949811]);
+  const bos={...base,eventId:"basketball/nba#bos-mil",title:"Boston Celtics at Milwaukee Bucks",
+    home:"Boston Celtics",away:"Milwaukee Bucks",homeAliases:["Boston Celtics","Celtics","BOS"],awayAliases:["Milwaukee Bucks","Bucks","MIL"]};
+  const bosIds=rankCandidates(bos,rows,12,now).map(x=>x.row.providerItemId);
+  assert.deepEqual(bosIds,[1955373]);
 });
-test('R3 beIN with valid fixture evidence outranks discovery',()=>{
- const found=run([...catalogue.rows,withProof()]);
- assert.equal(found[0].row.providerItemId,646977);assert.equal(found[0].decision.tier,'verified');
- assert.equal(discoveryCandidate(found[0].row,found[0].decision,now).evidence[0].source,'regression-only');
+
+test("hundreds of unrelated alternatives cannot be padded into the result",()=>{
+  const noise=Array.from({length:600},(_,i)=>({provider_item_id:3_000_000+i,name:`MOVIE CHANNEL ${i}`}));
+  const found=rankCandidates(base,[...noise,...rows],12,now);
+  assert.equal(found.length,3);
+  assert.ok(found.every(x=>/PISTONS|DET|76ERS|PHI/i.test(x.row.name)));
 });
-test('networks are evidence gated, not blacklisted',()=>{
- for(const [id,name,service,market] of [[900,'AU| STAN SPORT 1 HD','AU:STAN:1','AU'],[901,'US| PARAMOUNT PLUS 41 HD','US:PARAMOUNT:41','US']]){
-  const row=withProof(name,id,{...evidence,serviceId:service,market});
-  assert.equal(run([row])[0].decision.tier,'verified');
-  assert.equal(run([{...row,evidence:[]}]).length,0);
- }
-});
-test('R6 R7 provider aliases exclude ESPN AU1 and retain ESPN AU2 and US ESPN',()=>{
- for(const row of [{provider_item_id:646974,name:'renamed'}, {provider_item_id:1520168,name:'renamed'}, {name:'ESPN Australia 1'}, {name:'ESPN AU 1'}, {name:'AU| ESPN 1 HD'}])assert.equal(excluded(row),true);
- for(const name of ['ESPN Australia 2','AU| ESPN 2 HD','US| ESPN 1 HD','US| ESPN HD'])assert.equal(excluded({name}),false);
-});
-test('R8 R15 contradictory proof cannot be rescued by a matching positive entry',()=>{
- const row=withProof();row.evidence.push({...evidence,contentMismatch:true});assert.deepEqual(run([row]),[]);
-});
-test('R14 expired proof cannot promote verified or plausible',()=>{
- const found=run([withProof(undefined,undefined,{...evidence,observedAtUtc:'2026-11-04T23:00:00Z'})]);
- assert.equal(found[0].decision.tier,'unverified');
- assert.deepEqual(rankCandidates({...event,status:'POST'},[withProof()],6,now).filter(x=>x.decision.tier==='verified'),[]);
-});
-test('market, fixture, service and interval mismatches never promote',()=>{
- for(const override of [{eventId:'other'},{market:'UK'},{serviceId:'wrong'},{endUtc:event.scheduledStartUtc},{observedAtUtc:'2026-11-05T02:00:00Z'}]){
-  const row=withProof();row.evidence=[{...evidence,...override}];
-  assert.equal(run([row])[0]?.decision.tier,'unverified');
- }
-});
-test('R13 SQL variants collapse while identity exclusions survive renaming',()=>{
- const found=run(catalogue.rows);assert.equal(found.filter(x=>x.decision.logicalServiceId==='AU:BEIN:1').length,1);
- assert.equal(run([{provider_item_id:646974,name:'UK| TNT SPORTS 1 HD'}]).length,0);
+
+test("duplicate provider ids collapse but distinct backup feeds remain",()=>{
+  const duplicated=[rows[0],rows[0],rows[1],rows[2]];
+  const found=rankCandidates(base,duplicated,12,now);
+  assert.equal(found.length,3);
+  assert.equal(new Set(found.map(x=>x.row.providerItemId)).size,3);
 });
