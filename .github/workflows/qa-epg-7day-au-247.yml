@@ -42,6 +42,9 @@ jobs:
           curl --fail --location --retry 3 --connect-timeout 20 --max-time 300 \
             https://i.mjh.nz/au/Sydney/epg.xml.gz \
             -o /tmp/lounge-targeted/au-sydney.xml.gz || true
+          curl --fail --location --retry 3 --connect-timeout 20 --max-time 300 \
+            https://xmltv.net/xml_files/Sydney.xml \
+            -o /tmp/lounge-targeted/au-xmltv-net.xml || true
           test -s /tmp/lounge-targeted/published.xml.gz
           ls -lh /tmp/lounge-targeted/
       - name: Generate Australian and 24-7 seven-day additions
@@ -51,6 +54,7 @@ jobs:
             --existing /tmp/lounge-targeted/published.xml.gz \
             --au primary=/tmp/lounge-targeted/au-primary.xml.gz \
             --au sydney=/tmp/lounge-targeted/au-sydney.xml.gz \
+            --au xmltv-net=/tmp/lounge-targeted/au-xmltv-net.xml \
             --out qa/epg/rolling7-out
       - name: Check scope and horizon, leave publication closed
         run: |
