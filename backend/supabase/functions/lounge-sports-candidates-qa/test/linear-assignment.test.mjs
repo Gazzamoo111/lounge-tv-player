@@ -62,3 +62,32 @@ test("conflicting ESPN live TV assignments are withheld across simultaneous NBA 
  assert.equal(outcome.geo.length,0);
  assert.equal(outcome.status,"broadcast-assignments-absent-or-conflicted");
 });
+
+test("Lakers fixture includes BEST Spectrum SportsNet and TV RAW, no other regional sports networks",()=>{
+ const lakers={...event,eventId:"basketball/nba#401909934",home:"Sacramento Kings",away:"Los Angeles Lakers",
+   homeAliases:["Sacramento Kings","Kings"],awayAliases:["Los Angeles Lakers","Lakers"]};
+ const spectrum=[{region:"us",type:{shortName:"TV"},media:{shortName:"Spectrum Sports Net"}}];
+ const rows=[
+  {provider_item_id:1696805,name:"US| SPECTRUM SPORTSNET",category_id:"680"},
+  {provider_item_id:2151566,name:"TV| SPECTRUM SPORTSNET ᴿᴬᵂ",category_id:"2540"},
+  {provider_item_id:1597044,name:"US| SPECTRUM NEWS 1",category_id:"1863"},
+  {provider_item_id:45579,name:"US| ESPN HD",category_id:"680"},
+  {provider_item_id:2151620,name:"TV| NHL NETWORK ᴿᴬᵂ",category_id:"2540"},
+ ];
+ const suggestions=linearAssignmentCandidates(lakers,rows,spectrum,"espn-confirmed",now);
+ assert.deepEqual(suggestions.map(x=>x.providerItemId),[1696805,2151566]);
+ assert.deepEqual(suggestions.map(x=>x.categoryId),["680","2540"]);
+ assert.ok(suggestions.every(x=>x.evidence[0].type==="assignment"&&x.tier==="plausible"));
+});
+
+test("NHL regional TV abbreviations map only their explicitly assigned BEST service",()=>{
+ const nhl={...event,eventId:"hockey/nhl#401892649",sportId:"hockey",competitionId:"hockey/nhl"};
+ const rows=[
+  {provider_item_id:2153431,name:"US| DETROIT SPORTSNET",category_id:"680"},
+  {provider_item_id:2151648,name:"TV| WILLOW 2 ᴿᴬᵂ",category_id:"2540"},
+  {provider_item_id:2151620,name:"TV| NHL NETWORK ᴿᴬᵂ",category_id:"2540"}
+ ];
+ const evidence=[{region:"us",type:{shortName:"TV"},media:{shortName:"DSN"}}];
+ const found=linearAssignmentCandidates(nhl,rows,evidence,"espn-confirmed",now);
+ assert.deepEqual(found.map(x=>x.providerItemId),[2153431]);
+});
