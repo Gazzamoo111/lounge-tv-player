@@ -1,0 +1,52 @@
+import {test} from "node:test";
+import assert from "node:assert/strict";
+import {linearAssignmentCandidates} from "../matcher.mjs";
+import {findIndependentBroadcasts} from "../fixture-evidence.mjs";
+
+const start="2026-11-05T00:00:00Z", now=Date.parse("2026-11-05T00:30:00Z");
+const event={eventId:"basketball/nba#401999999",sportId:"basketball",competitionId:"basketball/nba",
+ scheduledStartUtc:start,status:"IN",home:"Philadelphia 76ers",away:"Detroit Pistons",
+ homeAliases:["Philadelphia 76ers","76ers"],awayAliases:["Detroit Pistons","Pistons"]};
+const geo=[{region:"us",type:{shortName:"TV"},media:{shortName:"ESPN"}}];
+const fixture={id:"401999999",date:start,competitions:[{competitors:[
+ {team:{displayName:"Philadelphia 76ers",name:"76ers"}},
+ {team:{displayName:"Detroit Pistons",name:"Pistons"}}],geoBroadcasts:geo}]};
+const request=events=>async()=>({ok:true,json:async()=>({events})});
+
+test("independent fixture lookup verifies event ID, teams and kickoff",async()=>{
+ const ok=await findIndependentBroadcasts(event,request([fixture]));
+ assert.equal(ok.status,"fixture-confirmed");assert.equal(ok.geo.length,1);
+ assert.match(ok.source,/site\.api\.espn\.com/);
+ for(const bad of [
+  {...fixture,id:"401999998"},
+  {...fixture,date:"2026-11-05T02:00:00Z"},
+  {...fixture,competitions:[{...fixture.competitions[0],competitors:[
+   {team:{displayName:"Boston Celtics"}},{team:{displayName:"Milwaukee Bucks"}}]}]}
+ ])assert.equal((await findIndependentBroadcasts(event,request([bad]))).geo.length,0);
+});
+
+test("only source-confirmed US TV services match, all true provider variants remain",()=>{
+ const rows=[
+  {provider_item_id:1,name:"US| ESPN FHD",category_id:"1"},
+  {provider_item_id:2,name:"US| ESPN HD BACKUP",category_id:"2"},
+  {provider_item_id:3,name:"US| ESPN 2 HD",category_id:"3"},
+  {provider_item_id:4,name:"AU| ESPN FHD",category_id:"4"},
+  {provider_item_id:5,name:"US| TNT HD",category_id:"5"},
+  {provider_item_id:6,name:"US| ESPN+ 101",category_id:"6"},
+  {provider_item_id:7,name:"MOVIES| ESPN",category_id:"7"}
+ ];
+ const found=linearAssignmentCandidates(event,rows,geo,"https://site.api.espn.com",now);
+ assert.deepEqual(found.map(x=>x.providerItemId),[1,2]);
+ assert.equal(found[0].tier,"plausible");
+ assert.equal(found[0].evidence[0].type,"assignment");
+ assert.equal(found[0].playbackObservation.status,"unknown");
+ assert.deepEqual(found.map(x=>x.categoryId),["1","2"]);
+});
+
+test("broadcaster hints never invent a TV assignment",()=>{
+ const rows=[{provider_item_id:1,name:"US| ESPN FHD"}];
+ const source="https://site.api.espn.com";
+ assert.equal(linearAssignmentCandidates(event,rows,[],source,now).length,0);
+ assert.equal(linearAssignmentCandidates(event,rows,[{region:"us",type:{shortName:"Streaming"},media:{shortName:"ESPN"}}],source,now).length,0);
+ assert.equal(linearAssignmentCandidates(event,rows,[{region:"au",type:{shortName:"TV"},media:{shortName:"ESPN"}}],source,now).length,0);
+});
