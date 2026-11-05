@@ -22,7 +22,7 @@ const rows=[
 ];
 
 test("XMLTV offset parses fixture time independently of the device timezone",()=>{
- assert.equal(new Date(xmlUtc("20261105000000 +1300")).toISOString(),start);
+ assert.equal(xmlUtc("20261105000000 +1300"),Date.parse(start));
  assert.ok(Number.isNaN(xmlUtc("20261105")));
 });
 
