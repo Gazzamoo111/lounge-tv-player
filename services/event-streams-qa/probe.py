@@ -28,6 +28,23 @@ def probe(candidate,template):
     except OSError:observation['reason']='decoder-unavailable'
     return observation
 
+def probe_candidates(cases,template,max_attempts=10,prober=probe,pause=time.sleep):
+    services={}
+    for case in cases:
+        if case['event']['status']!='IN':continue
+        for candidate in case['broadcastCandidates']:
+            variants=services.setdefault(candidate['logicalServiceId'],{})
+            for variant in candidate.get('variants',[candidate]):variants.setdefault(str(variant['providerItemId']),variant)
+    health={}
+    for variants in services.values():
+        for stream_id,candidate in list(variants.items())[:3]:
+            if len(health)>=max_attempts:return health
+            if stream_id in health:continue
+            health[stream_id]=prober(candidate,template)
+            pause(1)
+            if health[stream_id]['status']=='verified':break
+    return health
+
 if __name__=='__main__':
     template=os.environ.get('QA_STREAM_URL_TEMPLATE','')
     if not template or '{id}' not in template:
@@ -36,11 +53,7 @@ if __name__=='__main__':
         print('QA playback unavailable: no dedicated QA account configured; attempted=0')
     else:
         coverage=json.loads((OUT/'coverage.json').read_text())
-        candidates={str(c['providerItemId']):c for case in coverage['cases'] for c in case['broadcastCandidates'] if case['event']['status']=='IN'}
-        health={}
-        for stream_id,candidate in list(candidates.items())[:10]:
-            health[stream_id]=probe(candidate,template)
-            time.sleep(1)
+        health=probe_candidates(coverage['cases'],template)
         (OUT/'health.json').write_text(json.dumps(health))
         (OUT/'playback-status.json').write_text(json.dumps({'configured':True,'attempted':len(health),'decoded':sum(h['status']=='verified' for h in health.values()),'concurrency':1}))
         print(json.dumps({'attempted':len(health),'decoded':sum(h['status']=='verified' for h in health.values()),'concurrency':1}))

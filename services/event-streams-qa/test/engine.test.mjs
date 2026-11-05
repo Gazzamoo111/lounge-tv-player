@@ -26,7 +26,7 @@ test('broadcaster branding and fixture text in a channel name never establish ev
 });
 test('wrong opponent, sport, dates, stale source and expired fixture reject recommendations',()=>{
  const e=fixture();
- for(const mutate of [d=>d.guides[0].programmes[0].title='Live Basketball: Alpha Athletic v Other Team',d=>d.guides[0].programmes[0]=programme('tennis'),d=>d.guides[0].programmes[0].endUtc=iso(now-120000),d=>d.guides[0].sourceUpdatedAtUtc=iso(now-90_000_000),d=>d.fixtures[0].fixtureFetchedAtUtc=iso(now-900000)]){
+ for(const mutate of [d=>d.guides[0].programmes[0].title='Live Basketball: Alpha Athletic v Other Team',d=>d.guides[0].programmes[0]=programme('tennis'),d=>d.guides[0].programmes[0].endUtc=iso(now-120000),d=>d.guides[0].sourceUpdatedAtUtc=iso(now-90_000_000),d=>d.guides[0].fetchedAtUtc=iso(now-360000),d=>d.fixtures[0].fixtureFetchedAtUtc=iso(now-900000)]){
   const d=dataset();mutate(d);assert.equal(resolveEvent(d.fixtures[0],catalogue([row()]),d,health(),now).candidates.length,0);
  }
 });
@@ -113,4 +113,9 @@ test('a different programme now cannot disqualify a confirmed upcoming fixture l
  assert.equal(resolveEvent(d.fixtures[0],catalogue([row()]),d,{},now).coverage.broadcastConfirmed,1);
  d.guides[0].programmes.push({...programme(),title:'Live Basketball: Other Athletic v Another United',startUtc:iso(now+3_600_000),endUtc:iso(now+7_200_000)});
  assert.equal(resolveEvent(d.fixtures[0],catalogue([row()]),d,{},now).coverage.broadcastConfirmed,0);
+});
+test('failed primary does not hide an eligible backup or count variants as more streams',()=>{
+ const d=dataset(),rows=[row(1,'NZ| SKY SPORT 1 4K'),row(2,'NZ| SKY SPORT 1 HD')],h=health();h['1'].status='failed';
+ let r=resolveEvent(d.fixtures[0],catalogue(rows),d,h,now);assert.equal(r.broadcastCandidates[0].providerItemId,2);assert.equal(r.coverage.broadcastConfirmed,1);assert.equal(r.candidates.length,0);assert.equal(r.broadcastCandidates[0].variants.length,2);
+ h['2']={...health()[1],providerItemId:'2'};r=resolveEvent(d.fixtures[0],catalogue(rows),d,h,now);assert.deepEqual(r.candidates.map(c=>c.providerItemId),[2]);
 });

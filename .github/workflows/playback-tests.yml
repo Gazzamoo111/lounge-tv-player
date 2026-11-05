@@ -47,7 +47,9 @@ jobs:
         with:
           node-version: '22'
       - name: All-sport event evidence regressions
-        run: node --test services/event-streams-qa/test/*.test.mjs
+        run: |
+          node --test services/event-streams-qa/test/*.test.mjs
+          python3 -m unittest discover -s services/event-streams-qa/test -p 'test_*.py'
       - name: Collect and validate real fixtures in an isolated runtime
         run: |
           python3 services/event-streams-qa/collect.py

@@ -24,6 +24,7 @@ jobs:
           QA_STREAM_URL_TEMPLATE: ${{ secrets.LOUNGE_SPORTS_QA_STREAM_TEMPLATE }}
         run: |
           node --test services/event-streams-qa/test/*.test.mjs
+          python3 -m unittest discover -s services/event-streams-qa/test -p 'test_*.py'
           node services/event-streams-qa/src/validate.mjs > outputs/event-streams-qa/validation.log
           python3 services/event-streams-qa/probe.py
           QA_HEALTH_DATA=outputs/event-streams-qa/health.json node services/event-streams-qa/src/validate.mjs > outputs/event-streams-qa/validation.log

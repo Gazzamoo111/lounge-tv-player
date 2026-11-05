@@ -89,7 +89,7 @@ export function resolveEvent(event,catalogue,dataset,health={},now=Date.now(),li
  }
  for(const guide of dataset.guides||[]){
   const guideAge=now-instant(guide.sourceUpdatedAtUtc),fetchAge=now-instant(guide.fetchedAtUtc);
-  if(!(guideAge>=0&&guideAge<=DAY&&fetchAge>=0&&fetchAge<=15*MINUTE)){coverage.rejections.expiredGuide++;continue;}
+  if(!(guideAge>=0&&guideAge<=DAY&&fetchAge>=0&&fetchAge<=(event.status==='IN'?5*MINUTE:15*MINUTE))){coverage.rejections.expiredGuide++;continue;}
   activeGuides++;
   const programmesByChannel=new Map();
   for(const p of guide.programmes){if(instant(p.endUtc)<=now)continue;const list=programmesByChannel.get(p.channelId)||[];list.push(p);programmesByChannel.set(p.channelId,list);}
@@ -113,7 +113,8 @@ export function resolveEvent(event,catalogue,dataset,health={},now=Date.now(),li
    }
   }
  }
- const broadcast=[...byService.values()].map(variants=>variants.sort((a,b)=>(b.playbackObservation.status==='verified')-(a.playbackObservation.status==='verified')||b.quality-a.quality||a.providerItemId-b.providerItemId)[0]);
+ const healthRank={verified:2,unknown:1,failed:0};
+ const broadcast=[...byService.values()].map(variants=>{const unique=[...new Map(variants.map(v=>[v.providerItemId,v])).values()].sort((a,b)=>(healthRank[b.playbackObservation.status]||0)-(healthRank[a.playbackObservation.status]||0)||b.quality-a.quality||a.providerItemId-b.providerItemId);return {...unique[0],variants:unique.slice(0,3).map(v=>({providerItemId:v.providerItemId,displayName:v.displayName,logicalServiceId:v.logicalServiceId,playbackObservation:v.playbackObservation}))};});
  coverage.broadcastConfirmed=broadcast.length;
  if((event.participants||[]).length===2)coverage.namedEventHints=catalogue.rows.filter(r=>!badName.test(r.name)&&!excluded(r)&&sportHit(event,r.name)&&event.participants.every(p=>participantHit(p,r.name))).slice(0,12).map(r=>({providerItemId:r.id,name:r.name,reason:'catalogue-name-only; not event or playback verified'}));
  const working=broadcast.filter(c=>c.playbackObservation.status==='verified').sort((a,b)=>instant(b.playbackObservation.observedAtUtc)-instant(a.playbackObservation.observedAtUtc)||b.quality-a.quality||a.logicalServiceId.localeCompare(b.logicalServiceId));
