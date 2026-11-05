@@ -1,46 +1,53 @@
-# Capturing official Lounge TV screenshots for the README
+# Lounge TV official screenshots
 
-The existing `extras/screenshots/` assets originated with the OwnTV foundation and are **not** verified customer-facing Lounge TV screenshots. Do not relabel them as Lounge TV.
+Seven real **1920 x 1080** Fire TV screenshots were captured for the GitHub showcase. They are **not** emulator or phone-camera photographs.
 
-To add a real four-image gallery to the public README, capture these screens from the **latest approved Lounge TV build** on a Fire TV / Android TV device:
+## Recommended README gallery
 
-1. **Home** with Lounge TV branding and the current hero/rails.
-2. **Live TV** showing the curated categories, with non-sensitive content.
-3. **TV Guide** with a clear, correctly matched programme grid.
-4. **Sport Lounge** showing a current event listing, but not private account details or unverified playback claims.
+| Filename | Screen | Public README |
+| --- | --- | --- |
+| `home.png` | Home screen and event hero | Yes |
+| `live-tv.png` | Live TV list with playback preview | Yes |
+| `tv-guide.png` | TV Guide with populated listings | Yes |
+| `movies.png` | Movies browsing | Yes |
+| `series.png` | Series browsing | Yes |
+| `sport-lounge.png` | Sport Lounge fixture overview | Yes |
+| `match-centre-qa.png` | Individual fixture and channel matching | **No, QA only** |
 
-Use the same 16:9 capture format for all images.
+The separate Match Centre screenshot visibly says **0 verified streams** and **Unverified discovery**. It should **not** be promoted as evidence of reliable match-to-stream recommendations.
 
-## Capture over ADB
+## Upload process
 
-With Android platform tools installed and the device already connected over ADB:
+1. Open the branch `docs/loungetv-showcase-20261105` on GitHub.
+2. Navigate into `docs/screenshots/`.
+3. Upload the seven supplied PNGs without changing their pixel dimensions.
+4. Review the captures before publishing. The original top-right TV status display includes a profile name, time and locality. Confirm those details are acceptable for a **public** GitHub repository.
 
-```bash
-mkdir -p docs/screenshots
-adb exec-out screencap -p > docs/screenshots/home.png
-```
-
-Repeat after navigating to each screen and save as `live-tv.png`, `tv-guide.png` and `sport-lounge.png`.
-
-Review the images before committing: hide account names, access credentials, private IPs, device identifiers, notifications and customer-specific content. Check that all branding and programme listings are accurate.
-
-## Add the gallery to README.md
-
-Insert the following after the highlights section **only after all four verified image files are committed**:
+After upload, add the gallery below to the root README, ideally after the feature descriptions:
 
 ```html
 ## Screenshots
 
 <table>
 <tr>
-<td><img src="docs/screenshots/home.png" alt="Lounge TV Home" width="100%"><br><sub>Home</sub></td>
-<td><img src="docs/screenshots/live-tv.png" alt="Lounge TV Live" width="100%"><br><sub>Live TV</sub></td>
+<td align="center"><img src="docs/screenshots/home.png" alt="Lounge TV Home"><br><sub>Home</sub></td>
+<td align="center"><img src="docs/screenshots/live-tv.png" alt="Lounge TV Live TV"><br><sub>Live TV</sub></td>
 </tr>
 <tr>
-<td><img src="docs/screenshots/tv-guide.png" alt="Lounge TV Guide" width="100%"><br><sub>TV Guide</sub></td>
-<td><img src="docs/screenshots/sport-lounge.png" alt="Lounge TV Sport Lounge" width="100%"><br><sub>Sport Lounge</sub></td>
+<td align="center"><img src="docs/screenshots/tv-guide.png" alt="Lounge TV Guide"><br><sub>TV Guide</sub></td>
+<td align="center"><img src="docs/screenshots/sport-lounge.png" alt="Lounge TV Sport Lounge"><br><sub>Sport Lounge</sub></td>
+</tr>
+<tr>
+<td align="center"><img src="docs/screenshots/movies.png" alt="Lounge TV Movies"><br><sub>Movies</sub></td>
+<td align="center"><img src="docs/screenshots/series.png" alt="Lounge TV Series"><br><sub>Series</sub></td>
 </tr>
 </table>
 ```
 
-Screenshots document the customer experience, not a guarantee of channel availability or matching accuracy.
+## Quality checks
+
+- Keep all screenshots 1920 x 1080 and avoid stretching or aggressive cropping.
+- Confirm there are no exposed passwords, access tokens, login details or personal data.
+- Preserve screenshots as genuine app captures. Do not invent or alter UI features.
+- The Live TV and guide screenshots are examples of the interface, not verified playback guarantees.
+- QA and screenshots do not merge or deploy the Android app.
