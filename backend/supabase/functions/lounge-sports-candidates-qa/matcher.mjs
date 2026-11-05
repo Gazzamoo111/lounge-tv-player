@@ -45,16 +45,15 @@ function sportContextHit(event,name){
 function fixtureNamed(event,row){
   const name=String(row.name||row.displayName||"");
   const home=aliasesFor(event,"home"),away=aliasesFor(event,"away");
+  const fullHome=norm(event.home),fullAway=norm(event.away);
+  if(fullHome.length>=4&&fullAway.length>=4&&phrase(name,fullHome)&&phrase(name,fullAway))return true;
   if(home.length&&away.length){
-    const strongHome=home.filter(a=>norm(a).length>=4);
-    const strongAway=away.filter(a=>norm(a).length>=4);
-    if(strongHome.length&&strongAway.length&&aliasHit(name,strongHome)&&aliasHit(name,strongAway))return true;
-    // Three-letter abbreviations are ambiguous across sports (e.g. PHI/DET in NBA and NCAA).
-    // They are usable only when the provider row also names the selected sport/competition family.
+    // Partial team names, nicknames and abbreviations are only usable when the provider row
+    // also proves the selected sport. This blocks shared-city and cross-sport collisions.
     return aliasHit(name,home)&&aliasHit(name,away)&&sportContextHit(event,name);
   }
   const title=norm(event.title);
-  return title.length>=10&&phrase(name,title);
+  return title.length>=10&&phrase(name,title)&&sportContextHit(event,name);
 }
 function market(name){
   const m=norm(name).match(/^(AU|AUS|AUSTRALIA|UK|GB|US|USA|NZ|IE|CA)\b/);

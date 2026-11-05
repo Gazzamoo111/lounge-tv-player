@@ -7,7 +7,7 @@ const days=[dateKey(-1),dateKey(0),dateKey(1)];
 
 function aliases(team={}){
   return [...new Set([
-    team.displayName,team.name,team.shortDisplayName,team.abbreviation,team.location,
+    team.displayName,team.name,team.shortDisplayName,team.abbreviation,
   ].filter(Boolean))].join("|");
 }
 function requestStatus(event){
@@ -18,6 +18,13 @@ function candidateHasFixtureEvidence(candidate,eventId,sport,competitionId){
     e.eventId===eventId && e.sportId===sport && e.competitionId===competitionId
   );
 }
+const norm=value=>String(value||"").toUpperCase().replace(/[^A-Z0-9]+/g," ").trim();
+const hasAlias=(text,team={})=>{
+  const hay=" "+norm(text)+" ";
+  return [team.displayName,team.name,team.shortDisplayName,team.abbreviation]
+    .filter(Boolean).map(norm).filter(a=>a.length>=3)
+    .some(a=>hay.includes(" "+a+" "));
+};
 
 const events=[];
 const seen=new Set();
@@ -68,6 +75,10 @@ for(const event of events){
     "Unverified streams must never be labeled verified");
   assert.ok(body.candidates.every(c=>candidateHasFixtureEvidence(c,eventId,"basketball",competitionId)),
     "Every suggestion must carry the exact fixture identity");
+  assert.ok(body.candidates.every(c=>{
+    const kind=c.evidence?.[0]?.type;
+    return kind!=="name-hint" || (hasAlias(c.displayName,home.team)&&hasAlias(c.displayName,away.team));
+  }),"Provider-name suggestions must visibly identify both selected NBA teams");
   assert.equal(body.coverage.playbackVerified,0,"No playback probe credentials configured");
   assert.equal(body.coverage.coverageGap,true,"Unverified video is not three verified streams");
   if(body.candidates.length){

@@ -60,6 +60,15 @@ test("provider-title evidence remains unverified and playback stays unclaimed",(
   assert.equal(candidate.playbackObservation.status,"unknown");
 });
 
+test("shared city or nickname text cannot match the wrong sport or team",()=>{
+  const lakersKings={...nba,eventId:"basketball/nba#lal-sac",title:"Los Angeles Lakers at Sacramento Kings",
+    home:"Sacramento Kings",away:"Los Angeles Lakers",homeAliases:["Sacramento Kings","Kings","SAC"],
+    awayAliases:["Los Angeles Lakers","Lakers","LAL"]};
+  assert.equal(classify(lakersKings,{provider_item_id:836392,name:"NHL TEAM| LOS ANGELES KINGS"},now),null);
+  assert.equal(classify(lakersKings,{provider_item_id:999001,name:"NBA | LA CLIPPERS VS SACRAMENTO KINGS"},now),null);
+  assert.equal(classify(lakersKings,{provider_item_id:1955363,name:"NEXT | SAC - KINGS VS LAL - LAKERS | NBA PASS PPV 13"},now)?.tier,"plausible");
+});
+
 test("ended, replay and AU ESPN1 rows stay excluded",()=>{
   assert.equal(classify({...nba,status:"POST"},{provider_item_id:1955374,name:"LIVE | DET - PISTONS VS PHI - 76ERS"},now),null);
   assert.equal(classify(nba,{provider_item_id:1,name:"REPLAY | DET PISTONS VS PHI 76ERS"},now),null);

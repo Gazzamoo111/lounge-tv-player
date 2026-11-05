@@ -41,7 +41,7 @@ internal class BackendSportsCandidateProvider(
         val home = match.home?.team
         val away = match.away?.team
         fun aliases(team: tv.own.owntv.core.sports.model.Team?) = listOfNotNull(
-            team?.name, team?.shortName, team?.abbreviation, team?.location,
+            team?.name, team?.shortName, team?.abbreviation,
         ).filter(String::isNotBlank).distinct().joinToString("|")
         val params = linkedMapOf(
             "contractVersion" to "2", "eventId" to match.key, "sportId" to match.sport.path,
