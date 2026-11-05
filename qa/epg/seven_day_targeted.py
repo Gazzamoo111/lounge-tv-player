@@ -199,6 +199,17 @@ def main():
             errors[name] = str(exc)
     if not feeds:
         raise SystemExit("No Australian source could be loaded. No publication.")
+    for label, (ids, names, programmes) in feeds.items():
+        horizon = max((max(item[1] for item in items)
+                       for items in programmes.values() if items), default=None)
+        print("AU_FEED_SUMMARY", json.dumps({
+            "feed": label, "sourceIds": len(ids), "programmeChannelIds": len(programmes),
+            "latest": horizon.isoformat() if horizon else None,
+            "sample": [{
+                "sourceId": cid, "names": [k for k, v in names.items() if cid in v][:2],
+                "end": max((p[1] for p in programmes.get(cid, [])), default=now).isoformat()
+            } for cid in list(ids.values())[:20]]
+        }))
 
     changed = set()
     au_added = 0
