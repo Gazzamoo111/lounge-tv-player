@@ -28,7 +28,7 @@ async function loadNzSportsGuide(now:number){
     if(xml.length>40_000_000)return [];
     const tv=new XMLParser({ignoreAttributes:false,attributeNamePrefix:"@_",textNodeName:"#text"}).parse(xml).tv;
     const all=Array.isArray(tv?.programme)?tv.programme:tv?.programme?[tv.programme]:[];
-    const programmes=all.filter((p:any)=>/^SkySport(?:\\d+|Select|NZ).*\\.nz$/i.test(String(p["@_channel"]||"")));
+    const programmes=all.filter((p:any)=>/^SkySport(?:\d+|Select|NZ).*\.nz$/i.test(String(p["@_channel"]||"")));
     nzGuideCache={at:now,programmes};
     return programmes;
   }catch{return [];}
