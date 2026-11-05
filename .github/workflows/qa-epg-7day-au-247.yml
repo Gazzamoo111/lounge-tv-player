@@ -47,6 +47,20 @@ jobs:
             -o /tmp/lounge-targeted/au-xmltv-net.xml || true
           test -s /tmp/lounge-targeted/published.xml.gz
           ls -lh /tmp/lounge-targeted/
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Try direct eight-day Foxtel and Fox Sports guide grabber
+        continue-on-error: true
+        timeout-minutes: 12
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/iptv-org/epg.git /tmp/lounge-targeted/grabber
+          cd /tmp/lounge-targeted/grabber
+          npm ci --no-audit --no-fund
+          npm run grab --- --sites=foxtel.com.au,foxsports.com.au --days=8             --maxConnections=3 --output=/tmp/lounge-targeted/au-direct-8day.xml
+          ls -lh /tmp/lounge-targeted/au-direct-8day.xml
       - name: Generate Australian and 24-7 seven-day additions
         run: |
           python qa/epg/seven_day_targeted.py \
@@ -55,6 +69,7 @@ jobs:
             --au primary=/tmp/lounge-targeted/au-primary.xml.gz \
             --au sydney=/tmp/lounge-targeted/au-sydney.xml.gz \
             --au xmltv-net=/tmp/lounge-targeted/au-xmltv-net.xml \
+            --au direct-8day=/tmp/lounge-targeted/au-direct-8day.xml \
             --out qa/epg/rolling7-out
       - name: Check scope and horizon, leave publication closed
         run: |
