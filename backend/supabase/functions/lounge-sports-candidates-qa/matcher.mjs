@@ -244,3 +244,73 @@ export function linearAssignmentCandidates(event,rows,geoBroadcasts,source,now=D
   result.sort((a,b)=>quality(b.displayName)-quality(a.displayName||"")||a.providerItemId-b.providerItemId);
   return result.slice(0,Math.min(rows.length,Math.max(1,limit)));
 }
+
+
+/**
+ * QA-only sport-specific discovery across every BEST live source category.
+ * These are optional channel choices, NOT evidence that the selected game is on air.
+ * They must never be counted as an assigned network or a verified match.
+ * Never add all generic networks (ESPN, Stan, Paramount) by sport.
+ */
+export function sportFallbackCandidates(event,rows,now=Date.now(),limit=6){
+  const sport=norm(event.sportId),league=norm(event.competitionId);
+  const start=Date.parse(event.scheduledStartUtc);
+  if(!Number.isFinite(start)||start-now>7*86400_000||
+     ["POST","CANCELLED","POSTPONED"].includes(String(event.status).toUpperCase()))return [];
+  const end=Date.parse(event.scheduledEndUtc);
+  if((Number.isFinite(end)&&end<=now)||(!Number.isFinite(end)&&start+36*3600_000<=now))return [];
+  const rules=[
+    [/TENNIS/, /^(?:(?:US|UK|UK NOWTV|TV|AU|NZ|DE|IT)\s+)?(?:SKY SPORTS? TENNIS|TENNIS CHANNEL(?: PLUS)?(?: [0-9]+)?|SUPERSPORTS TENNIS|BEIN SPORTS TENNIS)\b/],
+    [/BASKETBALL/, /\b(?:NBA TEAM|NBA TV|NBA LEAGUE PASS|NBA PASS|NBL TV)\b/],
+    [/FOOTBALL/, /\b(?:NFL TEAMS?|NFL NETWORK|NFL GAME PASS)\b/],
+    [/HOCKEY/, /\b(?:NHL NETWORK|NHL TEAM|NHL CENTER ICE|NHL TV)\b/],
+    [/BASEBALL/, /\b(?:MLB NETWORK|MLB EXTRA INNINGS|MLB TEAM|MLB TV)\b/],
+    [/CRICKET/, /\b(?:SKY SPORTS? CRICKET|FOX CRICKET|WILLOW(?: TV)?|SUPERSPORT CRICKET)\b/],
+    [/SOCCER/, /\b(?:BEIN SPORTS?|TNT SPORTS?|SKY SPORTS (?:FOOTBALL|PREMIER LEAGUE)|OPTUS SPORT|PREMIER SPORTS)\b/],
+    [/RUGBY LEAGUE/, /\b(?:FOX LEAGUE|SKY SPORTS? LEAGUE|NRL TV)\b/],
+    [/RUGBY/, /\b(?:SKY SPORTS? RUGBY|RUGBY PASS|SUPERSPORT RUGBY)\b/],
+    [/MMA|UFC/, /\b(?:UFC FIGHT PASS|UFC TV|UFC PPV)\b/],
+    [/BOX/, /\b(?:DAZN BOXING|BOXING PPV|SKY SPORTS? BOXING)\b/],
+    [/GOLF/, /\b(?:GOLF CHANNEL|SKY SPORTS? GOLF|PGA TOUR)\b/],
+    [/RACING|FORMULA|F1|MOTOGP/, /\b(?:SKY SPORTS? F1|F1 TV|MOTOGP TV|SKY SPORTS? RACING)\b/],
+  ];
+  const rule=rules.find(([key])=>key.test(sport))?.[1];
+  if(!rule)return [];
+  const options=[];
+  for(const raw of rows){
+    const row=inventoryRow(raw),name=String(row.name||"");
+    if(!name||INACTIVE.test(name)||excluded(row))continue;
+    const n=norm(name);
+    // Prevent different live fixture or replay channels from being offered as backups.
+    if(/\b(?:VS|VERSUS| AT |REPLAY|ENDED|NEXT)\b/.test(n))continue;
+    if(!rule.test(n))continue;
+    if(sport.includes("BASKETBALL")&&league.includes("NBA")&&/\bNBL\b/.test(n))continue;
+    if(sport.includes("FOOTBALL")&&!league.includes("NFL")&&/\bNFL\b/.test(n))continue;
+    // Preserve the source identity, but deduplicate equivalent HD/FHD/RAW variants.
+    const family=n.replace(/\b(?:8K|4K|UHD|HEVC|FHD|HD|SD|RAW|BACKUP|25FPS|30FPS|50FPS|60FPS)\b/g,"")
+      .replace(/\s+/g," ").trim();
+    const logicalServiceId="best-sport-option:"+row.providerItemId;
+    const decision={
+      tier:"plausible",logicalServiceId,market:market(name),reason:"sport-specific-unverified",
+      accepted:[{
+        type:"sport-option",source:"best-live-inventory-sport-channel",
+        eventId:event.eventId,sportId:event.sportId,competitionId:event.competitionId,
+        serviceId:logicalServiceId,market:market(name),
+        startUtc:new Date(start).toISOString(),
+        endUtc:new Date(Number.isFinite(end)&&end>start?end:start+36*3600_000).toISOString(),
+        observedAtUtc:new Date(now).toISOString(),contentMismatch:false,
+        providerObservedName:name,fixtureBroadcastConfirmed:false,
+      }],
+    };
+    options.push({row,decision,family,quality:quality(name)});
+  }
+  options.sort((a,b)=>b.quality-a.quality||Number(a.row.providerItemId)-Number(b.row.providerItemId));
+  const unique=new Set(),output=[];
+  for(const option of options){
+    if(unique.has(option.family))continue;
+    unique.add(option.family);
+    output.push(discoveryCandidate(option.row,option.decision,now));
+    if(output.length>=Math.max(0,Math.min(6,limit)))break;
+  }
+  return output;
+}
