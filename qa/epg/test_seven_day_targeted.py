@@ -84,6 +84,24 @@ class EpgTargetedTest(unittest.TestCase):
             self.assertEqual(report["untouchedExistingProgrammeEntries"], 1)
             self.assertEqual(report["auProgrammesAdded"], 7)
 
+            # The second refresh must extend coverage, not leave a shrinking week.
+            next_now = NOW + timedelta(hours=6)
+            repeat = [sys.executable, str(Path(__file__).parent / "seven_day_targeted.py"),
+                      "--manifest", str(base / "manifest.json"),
+                      "--existing", str(base / "out" / "guide.xml.gz"),
+                      "--au", f"primary={base / 'au.xml'}", "--out", str(base / "out2"),
+                      "--now", next_now.isoformat()]
+            again = subprocess.run(repeat, capture_output=True, text=True)
+            self.assertEqual(again.returncode, 0, again.stdout + again.stderr)
+            with gzip.open(base / "out2" / "guide.xml.gz", "rb") as f:
+                fresh = etree.parse(f).getroot()
+            loop_after = fresh.xpath('programme[@channel="live:kids-0"]')
+            self.assertEqual(len(loop_after), 8)
+            ends = [dt(p.get("stop")) for p in loop_after]
+            self.assertGreaterEqual(max(ends), next_now + timedelta(days=7))
+            self.assertEqual(fresh.xpath('programme[@channel="BBCOne.uk"]')[0]
+                             .findtext("title"), "Leave unchanged")
+
 
 if __name__ == "__main__":
     unittest.main()
