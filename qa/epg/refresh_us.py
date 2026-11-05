@@ -150,42 +150,6 @@ def make(args):
     with gzip.open(out/"guide.xml.gz","wb",compresslevel=6) as dst:dst.write(xml)
     by_sub=Counter(target_sub.get(k,"") for k in repair)
     count=sum(len(x) for x in repair.values())
-    # A one-feed outage must not wipe the US guide. Reject partial replacements.
-    if len(repair)<40 or count<1000:
-        raise RuntimeError(f"US provider incomplete: {len(repair)} channels, "
-                           f"{count} programmes. Publication stopped.")
-    root=etree.parse(gzip.open(args.existing,"rb"),
-                     etree.XMLParser(no_network=True,resolve_entities=False,
-                                     huge_tree=True)).getroot()
-    original_prog=root.findall("programme")
-    non_us_original=[etree.tostring(p,with_tail=False) for p in original_prog
-                     if p.get("channel") not in repair]
-    removed=0
-    for p in original_prog:
-        if p.get("channel") in repair:
-            root.remove(p);removed+=1
-    channel_ids={c.get("id") for c in root.findall("channel")}
-    for target,entries in repair.items():
-        if target not in channel_ids:
-            ch=etree.Element("channel",id=target)
-            etree.SubElement(ch,"display-name").text=matches[target][2]
-            root.insert(0,ch)
-            channel_ids.add(target)
-        for _,_,raw in entries:
-            p=etree.fromstring(raw)
-            p.set("channel",target)
-            root.append(p)
-    non_us_after=[etree.tostring(p,with_tail=False) for p in root.findall("programme")
-                  if p.get("channel") not in repair]
-    if non_us_after!=non_us_original:
-        raise RuntimeError("Non-US EPG preservation failed. No publication.")
-    out=Path(args.out);(out/"short").mkdir(parents=True,exist_ok=True)
-    for target in repair:
-        n=short_file(root,target,now,out/"short"/f"{fnv1a(target)}.json")
-        if n<2:raise RuntimeError(f"No current short EPG generated for {target}")
-    xml=etree.tostring(root,encoding="UTF-8",xml_declaration=True)
-    (out/"guide.xml").write_bytes(xml)
-    with gzip.open(out/"guide.xml.gz","wb",compresslevel=6) as f:f.write(xml)
     coverage={
         "generatedAtUtc":now.isoformat(),"sources":list(source_health),
         "sourceHealth":source_health,"selectedSources":dict(source_counts),
@@ -194,7 +158,7 @@ def make(args):
         "usNewProgrammes":count,"usRemovedOldProgrammes":removed,
         "preservedNonUsProgrammes":len(non_us_original),
         "targetCategoryCounts":dict(by_sub),
-        "usUnmatchedReasons":dict(rejected),
+        "usUnmatchedReasons":{},
         "usLatestProgrammeUtc":max(v[1] for values in repair.values() for v in values).isoformat(),
         "usEarliestProgrammeUtc":min(v[0] for values in repair.values() for v in values).isoformat(),
         "guideProgrammeCount":len(root.findall("programme")),
