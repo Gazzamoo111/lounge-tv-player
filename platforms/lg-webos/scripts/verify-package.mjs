@@ -26,6 +26,8 @@ try {
   assert.equal(meta.handlesRelaunch, false);
   for (const name of [
     "epg.worker.js",
+    "vendor/shaka-player.compiled.js",
+    "vendor/SHAKA-LICENSE.txt",
     "largeIcon.png",
     "index.html",
     "app.js",

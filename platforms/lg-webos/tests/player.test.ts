@@ -348,3 +348,135 @@ test("decoded frame progress prevents false stall detection when the transport c
   assert.equal(p.state, "playing");
   p.stop();
 });
+
+test("TVNZ adaptive session receives the direct manifest/license and is destroyed before native switching", async () => {
+  const video = new Video();
+  const calls: string[] = [];
+  let finish!: () => void;
+  const cleanup = new Promise<void>((r) => (finish = r));
+  const p = new LgPlayback(video as any, undefined, async () => ({
+    async attach(v) {
+      assert.equal(v, video);
+      calls.push("attach");
+    },
+    async load(url, license) {
+      calls.push(url, license);
+    },
+    async destroy() {
+      calls.push("destroy");
+      await cleanup;
+    },
+  }));
+  await p.load(
+    { ...m, kind: "live" },
+    "https://gateway.test/live/900000001.ts",
+    0,
+    {
+      url: "https://source.test/tvnz.mpd",
+      manifest: "dash",
+      license: "https://license.test/wv",
+    },
+  );
+  assert.deepEqual(calls, [
+    "attach",
+    "https://source.test/tvnz.mpd",
+    "https://license.test/wv",
+  ]);
+  assert.equal(p.state, "playing");
+  const next = p.load(
+    { ...m, kind: "live", id: "2" },
+    "https://gateway.test/live/2.ts",
+  );
+  await new Promise((r) => setImmediate(r));
+  assert.equal(calls.at(-1), "destroy");
+  assert.equal(video.src, "");
+  finish();
+  await next;
+  assert.equal(video.src, "https://gateway.test/live/2.ts");
+  assert.equal(p.state, "playing");
+  assert.ok(!JSON.stringify(p.trace).includes("license.test"));
+  p.stop();
+});
+test("cancelled delayed adaptive factory never attaches to or overwrites a newer native stream", async () => {
+  const video = new Video();
+  let ready!: (session: any) => void;
+  const pending = new Promise<any>((r) => (ready = r));
+  const p = new LgPlayback(video as any, undefined, () => pending);
+  let attaches = 0,
+    destroys = 0;
+  const old = p.load(
+    { ...m, kind: "live" },
+    "https://gateway.test/live/1.ts",
+    0,
+    {
+      url: "https://source.test/tvnz.mpd",
+      manifest: "dash",
+      license: "https://license.test/wv",
+    },
+  );
+  await p.load(
+    { ...m, kind: "live", id: "2" },
+    "https://gateway.test/live/2.ts",
+  );
+  ready({
+    async attach() {
+      attaches++;
+    },
+    async load() {
+      assert.fail("stale session must not load");
+    },
+    async destroy() {
+      destroys++;
+    },
+  });
+  await old;
+  assert.equal(attaches, 0);
+  assert.equal(destroys, 1);
+  assert.equal(video.src, "https://gateway.test/live/2.ts");
+  assert.equal(p.media?.id, "2");
+  assert.equal(p.state, "playing");
+  p.stop();
+});
+
+test("DRM startup waits for manifest/license preparation without watchdog play on an empty video", async () => {
+  const clock = new Clock();
+  const video = new LiveVideo();
+  let finish!: () => void;
+  const waiting = new Promise<void>((r) => (finish = r));
+  let destroys = 0;
+  const p = new LgPlayback(video as any, clock.api, async () => ({
+    async attach() {
+      video.dispatchEvent(new Event("pause"));
+    },
+    async load() {
+      await waiting;
+    },
+    async destroy() {
+      destroys++;
+    },
+  }));
+  const loading = p.load(
+    { ...m, kind: "live" },
+    "https://gateway.test/live/1.ts",
+    0,
+    {
+      url: "https://source.test/live.mpd",
+      manifest: "dash",
+      license: "https://license.test/wv",
+    },
+  );
+  await new Promise((r) => setImmediate(r));
+  await clock.advance(10000);
+  assert.equal(p.state, "loading");
+  assert.equal(destroys, 0);
+  assert.equal(video.paused, true);
+  assert.ok(
+    !p.trace.some(
+      (t) => t.event === "resume-unexpected-pause" || t.event === "reconnect",
+    ),
+  );
+  finish();
+  await loading;
+  assert.equal(p.state, "playing");
+  p.stop();
+});

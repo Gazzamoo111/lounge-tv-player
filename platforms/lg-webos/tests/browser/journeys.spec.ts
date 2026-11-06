@@ -1302,3 +1302,310 @@ test("a failed canonical refresh retains valid previous listings while publishin
   );
   await expect(page.locator("#channel-20001")).toContainText("PGA Tour");
 });
+
+test("Guide moves one channel per key across the full virtual list and returns from the final row", async ({
+  page,
+}) => {
+  await signIn(page);
+  await section(page, "guide");
+  await expect(page.locator("#guide-cell-0-0")).toContainText("PGA Tour");
+  await page.locator("#guide-cell-0-0").focus();
+  for (let i = 1; i <= 24; i++) {
+    await page.keyboard.press("ArrowDown");
+    await expect(
+      page.locator(`[data-guide-row="${i}"][data-guide-time]`),
+    ).toBeFocused();
+  }
+  for (let i = 23; i >= 20; i--) {
+    await page.keyboard.press("ArrowUp");
+    await expect(
+      page.locator(`[data-guide-row="${i}"][data-guide-time]`),
+    ).toBeFocused();
+  }
+  await expect(
+    page.getByRole("button", { name: /More channels|Previous channels/ }),
+  ).toHaveCount(0);
+  expect(await page.locator(".guide-row").count()).toBeLessThan(30);
+  await page.locator("#guide-rows").evaluate((el) => {
+    el.scrollTop = el.scrollHeight;
+    el.dispatchEvent(new Event("scroll"));
+  });
+  await expect(page.locator("#guide-channel-2390")).toBeVisible();
+  await page.locator("#guide-channel-2390").focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator("#guide-channel-2390")).toBeFocused();
+  await page.keyboard.press("ArrowUp");
+  await expect(page.locator("#guide-channel-2389")).toBeFocused();
+  await page.screenshot({ path: "test-results/guide-continuous-015.png" });
+});
+
+test("Guide refresh after an idle minute preserves focused programme and immediate next-row movement", async ({
+  page,
+}) => {
+  await signIn(page);
+  await section(page, "guide");
+  await expect(page.locator("#guide-cell-0-0")).toContainText("PGA Tour");
+  await page.locator("#guide-cell-0-0").focus();
+  await page.clock.install();
+  await page.clock.fastForward(61000);
+  await expect(page.locator("#guide-cell-0-0")).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator("#guide-cell-1-0")).toBeFocused();
+  await page
+    .locator("#guide-cell-1-0")
+    .evaluate((el) => (el as HTMLElement).blur());
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator("#guide-cell-2-0")).toBeFocused();
+});
+
+test("Hero previews events on directional focus without Enter, hides logos, and stays clear of the clock", async ({
+  page,
+}) => {
+  await mock(page);
+  await page.route("https://liqocisegeqzbyuqloql.supabase.co/**", (r) =>
+    r.fulfill({
+      json: {
+        events: [
+          event,
+          {
+            ...event,
+            id: "golf-final",
+            externalId: "43",
+            sport: "golf",
+            feedId: "golf/pga",
+            leagueName: "PGA Tour",
+            title: "PGA Championship Final Round",
+            competitors: [
+              { id: "c", name: "Golf", logo: "https://images.test/crest.jpg" },
+            ],
+          },
+        ],
+        status: "ok",
+      },
+    }),
+  );
+  await page.goto("/");
+  await page.locator("#login-user").fill("qa-user");
+  await page.locator("#login-password").fill("qa-password");
+  await page.locator("#login-submit").click();
+  await expect(page.locator("#hero-page-1")).toBeVisible({ timeout: 15000 });
+  await page.locator("#hero-page-1").focus();
+  await expect(page.locator("#major-hero h2")).toHaveText("Warriors at Heat");
+  await page.keyboard.press("ArrowLeft");
+  await expect(page.locator("#hero-page-0")).toBeFocused();
+  await expect(page.locator("#major-hero h2")).toHaveText(
+    "PGA Championship Final Round",
+  );
+  await expect(page.locator("#major-hero .hero-teams")).toHaveCount(0);
+  await expect(page.locator('#major-hero img[src*="crest"]')).toHaveCount(0);
+  const clock = await page.locator(".clock").boundingBox(),
+    hero = await page.locator("#major-hero").boundingBox();
+  expect(clock!.y + clock!.height).toBeLessThan(hero!.y);
+  await page.clock.install();
+  await page.clock.fastForward(25000);
+  await expect(page.locator("#hero-page-0")).toBeFocused();
+  await expect(page.locator("#major-hero h2")).toHaveText(
+    "PGA Championship Final Round",
+  );
+  await page.screenshot({ path: "test-results/hero-clean-015.png" });
+});
+
+test("TVNZ selects direct Widevine DASH, HLS Freeview stays native, and switching destroys the adaptive session", async ({
+  page,
+}) => {
+  await syntheticNativeVideo(page);
+  await page.addInitScript(() => {
+    (window as any).__adaptiveCalls = [];
+    class Player {
+      static isBrowserSupported() {
+        return true;
+      }
+      addEventListener() {}
+      async attach(video: HTMLVideoElement) {
+        (window as any).__adaptiveCalls.push(["attach", video.id]);
+      }
+      configure(config: any) {
+        (window as any).__adaptiveCalls.push(["configure", config]);
+      }
+      async load(url: string, unused: any, mime: string) {
+        (window as any).__adaptiveCalls.push(["load", url, mime]);
+      }
+      async destroy() {
+        (window as any).__adaptiveCalls.push(["destroy"]);
+      }
+    }
+    (window as any).shaka = { Player, polyfill: { installAll() {} } };
+  });
+  await mock(page);
+  await page
+    .context()
+    .route("https://connect.loungetv.nz/**action=get_live_streams*", (r) =>
+      r.fulfill({
+        json: [
+          {
+            ...live[0],
+            name: "TVNZ 1",
+            stream_id: 900000001,
+            epg_channel_id: "mjh-tvnz-1",
+          },
+          {
+            ...live[1],
+            name: "Three",
+            stream_id: 900000003,
+            epg_channel_id: "mjh-three",
+          },
+          live[2],
+        ],
+      }),
+    );
+  await page.goto("/");
+  await page.locator("#login-user").fill("qa-user");
+  await page.locator("#login-password").fill("qa-password");
+  await page.locator("#login-submit").click();
+  await expect(page.locator("#featured-0")).toBeVisible({ timeout: 15000 });
+  await section(page, "live");
+  await page.locator("#channel-900000001").focus();
+  await page.keyboard.press("Enter");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as any).__adaptiveCalls.filter((c: any[]) => c[0] === "load")
+            .length,
+      ),
+    )
+    .toBe(1);
+  const calls = await page.evaluate(() => (window as any).__adaptiveCalls);
+  expect(calls.find((c: any[]) => c[0] === "load")[1]).toBe(
+    "https://i.mjh.nz/.r/tvnz-1.mpd",
+  );
+  expect(
+    calls.find((c: any[]) => c[0] === "configure")[1].drm.servers[
+      "com.widevine.alpha"
+    ],
+  ).toBe("https://c.mjh.nz/tvnz-1-wv");
+  await page.keyboard.press("Escape");
+  await page.locator("#channel-900000003").focus();
+  await page.keyboard.press("Enter");
+  await expect
+    .poll(() =>
+      page.locator("#video").evaluate((v) => (v as HTMLVideoElement).src),
+    )
+    .toBe("https://i.mjh.nz/.r/three.m3u8");
+  expect(
+    await page.evaluate(
+      () =>
+        (window as any).__adaptiveCalls.filter((c: any[]) => c[0] === "destroy")
+          .length,
+    ),
+  ).toBe(1);
+});
+
+test("Guide delayed programme arrival keeps the selected row and unequal programme lengths never skip channels", async ({
+  page,
+}) => {
+  await mock(page);
+  await page
+    .context()
+    .route("https://connect.loungetv.nz/xmltv.php*", (r) =>
+      r.fulfill({ contentType: "application/xml", body: "<tv></tv>" }),
+    );
+  await page
+    .context()
+    .route("https://connect.loungetv.nz/**action=get_short_epg*", async (r) => {
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      const id = Number(
+        new URL(r.request().url()).searchParams.get("stream_id"),
+      );
+      const start = Math.floor((now - 3600000) / 1000),
+        end = Math.floor((now + 3600000) / 1000);
+      await r.fulfill({
+        json: {
+          epg_listings:
+            id % 2
+              ? [
+                  {
+                    title: Buffer.from("Short first").toString("base64"),
+                    start_timestamp: start,
+                    stop_timestamp: Math.floor((now - 300000) / 1000),
+                  },
+                  {
+                    title: Buffer.from("Short current").toString("base64"),
+                    start_timestamp: Math.floor((now - 300000) / 1000),
+                    stop_timestamp: end,
+                  },
+                ]
+              : [
+                  {
+                    title: Buffer.from("Long programme").toString("base64"),
+                    start_timestamp: start,
+                    stop_timestamp: end,
+                  },
+                ],
+        },
+      });
+    });
+  await page.goto("/");
+  await page.locator("#login-user").fill("qa-user");
+  await page.locator("#login-password").fill("qa-password");
+  await page.locator("#login-submit").click();
+  await expect(page.locator("#featured-0")).toBeVisible({ timeout: 15000 });
+  await section(page, "guide");
+  await page.locator("#guide-cell-0-0").focus();
+  await expect(page.locator("#guide-cell-0-0")).toContainText("Long programme");
+  await expect(page.locator("#guide-cell-0-0")).toBeFocused();
+  for (let i = 1; i <= 6; i++) {
+    await page.keyboard.press("ArrowDown");
+    await expect(
+      page.locator(`[data-guide-row="${i}"][data-guide-time]:focus`),
+    ).toHaveCount(1);
+  }
+  await page.keyboard.press("ArrowUp");
+  await expect(
+    page.locator('[data-guide-row="5"][data-guide-time]:focus'),
+  ).toHaveCount(1);
+});
+
+test("Clock and date stay inside the fixed header on every page with long channel and profile names", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "lounge.webos.v1:qa-user:last-channel",
+      JSON.stringify({
+        id: "20000",
+        kind: "live",
+        name: "SKY SPORT VERY LONG CHANNEL NAME HD BACKUP",
+        image: "",
+        category: "live_nz_sports",
+        ext: "ts",
+        rating: 0,
+      }),
+    );
+    localStorage.setItem(
+      "lounge.webos.v1:qa-user:profiles",
+      JSON.stringify([{ id: "default", name: "A very long profile name" }]),
+    );
+  });
+  await signIn(page);
+  for (const id of [
+    "home",
+    "movies",
+    "series",
+    "sports",
+    "guide",
+    "settings",
+  ]) {
+    await section(page, id);
+    const clock = await page.locator(".clock").boundingBox();
+    expect(clock!.x + clock!.width).toBeLessThanOrEqual(1920);
+    expect(clock!.y + clock!.height).toBeLessThanOrEqual(100);
+    expect(
+      await page
+        .locator(".clock")
+        .evaluate((el) => el.scrollWidth <= el.clientWidth),
+    ).toBe(true);
+  }
+  await section(page, "home");
+  await page.screenshot({ path: "test-results/clock-long-names-015.png" });
+});

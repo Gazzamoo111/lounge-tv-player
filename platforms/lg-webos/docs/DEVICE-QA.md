@@ -1,6 +1,6 @@
 # LG acceptance checklist
 
-Device: `192.168.68.57`. Existing ares device alias: `loungetv-lg`. QA app ID: `nz.loungetv.webos.qa`.
+Device: `192.168.68.60`. Existing ares device alias: `loungetv-lg`. QA app ID: `nz.loungetv.webos.qa`.
 
 Install the provided `.ipk`; sign in with an existing Lounge TV customer login. The app supplies the gateway automatically. Do not type a media URL.
 
@@ -53,3 +53,12 @@ User confirmed 0.1.2 played for 15 minutes without the former early stop. Keep t
 4. Settings → Sources & guide → EPG sources reports current-entry counts at refresh and per-source status. A source failure must retain valid cached listings for unrelated channels.
 5. Leave the Live list open across a programme boundary. Visible titles/progress update without moving focus or restarting video. Check normal browsing and the 15-minute playback baseline.
 6. Record remaining missing UK/US or rotating-event listings accurately; do not treat this as full upstream guide coverage.
+
+## 0.1.5 remote and NZ playback acceptance
+
+1. Install over 0.1.4 without uninstalling. Home: move between event selectors without OK. The title/background change immediately; event logos stay absent. Leave a selector focused for 25 seconds; focus must stay there.
+2. Move naturally through hero actions, selectors, shelves and sidebar. Check the clock/date on Home, Movies, Series, Sport Lounge and Guide, including the larger text preference.
+3. Guide: hold Down through at least 30 channels, reverse direction and check every row is reached. Change categories and check the full list. Left from a programme reaches its channel label, Left again reaches navigation. Right returns to the programme. The last row stays selected on Down.
+4. Leave focus on a programme for 2 minutes; the next Up/Down must move immediately. Repeat in Live. Delayed EPG titles must not move focus.
+5. Play TVNZ 1 and TVNZ 2, then Three, Whakaata Māori and Te Reo. Confirm actual picture and audio. TVNZ uses normal Widevine and needs TV/network/license acceptance; browser mocks do not establish this. If it fails, collect Playback diagnostics numeric errors without entering a media URL.
+6. Switch TVNZ to Sky Sport and back repeatedly. Confirm one video/audio session, Back restoration and no stale player takeover. Retain the 15-minute Live baseline and test VOD resume.

@@ -2209,3 +2209,81 @@ body[data-motion="false"] * {
 .stage-setting {
   height: calc(104px * var(--text-scale, 1));
 }
+
+/* Fixed top band for the clock/profile, clear of every page and hero. */
+.status {
+  top: 22px;
+  right: 36px;
+  height: 66px;
+  max-width: 650px;
+  align-items: center;
+}
+.clock {
+  margin-left: 12px;
+  min-width: 148px;
+  max-width: 165px;
+  flex-shrink: 0;
+}
+.clock strong {
+  font-size: 30px;
+  line-height: 1.12;
+  white-space: nowrap;
+}
+.clock span {
+  font-size: 14px;
+  margin-top: 5px;
+  white-space: nowrap;
+}
+.status-button {
+  height: 42px;
+  max-width: 225px;
+  padding: 8px 12px;
+  font-size: 16px;
+}
+.home-scroll {
+  top: 110px;
+}
+.hero-teams {
+  display: none;
+}
+.guide-grid {
+  bottom: 28px;
+}
+.guide-rows {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 46px;
+  bottom: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  contain: layout paint;
+}
+.guide-row {
+  width: 100%;
+  height: 66px;
+}
+.guide-programmes {
+  position: relative;
+  height: 60px;
+}
+.guide-programmes .guide-cell {
+  height: 60px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+.guide-paging {
+  display: none;
+}
+
+.status-button {
+  min-width: 0;
+}
+.status-button svg {
+  flex-shrink: 0;
+}
+.status-button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

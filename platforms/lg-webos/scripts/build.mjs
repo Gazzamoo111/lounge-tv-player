@@ -21,4 +21,13 @@ await build({
   format: "iife",
   minify: true,
 });
+await mkdir("dist/vendor", { recursive: true });
+await copyFile(
+  "node_modules/shaka-player/dist/shaka-player.compiled.js",
+  "dist/vendor/shaka-player.compiled.js",
+);
+await copyFile(
+  "node_modules/shaka-player/LICENSE",
+  "dist/vendor/SHAKA-LICENSE.txt",
+);
 console.log("Built LG application. No backend or Android changes.");

@@ -28,6 +28,7 @@ export function nearest(
 export class FocusController {
   root: HTMLElement;
   lastContent = "";
+  private lastFocused = "";
   onBack = () => {};
   onMedia = (code: number) => false;
   onLong = (el: HTMLElement) => false;
@@ -51,6 +52,7 @@ export class FocusController {
     });
     document.addEventListener("focusin", (e) => {
       const el = e.target as HTMLElement;
+      if (el.id && el.dataset.focus !== undefined) this.lastFocused = el.id;
       if (
         el.id &&
         !el.closest("nav") &&
@@ -71,7 +73,29 @@ export class FocusController {
       e.preventDefault();
       return;
     }
-    const el = document.activeElement as HTMLElement;
+    let el = document.activeElement as HTMLElement;
+    if (
+      [37, 38, 39, 40, 13].includes(code) &&
+      (!el || el === document.body || !el.isConnected)
+    ) {
+      const overlay = document.querySelector<HTMLElement>(
+        "#overlay:not([hidden]) [data-focus-scope]",
+      );
+      const watch = document.getElementById("watch-panel");
+      const player = document.querySelector<HTMLElement>(
+        "#player:not([hidden])",
+      );
+      const scope = overlay ?? watch ?? player ?? this.root;
+      const previous = document.getElementById(this.lastFocused);
+      const target =
+        previous && scope.contains(previous) && previous.getClientRects().length
+          ? previous
+          : scope.querySelector<HTMLElement>("[data-focus]");
+      if (target) {
+        this.focus(target.id, false);
+        el = target;
+      }
+    }
     if (e.key === "Tab") {
       e.preventDefault();
       return;
@@ -197,8 +221,8 @@ export class VirtualCollection {
     this.host.append(fragment);
     if (active) document.getElementById(active)?.focus({ preventScroll: true });
   }
-  focus(index: number) {
-    if (index < 0 || index >= this.count) return false;
+  reveal(index: number): HTMLElement | undefined {
+    if (index < 0 || index >= this.count) return undefined;
     const top = Math.floor(index / this.columns) * this.rowHeight;
     if (top < this.host.scrollTop) this.host.scrollTop = top;
     else if (
@@ -207,9 +231,15 @@ export class VirtualCollection {
     )
       this.host.scrollTop = top + this.rowHeight - this.host.clientHeight;
     this.render();
-    this.host
-      .querySelector<HTMLElement>(`[data-index="${index}"]`)
-      ?.focus({ preventScroll: true });
+    return (
+      this.host.querySelector<HTMLElement>(`[data-index="${index}"]`) ??
+      undefined
+    );
+  }
+  focus(index: number) {
+    const el = this.reveal(index);
+    if (!el) return false;
+    el.focus({ preventScroll: true });
     return true;
   }
   move(el: HTMLElement, dir: Direction) {

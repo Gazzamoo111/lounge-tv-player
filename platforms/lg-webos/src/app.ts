@@ -1,3 +1,5 @@
+import { freeviewSource } from "./freeview";
+import { GuideGrid } from "./guide-grid";
 import { hasCurrentGuide, mergeGuide } from "./guide-policy";
 import { channelRegion } from "./guide-match";
 import { mergeFixtures } from "./sports";
@@ -380,6 +382,12 @@ function navigate(next: Route, restore = false) {
     epoch = ++focusEpoch;
   const restoreFocus = () => {
     if (token !== view || epoch !== focusEpoch) return;
+    if (route === "guide" && guidePendingFocus) {
+      const target = guidePendingFocus;
+      guidePendingFocus = undefined;
+      guideGrid?.focus(target.index, target.time, !!target.channel);
+      return;
+    }
     const pos = routePositions.get(route);
     if (restore && pos) {
       for (const [id, top] of Object.entries(pos.scroll)) {
@@ -897,7 +905,12 @@ function renderHome(main: HTMLElement) {
   scroller.append(hero);
   renderHero(hero);
   heroTimer = setInterval(() => {
-    if (!overlay.hidden || (currentPlaying && !preview)) return;
+    if (
+      !overlay.hidden ||
+      (currentPlaying && !preview) ||
+      document.activeElement?.closest("#major-hero")
+    )
+      return;
     const pool = headlineEvents(events);
     if (pool.length > 1) {
       heroIndex = (heroIndex + 1) % pool.length;
@@ -960,8 +973,10 @@ function heroAsset(e: SportEvent) {
                 ? "f1"
                 : s === "cricket"
                   ? "cricket"
-                  : "combat";
-  return `assets/lounge_hero_${n}.webp`;
+                  : s === "mma" || s === "boxing" || s === "wrestling"
+                    ? "combat"
+                    : undefined;
+  return n ? `assets/lounge_hero_${n}.webp` : undefined;
 }
 function renderHero(hero: HTMLElement) {
   const old = (document.activeElement as HTMLElement)?.id;
@@ -990,10 +1005,9 @@ function renderHero(hero: HTMLElement) {
     hero.append(copy);
     return;
   }
-  hero.append(
-    image(event.hero_art_url || heroAsset(event), "hero-image"),
-    node("div", "hero-wash"),
-  );
+  const art = event.hero_art_url || heroAsset(event);
+  if (art) hero.append(image(art, "hero-image"));
+  hero.append(node("div", "hero-wash"));
   const copy = node("div", "hero-copy");
   copy.append(node("div", "eyebrow", "BIG EVENTS. LIVE ON LOUNGE."));
   const tags = node("div", "tags");
@@ -1051,6 +1065,12 @@ function renderHero(hero: HTMLElement) {
       i === heroIndex % pool.length ? "on" : "",
     );
     b.setAttribute("aria-label", e.title);
+    b.dataset.heroIndex = String(i);
+    b.addEventListener("focus", () => {
+      if (heroIndex % pool.length === i) return;
+      heroIndex = i;
+      renderHero(hero);
+    });
     pager.append(b);
   });
   copy.append(
@@ -1062,17 +1082,6 @@ function renderHero(hero: HTMLElement) {
     ),
   );
   hero.append(copy);
-  const teams = node("div", "hero-teams");
-  event.competitors.slice(0, 2).forEach((team, i) => {
-    if (i) teams.append(node("strong", "versus", "VS"));
-    const plate = node("div", "hero-team");
-    plate.append(
-      image(team.crestUrl ?? "", "team-crest"),
-      node("b", "", team.shortName || team.name),
-    );
-    teams.append(plate);
-  });
-  hero.append(teams);
   if (old?.startsWith("hero-")) focus.focus(old, false);
 }
 function poster(item: Media, id: string, still = false) {
@@ -1288,10 +1297,17 @@ const visibleGuidePending = new Map<string, Promise<Programme[]>>();
 function queuedGuide(id: string): Promise<Programme[]> {
   const key = accountGeneration + ":" + view + ":" + id,
     pending = visibleGuidePending.get(key);
-  if (pending) return pending;
+  if (pending) {
+    const at = visibleGuideQueue.findIndex(
+      (j) => j.id === id && j.view === view,
+    );
+    if (at > 0) visibleGuideQueue.unshift(...visibleGuideQueue.splice(at, 1));
+    queueMicrotask(drainGuides);
+    return pending;
+  }
   const work = new Promise<Programme[]>((resolve) => {
     visibleGuideQueue.push({ id, view, resolve });
-    drainGuides();
+    queueMicrotask(drainGuides);
   });
   visibleGuidePending.set(key, work);
   void work.finally(() => visibleGuidePending.delete(key));
@@ -1301,7 +1317,12 @@ function queuedGuide(id: string): Promise<Programme[]> {
 function drainGuides() {
   while (visibleGuideActive < 2 && visibleGuideQueue.length) {
     const job = visibleGuideQueue.shift()!;
-    if (job.view !== view) {
+    const visible =
+      document.getElementById("channel-" + job.id) ||
+      [...document.querySelectorAll<HTMLElement>(".guide-row")].some(
+        (row) => row.dataset.guideChannel === job.id,
+      );
+    if (job.view !== view || !visible) {
       job.resolve([]);
       continue;
     }
@@ -1566,7 +1587,10 @@ function setChannelGuide(row: HTMLElement, rows: Programme[]) {
   row.querySelector(".progress")?.replaceWith(progressBar(p));
 }
 async function updateLivePane(pane: HTMLElement, m: Media, token: number) {
-  if (token !== view) return;
+  if (token !== view || browseItem?.id !== m.id) return;
+  const paneFocus = pane.contains(document.activeElement)
+    ? document.activeElement?.id
+    : undefined;
   pane.replaceChildren();
   const stage = node("div", "live-stage");
   stage.id = "preview-stage";
@@ -1582,6 +1606,7 @@ async function updateLivePane(pane: HTMLElement, m: Media, token: number) {
     ),
   );
   pane.append(stage, node("h2", "", m.name));
+  if (paneFocus) focus.focus(paneFocus, false);
   if (
     state.settings().livePreview &&
     route === "live" &&
@@ -1596,7 +1621,7 @@ async function updateLivePane(pane: HTMLElement, m: Media, token: number) {
       video.muted = !state.settings().previewSound;
       positionVideo(true);
       hud.hidden = true;
-      void player.load(m, client.playback(m));
+      void player.load(m, client.playback(m), 0, freeviewSource(m));
     } else {
       positionVideo(true);
       video.muted = !state.settings().previewSound;
@@ -2085,7 +2110,11 @@ function eventCard(e: SportEvent) {
     node("b", "", e.state === "live" ? "LIVE" : nzTime(e.startUtcMs)),
   );
   b.append(top);
-  for (const t of e.competitors.slice(0, 2)) {
+  for (const t of ["racing", "golf", "tennis", "mma", "boxing"].includes(
+    e.sport,
+  )
+    ? []
+    : e.competitors.slice(0, 2)) {
     const team = node("div", "event-team");
     team.append(
       image(t.crestUrl ?? "", "crest"),
@@ -2095,6 +2124,8 @@ function eventCard(e: SportEvent) {
     b.append(team);
   }
   if (!e.competitors.length) b.append(node("h3", "", e.title));
+  if (["racing", "golf", "tennis", "mma", "boxing"].includes(e.sport))
+    b.append(node("h3", "event-title", e.editorial_title || e.title));
   b.append(
     node(
       "div",
@@ -2636,10 +2667,10 @@ function settingControl(id: string): SettingControl | undefined {
   if (id === "vp_measured_stats" || id === "vp_logging" || id === "diagnostics")
     return open(player.trace.length + " entries", showDiagnostics);
   if (id === "about")
-    return open("0.1.4", () => {
+    return open("0.1.5", () => {
       const b = openOverlay("Lounge TV for LG");
       b.append(
-        node("p", "", "QA 0.1.4 · Native webOS player"),
+        node("p", "", "QA 0.1.5 · webOS native + TVNZ adaptive player"),
         node(
           "p",
           "muted",
@@ -3232,6 +3263,10 @@ function showDiagnostics() {
   );
   focus.focus("diagnostics-close");
 }
+let guideGrid: GuideGrid | undefined;
+let guidePendingFocus:
+  | { index: number; time: number; channel?: boolean }
+  | undefined;
 function renderGuide(main: HTMLElement) {
   main.className = "guide";
   if (!catalogues.live) {
@@ -3239,35 +3274,47 @@ function renderGuide(main: HTMLElement) {
     unavailable(main, "live");
     return;
   }
-  if (!selected.live) selected.live = categories.live?.[0]?.id;
+  if (selected.live === undefined) selected.live = categories.live?.[0]?.id;
   const channels = filtered("live");
-  guideOffset = Math.max(
-    0,
-    Math.min(guideOffset, Math.max(0, channels.length - 7)),
-  );
+  guideOffset = Math.max(0, Math.min(guideOffset, channels.length - 1));
+  let chosen = currentPlaying ?? channels[guideOffset];
   const top = node("section", "guide-top");
   top.id = "preview-stage";
-  const m = currentPlaying ?? channels[guideOffset];
-  if (m)
-    top.append(
-      image(m.image, "preview-logo"),
-      action("guide-watch", "Watch " + m.name, () => play(m), "", "PLAY"),
-    );
+  const logo = image(chosen?.image ?? "", "preview-logo");
+  const watch = action(
+    "guide-watch",
+    "Watch " + (chosen?.name ?? "channel"),
+    () => {
+      if (chosen) void play(chosen);
+    },
+    "",
+    "PLAY",
+  );
+  top.append(logo, watch);
   main.append(top);
   const info = node("section", "guide-info");
   info.id = "guide-info";
-  info.append(node("h2", "", m?.name ?? "TV Guide"));
+  info.append(node("h2", "", chosen?.name ?? "TV Guide"));
   main.append(info);
   const tools = node("div", "guide-toolbar");
+  const changeWindow = (delta: number) => {
+    guideStart += delta;
+    guidePendingFocus = {
+      index: guideGrid?.index ?? guideOffset,
+      time: guideStart + 1,
+    };
+    navigate("guide", true);
+  };
   tools.append(
     node("h1", "", "TV Guide"),
     action(
       "guide-category",
-      categories.live?.find((x) => x.id === selected.live)?.label ??
-        "Categories",
+      categories.live?.find((c) => c.id === selected.live)?.label ??
+        "All channels",
       () =>
         categoryPicker("live", () => {
           guideOffset = 0;
+          guidePendingFocus = { index: 0, time: Date.now(), channel: true };
           navigate("guide");
         }),
       "tool",
@@ -3278,7 +3325,8 @@ function renderGuide(main: HTMLElement) {
       "Now",
       () => {
         guideStart = Math.floor(Date.now() / 1800000) * 1800000;
-        navigate("guide");
+        guidePendingFocus = { index: guideGrid?.index ?? 0, time: Date.now() };
+        navigate("guide", true);
       },
       "tool",
       "CLOCK",
@@ -3286,141 +3334,68 @@ function renderGuide(main: HTMLElement) {
     action(
       "guide-earlier",
       "Earlier",
-      () => {
-        guideStart -= 7200000;
-        navigate("guide");
-      },
+      () => changeWindow(-7200000),
       "tool",
       "CHEVRON_LEFT",
     ),
     action(
       "guide-later",
       "Later",
-      () => {
-        guideStart += 7200000;
-        navigate("guide");
-      },
+      () => changeWindow(7200000),
       "tool",
       "CHEVRON",
     ),
   );
   main.append(tools);
-  const grid = node("div", "guide-grid");
-  const timeline = node("div", "guide-timeline");
+  const toolbar = [...tools.querySelectorAll<HTMLElement>("[data-focus]")];
+  toolbar.forEach((b, i) => {
+    b.dataset.left = toolbar[Math.max(0, i - 1)].id;
+    b.dataset.right = toolbar[Math.min(toolbar.length - 1, i + 1)].id;
+  });
+  const grid = node("div", "guide-grid"),
+    timeline = node("div", "guide-timeline");
   timeline.append(node("span", "guide-channel-label", "Channels"));
   for (let i = 0; i < 4; i++)
     timeline.append(node("b", "", nzTime(guideStart + i * 1800000)));
   grid.append(timeline);
-  const token = view;
-  for (const [i, ch] of channels
-    .slice(guideOffset, guideOffset + 7)
-    .entries()) {
-    const row = node("div", "guide-row");
-    const label = action(
-      "guide-channel-" + i,
-      ch.name,
-      () => play(ch),
-      "guide-channel",
-    );
-    label.append(image(ch.image, "channel-logo"));
-    row.append(label);
-    const cells = node("div", "guide-programmes");
-    cells.append(
-      action(
-        "guide-loading-" + i,
-        "Loading guide…",
-        () => showSchedule(ch),
-        "guide-cell",
-      ),
-    );
-    row.append(cells);
-    grid.append(row);
-    guide(ch.id)
-      .then((rows) => {
-        if (token !== view) return;
-        cells.replaceChildren();
-        const visible = rows.filter(
-          (p) => p.end > guideStart && p.start < guideStart + 7200000,
-        );
-        if (!visible.length)
-          cells.append(
-            action(
-              "guide-empty-" + i,
-              "No programme information",
-              () => play(ch),
-              "guide-cell",
-            ),
-          );
-        visible.forEach((p, j) => {
-          const b = action(
-            `guide-cell-${i}-${j}`,
-            "",
-            () => play(ch),
-            "guide-cell" +
-              (p.start <= Date.now() && p.end > Date.now() ? " current" : ""),
-          );
-          b.append(
-            node("b", "", p.title),
-            node("small", "muted", `${nzTime(p.start)} – ${nzTime(p.end)}`),
-          );
-          b.style.width = `${Math.max(1, ((Math.min(p.end, guideStart + 7200000) - Math.max(p.start, guideStart)) / 7200000) * 100)}%`;
-          b.dataset.channel = ch.id;
-          b.addEventListener("focus", () => {
-            info.replaceChildren(
-              node(
-                "p",
-                "eyebrow",
-                `${nzTime(p.start)} – ${nzTime(p.end)} · ${ch.name}`,
-              ),
-              node("h2", "", p.title),
-              node("p", "muted", p.description),
-            );
-          });
-          cells.append(b);
-        });
-      })
-      .catch(() => {
-        if (token === view)
-          cells.replaceChildren(
-            action(
-              "guide-error-" + i,
-              "Guide unavailable · Retry",
-              () => navigate("guide"),
-              "guide-cell",
-            ),
-          );
-      });
-  }
+  const rows = node("div", "guide-rows");
+  rows.id = "guide-rows";
+  rows.dataset.scroll = "";
+  grid.append(rows);
   main.append(grid);
-  const paging = node("div", "guide-paging");
-  paging.append(
-    action(
-      "guide-page-up",
-      "Previous channels",
-      () => {
-        guideOffset = Math.max(0, guideOffset - 7);
-        navigate("guide");
-      },
-      "tool",
-      "CHEVRON_UP",
-    ),
-    action(
-      "guide-page-down",
-      "More channels",
-      () => {
-        guideOffset = Math.min(
-          Math.max(0, channels.length - 7),
-          guideOffset + 7,
-        );
-        navigate("guide");
-      },
-      "tool",
-      "CHEVRON_DOWN",
-    ),
-  );
-  main.append(paging);
+  guideGrid = new GuideGrid(rows, {
+    channels,
+    start: guideStart,
+    read: queuedGuide,
+    watch: (m) => void play(m),
+    focus: (id) => focus.focus(id, false),
+    leave: () => navEntry(),
+    toolbar: () => focus.focus("guide-category", false),
+    shift: (delta, index, time) => {
+      guideStart += delta;
+      guidePendingFocus = { index, time };
+      navigate("guide", true);
+    },
+    info: (m, p) => {
+      chosen = m;
+      guideOffset = channels.indexOf(m);
+      logo.src = m.image || "";
+      watch.querySelector("span")!.textContent = "Watch " + m.name;
+      info.replaceChildren(
+        node(
+          "p",
+          "eyebrow",
+          p ? `${nzTime(p.start)} – ${nzTime(p.end)} · ${m.name}` : m.name,
+        ),
+        node("h2", "", p?.title ?? m.name),
+        node("p", "muted", p?.description ?? ""),
+      );
+    },
+  });
+  collections.set(rows.id, guideGrid.collection);
   if (currentPlaying && preview) positionVideo(true);
 }
+
 function allMedia() {
   return [
     ...Object.values(catalogues).flat(),
@@ -3551,6 +3526,7 @@ async function play(m: Media, position?: number, sports = false) {
     m,
     sports ? client.sportPlayback(m) : client.playback(m),
     from,
+    sports ? undefined : freeviewSource(m),
   );
 }
 player.onState = () => {
@@ -4003,6 +3979,25 @@ focus.onMove = (el, dir) => {
       return collections.get("episode-list")?.move(el, dir) ?? false;
     return false;
   }
+  if (route === "guide") {
+    if (guideGrid?.move(el, dir)) return true;
+    if (el.closest(".guide-toolbar") && dir === "down") {
+      guideGrid?.focus(guideGrid.index);
+      return true;
+    }
+    if (el.closest(".guide-toolbar") && dir === "up") {
+      focus.focus("guide-watch", false);
+      return true;
+    }
+    if (el.id === "guide-watch" && dir === "down") {
+      focus.focus("guide-category", false);
+      return true;
+    }
+    if (el.id === "guide-category" && dir === "left") {
+      navEntry();
+      return true;
+    }
+  }
   if (route === "settings" && settingScreen.move(el, dir)) return true;
   if (watchPanel) {
     if (dir === "left") {
@@ -4039,6 +4034,10 @@ focus.onMove = (el, dir) => {
       const pos = routePositions.get(route)?.focus;
       if (pos && !pos.startsWith("nav-") && focus.focus(pos, false))
         return true;
+      if (route === "guide") {
+        guideGrid?.focus(guideOffset, Date.now(), true);
+        return true;
+      }
       if (route === "live") {
         focus.focus(
           selected.live ? "live-category-" + selected.live : "live-all",
@@ -4083,6 +4082,31 @@ focus.onMove = (el, dir) => {
       return true;
     }
   }
+  const rail = el.closest<HTMLElement>(".poster-rail,.event-rail");
+  if (rail) {
+    const buttons = [...rail.querySelectorAll<HTMLElement>("[data-focus]")],
+      index = buttons.indexOf(el);
+    if (dir === "left" || dir === "right") {
+      const next = buttons[index + (dir === "right" ? 1 : -1)];
+      if (next) focus.focus(next.id);
+      else if (dir === "left") navEntry();
+      return true;
+    }
+    const sections = [
+        ...document.querySelectorAll<HTMLElement>("#home-scroll .home-rail"),
+      ],
+      section = el.closest<HTMLElement>(".home-rail")!,
+      at = sections.indexOf(section),
+      next = sections[at + (dir === "down" ? 1 : -1)];
+    if (next) {
+      const targets = [...next.querySelectorAll<HTMLElement>("[data-focus]")];
+      if (targets.length)
+        focus.focus(
+          targets[Math.min(Math.max(0, index), targets.length - 1)].id,
+        );
+    } else if (dir === "up") focus.focus("hero-view");
+    return true;
+  }
   const collection =
     el.dataset.collection && collections.get(el.dataset.collection);
   if (collection) {
@@ -4098,15 +4122,75 @@ focus.onMove = (el, dir) => {
       else navEntry();
       return true;
     }
+    if (
+      (dir === "up" || dir === "down") &&
+      el.dataset.collection === "channels"
+    ) {
+      if (dir === "up") focus.focus("live-search", false);
+      return true;
+    }
+    if (
+      el.dataset.collection === "vod-grid" &&
+      (dir === "up" || dir === "down" || dir === "right")
+    ) {
+      if (dir === "up") focus.focus("browse-all", false);
+      return true;
+    }
+    if (
+      el.dataset.collection === "sports-grid" &&
+      (dir === "up" || dir === "down" || dir === "right")
+    ) {
+      if (dir === "up") focus.focus("sport-all", false);
+      return true;
+    }
     if (dir === "right" && route === "live" && browseItem) {
       void showSchedule(browseItem);
       return true;
     }
   }
-  if (dir === "left" && el.id === "hero-page-0") {
-    heroIndex = Math.max(0, heroIndex - 1);
-    renderHero(document.getElementById("major-hero")!);
-    return true;
+  if (el.closest("#major-hero")) {
+    const pages = [
+      ...document.querySelectorAll<HTMLElement>(".hero-pager [data-focus]"),
+    ];
+    const actions = [
+      ...document.querySelectorAll<HTMLElement>(
+        "#major-hero .actions [data-focus]",
+      ),
+    ];
+    const page = pages.findIndex((p) => p.id === el.id),
+      action = actions.findIndex((b) => b.id === el.id);
+    if (dir === "left" || dir === "right") {
+      if (page >= 0) {
+        const next = pages[page + (dir === "right" ? 1 : -1)];
+        if (next) focus.focus(next.id, false);
+        else if (dir === "left") navEntry();
+        return true;
+      }
+      if (action >= 0) {
+        const next = actions[action + (dir === "right" ? 1 : -1)];
+        if (next) focus.focus(next.id, false);
+        else if (dir === "left") navEntry();
+        else if (pages.length)
+          focus.focus(pages[heroIndex % pages.length].id, false);
+        return true;
+      }
+    }
+    if (dir === "up") {
+      if (page >= 0 && actions[0]) focus.focus(actions[0].id, false);
+      else focus.focus("active-profile", false);
+      return true;
+    }
+    if (dir === "down") {
+      if (action >= 0 && pages.length)
+        focus.focus(pages[heroIndex % pages.length].id, false);
+      else {
+        const first = document.querySelector<HTMLElement>(
+          ".home-rail [data-focus]",
+        );
+        if (first) focus.focus(first.id);
+      }
+      return true;
+    }
   }
   return false;
 };
@@ -4197,6 +4281,16 @@ window.addEventListener("pagehide", () => {
     );
   player.stop();
 });
+setInterval(() => {
+  if (
+    !starting &&
+    !document.hidden &&
+    route === "guide" &&
+    overlay.hidden &&
+    (!currentPlaying || preview)
+  )
+    guideGrid?.refresh();
+}, 60000);
 // Update only visible guide rows. No shell rebuild, focus change or player reload.
 setInterval(() => {
   if (

@@ -1,6 +1,14 @@
+import { createAdaptiveSession, AdaptiveSession } from "./adaptive";
+import type { FreeviewSource } from "./freeview";
 import { Media } from "./model";
 export type PlayerState =
-  "idle" | "loading" | "playing" | "paused" | "buffering" | "error" | "ended";
+  | "idle"
+  | "loading"
+  | "playing"
+  | "paused"
+  | "buffering"
+  | "error"
+  | "ended";
 export interface Trace {
   at: number;
   event: string;
@@ -49,8 +57,12 @@ export class LgPlayback {
   configure(options: Partial<{ startupTimeout: number; reconnects: number }>) {
     this.options = { ...this.options, ...options };
   }
+  private source?: FreeviewSource;
+  private adaptive?: AdaptiveSession;
+  private closing?: Promise<void>;
   private generation = 0;
   private attempt = 0;
+  private attemptPrepared = false;
   private failures = 0;
   private url = "";
   private resumeAt = 0;
@@ -69,6 +81,7 @@ export class LgPlayback {
   constructor(
     public video: HTMLVideoElement,
     private clock: PlaybackClock = defaults,
+    private adaptiveFactory = createAdaptiveSession,
   ) {}
   private frames() {
     try {
@@ -129,10 +142,11 @@ export class LgPlayback {
     this.log(state);
     this.onState(state);
   }
-  async load(media: Media, url: string, position = 0) {
+  async load(media: Media, url: string, position = 0, source?: FreeviewSource) {
     this.stop();
     this.media = media;
-    this.url = url;
+    this.source = source;
+    this.url = source?.url ?? url;
     this.resumeAt = position;
     this.failures = 0;
     this.attempt = 0;
@@ -146,8 +160,11 @@ export class LgPlayback {
   }
   private async start(gen: number) {
     if (gen !== this.generation || !this.wantsPlayback) return;
+    if (this.closing) await this.closing;
+    if (gen !== this.generation || !this.wantsPlayback) return;
     this.detach();
     const attempt = ++this.attempt;
+    this.attemptPrepared = false;
     this.attemptOpened = this.clock.now();
     this.lastPosition = 0;
     this.lastFrames = undefined;
@@ -195,6 +212,7 @@ export class LgPlayback {
     });
     on("pause", () => {
       this.log("native-pause");
+      if (!this.attemptPrepared && this.wantsPlayback) return;
       if (!this.wantsPlayback) {
         this.set("paused");
         return;
@@ -253,15 +271,34 @@ export class LgPlayback {
       on(event, () => this.log("native-" + event));
     // Reconnects request the same canonical gateway route, with a new browser cache identity.
     let target = this.url;
-    if (attempt > 1) {
+    if (attempt > 1 && !this.source) {
       const u = new URL(target);
       u.searchParams.set("_ltv_restart", `${Date.now()}-${attempt}`);
       target = u.toString();
     }
-    this.video.src = target;
-    this.video.load();
     this.watchdog = this.clock.interval(() => this.check(gen), 2000);
     try {
+      if (this.source?.manifest === "dash" && this.source.license) {
+        const session = await this.adaptiveFactory((code, fatal) => {
+          if (gen !== this.generation || attempt !== this.attempt) return;
+          this.log("adaptive-error", code);
+          if (fatal) this.recover(gen, "adaptive-error");
+        });
+        if (gen !== this.generation || attempt !== this.attempt) {
+          await session.destroy();
+          return;
+        }
+        this.adaptive = session;
+        this.log("adaptive-widevine");
+        await session.attach(this.video);
+        if (gen !== this.generation || attempt !== this.attempt) return;
+        await session.load(target, this.source.license);
+        if (gen !== this.generation || attempt !== this.attempt) return;
+      } else {
+        this.video.src = target;
+        this.video.load();
+      }
+      this.attemptPrepared = true;
       await this.video.play();
     } catch {
       if (gen === this.generation && attempt === this.attempt)
@@ -316,7 +353,12 @@ export class LgPlayback {
       this.recover(gen, "live-ended-without-event");
       return;
     }
-    if (this.media.kind === "live" && this.video.paused && !this.pauseTimer) {
+    if (
+      this.media.kind === "live" &&
+      this.attemptPrepared &&
+      this.video.paused &&
+      !this.pauseTimer
+    ) {
       void this.resumeNative(gen, this.attempt);
     }
     const timeout =
@@ -384,6 +426,18 @@ export class LgPlayback {
     this.cleanups.splice(0).forEach((fn) => fn());
   }
   private release() {
+    const session = this.adaptive;
+    this.adaptive = undefined;
+    if (session) {
+      const closing = (this.closing ?? Promise.resolve())
+        .catch(() => {})
+        .then(() => session.destroy())
+        .catch(() => {});
+      this.closing = closing;
+      void closing.finally(() => {
+        if (this.closing === closing) this.closing = undefined;
+      });
+    }
     this.video.pause();
     this.video.removeAttribute("src");
     this.video.load();

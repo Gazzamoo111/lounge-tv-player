@@ -1,6 +1,6 @@
 {
   "name": "lounge-tv-webos",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "type": "module",
   "description": "Isolated LG webOS client of Lounge TV, Android v5.2.3.10 parity work",
@@ -17,5 +17,8 @@
     "@webos-tools/cli": "3.2.6",
     "esbuild": "0.28.2",
     "typescript": "7.0.2"
+  },
+  "dependencies": {
+    "shaka-player": "4.16.12"
   }
 }
