@@ -13,4 +13,12 @@ await build({
   minify: true,
   legalComments: "eof",
 });
+await build({
+  entryPoints: ["src/epg.worker.ts"],
+  bundle: true,
+  outfile: "dist/epg.worker.js",
+  target: "chrome87",
+  format: "iife",
+  minify: true,
+});
 console.log("Built LG application. No backend or Android changes.");

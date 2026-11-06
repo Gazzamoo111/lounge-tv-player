@@ -13,6 +13,7 @@ export interface Store {
 }
 export class LibraryState {
   private account = "";
+  private memory = new Map<string, unknown>();
   profile = "default";
   constructor(private store: Store) {}
   scope(username: string) {
@@ -23,8 +24,12 @@ export class LibraryState {
     return `lounge.webos.v1:${encodeURIComponent(this.account)}:${k}`;
   }
   read<T>(k: string, fallback: T): T {
+    const id = this.id(k);
+    if (this.memory.has(id)) return this.memory.get(id) as T;
     try {
-      return JSON.parse(this.store.getItem(this.id(k)) ?? "null") ?? fallback;
+      const value = JSON.parse(this.store.getItem(id) ?? "null") ?? fallback;
+      this.memory.set(id, value);
+      return value;
     } catch {
       return fallback;
     }
@@ -32,6 +37,7 @@ export class LibraryState {
   write(k: string, v: unknown) {
     try {
       this.store.setItem(this.id(k), JSON.stringify(v));
+      this.memory.set(this.id(k), v);
     } catch {
       throw new Error(
         "TV storage is full. Your latest change could not be saved.",

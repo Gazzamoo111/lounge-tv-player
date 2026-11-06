@@ -25,6 +25,9 @@ import {
   sportLabel,
 } from "./model";
 import { LibraryState } from "./storage";
+import { DeviceCache, completeCatalogue } from "./cache";
+import { mapLimit } from "./tasks";
+import { categoryGroups } from "./categories";
 import { Direction, FocusController, VirtualCollection } from "./focus";
 import { LgPlayback } from "./player";
 import { button, icon, image, input, message, node, tag } from "./ui";
@@ -79,7 +82,19 @@ let view = 0,
   hoverTimer: ReturnType<typeof setTimeout> | undefined;
 let tracksInitialised = false;
 let accountGeneration = 0;
-let focusEpoch=0;
+let focusEpoch = 0;
+const deviceCache = new DeviceCache();
+let activeAuth: Credentials | undefined;
+let cacheAccount = "",
+  starting = false,
+  guideSummary:
+    | { generation: string; at: number; channels: number; records: number }
+    | undefined;
+let startupRevision = 0,
+  guideWorker: Worker | undefined;
+const liveExpanded = new Set<string>();
+const guideInFlight = new Map<string, Promise<Programme[]>>(),
+  detailsInFlight = new Map<string, Promise<Details>>();
 let browseItem: Media | undefined,
   sportTime = "live",
   sportFilter = "all",
@@ -185,6 +200,11 @@ function navEntry() {
   focus.focus("nav-" + route, false);
 }
 function renderShell() {
+  const existing = document.getElementById("main");
+  if (existing) {
+    updateShell();
+    return existing;
+  }
   app.replaceChildren();
   app.append(node("div", "page-backdrop"));
   const nav = node("nav", "nav-rail");
@@ -201,9 +221,22 @@ function renderShell() {
     b.setAttribute("aria-label", r.label);
     nav.append(b);
   }
-  nav.append(
-    action("nav-profile", state.profileName, profiles, "nav-profile", "PERSON"),
+  const profileButton = action(
+    "nav-profile",
+    "Profiles",
+    profiles,
+    "nav-profile",
+    "PERSON",
   );
+  profileButton.setAttribute("aria-label", "Profiles");
+  nav.append(profileButton);
+  const navButtons = Array.from(
+    nav.querySelectorAll<HTMLElement>("[data-focus]"),
+  );
+  navButtons.forEach((b, i) => {
+    b.dataset.up = navButtons[Math.max(0, i - 1)].id;
+    b.dataset.down = navButtons[Math.min(navButtons.length - 1, i + 1)].id;
+  });
   app.append(nav);
   const status = node("header", "status");
   const last = state.read<Media | null>("last-channel", null);
@@ -220,7 +253,7 @@ function renderShell() {
   status.append(
     action(
       "active-profile",
-      state.profileName,
+      "Profile · " + state.profileName,
       profiles,
       "status-button",
       "LAYERS",
@@ -235,6 +268,15 @@ function renderShell() {
   main.id = "main";
   app.append(main);
   return main;
+}
+function updateShell() {
+  for (const r of routes) {
+    const b = document.getElementById("nav-" + r.route);
+    b?.classList.toggle("selected", r.route === route);
+    if (b) b.setAttribute("aria-current", r.route === route ? "page" : "false");
+  }
+  const profile = document.querySelector("#active-profile span");
+  if (profile) profile.textContent = "Profile · " + state.profileName;
 }
 function updateClock() {
   const el = document.getElementById("clock");
@@ -256,6 +298,8 @@ function navigate(next: Route, restore = false) {
   destroyViews();
   route = next;
   const main = renderShell();
+  main.replaceChildren();
+  main.className = "";
   switch (route) {
     case "home":
       renderHome(main);
@@ -285,9 +329,10 @@ function navigate(next: Route, restore = false) {
       renderSettings(main);
       break;
   }
-  const token = view,epoch=++focusEpoch;
-  requestAnimationFrame(() => {
-    if (token !== view||epoch!==focusEpoch) return;
+  const token = view,
+    epoch = ++focusEpoch;
+  const restoreFocus = () => {
+    if (token !== view || epoch !== focusEpoch) return;
     const pos = routePositions.get(route);
     if (restore && pos) {
       for (const [id, top] of Object.entries(pos.scroll)) {
@@ -299,10 +344,14 @@ function navigate(next: Route, restore = false) {
       }
       if (focus.focus(pos.focus, false)) return;
     }
-    const first = main.querySelector<HTMLElement>("[data-focus]");
+    const first =
+      route === "live"
+        ? main.querySelector<HTMLElement>("#live-category-tree [data-focus]")
+        : main.querySelector<HTMLElement>("[data-focus]");
     if (first) focus.focus(first.id, false);
     else navEntry();
-  });
+  };
+  restoreFocus();
 }
 function header(main: HTMLElement, title: string, subtitle?: string) {
   const h = node("div", "screen-heading");
@@ -347,41 +396,28 @@ async function loadKind(kind: Kind) {
   }
 }
 async function loadTrending() {
+  const generation = accountGeneration;
   try {
-    const movie = await request(
-      "https://metadata.loungetv.nz/3/trending/movie/day?page=1&language=en-US",
+    const [movie, series] = await mapLimit(["movie", "tv"], 2, (type) =>
+      request(
+        `https://metadata.loungetv.nz/3/trending/${type}/day?page=1&language=en-US`,
+      ),
     );
-    const series = await request(
-      "https://metadata.loungetv.nz/3/trending/tv/day?page=1&language=en-US",
-    );
+    if (generation !== accountGeneration) return;
     trendingFeeds = {
       movies: movie.results ?? [],
       series: series.results ?? [],
     };
-    if (route === "home" && overlay.hidden && !currentPlaying)
-      navigate("home", true);
   } catch {
-    /* Keep catalogue shelves available when metadata is offline. */
+    /* Artwork never blocks catalogue readiness. */
   }
 }
 async function loadAll() {
   const generation = accountGeneration;
-  // Keep requests bounded and avoid parallel provider playback sessions.
-  for (const kind of ["live", "movie", "series"] as Kind[]) {
+  await mapLimit(["live", "movie", "series"] as Kind[], 2, async (kind) => {
     await loadKind(kind);
     if (generation !== accountGeneration) return;
-    if (
-      overlay.hidden &&
-      !currentPlaying &&
-      (route === "home" ||
-        route === "search" ||
-        route === "saved" ||
-        (kind === "live" && ["live", "guide"].includes(route)) ||
-        (kind === "movie" && route === "movies") ||
-        (kind === "series" && route === "series"))
-    )
-      navigate(route, true);
-  }
+  });
 }
 async function loadEvents() {
   const generation = accountGeneration,
@@ -392,11 +428,253 @@ async function loadEvents() {
     events = rows;
     delete errors.sports;
   } catch (e) {
-    if (generation !== accountGeneration) return;
-    errors.sports = (e as Error).message;
+    if (generation === accountGeneration) errors.sports = (e as Error).message;
   }
-  if (["home", "sports"].includes(route) && overlay.hidden && !currentPlaying)
-    navigate(route, true);
+}
+function showStartup() {
+  starting = true;
+  destroyViews();
+  overlay.hidden = true;
+  hud.hidden = true;
+  app.replaceChildren();
+  const screen = node("section", "startup");
+  screen.id = "startup";
+  screen.dataset.focusScope = "";
+  screen.append(
+    image("assets/nav-mark.png", "startup-logo", "Lounge TV"),
+    node("h1", "", "Getting your lounge ready"),
+    node("p", "muted", "Loading your playlist and programme guide."),
+  );
+  const stages = node("ol", "startup-stages");
+  for (const [id, label] of [
+    ["account", "Checking your membership"],
+    ["catalogue", "Preparing your playlist"],
+    ["guide", "Preparing your TV guide"],
+    ["ready", "Opening your lounge"],
+  ]) {
+    const row = node("li", "");
+    row.id = "stage-" + id;
+    row.append(node("i", "stage-light"), node("span", "", label));
+    stages.append(row);
+  }
+  const status = node("p", "startup-status", "Connecting…");
+  status.id = "startup-status";
+  status.setAttribute("role", "status");
+  status.setAttribute("aria-live", "polite");
+  const counts = node("p", "startup-counts");
+  counts.id = "startup-counts";
+  screen.append(stages, status, counts);
+  app.append(screen);
+}
+function startupStage(id: string, text: string) {
+  const rows = ["account", "catalogue", "guide", "ready"],
+    at = rows.indexOf(id);
+  rows.forEach((key, i) => {
+    const el = document.getElementById("stage-" + key);
+    el?.classList.toggle("done", i < at);
+    el?.classList.toggle("active", i === at);
+  });
+  const status = document.getElementById("startup-status");
+  if (status) status.textContent = text;
+}
+async function loadFullGuide(onProgress: (text: string) => void) {
+  const generation = accountGeneration,
+    account = cacheAccount,
+    now = Date.now(),
+    version = String(now);
+  const ids = [
+    ...new Set((catalogues.live ?? []).map((m) => m.epgId).filter(Boolean)),
+  ] as string[];
+  if (!ids.length) throw Error("No guide channel identifiers were supplied.");
+  await new Promise<void>((resolve, reject) => {
+    const worker = new Worker("epg.worker.js");
+    guideWorker = worker;
+    let writes = Promise.resolve(),
+      done = false;
+    const timer = setTimeout(
+      () => finish(Error("Programme guide timed out")),
+      65000,
+    );
+    function finish(error?: Error) {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      worker.terminate();
+      if (guideWorker === worker) guideWorker = undefined;
+      error ? reject(error) : resolve();
+    }
+    worker.onerror = () => finish(Error("Programme guide unavailable"));
+    worker.onmessage = ({ data }) => {
+      if (generation !== accountGeneration) {
+        finish(Error("Session changed"));
+        return;
+      }
+      if (data.type === "progress")
+        onProgress(
+          `${Number(data.records).toLocaleString()} programmes · ${Number(data.channels).toLocaleString()} guide channels`,
+        );
+      if (data.type === "batch")
+        writes = writes
+          .then(() =>
+            deviceCache.putGuideBatch(account, version, data.rows, now),
+          )
+          .catch(() => {
+            finish(Error("TV guide could not be cached."));
+          });
+      if (data.type === "error") finish(Error(data.message));
+      if (data.type === "complete")
+        void writes
+          .then(async () => {
+            if (done || generation !== accountGeneration) return;
+            guideSummary = {
+              generation: version,
+              at: now,
+              channels: data.channels,
+              records: data.records,
+            };
+            await deviceCache.put(account + ":guide-summary", guideSummary);
+            void deviceCache.pruneGuides(account, version);
+            finish();
+          })
+          .catch(() => finish(Error("TV guide could not be cached.")));
+    };
+    worker.postMessage({ url: client.guideUrl(), ids, now });
+  });
+}
+async function primeGuide() {
+  const live = catalogues.live ?? [],
+    firstCategory = selected.live ?? categories.live?.[0]?.id;
+  const important = [
+    state.read<Media | null>("last-channel", null),
+    ...state.favourites().filter((m) => m.kind === "live"),
+    ...live.filter((m) => m.category === firstCategory),
+  ].filter(Boolean) as Media[];
+  const ids = [...new Set(important.map((m) => m.id))].slice(0, 12);
+  let completed = 0,
+    failed = 0;
+  await mapLimit(ids, 3, async (id) => {
+    try {
+      await guide(id);
+    } catch {
+      failed++;
+    }
+    completed++;
+    startupStage("guide", `Preparing channels ${completed} / ${ids.length}`);
+  });
+  return { failed, total: ids.length };
+}
+async function startSession(auth: Credentials, force = false) {
+  const revision = ++startupRevision;
+  showStartup();
+  const generation = ++accountGeneration;
+  guideInFlight.clear();
+  detailsInFlight.clear();
+  epgCache.clear();
+  detailCache.clear();
+  activeAuth = auth;
+  client = new LoungeClient(auth);
+  startupStage("account", "Checking your Lounge TV membership…");
+  try {
+    await client.login();
+    if (revision !== startupRevision) return;
+    state.scope(auth.username);
+    cacheAccount = auth.username;
+    state.settings().rememberLogin
+      ? state.remember(auth)
+      : state.remember(null);
+    guideSummary = await deviceCache.get(cacheAccount + ":guide-summary");
+    const optional = Promise.allSettled([loadEvents(), loadTrending()]);
+    startupStage("catalogue", "Checking the playlist saved on this TV…");
+    const saved = await deviceCache.catalogue(cacheAccount);
+    const useSaved =
+      !force && completeCatalogue(saved) && Date.now() - saved.at < 6 * 3600000;
+    if (useSaved) {
+      categories = saved.categories;
+      catalogues = saved.catalogues;
+      startupStage("catalogue", "Playlist restored from this TV.");
+    } else {
+      let finished = 0;
+      const nextCats: Partial<Record<Kind, Category[]>> = {},
+        nextRows: Partial<Record<Kind, Media[]>> = {};
+      await mapLimit(["live", "movie", "series"] as Kind[], 2, async (kind) => {
+        const cats = await client.categories(kind),
+          rows = await client.catalogue(kind);
+        nextCats[kind] = cats;
+        nextRows[kind] = rows;
+        finished++;
+        startupStage(
+          "catalogue",
+          `${finished} / 3 libraries ready · ${kind === "live" ? "Live TV" : kind === "movie" ? "Movies" : "Series"}: ${rows.length.toLocaleString()}`,
+        );
+      });
+      if (generation !== accountGeneration) return;
+      categories = nextCats;
+      catalogues = nextRows;
+      await deviceCache.saveCatalogue(cacheAccount, {
+        at: Date.now(),
+        categories,
+        catalogues,
+      });
+    }
+    const counts = document.getElementById("startup-counts");
+    if (counts)
+      counts.textContent = `${(catalogues.live?.length ?? 0).toLocaleString()} channels · ${(catalogues.movie?.length ?? 0).toLocaleString()} movies · ${(catalogues.series?.length ?? 0).toLocaleString()} series`;
+    if (!selected.live || !categories.live?.some((c) => c.id === selected.live))
+      selected.live = categories.live?.[0]?.id;
+    startupStage("guide", "Checking programme guide…");
+    let guideWarning = "";
+    if (force || !guideSummary || Date.now() - guideSummary.at > 6 * 3600000) {
+      try {
+        await loadFullGuide((text) => startupStage("guide", text));
+      } catch {
+        guideWarning =
+          "The full guide is unavailable. Loaded channel guides where available.";
+      }
+    }
+    const primed = await primeGuide();
+    if (primed.failed && primed.failed === primed.total)
+      guideWarning =
+        "Programme guide unavailable. You can retry it from Settings.";
+    await Promise.race([optional, new Promise((r) => setTimeout(r, 1000))]);
+    if (revision !== startupRevision || generation !== accountGeneration)
+      return;
+    startupStage("ready", "Your lounge is ready.");
+    starting = false;
+    app.replaceChildren();
+    routePositions.clear();
+    navigate("home");
+    if (guideWarning) toast(guideWarning);
+  } catch (error) {
+    if (revision !== startupRevision) return;
+    starting = false;
+    const status = document.getElementById("startup-status");
+    if (status) {
+      status.textContent = (error as Error).message;
+      status.classList.add("error");
+    }
+    const screen = document.getElementById("startup");
+    screen?.append(
+      action(
+        "startup-retry",
+        "Try again",
+        () => startSession(auth, force),
+        "primary",
+        "REFRESH",
+      ),
+      action(
+        "startup-signout",
+        "Change login",
+        () => {
+          accountGeneration++;
+          state.remember(null);
+          login();
+        },
+        "",
+        "PERSON",
+      ),
+    );
+    focus.focus("startup-retry");
+  }
 }
 function login(error = "") {
   destroyViews();
@@ -436,14 +714,7 @@ function login(error = "") {
     submit.disabled = true;
     submit.querySelector("span")!.textContent = "Signing in…";
     try {
-      client = new LoungeClient(auth);
-      await client.login();
-      state.scope(auth.username);
-      if (state.settings().rememberLogin) state.remember(auth);
-      navigate("home");
-      void loadAll();
-      void loadEvents();
-      void loadTrending();
+      await startSession(auth);
     } catch (e) {
       err.textContent = (e as Error).message;
       submit.disabled = false;
@@ -718,6 +989,72 @@ function rail(
   section.append(row);
   host.append(section);
 }
+function liveCategoryPanel(
+  host: HTMLElement,
+  prefix: string,
+  onSelect: (id: string) => void,
+) {
+  const rows = categories.live ?? [],
+    groups = categoryGroups(rows),
+    selectedCategory = rows.find((c) => c.id === selected.live);
+  const counts = new Map<string, number>();
+  for (const m of catalogues.live ?? [])
+    counts.set(m.category, (counts.get(m.category) ?? 0) + 1);
+  if (selectedCategory && !liveExpanded.size)
+    liveExpanded.add(selectedCategory.section);
+  const draw = () => {
+    const active = document.activeElement?.id;
+    host.replaceChildren();
+    host.append(
+      action(
+        prefix + "all",
+        "All channels",
+        () => onSelect(""),
+        "category-row" + (selected.live === "" ? " chosen" : ""),
+        "LIVE_TV",
+      ),
+    );
+    groups.forEach((group, i) => {
+      const id = prefix + "group-" + i,
+        expanded = liveExpanded.has(group.name);
+      const heading = action(
+        id,
+        group.name,
+        () => {
+          if (liveExpanded.has(group.name)) liveExpanded.delete(group.name);
+          else liveExpanded.add(group.name);
+          draw();
+          focus.focus(id, false);
+        },
+        "category-heading",
+        expanded ? "CHEVRON_DOWN" : "CHEVRON",
+      );
+      heading.setAttribute("aria-expanded", String(expanded));
+      host.append(heading);
+      if (expanded)
+        for (const cat of group.items) {
+          const count = counts.get(cat.id) ?? 0;
+          const b = action(
+            prefix + "category-" + cat.id,
+            cat.label,
+            () => onSelect(cat.id),
+            "category-row subcategory" +
+              (selected.live === cat.id ? " chosen" : ""),
+          );
+          b.setAttribute(
+            "aria-current",
+            selected.live === cat.id ? "true" : "false",
+          );
+          b.append(node("small", "category-count", String(count)));
+          b.dataset.category = cat.id;
+          host.append(b);
+        }
+    });
+    if (active && host.contains(document.getElementById(active)))
+      focus.focus(active, false);
+  };
+  draw();
+}
 function categoryPicker(kind: Kind, onSelect?: () => void) {
   const box = openOverlay(
     kind === "live"
@@ -727,47 +1064,40 @@ function categoryPicker(kind: Kind, onSelect?: () => void) {
         : "Series categories",
     "category-sheet",
   );
-  const rows = categories[kind] ?? [];
-  let last = "";
-  if (kind !== "live")
+  const choose = (id: string) => {
+    if (id) selected[kind] = id;
+    else if (kind === "live") selected.live = "";
+    else delete selected[kind];
+    closeOverlay();
+    onSelect ? onSelect() : navigate(route);
+  };
+  if (kind === "live") {
+    const tree = node("div", "category-tree");
+    tree.id = "category-tree";
+    box.append(tree);
+    liveCategoryPanel(tree, "picker-", choose);
+  } else {
     box.append(
       action(
         "category-all",
         "All " + (kind === "movie" ? "movies" : "series"),
-        () => {
-          delete selected[kind];
-          closeOverlay();
-          onSelect ? onSelect() : navigate(route);
-        },
+        () => choose(""),
         "category-row",
       ),
     );
-  for (const cat of rows) {
-    if (kind === "live" && last !== cat.section) {
-      last = cat.section;
-      box.append(node("h3", "group-label", cat.section));
-    }
-    box.append(
-      action(
-        "category-" + cat.id,
-        cat.label,
-        () => {
-          selected[kind] = cat.id;
-          closeOverlay();
-          onSelect ? onSelect() : navigate(route);
-        },
-        "category-row" + (selected[kind] === cat.id ? " chosen" : ""),
-      ),
-    );
+    for (const cat of categories[kind] ?? [])
+      box.append(
+        action(
+          "category-" + cat.id,
+          cat.label,
+          () => choose(cat.id),
+          "category-row" + (selected[kind] === cat.id ? " chosen" : ""),
+        ),
+      );
   }
   box.append(action("categories-close", "Close", closeOverlay, "category-row"));
-  focus.focus(
-    selected[kind]
-      ? "category-" + selected[kind]
-      : kind === "live"
-        ? "category-" + rows[0]?.id
-        : "category-all",
-  );
+  const first = box.querySelector<HTMLElement>("[data-focus]");
+  if (first) focus.focus(first.id);
 }
 function filtered(kind: Kind, query = "") {
   const rows = catalogues[kind] ?? [];
@@ -777,13 +1107,52 @@ function filtered(kind: Kind, query = "") {
       (!query || m.name.toLowerCase().includes(query.toLowerCase())),
   );
 }
-async function guide(id: string) {
-  const cached = epgCache.get(id);
-  if (cached && Date.now() - cached.at < 120000) return cached.rows;
-  const rows = await client.guide(id);
-  epgCache.set(id, { at: Date.now(), rows });
-  if (epgCache.size > 160) epgCache.delete(epgCache.keys().next().value!);
+async function cachedGuide(id: string): Promise<Programme[] | undefined> {
+  const memory = epgCache.get(id);
+  if (memory && Date.now() - memory.at < 120000) return memory.rows;
+  const generation = accountGeneration,
+    account = cacheAccount,
+    m = catalogues.live?.find((m) => m.id === id);
+  let rows: Programme[] | undefined;
+  if (m?.epgId && guideSummary) {
+    const full = await deviceCache.get<{ at: number; rows: Programme[] }>(
+      `${account}:xmltv:${guideSummary.generation}:${m.epgId}`,
+    );
+    if (full && full.rows.some((p) => p.end > Date.now())) rows = full.rows;
+  }
+  if (!rows) {
+    const saved = await deviceCache.guide(account, id);
+    if (saved && Date.now() - saved.at < 15 * 60000) rows = saved.rows;
+  }
+  if (rows && generation === accountGeneration) {
+    epgCache.set(id, { at: Date.now(), rows });
+    if (epgCache.size > 160) epgCache.delete(epgCache.keys().next().value!);
+  }
   return rows;
+}
+async function guide(id: string): Promise<Programme[]> {
+  const pending = guideInFlight.get(id);
+  if (pending) return pending;
+  const generation = accountGeneration,
+    account = cacheAccount,
+    source = client;
+  const work = (async () => {
+    const cached = await cachedGuide(id);
+    if (cached) return cached;
+    const rows = await source.guide(id);
+    await deviceCache.saveGuide(account, id, { at: Date.now(), rows });
+    return rows;
+  })()
+    .then((rows) => {
+      if (generation === accountGeneration) {
+        epgCache.set(id, { at: Date.now(), rows });
+        if (epgCache.size > 160) epgCache.delete(epgCache.keys().next().value!);
+      }
+      return rows;
+    })
+    .finally(() => guideInFlight.delete(id));
+  guideInFlight.set(id, work);
+  return work;
 }
 function progressBar(p: Programme | undefined) {
   const line = node("div", "progress");
@@ -801,34 +1170,25 @@ function renderLive(main: HTMLElement) {
     unavailable(main, "live");
     return;
   }
-  if (!selected.live) selected.live = categories.live?.[0]?.id;
-  const cat = categories.live?.find((x) => x.id === selected.live);
-  const all = filtered("live");
-  const heading = node("div", "live-heading");
-  heading.append(
-    node("h1", "", "Live TV"),
-    action(
-      "live-categories",
-      cat?.label ?? "Categories",
-      () => categoryPicker("live"),
-      "crumb",
-      "CHEVRON_LEFT",
-    ),
-    node("span", "muted", `· ${all.length} channels`),
-  );
+  if (selected.live === undefined) selected.live = categories.live?.[0]?.id;
+  const panel = node("section", "live-category-panel");
+  panel.setAttribute("aria-label", "Live TV categories");
+  panel.append(node("h2", "", "Categories"));
+  const tree = node("div", "live-category-tree");
+  tree.id = "live-category-tree";
+  tree.dataset.scroll = "";
+  panel.append(tree);
+  main.append(panel);
+  const heading = node("div", "live-heading"),
+    label = node("span", "live-crumb"),
+    count = node("span", "muted");
+  heading.append(node("h1", "", "Live TV"), label, count);
   main.append(heading);
   const toolbar = node("div", "live-toolbar"),
-    search = input("live-search", "Search " + (cat?.label ?? "channels"));
+    search = input("live-search", "Search channels");
   toolbar.append(
     search,
-    action(
-      "live-order",
-      "Provider",
-      () => toast("Channels follow the current Lounge TV catalogue."),
-      "tool",
-      "SORT",
-    ),
-    action("live-guide", "Guide view", () => navigate("guide"), "tool", "GRID"),
+    action("live-guide", "Guide", () => navigate("guide"), "tool", "GRID"),
   );
   main.append(toolbar);
   const host = node("div", "channel-list");
@@ -843,49 +1203,87 @@ function renderLive(main: HTMLElement) {
     "OK  Watch       ◀  Categories       ▶  Schedule       Hold OK  Options";
   main.append(footer);
   const token = view;
-  let localItems = all;
+  let localItems: Media[] = [];
+  const choose = (id: string) => {
+    selected.live = id;
+    search.value = "";
+    routePositions.delete("live");
+    renderTree();
+    list();
+    collections.get("channels")?.focus(0);
+  };
+  const renderTree = () => liveCategoryPanel(tree, "live-", choose);
   function list() {
     collections.get(host.id)?.destroy();
     host.replaceChildren();
     localItems = filtered("live", search.value);
-    const col = new VirtualCollection(host, localItems.length, 1, 92, (i) => {
-      const m = localItems[i];
-      const b = action("channel-" + m.id, "", () => play(m), "channel-row");
-      b.dataset.media = key(m);
-      b.append(
-        node("span", "channel-number", String(i + 1)),
-        image(m.image, "channel-logo"),
-        node("div", "channel-info"),
+    label.textContent =
+      categories.live?.find((c) => c.id === selected.live)?.label ??
+      "All channels";
+    count.textContent = "· " + localItems.length + " channels";
+    const collection = new VirtualCollection(
+      host,
+      localItems.length,
+      1,
+      92,
+      (i) => {
+        const m = localItems[i],
+          b = action("channel-" + m.id, "", () => play(m), "channel-row");
+        b.dataset.media = key(m);
+        b.append(
+          node("span", "channel-number", String(i + 1)),
+          image(m.image, "channel-logo"),
+          node("div", "channel-info"),
+        );
+        const text = b.querySelector(".channel-info")!;
+        text.append(
+          node("b", "", m.name),
+          node("span", "muted", "Programme information loading"),
+          progressBar(undefined),
+        );
+        b.addEventListener("focus", () => {
+          browseItem = m;
+          clearTimeout(hoverTimer);
+          hoverTimer = setTimeout(
+            () => void updateLivePane(pane, m, token),
+            120,
+          );
+        });
+        const cached = epgCache.get(m.id)?.rows;
+        if (cached) setChannelGuide(b, cached);
+        // EPG lookup is cache-first and deduplicated; rows update without rebuilding the list.
+        void cachedGuide(m.id)
+          .then((rows) => {
+            if (rows && token === view && b.isConnected)
+              setChannelGuide(b, rows);
+          })
+          .catch(() => {
+            if (b.isConnected) {
+              const text = b.querySelector(".channel-info .muted");
+              if (text) text.textContent = "Guide unavailable";
+            }
+          });
+        return b;
+      },
+    );
+    collections.set(host.id, collection);
+    if (!localItems.length)
+      host.append(
+        message(
+          "No channels in this view",
+          "Choose another category or clear the search.",
+        ),
       );
-      const text = b.querySelector(".channel-info")!;
-      text.append(
-        node("b", "", m.name),
-        node("span", "muted", "Programme information loading"),
-        progressBar(undefined),
-      );
-      b.addEventListener("focus", () => {
-        browseItem = m;
-        clearTimeout(hoverTimer);
-        hoverTimer = setTimeout(() => {
-          void updateLivePane(pane, m, token);
-        }, 180);
-      });
-      const cached = epgCache.get(m.id)?.rows;
-      if (cached) setChannelGuide(b, cached);
-      return b;
-    });
-    collections.set(host.id, col);
+    const first =
+      localItems.find((m) => m.id === browseItem?.id) ?? localItems[0];
+    if (first) {
+      browseItem = first;
+      void updateLivePane(pane, first, token);
+    }
   }
   search.addEventListener("input", list);
+  renderTree();
   list();
-  const first =
-    all.find(
-      (m) => m.id === state.read<Media | null>("last-channel", null)?.id,
-    ) ?? all[0];
-  if (first) {
-    browseItem = first;
-    void updateLivePane(pane, first, token);
-  }
   if (currentPlaying && preview) positionVideo(true);
 }
 function setChannelGuide(row: HTMLElement, rows: Programme[]) {
@@ -1092,14 +1490,26 @@ function renderBrowse(main: HTMLElement, kind: "movie" | "series") {
   search.addEventListener("input", list);
   list();
 }
-async function getDetails(m: Media) {
-  const cached = detailCache.get(key(m));
+async function getDetails(m: Media): Promise<Details> {
+  const id = key(m),
+    cached = detailCache.get(id);
   if (cached) return cached;
-  const d = await client.details(m);
-  detailCache.set(key(m), d);
-  if (detailCache.size > 160)
-    detailCache.delete(detailCache.keys().next().value!);
-  return d;
+  const pending = detailsInFlight.get(id);
+  if (pending) return pending;
+  const generation = accountGeneration;
+  const work = client
+    .details(m)
+    .then((d) => {
+      if (generation === accountGeneration) {
+        detailCache.set(id, d);
+        if (detailCache.size > 160)
+          detailCache.delete(detailCache.keys().next().value!);
+      }
+      return d;
+    })
+    .finally(() => detailsInFlight.delete(id));
+  detailsInFlight.set(id, work);
+  return work;
 }
 async function spotlightFor(
   m: Media,
@@ -1631,12 +2041,11 @@ function renderSettings(main: HTMLElement) {
       "settings-refresh",
       "Refresh catalogue and programme guide",
       async () => {
+        const auth = activeAuth;
+        if (!auth) return;
         epgCache.clear();
         detailCache.clear();
-        toast("Refreshing your Lounge TV catalogue");
-        await loadAll();
-        await loadEvents();
-        toast("Catalogue refreshed");
+        await startSession(auth, true);
       },
       "settings-row",
       "REFRESH",
@@ -1733,7 +2142,7 @@ function renderSettings(main: HTMLElement) {
       "settings-row",
       "INFO",
     ),
-    node("p", "muted", "Lounge TV for LG · QA 0.1.0"),
+    node("p", "muted", "Lounge TV for LG · QA 0.1.1"),
   );
   main.append(list);
 }
@@ -2290,14 +2699,16 @@ function backFromPlayer() {
   ) {
     preview = true;
     hud.hidden = true;
-    navigate(route, true);
     positionVideo(true);
+    const pos = routePositions.get(route);
+    if (pos) focus.focus(pos.focus, false);
     return;
   }
   stopPlayback();
   navigate(route, true);
 }
 focus.onBack = () => {
+  if (starting) return;
   focusEpoch++;
   if (!overlay.hidden) {
     closeOverlay();
@@ -2358,19 +2769,57 @@ focus.onMove = (el, dir) => {
       const pos = routePositions.get(route)?.focus;
       if (pos && !pos.startsWith("nav-") && focus.focus(pos, false))
         return true;
+      if (route === "live") {
+        focus.focus(
+          selected.live ? "live-category-" + selected.live : "live-all",
+        ) || focus.focus("live-all");
+        return true;
+      }
       const target = app.querySelector<HTMLElement>("main [data-focus]");
       if (target) focus.focus(target.id);
       return true;
     }
     return false;
   }
+  if (el.closest(".live-category-tree")) {
+    if (dir === "left") {
+      navEntry();
+      return true;
+    }
+    if (dir === "right") {
+      if (
+        el.classList.contains("category-heading") &&
+        el.getAttribute("aria-expanded") === "false"
+      ) {
+        el.click();
+        return true;
+      }
+      collections.get("channels")?.focus(0);
+      return true;
+    }
+    if (dir === "up" || dir === "down") {
+      const buttons = Array.from(
+        document.querySelectorAll<HTMLElement>(
+          ".live-category-tree [data-focus]",
+        ),
+      );
+      const i = buttons.indexOf(el),
+        next = buttons[i + (dir === "up" ? -1 : 1)];
+      if (next) focus.focus(next.id);
+      return true;
+    }
+  }
   const collection =
     el.dataset.collection && collections.get(el.dataset.collection);
   if (collection) {
     if (collection.move(el, dir)) return true;
     if (dir === "left") {
-      if (route === "live") categoryPicker("live");
-      else if (route === "movies" || route === "series")
+      if (route === "live") {
+        const id = selected.live
+          ? "live-category-" + selected.live
+          : "live-all";
+        focus.focus(id) || focus.focus("live-all");
+      } else if (route === "movies" || route === "series")
         categoryPicker(route === "movies" ? "movie" : "series");
       else navEntry();
       return true;
@@ -2451,17 +2900,6 @@ async function boot() {
     login();
     return;
   }
-  app.append(message("Lounge TV", "Signing in…"));
-  client = new LoungeClient(auth);
-  try {
-    await client.login();
-    state.scope(auth.username);
-    navigate("home");
-    void loadAll();
-    void loadEvents();
-    void loadTrending();
-  } catch (e) {
-    login((e as Error).message);
-  }
+  await startSession(auth);
 }
 void boot();

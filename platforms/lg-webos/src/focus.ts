@@ -133,6 +133,8 @@ export class VirtualCollection {
   private start = -1;
   private end = -1;
   private observer: () => void;
+  private cells = new Map<number, HTMLElement>();
+  private scheduled = 0;
   constructor(
     public host: HTMLElement,
     public count: number,
@@ -147,7 +149,13 @@ export class VirtualCollection {
     spacer.className = "spacer";
     spacer.style.height = `${Math.ceil(count / columns) * rowHeight}px`;
     host.append(spacer);
-    this.observer = () => this.render();
+    this.observer = () => {
+      if (!this.scheduled)
+        this.scheduled = requestAnimationFrame(() => {
+          this.scheduled = 0;
+          this.render();
+        });
+    };
     host.addEventListener("scroll", this.observer);
     this.render();
   }
@@ -167,8 +175,13 @@ export class VirtualCollection {
     this.start = start;
     this.end = end;
     const active = document.activeElement?.id;
-    this.host.querySelectorAll(".virtual-cell").forEach((x) => x.remove());
+    for (const [index, cell] of this.cells)
+      if (index < start || index >= end) {
+        cell.remove();
+        this.cells.delete(index);
+      }
     for (let i = start; i < end; i++) {
+      if (this.cells.has(i)) continue;
       const cell = this.draw(i);
       cell.classList.add("virtual-cell");
       cell.style.position = "absolute";
@@ -177,6 +190,7 @@ export class VirtualCollection {
       cell.style.width = `${100 / this.columns}%`;
       cell.dataset.index = String(i);
       cell.dataset.collection = this.host.id;
+      this.cells.set(i, cell);
       this.host.append(cell);
     }
     if (active) document.getElementById(active)?.focus({ preventScroll: true });
@@ -213,5 +227,7 @@ export class VirtualCollection {
   }
   destroy() {
     this.host.removeEventListener("scroll", this.observer);
+    if (this.scheduled) cancelAnimationFrame(this.scheduled);
+    this.cells.clear();
   }
 }

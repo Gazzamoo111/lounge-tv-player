@@ -102,6 +102,9 @@ export class LoungeClient {
       throw new ApiError(502, "The Lounge TV catalogue is unavailable.");
     return data.map((r) => media(r, kind));
   }
+  guideUrl() {
+    return `${GATEWAY}/xmltv.php?${new URLSearchParams({ ...this.auth })}`;
+  }
   async guide(id: string): Promise<Programme[]> {
     const d = await request(
       this.url("get_short_epg", { stream_id: id, limit: "20" }),

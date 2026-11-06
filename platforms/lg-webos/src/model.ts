@@ -12,6 +12,7 @@ export interface Media {
   image: string;
   backdrop?: string;
   category: string;
+  epgId?: string;
   ext: string;
   rating: number;
   year?: string;
@@ -108,6 +109,10 @@ export function media(row: Record<string, any>, kind: Kind): Media {
     image: String(row.stream_icon ?? row.cover ?? row.info?.movie_image ?? ""),
     backdrop: row.backdrop_path?.[0],
     category: String(row.category_id ?? ""),
+    epgId:
+      kind === "live"
+        ? String(row.epg_channel_id || "ltv-" + (row.stream_id ?? row.id))
+        : undefined,
     ext: String(
       row.container_extension ?? (kind === "live" ? "ts" : "mp4"),
     ).replace(/[^a-z0-9]/gi, ""),
