@@ -1,0 +1,739 @@
+{
+  "reference": "Android v5.2.3.10 44388fa8683df20a51ad5166f3ea73d7b08c8051",
+  "groups": [
+    {
+      "id": "quick",
+      "title": "Quick",
+      "description": "The toggles you reach for most",
+      "icon": "SPARKLE"
+    },
+    {
+      "id": "profile",
+      "title": "Profile",
+      "description": "Viewers, kids mode, PIN locks",
+      "icon": "PERSON"
+    },
+    {
+      "id": "sources",
+      "title": "Sources & guide",
+      "description": "Playlists, EPG, reminders, catch-up",
+      "icon": "LIST"
+    },
+    {
+      "id": "appearance",
+      "title": "Appearance",
+      "description": "Theme, accent, glass, text",
+      "icon": "PALETTE"
+    },
+    {
+      "id": "layout",
+      "title": "Layout",
+      "description": "Navigation, panels, Home, menus",
+      "icon": "GRID"
+    },
+    {
+      "id": "content_metadata",
+      "title": "Content & metadata",
+      "description": "Categories, TMDB, subtitles",
+      "icon": "MOVIE"
+    },
+    {
+      "id": "player",
+      "title": "Player",
+      "description": "Which player, streaming",
+      "icon": "PLAY"
+    },
+    {
+      "id": "picture",
+      "title": "Picture",
+      "description": "Decode, HDR, zoom, frame rate",
+      "icon": "VIDEO"
+    },
+    {
+      "id": "sound",
+      "title": "Sound & subtitles",
+      "description": "Volume, surround, languages",
+      "icon": "AUDIO"
+    },
+    {
+      "id": "live",
+      "title": "Live TV",
+      "description": "Preview, rewind, latency, start-up",
+      "icon": "LIVE_TV"
+    },
+    {
+      "id": "watching",
+      "title": "Watching & recording",
+      "description": "Skip, resume, multiview, recording",
+      "icon": "PLAY"
+    },
+    {
+      "id": "app",
+      "title": "App",
+      "description": "Language, updates, network, diagnostics",
+      "icon": "INFO"
+    }
+  ],
+  "rows": [
+    {
+      "key": "quick_live_preview",
+      "group": "quick",
+      "title": "Live preview",
+      "description": ""
+    },
+    {
+      "key": "quick_preview_sound",
+      "group": "quick",
+      "title": "Preview sound",
+      "description": ""
+    },
+    {
+      "key": "quick_channel_numbers",
+      "group": "quick",
+      "title": "Channel numbers",
+      "description": ""
+    },
+    {
+      "key": "quick_hdr",
+      "group": "quick",
+      "title": "Prefer SDR",
+      "description": ""
+    },
+    {
+      "key": "quick_autoplay",
+      "group": "quick",
+      "title": "Auto-play",
+      "description": ""
+    },
+    {
+      "key": "quick_check_update",
+      "group": "quick",
+      "title": "Check for update",
+      "description": ""
+    },
+    {
+      "key": "tab_sources",
+      "group": "sources",
+      "title": "Playlists",
+      "description": "Add, re-sync or remove M3U / Xtream playlists"
+    },
+    {
+      "key": "tab_epg",
+      "group": "sources",
+      "title": "EPG Sources",
+      "description": "Add XMLTV guide feeds for the TV Guide"
+    },
+    {
+      "key": "epg_offset",
+      "group": "sources",
+      "title": "EPG time offset",
+      "description": "Shift the whole guide when a feed’s times don’t match what’s actually on. A single channel can be shifted on its own from its long-press menu (Live TV or Guide) — that’s the one for East/West versions sharing a guide."
+    },
+    {
+      "key": "guide_days",
+      "group": "sources",
+      "title": "Guide days to keep",
+      "description": ""
+    },
+    {
+      "key": "catchup",
+      "group": "sources",
+      "title": "Catch-up",
+      "description": ""
+    },
+    {
+      "key": "catchup_sources",
+      "group": "sources",
+      "title": "Catch-up time zone per playlist",
+      "description": "Override the time zone above for one playlist, for a provider whose archive runs on a different clock."
+    },
+    {
+      "key": "theme",
+      "group": "appearance",
+      "title": "Theme",
+      "description": "Light, dark or follow the system"
+    },
+    {
+      "key": "accent",
+      "group": "appearance",
+      "title": "Accent color",
+      "description": "Tint the interface — presets, palette or hex code"
+    },
+    {
+      "key": "focus_highlight",
+      "group": "appearance",
+      "title": "Focus highlight",
+      "description": "Colour and thickness of the ring around the focused item"
+    },
+    {
+      "key": "tab_glass_effect",
+      "group": "appearance",
+      "title": "Glass & background",
+      "description": "Background, picture look, glass"
+    },
+    {
+      "key": "ambient_glow",
+      "group": "appearance",
+      "title": "Ambient glow",
+      "description": "Adds setup-style radiance to the solid interface"
+    },
+    {
+      "key": "fonts",
+      "group": "appearance",
+      "title": "Font customization",
+      "description": "Text size and fonts for the main interface and popups"
+    },
+    {
+      "key": "popup_size",
+      "group": "appearance",
+      "title": "Popup size",
+      "description": "Scale dialog and menu boxes without changing their text size"
+    },
+    {
+      "key": "ui_zoom",
+      "group": "appearance",
+      "title": "UI zoom",
+      "description": "Scale the whole interface"
+    },
+    {
+      "key": "animations",
+      "group": "appearance",
+      "title": "Animations",
+      "description": "Turn interface motion on or off — Off feels snappier on lower-end TV boxes"
+    },
+    {
+      "key": "tab_weather",
+      "group": "appearance",
+      "title": "Weather",
+      "description": "Top-bar weather chip: show or hide, custom location, and Celsius / Fahrenheit."
+    },
+    {
+      "key": "vod_layout",
+      "group": "layout",
+      "title": "Movies & Series layout",
+      "description": "Separate panels, or one cinematic view with the artwork behind"
+    },
+    {
+      "key": "tab_panel_width",
+      "group": "layout",
+      "title": "Panel widths",
+      "description": "Resize the category, list and preview panels in Live TV, Movies & Series."
+    },
+    {
+      "key": "tab_guide_width",
+      "group": "layout",
+      "title": "Guide column widths",
+      "description": "Resize the channel list and EPG timeline in the TV Guide."
+    },
+    {
+      "key": "browsing_lists",
+      "group": "layout",
+      "title": "Browsing & lists",
+      "description": "Remember the last category and the last item in Live TV, Movies & Series"
+    },
+    {
+      "key": "tab_home",
+      "group": "layout",
+      "title": "Home screen",
+      "description": "Choose, reorder & filter the rows on Home"
+    },
+    {
+      "key": "tab_content_menus",
+      "group": "layout",
+      "title": "Long-press menus",
+      "description": "Rearrange or hide the actions in the channel, movie, series & episode menus"
+    },
+    {
+      "key": "tab_ch_nav",
+      "group": "layout",
+      "title": "Remote shortcuts",
+      "description": "Assign spare remote buttons while keeping essential navigation protected"
+    },
+    {
+      "key": "tab_customize",
+      "group": "content_metadata",
+      "title": "Customize categories & items",
+      "description": "Hide & unhide items, rename & reorder categories"
+    },
+    {
+      "key": "tab_metadata",
+      "group": "content_metadata",
+      "title": "Metadata (TMDB)",
+      "description": "Posters, plots, cast, genres, ratings and backdrops for Movies and Series."
+    },
+    {
+      "key": "tab_open_subtitles",
+      "group": "content_metadata",
+      "title": "OpenSubtitles",
+      "description": "Sign in to search and download subtitles, and manage downloaded subtitles. Per profile; a free opensubtitles.com account is required."
+    },
+    {
+      "key": "tab_sports",
+      "group": "app",
+      "title": "Sports",
+      "description": "Sports and leagues"
+    },
+    {
+      "key": "tab_language",
+      "group": "app",
+      "title": "Language",
+      "description": "App display language"
+    },
+    {
+      "key": "app_icon",
+      "group": "app",
+      "title": "App icon",
+      "description": "Color of the Lounge TV icon and logo"
+    },
+    {
+      "key": "brand_accent",
+      "group": "app",
+      "title": "Accent-colored logo",
+      "description": "The logo's play triangle in your accent color"
+    },
+    {
+      "key": "app_startup",
+      "group": "app",
+      "title": "App startup",
+      "description": "What Lounge TV opens when it starts"
+    },
+    {
+      "key": "check_updates",
+      "group": "app",
+      "title": "Check for updates",
+      "description": "Get the latest version from GitHub Releases"
+    },
+    {
+      "key": "update_startup",
+      "group": "app",
+      "title": "Check updates on startup",
+      "description": "Look for a new version when the app opens"
+    },
+    {
+      "key": "tab_network",
+      "group": "app",
+      "title": "Proxy",
+      "description": "Send all Lounge TV traffic and playback through an HTTP proxy."
+    },
+    {
+      "key": "tab_dns",
+      "group": "app",
+      "title": "DNS",
+      "description": "Use a custom DNS server for domain lookups"
+    },
+    {
+      "key": "navigation",
+      "group": "layout",
+      "title": "Navigation",
+      "description": "How the menu on the left behaves"
+    },
+    {
+      "key": "live_layout",
+      "group": "layout",
+      "title": "Live TV layout",
+      "description": "Categories as a sheet, or always on screen"
+    },
+    {
+      "key": "live_opens_in",
+      "group": "layout",
+      "title": "Live TV opens in",
+      "description": "Open Live TV on the channel list or on the guide grid. The Guide view button in Live TV switches it too."
+    },
+    {
+      "key": "reminders",
+      "group": "sources",
+      "title": "Program reminders",
+      "description": "What happens when a program you set a reminder for is about to start."
+    },
+    {
+      "key": "reminder_lead",
+      "group": "sources",
+      "title": "Reminder time",
+      "description": "How long before the program starts the reminder comes."
+    },
+    {
+      "key": "vp_live_engine",
+      "group": "player",
+      "title": "Live TV player",
+      "description": "ExoPlayer (recommended) opens channels much faster and is the only one with live subtitles. mpv plays channels ExoPlayer can't, including some with unusual audio. The combined options try the other player automatically when the first one fails; the single-player options never do, which saves a few seconds of black screen if the second player never works on your TV. A channel you switch by hand in the player keeps your choice either way."
+    },
+    {
+      "key": "vp_live_engine_sources",
+      "group": "player",
+      "title": "Live TV player per playlist",
+      "description": "Override the setting above for one playlist, for a provider whose channels only one of the players handles well."
+    },
+    {
+      "key": "vp_reset_live_pins",
+      "group": "player",
+      "title": "Reset saved live TV player choices",
+      "description": "Switching a channel between ExoPlayer and mpv in the player saves that choice for the channel. Reset makes every channel follow the “Live TV player” setting again. Saved choices for movies and episodes are kept."
+    },
+    {
+      "key": "vp_vod_engine",
+      "group": "player",
+      "title": "Movies & Series player",
+      "description": "mpv (recommended) has the widest format support — DTS/TrueHD audio, unusual files. ExoPlayer plays some streams mpv can't on certain TVs, but can't decode DTS/TrueHD audio. The combined options try the other player automatically when the first one fails; the single-player options never do, which saves a few seconds of black screen if the second player never works on your TV."
+    },
+    {
+      "key": "vp_vod_engine_sources",
+      "group": "player",
+      "title": "Movies & Series player per playlist",
+      "description": "Override the setting above for one playlist, for a provider whose films and episodes only one of the players handles well."
+    },
+    {
+      "key": "vp_reset_pins",
+      "group": "player",
+      "title": "Reset saved player choices",
+      "description": "Switching a single movie or episode between mpv and ExoPlayer in the player saves that choice for next time. Reset makes everything follow the setting above again. Saved choices for live channels are kept."
+    },
+    {
+      "key": "vp_external",
+      "group": "player",
+      "title": "External player",
+      "description": "Open streams in an external app (VLC, MX Player) instead of the built-in player, chosen per section. Useful for streams this app can't decode, or if you prefer another player. Resume position and prev/next are unavailable while playing externally; streams needing a custom User-Agent or referer may not play."
+    },
+    {
+      "key": "vp_hw",
+      "group": "picture",
+      "title": "Hardware decoding",
+      "description": "Use the TV's hardware decoder. Turn off if some streams stutter or show artifacts."
+    },
+    {
+      "key": "vp_sw_above_1080p",
+      "group": "picture",
+      "title": "Software decoding above 1080p",
+      "description": "Plays 4K and other video above 1080p in software when the TV's hardware decoder is off or fails. Needs a fast processor: on most TVs it stutters."
+    },
+    {
+      "key": "vp_hdr",
+      "group": "picture",
+      "title": "Prefer SDR",
+      "description": "When a stream offers both an SDR and an HDR picture, play the SDR one: for a TV whose HDR looks washed out or too dark. A stream with HDR only stays HDR. ExoPlayer only."
+    },
+    {
+      "key": "vp_max_quality",
+      "group": "picture",
+      "title": "Maximum video quality",
+      "description": "The highest picture played when a channel or movie offers several. Saves bandwidth and eases the decoder."
+    },
+    {
+      "key": "vp_tunneled",
+      "group": "picture",
+      "title": "Tunneled playback (experimental)",
+      "description": "Live TV on ExoPlayer: the TV's own hardware keeps picture and sound together, with less work for the processor. Works on some TVs only, and turns itself off if a channel fails with it. Audio sync cannot be nudged while it is on."
+    },
+    {
+      "key": "vp_zoom",
+      "group": "picture",
+      "title": "Default zoom",
+      "description": "Aspect/zoom applied when playback starts."
+    },
+    {
+      "key": "vp_reset_zoom",
+      "group": "picture",
+      "title": "Reset saved zoom",
+      "description": "Changing zoom in the player saves it for that channel, movie or episode. Reset makes everything follow the default zoom again."
+    },
+    {
+      "key": "vp_afr",
+      "group": "picture",
+      "title": "Auto frame rate",
+      "description": "settings_auto_frame_rate_description"
+    },
+    {
+      "key": "vp_afr_pause",
+      "group": "picture",
+      "title": "Pause during the display switch",
+      "description": "Films only. When the TV has to re-sync to a new display mode, the film waits this long so its opening is not lost to the black screen. A seamless switch never pauses."
+    },
+    {
+      "key": "vp_afr_resolution",
+      "group": "picture",
+      "title": "Match resolution",
+      "description": "Films only. When the display mode changes for a film, the TV also switches to its resolution — 1080p for an HD film on a 4K TV — never above the resolution it started on. Off leaves the resolution alone and lets the TV upscale, usually the better picture."
+    },
+    {
+      "key": "vp_vod_buffer",
+      "group": "player",
+      "title": "Film buffer",
+      "description": "How far ahead films, episodes and catch-up are loaded. Auto uses what suits this device. A longer buffer rides out a bad connection better; this device’s memory still sets the limit, so a high-bitrate film may hold less than chosen."
+    },
+    {
+      "key": "vp_vod_timeout",
+      "group": "player",
+      "title": "Network timeout",
+      "description": "How long films, episodes and catch-up wait on a silent server before the connection counts as lost. Auto keeps each player’s own wait: 60 seconds on mpv, 20 on ExoPlayer."
+    },
+    {
+      "key": "vp_vod_reconnects",
+      "group": "player",
+      "title": "Reconnect attempts",
+      "description": "How many times a film or episode that loses its connection is reopened where it stopped before an error is shown. A minute of steady playback earns the attempts back."
+    },
+    {
+      "key": "vp_channel_numbers",
+      "group": "live",
+      "title": "Channel numbers",
+      "description": "Show your provider's channel number beside the name in the Live TV list, the channel-list overlay and the player — and type a number on the remote during full-screen playback to jump straight to that channel (OK tunes at once, Back cancels). Off hides every number and ignores the number keys; nothing is lost, and turning it back on restores them."
+    },
+    {
+      "key": "vp_live_preview",
+      "group": "live",
+      "title": "Live preview",
+      "description": "Auto-play a channel when you focus it"
+    },
+    {
+      "key": "vp_preview_audio",
+      "group": "live",
+      "title": "Preview audio",
+      "description": "Play sound in the Live preview"
+    },
+    {
+      "key": "vp_timeshift",
+      "group": "live",
+      "title": "Pause and rewind live TV",
+      "description": "Channels without catch-up are saved on this device while you watch them full screen, so you can pause and rewind. Writes to storage all the time; at least 1 GB always stays free."
+    },
+    {
+      "key": "vp_timeshift_window",
+      "group": "live",
+      "title": "Rewind length",
+      "description": "How far back you can rewind a channel without catch-up."
+    },
+    {
+      "key": "vp_timeshift_resume",
+      "group": "live",
+      "title": "Resume a saved channel",
+      "description": "What happens when you come back to a channel that was saved while you were away."
+    },
+    {
+      "key": "vp_live_left_right",
+      "group": "live",
+      "title": "Left and right rewind live TV",
+      "description": "With the controls hidden, Left and Right rewind and go forward on channels you can rewind (catch-up, or saved by Pause and rewind live TV), instead of opening the channel list and history."
+    },
+    {
+      "key": "vp_live_latency",
+      "group": "live",
+      "title": "Live latency",
+      "description": "How close to the live broadcast to play. Lower means closer to live but a smaller buffer, so weak streams may stutter or reconnect more. Applies to the next channel you open."
+    },
+    {
+      "key": "vp_latency_sources",
+      "group": "live",
+      "title": "Live latency per playlist",
+      "description": "Override the setting above for one playlist, for a provider that needs a deeper or shallower buffer than the others."
+    },
+    {
+      "key": "vp_preroll",
+      "group": "live",
+      "title": "Pre-buffer live streams",
+      "description": "Collect this much video before a live channel starts playing, and again after a stutter. This is an amount of video, not a countdown. Off keeps the fastest possible start and is right for most providers. Raise it only if playback actually stutters: many providers publish only a few seconds ahead of live, and asking for more video than they send can make stuttering worse."
+    },
+    {
+      "key": "vp_preroll_sources",
+      "group": "live",
+      "title": "Pre-buffer per playlist",
+      "description": "Override the setting above for one playlist while keeping your other playlists fast."
+    },
+    {
+      "key": "vp_tune_timeout",
+      "group": "live",
+      "title": "Give up on a channel after",
+      "description": "If a live channel has shown no picture by this time, Lounge TV stops trying and tells you, instead of leaving a black screen while it works through every player it has. Never keeps trying, which can take well over a minute on a channel your provider has removed. Waits your provider asks for are not counted."
+    },
+    {
+      "key": "vp_tune_timeout_sources",
+      "group": "live",
+      "title": "Give up after, per playlist",
+      "description": "Override the setting above for one playlist, for a provider whose channels are slow to start or often dead."
+    },
+    {
+      "key": "vp_seek_step",
+      "group": "watching",
+      "title": "Seek step",
+      "description": "How far rewind and forward jump in a movie or episode."
+    },
+    {
+      "key": "vp_rewind_step",
+      "group": "watching",
+      "title": "Live rewind step",
+      "description": "How far rewind and forward move on a live channel: in its catch-up archive, or in the copy saved by Pause and rewind live TV."
+    },
+    {
+      "key": "vp_multiview",
+      "group": "watching",
+      "title": "Multiview",
+      "description": "Watch several live channels at once. You choose how many each time, up to this limit — every tile uses one of your provider's connections."
+    },
+    {
+      "key": "vp_multiview_tiles",
+      "group": "watching",
+      "title": "Most tiles",
+      "description": "Watch several live channels at once. You choose how many each time, up to this limit — every tile uses one of your provider's connections."
+    },
+    {
+      "key": "vp_mini",
+      "group": "watching",
+      "title": "Mini-player",
+      "description": "Size and position of the docked mini-player"
+    },
+    {
+      "key": "vp_volume",
+      "group": "sound",
+      "title": "Default volume",
+      "description": "Volume applied when playback starts. Above 100%% quiet streams are amplified."
+    },
+    {
+      "key": "vp_reset_volume",
+      "group": "sound",
+      "title": "Reset saved volume",
+      "description": "Changing volume in the player saves it for that channel, movie or episode. Reset makes everything follow the default volume again."
+    },
+    {
+      "key": "vp_surround",
+      "group": "sound",
+      "title": "Surround sound",
+      "description": ""
+    },
+    {
+      "key": "vp_passthrough",
+      "group": "sound",
+      "title": "Dolby and DTS passthrough",
+      "description": "On: Dolby and DTS go undecoded to the TV, soundbar or receiver when it says it can play them (ExoPlayer). Off: the app decodes them, still as surround where Surround sound allows. mpv always decodes. Not used while Night mode or Volume leveling is on."
+    },
+    {
+      "key": "vp_ffmpeg_audio",
+      "group": "sound",
+      "title": "FFmpeg audio for ExoPlayer",
+      "description": "On: ExoPlayer can also decode sound your device has no decoder for, such as DTS, TrueHD or MP2. The device's own decoders still come first. Off: ExoPlayer uses only the device's decoders. mpv always decodes with FFmpeg. Changing this restarts OwnTV."
+    },
+    {
+      "key": "vp_night_mode",
+      "group": "sound",
+      "title": "Night mode",
+      "description": "Turns loud scenes down and quiet dialogue up, for watching at a low volume."
+    },
+    {
+      "key": "vp_volume_leveling",
+      "group": "sound",
+      "title": "Volume leveling",
+      "description": "Brings every channel and movie slowly to the same loudness, so switching does not jump in volume."
+    },
+    {
+      "key": "vp_audio_sync",
+      "group": "sound",
+      "title": "Audio sync",
+      "description": "Shift audio earlier or later to match the video. Works with both players (mpv and ExoPlayer)."
+    },
+    {
+      "key": "vp_output_audio_delay",
+      "group": "sound",
+      "title": "Delay for this output",
+      "description": "Added on top of “Audio sync” and kept separately for each output — HDMI, a soundbar on HDMI ARC, Bluetooth, the built-in speakers, headphones. Set it while listening on the output it is for."
+    },
+    {
+      "key": "vp_reset_audio_delay",
+      "group": "sound",
+      "title": "Reset saved audio sync",
+      "description": "Choosing 'Remember this delay' in the player saves the audio sync for that channel, movie or episode. Reset makes everything follow the setting above again."
+    },
+    {
+      "key": "vp_audio_lang",
+      "group": "sound",
+      "title": "Preferred audio language",
+      "description": "Plays this audio track when the stream has it. \\\"Original language\\\" plays films and series in the language they were made in."
+    },
+    {
+      "key": "vp_sub_lang",
+      "group": "sound",
+      "title": "Preferred subtitle language",
+      "description": "Auto-select this subtitle track when available."
+    },
+    {
+      "key": "vp_sub_style",
+      "group": "sound",
+      "title": "Subtitle appearance",
+      "description": "Size, text color, on-screen position and background transparency. While off, subtitles keep their stock look — including the styling broadcasters embed in Live TV subtitles."
+    },
+    {
+      "key": "vp_resume",
+      "group": "watching",
+      "title": "Resume playback",
+      "description": "What to do when a movie or episode has a saved position."
+    },
+    {
+      "key": "vp_autoplay",
+      "group": "watching",
+      "title": "Auto-play next episode",
+      "description": "When an episode ends, automatically start the next one — and roll into the next season. Catch-up plays on to the next programme too."
+    },
+    {
+      "key": "vp_measured_stats",
+      "group": "app",
+      "title": "Measured stream stats",
+      "description": "Show live fps, bitrate and dropped frames in the stream-info overlay (measured while the overlay is open, for streams that don't declare these values). Turn off only if a low-end TV stutters — it never affects the actual video, only the diagnostic numbers."
+    },
+    {
+      "key": "vp_logging",
+      "group": "app",
+      "title": "Detailed playback logging",
+      "description": "Keep a full trace of what the live engine does — every tune, fallback and reconnect — in Logcat and in the exported report. Leave it off unless you are chasing a problem; it never changes playback, only how much is written down."
+    },
+    {
+      "key": "profiles_title",
+      "group": "profile",
+      "title": "Profiles",
+      "description": ""
+    },
+    {
+      "key": "settings_profile_add",
+      "group": "profile",
+      "title": "Add a profile",
+      "description": ""
+    },
+    {
+      "key": "profiles_delete_title",
+      "group": "profile",
+      "title": "Delete \\u201c%1$s\\u201d?",
+      "description": ""
+    },
+    {
+      "key": "settings_recording_reserve",
+      "group": "watching",
+      "title": "Keep one stream free for watching",
+      "description": ""
+    },
+    {
+      "key": "settings_record_watching",
+      "group": "watching",
+      "title": "Record what I’m watching",
+      "description": ""
+    },
+    {
+      "key": "settings_recording_pre_roll",
+      "group": "watching",
+      "title": "Start early",
+      "description": ""
+    },
+    {
+      "key": "settings_recording_post_roll",
+      "group": "watching",
+      "title": "Keep going after the end",
+      "description": ""
+    },
+    {
+      "key": "settings_record_watching_warning_title",
+      "group": "watching",
+      "title": "One connection only",
+      "description": ""
+    },
+    {
+      "key": "profiles",
+      "group": "profile",
+      "title": "Profiles",
+      "description": "Each viewer keeps their own favorites, watch history, resume points and settings."
+    }
+  ]
+}

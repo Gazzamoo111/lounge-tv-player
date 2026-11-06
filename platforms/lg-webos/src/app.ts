@@ -1,3 +1,5 @@
+import { mergeFixtures } from "./sports";
+import { SettingsScreen, SettingControl, SETTINGS_ROWS } from "./settings";
 import { LoungeClient, request } from "./api";
 import editorial from "./editorial.json";
 import {
@@ -88,7 +90,13 @@ let activeAuth: Credentials | undefined;
 let cacheAccount = "",
   starting = false,
   guideSummary:
-    | { generation: string; at: number; channels: number; records: number }
+    | {
+        generation: string;
+        at: number;
+        channels: number;
+        records: number;
+        failedSources?: number;
+      }
     | undefined;
 let startupRevision = 0,
   guideWorker: Worker | undefined;
@@ -192,13 +200,18 @@ function destroyViews() {
   view++;
 }
 function closeOverlay() {
+  collections.get("episode-list")?.destroy();
+  collections.delete("episode-list");
   overlayVersion++;
   overlay.hidden = true;
   overlay.replaceChildren();
   focus.focus(returnFocus, false);
 }
 function openOverlay(title: string, cls = "modal") {
-  returnFocus = (document.activeElement as HTMLElement)?.id ?? "";
+  collections.get("episode-list")?.destroy();
+  collections.delete("episode-list");
+  if (overlay.hidden || !overlay.contains(document.activeElement))
+    returnFocus = (document.activeElement as HTMLElement)?.id ?? "";
   overlayVersion++;
   overlay.hidden = false;
   overlay.replaceChildren();
@@ -229,7 +242,11 @@ function renderShell() {
     const b = action(
       "nav-" + r.route,
       r.label,
-      () => navigate(r.route),
+      () => {
+        if (r.route === "movies" || r.route === "series")
+          selected[r.route === "movies" ? "movie" : "series"] = undefined;
+        navigate(r.route);
+      },
       "nav-item" + (route === r.route ? " selected" : ""),
       r.icon,
     );
@@ -311,6 +328,9 @@ function navigate(next: Route, restore = false) {
     } else if (next !== "live" && next !== "guide") stopPlayback();
   }
   destroyViews();
+  if (next !== route && (next === "movies" || next === "series"))
+    selected[next === "movies" ? "movie" : "series"] = undefined;
+  if (next === "settings" && route !== "settings") settingScreen.reset();
   route = next;
   const main = renderShell();
   main.replaceChildren();
@@ -362,7 +382,11 @@ function navigate(next: Route, restore = false) {
     const first =
       route === "live"
         ? main.querySelector<HTMLElement>("#live-category-tree [data-focus]")
-        : main.querySelector<HTMLElement>("[data-focus]");
+        : route === "movies" || route === "series"
+          ? main.querySelector<HTMLElement>("#browse-all")
+          : route === "settings"
+            ? main.querySelector<HTMLElement>("#settings-group-quick")
+            : main.querySelector<HTMLElement>("[data-focus]");
     if (first) focus.focus(first.id, false);
     else navEntry();
   };
@@ -434,16 +458,39 @@ async function loadAll() {
     if (generation !== accountGeneration) return;
   });
 }
+let sportsLoading = false,
+  sportsPaintTimer: ReturnType<typeof setTimeout> | undefined;
 async function loadEvents() {
+  if (sportsLoading) return;
+  sportsLoading = true;
   const generation = accountGeneration,
     source = client;
   try {
-    const rows = await source.events();
+    const saved = await deviceCache.get<{ at: number; rows: SportEvent[] }>(
+      cacheAccount + ":sports",
+    );
+    if (saved && Date.now() - saved.at < 5 * 60000 && !events.length)
+      events = saved.rows;
+    const rows = await source.events((partial) => {
+      if (generation !== accountGeneration) return;
+      if (partial.length) events = mergeFixtures([...events, ...partial]);
+      if (!starting && route === "sports" && overlay.hidden) {
+        clearTimeout(sportsPaintTimer);
+        sportsPaintTimer = setTimeout(() => {
+          if (route === "sports" && overlay.hidden) navigate("sports", true);
+        }, 300);
+      }
+    });
     if (generation !== accountGeneration) return;
     events = rows;
+    void deviceCache.put(cacheAccount + ":sports", { at: Date.now(), rows });
     delete errors.sports;
+    if (!starting && route === "sports" && overlay.hidden)
+      navigate("sports", true);
   } catch (e) {
     if (generation === accountGeneration) errors.sports = (e as Error).message;
+  } finally {
+    sportsLoading = false;
   }
 }
 function showStartup() {
@@ -493,6 +540,7 @@ function startupStage(id: string, text: string) {
   if (status) status.textContent = text;
 }
 async function loadFullGuide(onProgress: (text: string) => void) {
+  if (guideWorker) throw Error("Guide refresh is already running.");
   const generation = accountGeneration,
     account = cacheAccount,
     now = Date.now(),
@@ -508,7 +556,7 @@ async function loadFullGuide(onProgress: (text: string) => void) {
       done = false;
     const timer = setTimeout(
       () => finish(Error("Programme guide timed out")),
-      65000,
+      125000,
     );
     function finish(error?: Error) {
       if (done) return;
@@ -546,14 +594,26 @@ async function loadFullGuide(onProgress: (text: string) => void) {
               at: now,
               channels: data.channels,
               records: data.records,
+              failedSources: data.failed,
             };
             await deviceCache.put(account + ":guide-summary", guideSummary);
+            state.write("guide-client-revision", 3);
             void deviceCache.pruneGuides(account, version);
             finish();
           })
           .catch(() => finish(Error("TV guide could not be cached.")));
     };
-    worker.postMessage({ url: client.guideUrl(), ids, now });
+    worker.postMessage({
+      url: client.guideUrl(),
+      urls: guideSources()
+        .filter((s) => s.enabled)
+        .map((s) => s.url),
+      ids,
+      channels: catalogues.live ?? [],
+      overrides: state.read("guide-matches", {}),
+      now,
+      days: state.settings().guideDays,
+    });
   });
 }
 async function primeGuide() {
@@ -593,10 +653,12 @@ async function startSession(auth: Credentials, force = false) {
     await client.login();
     if (revision !== startupRevision) return;
     state.scope(auth.username);
+    applyPreferences();
     cacheAccount = auth.username;
     state.settings().rememberLogin
       ? state.remember(auth)
       : state.remember(null);
+    if (state.settings().rememberLogin) state.savePlaylist(auth);
     guideSummary = await deviceCache.get(cacheAccount + ":guide-summary");
     const optional = Promise.allSettled([loadEvents(), loadTrending()]);
     startupStage("catalogue", "Checking the playlist saved on this TV…");
@@ -631,6 +693,8 @@ async function startSession(auth: Credentials, force = false) {
         catalogues,
       });
     }
+    startupStage("catalogue", "Preparing Movies and Series for browsing…");
+    await warmLibraries();
     const counts = document.getElementById("startup-counts");
     if (counts)
       counts.textContent = `${(catalogues.live?.length ?? 0).toLocaleString()} channels · ${(catalogues.movie?.length ?? 0).toLocaleString()} movies · ${(catalogues.series?.length ?? 0).toLocaleString()} series`;
@@ -638,7 +702,13 @@ async function startSession(auth: Credentials, force = false) {
       selected.live = categories.live?.[0]?.id;
     startupStage("guide", "Checking programme guide…");
     let guideWarning = "";
-    if (force || !guideSummary || Date.now() - guideSummary.at > 6 * 3600000) {
+    if (
+      force ||
+      !guideSummary ||
+      state.read("guide-client-revision", 0) < 3 ||
+      Date.now() - guideSummary.at >
+        state.settings().guideRefreshHours * 3600000
+    ) {
       try {
         await loadFullGuide((text) => startupStage("guide", text));
       } catch {
@@ -657,7 +727,12 @@ async function startSession(auth: Credentials, force = false) {
     starting = false;
     app.replaceChildren();
     routePositions.clear();
-    navigate("home");
+    const initial = state.settings().startup as Route;
+    navigate(
+      ["home", "live", "movies", "series", "sports"].includes(initial)
+        ? initial
+        : "home",
+    );
     if (guideWarning) toast(guideWarning);
   } catch (error) {
     if (revision !== startupRevision) return;
@@ -974,7 +1049,7 @@ function poster(item: Media, id: string, still = false) {
   );
   const art = node("div", "poster-art");
   art.append(image(item.image, "poster-image", item.name));
-  if (item.rating > 0)
+  if (item.rating > 0 && state.settings().showRatings)
     art.append(node("span", "rating", `★ ${item.rating.toFixed(1)}`));
   if (state.saved(item)) art.append(node("span", "saved-badge", "♥"));
   const progress = state.progressFor(item);
@@ -1010,7 +1085,10 @@ function liveCategoryPanel(
   onSelect: (id: string) => void,
   selectedId = selected.live,
 ) {
-  const rows = categories.live ?? [],
+  const rows = (categories.live ?? []).filter(
+      (c) =>
+        !state.read<string[]>("hidden-categories", []).includes("live:" + c.id),
+    ),
     groups = categoryGroups(rows),
     selectedCategory = rows.find((c) => c.id === selectedId);
   const counts = new Map<string, number>();
@@ -1104,7 +1182,12 @@ function categoryPicker(kind: Kind, onSelect?: () => void) {
         "category-row",
       ),
     );
-    for (const cat of categories[kind] ?? [])
+    for (const cat of (categories[kind] ?? []).filter(
+      (c) =>
+        !state
+          .read<string[]>("hidden-categories", [])
+          .includes(kind + ":" + c.id),
+    ))
       box.append(
         action(
           "category-" + cat.id,
@@ -1119,7 +1202,10 @@ function categoryPicker(kind: Kind, onSelect?: () => void) {
   if (first) focus.focus(first.id);
 }
 function filtered(kind: Kind, query = "") {
-  const rows = catalogues[kind] ?? [];
+  const hidden = state.read<string[]>("hidden-categories", []);
+  const rows = (catalogues[kind] ?? []).filter(
+    (m) => !hidden.includes(kind + ":" + m.category),
+  );
   return rows.filter(
     (m) =>
       (!selected[kind] || m.category === selected[kind]) &&
@@ -1139,26 +1225,61 @@ async function cachedGuide(id: string): Promise<Programme[] | undefined> {
     );
     if (full && full.rows.some((p) => p.end > Date.now())) rows = full.rows;
   }
-  if (!rows) {
+  if (!rows && state.read("guide-canonical-enabled", true)) {
     const saved = await deviceCache.guide(account, id);
     if (saved && Date.now() - saved.at < 15 * 60000) rows = saved.rows;
   }
-  if (rows && generation === accountGeneration) {
+  if (rows?.length && generation === accountGeneration) {
     epgCache.set(id, { at: Date.now(), rows });
     if (epgCache.size > 160) epgCache.delete(epgCache.keys().next().value!);
   }
   return rows;
 }
-async function guide(id: string): Promise<Programme[]> {
+const visibleGuideQueue: {
+  id: string;
+  view: number;
+  resolve: (rows: Programme[]) => void;
+}[] = [];
+let visibleGuideActive = 0;
+function queuedGuide(id: string): Promise<Programme[]> {
+  return new Promise((resolve) => {
+    visibleGuideQueue.push({ id, view, resolve });
+    drainGuides();
+  });
+}
+function drainGuides() {
+  while (visibleGuideActive < 2 && visibleGuideQueue.length) {
+    const job = visibleGuideQueue.shift()!;
+    if (job.view !== view) {
+      job.resolve([]);
+      continue;
+    }
+    visibleGuideActive++;
+    void guide(job.id)
+      .then(job.resolve, () => job.resolve([]))
+      .finally(() => {
+        visibleGuideActive--;
+        drainGuides();
+      });
+  }
+}
+async function guideRaw(id: string): Promise<Programme[]> {
+  if (!guideSources().some((s) => s.enabled)) return [];
   const pending = guideInFlight.get(id);
   if (pending) return pending;
   const generation = accountGeneration,
     account = cacheAccount,
     source = client;
   const work = (async () => {
+    const memory = epgCache.get(id);
+    if (memory && !memory.rows.length && Date.now() - memory.at < 60000)
+      return [];
     const cached = await cachedGuide(id);
-    if (cached) return cached;
-    const rows = await source.guide(id);
+    if (cached?.some((p) => p.end > Date.now())) return cached;
+    const m = catalogues.live?.find((m) => m.id === id);
+    const rows = state.read("guide-canonical-enabled", true)
+      ? await source.guide(id, m?.epgId)
+      : [];
     await deviceCache.saveGuide(account, id, { at: Date.now(), rows });
     return rows;
   })()
@@ -1172,6 +1293,30 @@ async function guide(id: string): Promise<Programme[]> {
     .finally(() => guideInFlight.delete(id));
   guideInFlight.set(id, work);
   return work;
+}
+async function guide(id: string) {
+  const rows = await guideRaw(id),
+    shift = state.settings().epgOffset * 60000;
+  return shift
+    ? rows.map((p) => ({ ...p, start: p.start + shift, end: p.end + shift }))
+    : rows;
+}
+interface GuideSource {
+  id: string;
+  name: string;
+  url: string;
+  enabled: boolean;
+}
+function guideSources(): GuideSource[] {
+  return [
+    {
+      id: "lounge",
+      name: "Lounge TV programme guide",
+      url: client.guideUrl(),
+      enabled: state.read("guide-canonical-enabled", true),
+    },
+    ...state.read<GuideSource[]>("guide-sources", []),
+  ];
 }
 function progressBar(p: Programme | undefined) {
   const line = node("div", "progress");
@@ -1250,7 +1395,11 @@ function renderLive(main: HTMLElement) {
           b = action("channel-" + m.id, "", () => play(m), "channel-row");
         b.dataset.media = key(m);
         b.append(
-          node("span", "channel-number", String(i + 1)),
+          node(
+            "span",
+            "channel-number",
+            state.settings().channelNumbers ? String(i + 1) : "",
+          ),
           image(m.image, "channel-logo"),
           node("div", "channel-info"),
         );
@@ -1265,16 +1414,15 @@ function renderLive(main: HTMLElement) {
           clearTimeout(hoverTimer);
           hoverTimer = setTimeout(
             () => void updateLivePane(pane, m, token),
-            120,
+            state.settings().livePreview ? 800 : 160,
           );
         });
         const cached = epgCache.get(m.id)?.rows;
         if (cached) setChannelGuide(b, cached);
         // EPG lookup is cache-first and deduplicated; rows update without rebuilding the list.
-        void cachedGuide(m.id)
+        void queuedGuide(m.id)
           .then((rows) => {
-            if (rows && token === view && b.isConnected)
-              setChannelGuide(b, rows);
+            if (token === view && b.isConnected) setChannelGuide(b, rows ?? []);
           })
           .catch(() => {
             if (b.isConnected) {
@@ -1300,7 +1448,11 @@ function renderLive(main: HTMLElement) {
       void updateLivePane(pane, first, token);
     }
   }
-  search.addEventListener("input", list);
+  let queryTimer: ReturnType<typeof setTimeout>;
+  search.addEventListener("input", () => {
+    clearTimeout(queryTimer);
+    queryTimer = setTimeout(list, 180);
+  });
   renderTree();
   list();
   if (currentPlaying && preview) positionVideo(true);
@@ -1329,6 +1481,26 @@ async function updateLivePane(pane: HTMLElement, m: Media, token: number) {
     ),
   );
   pane.append(stage, node("h2", "", m.name));
+  if (
+    state.settings().livePreview &&
+    route === "live" &&
+    overlay.hidden &&
+    Date.now() - lastRemoteMove >= 600
+  ) {
+    if (currentPlaying?.id !== m.id || currentPlaying.kind !== "live") {
+      if (currentPlaying) stopPlayback();
+      currentPlaying = m;
+      preview = true;
+      playingSports = false;
+      video.muted = !state.settings().previewSound;
+      positionVideo(true);
+      hud.hidden = true;
+      void player.load(m, client.playback(m));
+    } else {
+      positionVideo(true);
+      video.muted = !state.settings().previewSound;
+    }
+  }
   try {
     const rows = await guide(m.id);
     if (token !== view || browseItem?.id !== m.id) return;
@@ -1420,6 +1592,7 @@ async function showSchedule(m: Media) {
 }
 function renderBrowse(main: HTMLElement, kind: "movie" | "series") {
   main.className = "browse";
+  if (route !== "movies" && route !== "series") selected[kind] = undefined;
   const rows = catalogues[kind];
   header(main, kind === "movie" ? "Movies" : "Series");
   if (!rows) {
@@ -1442,6 +1615,16 @@ function renderBrowse(main: HTMLElement, kind: "movie" | "series") {
   );
   let order = "provider";
   toolbar.append(
+    action(
+      "browse-all",
+      kind === "movie" ? "All movies" : "All series",
+      () => {
+        selected[kind] = undefined;
+        navigate(kind === "movie" ? "movies" : "series");
+      },
+      "tool" + (!selected[kind] ? " on" : ""),
+      "LIST_GRID",
+    ),
     search,
     action(
       "browse-sort",
@@ -1487,27 +1670,60 @@ function renderBrowse(main: HTMLElement, kind: "movie" | "series") {
       items = [...items].sort(
         (a, b) => (order === "az" ? 1 : -1) * a.name.localeCompare(b.name),
       );
-    const col = new VirtualCollection(host, items.length, 6, 444, (i) => {
-      const m = items[i];
-      const p = poster(m, "vod-" + m.id);
-      p.addEventListener("focus", () => {
-        browseItem = m;
-        clearTimeout(hoverTimer);
-        hoverTimer = setTimeout(
-          () => void spotlightFor(m, spotlight, backdrop, token),
-          180,
-        );
-      });
-      return p;
-    });
+    const col = new VirtualCollection(
+      host,
+      items.length,
+      state.settings().vodColumns,
+      444,
+      (i) => {
+        const m = items[i];
+        const p = poster(m, "vod-" + m.id);
+        p.addEventListener("focus", () => {
+          browseItem = m;
+          clearTimeout(hoverTimer);
+          hoverTimer = setTimeout(
+            () => void spotlightFor(m, spotlight, backdrop, token),
+            750,
+          );
+        });
+        return p;
+      },
+    );
     collections.set(host.id, col);
     if (items[0]) {
       browseItem = items[0];
-      void spotlightFor(items[0], spotlight, backdrop, token);
+      void spotlightFor(items[0], spotlight, backdrop, token, false);
     }
   }
-  search.addEventListener("input", list);
+  let queryTimer: ReturnType<typeof setTimeout>;
+  search.addEventListener("input", () => {
+    clearTimeout(queryTimer);
+    queryTimer = setTimeout(list, 180);
+  });
   list();
+}
+async function warmLibraries() {
+  // All three complete catalogues are already in memory. Warm only the opening window,
+  // never issue thousands of metadata requests or decode the entire poster library.
+  const rows = [
+    ...(catalogues.movie ?? []).slice(0, 12),
+    ...(catalogues.series ?? []).slice(0, 12),
+  ];
+  await Promise.race([
+    mapLimit(rows, 2, async (m) => {
+      const saved = await deviceCache.get<{ at: number; details: Details }>(
+        cacheAccount + ":details:" + key(m),
+      );
+      if (saved && Date.now() - saved.at < 7 * 86400000)
+        detailCache.set(key(m), saved.details);
+      const img = image(m.image);
+      img.loading = "eager";
+      try {
+        await img.decode();
+      } catch {}
+    }),
+    new Promise((r) => setTimeout(r, 1800)),
+  ]);
 }
 async function getDetails(m: Media): Promise<Details> {
   const id = key(m),
@@ -1516,8 +1732,20 @@ async function getDetails(m: Media): Promise<Details> {
   const pending = detailsInFlight.get(id);
   if (pending) return pending;
   const generation = accountGeneration;
-  const work = client
-    .details(m)
+  const account = cacheAccount,
+    source = client;
+  const work = (async () => {
+    const saved = await deviceCache.get<{ at: number; details: Details }>(
+      account + ":details:" + id,
+    );
+    if (saved && Date.now() - saved.at < 7 * 86400000) return saved.details;
+    const d = await source.details(m);
+    void deviceCache.put(account + ":details:" + id, {
+      at: Date.now(),
+      details: d,
+    });
+    return d;
+  })()
     .then((d) => {
       if (generation === accountGeneration) {
         detailCache.set(id, d);
@@ -1535,6 +1763,7 @@ async function spotlightFor(
   spotlight: HTMLElement,
   backdrop: HTMLElement,
   token: number,
+  enrich = true,
 ) {
   const apply = (item: Media) => {
     spotlight.replaceChildren(node("h2", "", item.name));
@@ -1549,12 +1778,19 @@ async function spotlightFor(
     if (meta) spotlight.append(node("p", "metadata", meta));
     if (item.plot) spotlight.append(node("p", "overview", item.plot));
     backdrop.replaceChildren();
-    if (item.backdrop) backdrop.append(image(item.backdrop, "browse-art"));
+    if (item.backdrop && state.settings().backdrop)
+      backdrop.append(image(item.backdrop, "browse-art"));
   };
   apply(m);
+  if (!enrich || !state.settings().metadataOnFocus) return;
   try {
     const d = await getDetails(m);
-    if (token === view && browseItem?.id === m.id) apply(d.media);
+    if (
+      token === view &&
+      browseItem?.id === m.id &&
+      Date.now() - lastRemoteMove >= 650
+    )
+      apply(d.media);
   } catch {
     /* Browsing remains usable when metadata is temporarily unavailable. */
   }
@@ -1569,7 +1805,11 @@ async function openDetails(m: Media) {
   );
   focus.focus("details-close");
   try {
-    const d = await getDetails(m);
+    const pending = getDetails(m);
+    const d: Details =
+      m.kind === "movie"
+        ? { media: { ...m }, episodes: [], seasons: [], cast: "" }
+        : await pending;
     if (token !== overlayVersion) return;
     box.replaceChildren();
     if (d.media.backdrop)
@@ -1636,24 +1876,37 @@ async function openDetails(m: Media) {
       const list = node("div", "episodes");
       list.id = "episode-list";
       const renderSeason = (season: number) => {
+        collections.get(list.id)?.destroy();
         list.replaceChildren();
+        list.scrollTop = 0;
         const episodes = d.episodes.filter((e) => e.season === season);
-        for (const ep of episodes) {
-          const progress = state.progressFor(ep);
-          const b = action(
-            "episode-" + ep.id,
-            `${ep.episode}. ${ep.name}${progress && !progress.complete && progress.position > 15 ? " · Resume " + duration(progress.position) : ""}`,
-            () => {
-              episodeQueue = d.episodes;
-              play(ep, progress && !progress.complete ? progress.position : 0);
-            },
-            "episode",
-          );
-          b.append(image(ep.image, "episode-image"));
-          if (ep.plot) b.append(node("small", "muted", ep.plot));
-          b.dataset.media = key(ep);
-          list.append(b);
-        }
+        const episodeCollection = new VirtualCollection(
+          list,
+          episodes.length,
+          1,
+          120,
+          (i) => {
+            const ep = episodes[i];
+            const progress = state.progressFor(ep);
+            const b = action(
+              "episode-" + ep.id,
+              `${ep.episode}. ${ep.name}${progress && !progress.complete && progress.position > 15 ? " · Resume " + duration(progress.position) : ""}`,
+              () => {
+                episodeQueue = d.episodes;
+                play(
+                  ep,
+                  progress && !progress.complete ? progress.position : 0,
+                );
+              },
+              "episode",
+            );
+            b.append(image(ep.image, "episode-image"));
+            if (ep.plot) b.append(node("small", "muted", ep.plot));
+            b.dataset.media = key(ep);
+            return b;
+          },
+        );
+        collections.set(list.id, episodeCollection);
       };
       d.seasons.forEach((s) =>
         seasonBar.append(
@@ -1680,6 +1933,31 @@ async function openDetails(m: Media) {
           ),
         );
     }
+    if (m.kind === "movie")
+      void pending
+        .then((full) => {
+          if (token !== overlayVersion) return;
+          Object.assign(d.media, full.media);
+          const title = info.querySelector("h1"),
+            meta = info.querySelector(".metadata"),
+            plot = info.querySelector(".overview");
+          if (title) title.textContent = full.media.name;
+          if (meta)
+            meta.textContent = [
+              full.media.year,
+              full.media.genre,
+              full.media.rating ? `★ ${full.media.rating}` : "",
+              full.media.duration ? duration(full.media.duration) : "",
+            ]
+              .filter(Boolean)
+              .join(" • ");
+          if (plot) plot.textContent = full.media.plot ?? "";
+          if (full.media.backdrop && !box.querySelector(".details-backdrop"))
+            box.prepend(image(full.media.backdrop, "details-backdrop"));
+        })
+        .catch(() => {
+          /* Prepared movie controls remain available when extra metadata fails. */
+        });
     focus.focus(
       m.kind === "movie"
         ? document.getElementById("detail-resume")
@@ -1736,6 +2014,10 @@ function renderSports(main: HTMLElement) {
       "Live fixtures, today’s schedule and what comes next",
     ),
   );
+  if (sportsLoading)
+    main.append(
+      node("p", "sports-loading", "Loading connected sports sources…"),
+    );
   const time = node("div", "sport-time");
   for (const [id, label] of [
     ["live", "Live now"],
@@ -1791,8 +2073,9 @@ function renderSports(main: HTMLElement) {
   filter.append(
     action(
       "sport-refresh",
-      "Refresh",
+      sportsLoading ? "Loading…" : "Refresh",
       async () => {
+        if (sportsLoading) return;
         await loadEvents();
         if (route === "sports" && overlay.hidden) navigate("sports", true);
       },
@@ -2051,136 +2334,727 @@ function renderSearch(main: HTMLElement) {
   });
   results();
 }
+const quickDefaults = [
+  "vp_live_preview",
+  "vp_preview_audio",
+  "vp_channel_numbers",
+  "vp_hdr",
+  "vp_autoplay",
+  "update_startup",
+];
+const settingScreen = new SettingsScreen({
+  control: settingControl,
+  focus: (id) => focus.focus(id),
+  pins: () => state.read<string[]>("quick-pins", quickDefaults),
+  savePins: (keys) => state.write("quick-pins", keys),
+  menu: (key) => {
+    const keys = state.read<string[]>("quick-pins", quickDefaults),
+      has = keys.includes(key);
+    const box = openOverlay("Quick settings");
+    box.append(
+      action("setting-pin", has ? "Unpin from Quick" : "Pin to Quick", () => {
+        state.write(
+          "quick-pins",
+          has ? keys.filter((k) => k !== key) : [...keys, key],
+        );
+        closeOverlay();
+        settingScreen.render(document.getElementById("main")!);
+        focus.focus("setting-" + key);
+      }),
+      action("setting-pin-close", "Cancel", closeOverlay),
+    );
+    focus.focus("setting-pin");
+  },
+});
 function renderSettings(main: HTMLElement) {
-  main.className = "settings";
-  header(main, "Settings");
-  const settings = state.settings();
-  const list = node("div", "settings-list");
-  list.append(
-    node("h2", "", "Your lounge"),
-    action(
-      "settings-profiles",
-      "Profiles · " + state.profileName,
-      profiles,
-      "settings-row",
-      "PERSON",
-    ),
-    action(
-      "settings-refresh",
-      "Refresh catalogue and programme guide",
-      async () => {
-        const auth = activeAuth;
-        if (!auth) return;
-        epgCache.clear();
-        detailCache.clear();
-        await startSession(auth, true);
-      },
-      "settings-row",
-      "REFRESH",
-    ),
-    node("h2", "", "Playback"),
-  );
-  list.append(
-    action(
-      "settings-autoplay",
-      "Play next episode · " + (settings.autoplayNext ? "On" : "Off"),
-      () => {
-        settings.autoplayNext = !settings.autoplayNext;
-        state.setSettings(settings);
-        navigate("settings");
-      },
-      "settings-row",
-      "PLAY",
-    ),
-    action(
-      "settings-subtitles",
-      "Subtitles by default · " + (settings.subtitles ? "On" : "Off"),
-      () => {
-        settings.subtitles = !settings.subtitles;
-        state.setSettings(settings);
-        navigate("settings");
-      },
-      "settings-row",
-      "SUBTITLE",
-    ),
-    action(
-      "settings-aspect",
-      "Picture fit · " + settings.aspect,
-      () => {
-        settings.aspect =
-          settings.aspect === "contain"
-            ? "cover"
-            : settings.aspect === "cover"
-              ? "fill"
-              : "contain";
-        state.setSettings(settings);
-        video.style.objectFit = settings.aspect;
-        navigate("settings");
-      },
-      "settings-row",
-      "EXPAND",
-    ),
-    node("h2", "", "Account and history"),
-    action(
-      "settings-remember",
-      "Remember login · " + (settings.rememberLogin ? "On" : "Off"),
-      () => {
-        settings.rememberLogin = !settings.rememberLogin;
-        state.setSettings(settings);
-        if (!settings.rememberLogin) state.remember(null);
-        navigate("settings");
-      },
-      "settings-row",
-      "LOCK",
-    ),
-    action(
-      "settings-history",
-      "Clear watch history for " + state.profileName,
-      () =>
-        confirm("Clear watch history?", () => {
-          state.clearHistory();
-          closeOverlay();
-          toast("Watch history cleared");
-        }),
-      "settings-row",
-      "TRASH",
-    ),
-    action(
-      "settings-signout",
-      "Sign out",
-      () =>
-        confirm("Sign out of Lounge TV?", () => {
-          accountGeneration++;
-          startupRevision++;
-          activeAuth = undefined;
-          guideWorker?.terminate();
-          guideWorker = undefined;
-          guideInFlight.clear();
-          detailsInFlight.clear();
-          state.remember(null);
-          stopPlayback();
-          catalogues = {};
-          categories = {};
-          events = [];
-          epgCache.clear();
-          detailCache.clear();
-          closeOverlay();
-          login();
-        }),
-      "settings-row",
-      "PERSON",
-    ),
-    action(
-      "settings-diagnostics",
-      "Playback diagnostics",
-      showDiagnostics,
-      "settings-row",
-      "INFO",
-    ),
-    node("p", "muted", "Lounge TV for LG · QA 0.1.2"),
-  );
-  main.append(list);
+  settingScreen.render(main);
 }
+function applyPreferences() {
+  const s = state.settings();
+  document.body.dataset.motion = String(s.animations);
+  document.body.dataset.backdrop = String(s.backdrop);
+  document.documentElement.style.setProperty("--blue", s.accent);
+  document.documentElement.style.setProperty(
+    "--text-scale",
+    String(s.fontSize / 100),
+  );
+  video.style.objectFit = s.aspect;
+  video.volume = Math.max(0, Math.min(1, s.volume / 100));
+  player.configure({
+    startupTimeout: s.tuneTimeout * 1000,
+    reconnects: s.reconnects,
+  });
+}
+function settingControl(id: string): SettingControl | undefined {
+  const aliases: Record<string, string> = {
+    quick_live_preview: "vp_live_preview",
+    quick_preview_sound: "vp_preview_audio",
+    quick_channel_numbers: "vp_channel_numbers",
+    quick_hdr: "vp_hdr",
+    quick_autoplay: "vp_autoplay",
+    quick_check_update: "update_startup",
+    profiles_title: "profiles",
+    settings_profile_add: "profiles",
+    navigation: "navigation",
+    live_layout: "live_layout",
+  };
+  id = aliases[id] ?? id;
+  const settings = state.settings();
+  const toggle = (
+    key: keyof typeof settings,
+    help?: string,
+  ): SettingControl => ({
+    value: settings[key] ? "On" : "Off",
+    help,
+    run: () => {
+      state.setSettings({ ...state.settings(), [key]: !state.settings()[key] });
+      applyPreferences();
+    },
+  });
+  const choice = (
+    key: keyof typeof settings,
+    values: (string | number)[],
+    label = (v: any) => String(v),
+  ): SettingControl => ({
+    value: label(settings[key]),
+    run: () => {
+      const box = openOverlay(
+        SETTINGS_ROWS.find((r) => r.key === id)?.title ?? "Choose",
+      );
+      for (const [i, v] of values.entries())
+        box.append(
+          action(
+            "setting-choice-" + i,
+            label(v) + (settings[key] === v ? " · Selected" : ""),
+            () => {
+              state.setSettings({
+                ...state.settings(),
+                [key]: v,
+                ...(key === "subtitleLanguage"
+                  ? { subtitles: v !== "off" }
+                  : {}),
+              });
+              applyPreferences();
+              closeOverlay();
+              settingScreen.render(document.getElementById("main")!);
+              focus.focus("setting-" + id);
+            },
+          ),
+        );
+      box.append(action("setting-choice-close", "Cancel", closeOverlay));
+      focus.focus(
+        "setting-choice-" +
+          Math.max(0, values.indexOf(settings[key] as string | number)),
+      );
+    },
+  });
+  const open = (
+    value: string,
+    run: () => void,
+    help?: string,
+  ): SettingControl => ({ value, run, help });
+  if (id === "vp_autoplay") return toggle("autoplayNext");
+  if (id === "vp_preview_audio")
+    return toggle(
+      "previewSound",
+      "Audio is enabled only while Live preview is running.",
+    );
+  if (id === "vp_live_preview")
+    return toggle(
+      "livePreview",
+      "Play the focused channel in the Live preview after the remote has settled. Off avoids tuning streams while browsing.",
+    );
+  if (id === "vp_channel_numbers") return toggle("channelNumbers");
+  if (id === "vp_resume") return toggle("resume");
+  if (id === "animations") return toggle("animations");
+  if (id === "reminders") return toggle("remindersEnabled");
+  if (id === "reminder_lead")
+    return choice("reminderLead", [1, 5, 10, 15, 30], (v) => v + " minutes");
+  if (id === "vp_zoom")
+    return choice(
+      "aspect",
+      ["contain", "cover", "fill"],
+      (v) =>
+        ({ contain: "Fit", cover: "Fill screen", fill: "Stretch" })[
+          v as string
+        ] ?? v,
+    );
+  if (id === "vp_reset_zoom")
+    return open("Reset", () => {
+      state.setSettings({ ...settings, aspect: "contain" });
+      applyPreferences();
+      toast("Picture fit reset");
+    });
+  if (id === "accent")
+    return choice("accent", ["#0084ff", "#00cbb5", "#a57bff", "#f0b342"]);
+  if (id === "fonts")
+    return choice("fontSize", [90, 100, 110, 120], (v) => v + "%");
+  if (id === "vod_layout")
+    return choice("vodColumns", [5, 6, 7], (v) => v + " columns");
+  if (id === "epg_offset")
+    return choice("epgOffset", [-180, -120, -60, 0, 60, 120, 180], (v) =>
+      v === 0 ? "No shift" : (v > 0 ? "+" : "") + v + " minutes",
+    );
+  if (id === "guide_days")
+    return choice("guideDays", [1, 3, 7, 8], (v) => v + " days (next refresh)");
+  if (id === "vp_volume")
+    return choice("volume", [0, 25, 50, 75, 100], (v) => v + "%");
+  if (id === "vp_reset_volume")
+    return open("Reset", () => {
+      state.setSettings({ ...settings, volume: 100 });
+      applyPreferences();
+    });
+  if (id === "vp_audio_lang")
+    return choice("audioLanguage", ["en", "mi", "fr", "es", "de"]);
+  if (id === "vp_sub_lang")
+    return choice("subtitleLanguage", ["off", "en", "mi", "fr", "es", "de"]);
+  if (id === "vp_seek_step")
+    return choice("seekStep", [5, 10, 15, 30, 60], (v) => v + " seconds");
+  if (id === "vp_tune_timeout")
+    return choice("tuneTimeout", [15, 22, 30, 45], (v) => v + " seconds");
+  if (id === "vp_vod_reconnects")
+    return choice(
+      "reconnects",
+      [0, 1, 2, 4, 6],
+      (v) => v + " retries per outage",
+    );
+  if (id === "app_startup")
+    return choice("startup", ["home", "live", "movies", "series", "sports"]);
+  if (id === "tab_sources" || id === "playlists")
+    return open(state.playlists().length + " playlists", playlistSettings);
+  if (id === "tab_epg")
+    return open(
+      guideSources().filter((s) => s.enabled).length + " sources",
+      epgSettings,
+    );
+  if (id === "profiles")
+    return open(state.profiles().length + " profiles", profileSettings);
+  if (id === "profiles_delete_title") return open("Manage", profileSettings);
+  if (id === "tab_sports")
+    return open(events.length + " fixtures", () => navigate("sports"));
+  if (id === "vp_measured_stats" || id === "vp_logging" || id === "diagnostics")
+    return open(player.trace.length + " entries", showDiagnostics);
+  if (id === "about")
+    return open("0.1.3", () => {
+      const b = openOverlay("Lounge TV for LG");
+      b.append(
+        node("p", "", "QA 0.1.3 · Native webOS player"),
+        node(
+          "p",
+          "muted",
+          "Android reference v5.2.3.10. LG feature coverage is shown per setting.",
+        ),
+        action("about-close", "Close", closeOverlay),
+      );
+      focus.focus("about-close");
+    });
+  if (id === "saved")
+    return open(state.favourites().length + " saved", () => navigate("saved"));
+  if (id === "history")
+    return open(state.progress().length + " titles", () =>
+      confirm("Clear watch history for " + state.profileName + "?", () => {
+        state.clearHistory();
+        closeOverlay();
+        toast("Watch history cleared");
+      }),
+    );
+  if (id === "backup")
+    return open(
+      state.read("local-backup", null) ? "Saved on this TV" : "Never",
+      backupSettings,
+    );
+  if (id === "tab_metadata")
+    return open(
+      settings.metadataOnFocus ? "On focus" : "On selection",
+      () => {
+        const b = openOverlay("Metadata");
+        b.append(
+          action(
+            "metadata-focus",
+            "Load details while browsing · " +
+              (settings.metadataOnFocus ? "On" : "Off"),
+            () => {
+              state.setSettings({
+                ...state.settings(),
+                metadataOnFocus: !state.settings().metadataOnFocus,
+              });
+              closeOverlay();
+            },
+          ),
+          action(
+            "metadata-backdrop",
+            "Browse backdrops · " + (settings.backdrop ? "On" : "Off"),
+            () => {
+              state.setSettings({
+                ...state.settings(),
+                backdrop: !state.settings().backdrop,
+              });
+              applyPreferences();
+              closeOverlay();
+            },
+          ),
+          action(
+            "metadata-rating",
+            "Ratings · " + (settings.showRatings ? "On" : "Off"),
+            () => {
+              state.setSettings({
+                ...state.settings(),
+                showRatings: !state.settings().showRatings,
+              });
+              closeOverlay();
+            },
+          ),
+          action("metadata-close", "Close", closeOverlay),
+        );
+        focus.focus("metadata-focus");
+      },
+      "Metadata and large artwork load on selection by default to keep LG navigation responsive.",
+    );
+  if (id === "tab_customize")
+    return open("Local category visibility", customizeSettings);
+  if (id === "browsing_lists")
+    return choice("vodColumns", [5, 6, 7], (v) => v + " columns");
+  if (id === "tab_home")
+    return choice("startup", ["home", "live", "movies", "series", "sports"]);
+  if (id === "vp_live_engine" || id === "vp_vod_engine" || id === "vp_hw")
+    return {
+      value: "LG native",
+      supported: false,
+      run: () => {},
+      help: "LG native playback uses the TV hardware decoder. Android ExoPlayer and MPV are not included in this webOS build. Changing engines requires a separate webOS implementation.",
+    };
+  if (id === "theme")
+    return {
+      value: "Lounge dark",
+      supported: false,
+      run: () => {},
+      help: "The LG app currently uses the Lounge dark theme. Additional Android themes have not been ported.",
+    };
+  if (id === "navigation")
+    return {
+      value: "Icons",
+      supported: false,
+      run: () => {},
+      help: "The sidebar stays icons-only, as requested for LG.",
+    };
+  return undefined;
+}
+function playlistSettings() {
+  const b = openOverlay("Playlists");
+  for (const playlist of state.playlists())
+    b.append(
+      action(
+        "playlist-switch-" + playlist.auth.username,
+        playlist.name +
+          (playlist.auth.username === activeAuth?.username ? " · In use" : ""),
+        () => {
+          closeOverlay();
+          void startSession(playlist.auth);
+        },
+      ),
+    );
+  b.append(
+    action("playlist-add", "Add a Lounge TV playlist", addPlaylist),
+    node("h2", "", state.profileName + " · Lounge TV"),
+    node(
+      "p",
+      "muted",
+      `${catalogues.live?.length ?? 0} channels · ${catalogues.movie?.length ?? 0} movies · ${catalogues.series?.length ?? 0} series`,
+    ),
+    action("playlist-refresh", "Refresh playlist and guide", () => {
+      closeOverlay();
+      if (activeAuth) void startSession(activeAuth, true);
+    }),
+    action(
+      "playlist-remember",
+      "Remember login · " + (state.settings().rememberLogin ? "On" : "Off"),
+      () => {
+        const s = state.settings();
+        s.rememberLogin = !s.rememberLogin;
+        state.setSettings(s);
+        state.remember(s.rememberLogin ? (activeAuth ?? null) : null);
+        if (!s.rememberLogin && activeAuth)
+          state.forgetPlaylist(activeAuth.username);
+        closeOverlay();
+        playlistSettings();
+      },
+    ),
+    action("playlist-login", "Change playlist login", () =>
+      confirm("Change Lounge TV login?", () => {
+        stopPlayback();
+        state.remember(null);
+        closeOverlay();
+        login();
+      }),
+    ),
+    action("playlist-remove", "Remove saved playlist login", () =>
+      confirm("Remove this saved login?", () => {
+        if (activeAuth) state.forgetPlaylist(activeAuth.username);
+        state.remember(null);
+        closeOverlay();
+        toast("Saved login removed. Current session stays active.");
+      }),
+    ),
+    action("playlist-close", "Close", closeOverlay),
+  );
+  focus.focus("playlist-refresh");
+}
+function addPlaylist() {
+  const b = openOverlay("Add Lounge TV playlist"),
+    name = input("playlist-name", "Playlist name"),
+    user = input("playlist-user", "Username"),
+    pass = input("playlist-password", "Password", true),
+    error = node("p", "error");
+  b.append(
+    name,
+    user,
+    pass,
+    error,
+    action("playlist-add-save", "Sign in and prepare playlist", async () => {
+      const auth = { username: user.value.trim(), password: pass.value };
+      if (!auth.username || !auth.password) {
+        error.textContent = "Enter username and password.";
+        return;
+      }
+      try {
+        await new LoungeClient(auth).login();
+        state.savePlaylist(auth, name.value.trim());
+        closeOverlay();
+        await startSession(auth);
+      } catch {
+        error.textContent =
+          "Unable to sign in. Check the playlist credentials.";
+      }
+    }),
+    action("playlist-add-cancel", "Cancel", closeOverlay),
+  );
+  focus.focus(name.id);
+}
+function epgSettings() {
+  const b = openOverlay("EPG sources");
+  b.append(
+    node(
+      "p",
+      "muted",
+      "Source changes apply when you refresh the guide. Additional feeds must permit HTTPS XMLTV access from TV apps.",
+    ),
+  );
+  b.append(
+    node(
+      "p",
+      "muted",
+      guideSummary
+        ? `${guideSummary.channels} matched guide channels · ${guideSummary.records.toLocaleString()} programmes · Updated ${nzDate(guideSummary.at)} ${nzTime(guideSummary.at)}${guideSummary.failedSources ? " · " + guideSummary.failedSources + " sources failed" : ""}`
+        : "Guide not yet loaded",
+    ),
+  );
+  for (const source of guideSources())
+    b.append(
+      action(
+        "epg-source-" + source.id,
+        source.name + " · " + (source.enabled ? "On" : "Off"),
+        () => {
+          if (source.id === "lounge")
+            state.write("guide-canonical-enabled", !source.enabled);
+          else
+            state.write(
+              "guide-sources",
+              state
+                .read<GuideSource[]>("guide-sources", [])
+                .map((s) =>
+                  s.id === source.id ? { ...s, enabled: !s.enabled } : s,
+                ),
+            );
+          state.write("guide-client-revision", 0);
+          closeOverlay();
+          epgSettings();
+        },
+      ),
+      ...(source.id === "lounge"
+        ? []
+        : [
+            action("epg-remove-" + source.id, "Remove " + source.name, () => {
+              state.write(
+                "guide-sources",
+                state
+                  .read<GuideSource[]>("guide-sources", [])
+                  .filter((s) => s.id !== source.id),
+              );
+              closeOverlay();
+              epgSettings();
+            }),
+          ]),
+    );
+  b.append(
+    action("epg-add", "Add XMLTV source", addEpgSource),
+    action("epg-sync", "Refresh EPG now", async () => {
+      const status = node("p", "muted", "Preparing guide…");
+      b.append(status);
+      try {
+        await loadFullGuide((text) => (status.textContent = text));
+        epgCache.clear();
+        status.textContent = `${guideSummary?.channels ?? 0} channels ready${guideSummary?.failedSources ? " · " + guideSummary.failedSources + " sources failed" : ""}`;
+        toast("Programme guide refreshed");
+      } catch {
+        status.textContent = "Guide refresh failed. Previous guide retained.";
+      }
+    }),
+    action("epg-match", "Match a channel to EPG", matchGuideSettings),
+    action(
+      "epg-refresh-hours",
+      "Refresh on startup after · " +
+        state.settings().guideRefreshHours +
+        " hours",
+      () => {
+        const s = state.settings();
+        s.guideRefreshHours =
+          s.guideRefreshHours === 6 ? 12 : s.guideRefreshHours === 12 ? 24 : 6;
+        state.setSettings(s);
+        closeOverlay();
+        epgSettings();
+      },
+    ),
+    action("epg-close", "Close", closeOverlay),
+  );
+  focus.focus("epg-source-lounge");
+}
+function addEpgSource() {
+  const b = openOverlay("Add XMLTV source"),
+    name = input("epg-name", "Source name"),
+    url = input("epg-url", "https://… XMLTV URL"),
+    error = node("p", "error");
+  b.append(
+    name,
+    url,
+    error,
+    action("epg-save", "Save source", () => {
+      try {
+        const u = new URL(url.value);
+        if (u.protocol !== "https:") throw Error();
+        const sources = state.read<GuideSource[]>("guide-sources", []);
+        if (sources.length >= 5) {
+          error.textContent = "Up to five additional sources are supported.";
+          return;
+        }
+        state.write("guide-sources", [
+          ...sources,
+          {
+            id: "epg" + Date.now(),
+            name: name.value.trim() || "Programme guide",
+            url: u.toString(),
+            enabled: true,
+          },
+        ]);
+        state.write("guide-client-revision", 0);
+        closeOverlay();
+        epgSettings();
+      } catch {
+        error.textContent = "Enter a valid HTTPS XMLTV address.";
+      }
+    }),
+    action("epg-add-close", "Cancel", closeOverlay),
+  );
+  focus.focus(name.id);
+}
+function matchGuideSettings() {
+  const b = openOverlay("Match channel EPG"),
+    search = input("epg-match-search", "Find a channel"),
+    results = node("div");
+  b.append(search, results, action("epg-match-close", "Close", closeOverlay));
+  const draw = () => {
+    results.replaceChildren();
+    if (!search.value.trim()) return;
+    const matches = (catalogues.live ?? [])
+      .filter((m) => m.name.toLowerCase().includes(search.value.toLowerCase()))
+      .slice(0, 12);
+    for (const m of matches)
+      results.append(
+        action("epg-channel-" + m.id, m.name, () => {
+          const form = openOverlay("EPG match · " + m.name),
+            id = input("epg-match-id", "Exact XMLTV channel ID");
+          id.value =
+            state.read<Record<string, string>>("guide-matches", {})[m.id] ??
+            m.epgId ??
+            "";
+          form.append(
+            id,
+            action("epg-match-save", "Save and refresh guide", async () => {
+              state.write("guide-matches", {
+                ...state.read<Record<string, string>>("guide-matches", {}),
+                [m.id]: id.value.trim(),
+              });
+              state.write("guide-client-revision", 0);
+              const status = node("p", "muted", "Refreshing…");
+              form.append(status);
+              try {
+                await loadFullGuide((t) => (status.textContent = t));
+                epgCache.clear();
+                closeOverlay();
+                toast("Channel guide updated");
+              } catch {
+                status.textContent = "Refresh failed. Match saved for retry.";
+              }
+            }),
+            action("epg-match-reset", "Use playlist ID", () => {
+              const ids = state.read<Record<string, string>>(
+                "guide-matches",
+                {},
+              );
+              delete ids[m.id];
+              state.write("guide-matches", ids);
+              state.write("guide-client-revision", 0);
+              closeOverlay();
+            }),
+            action("epg-match-cancel", "Cancel", closeOverlay),
+          );
+          focus.focus(id.id);
+        }),
+      );
+  };
+  search.addEventListener("input", draw);
+  focus.focus(search.id);
+}
+function profileSettings() {
+  const b = openOverlay("Profiles");
+  for (const p of state.profiles())
+    b.append(
+      action(
+        "profile-edit-" + p.id,
+        p.name + (p.id === state.profile ? " · In use" : ""),
+        () => {
+          const form = openOverlay("Edit profile"),
+            name = input("profile-edit-name", "Profile name");
+          name.value = p.name;
+          form.append(
+            name,
+            action("profile-edit-save", "Save name", () => {
+              if (!name.value.trim()) return;
+              state.write(
+                "profiles",
+                state
+                  .profiles()
+                  .map((x) =>
+                    x.id === p.id
+                      ? { ...x, name: name.value.trim().slice(0, 24) }
+                      : x,
+                  ),
+              );
+              closeOverlay();
+              profileSettings();
+            }),
+            action("profile-edit-switch", "Use this profile", () => {
+              state.switchProfile(p.id);
+              closeOverlay();
+              navigate("home");
+            }),
+            ...(state.profiles().length > 1
+              ? [
+                  action("profile-edit-delete", "Delete profile", () =>
+                    confirm("Delete " + p.name + "?", () => {
+                      const rows = state
+                        .profiles()
+                        .filter((x) => x.id !== p.id);
+                      state.write("profiles", rows);
+                      if (state.profile === p.id)
+                        state.switchProfile(rows[0].id);
+                      closeOverlay();
+                      profileSettings();
+                    }),
+                  ),
+                ]
+              : []),
+            action("profile-edit-close", "Close", closeOverlay),
+          );
+          focus.focus(name.id);
+        },
+      ),
+    );
+  b.append(
+    action("profile-settings-add", "Add a profile", profiles),
+    action("profile-settings-close", "Close", closeOverlay),
+  );
+  focus.focus("profile-edit-" + state.profile);
+}
+function backupSettings() {
+  const b = openOverlay("Backup & Restore");
+  b.append(
+    node(
+      "p",
+      "muted",
+      "Save one local snapshot on this TV. Includes profiles, favorites, watch history and preferences. Login credentials are excluded. This does not protect against uninstalling or resetting the TV.",
+    ),
+    action("backup-save", "Create local backup", () => {
+      const profiles = state.profiles();
+      const values: Record<string, unknown> = {
+        profiles,
+        settings: state.settings(),
+      };
+      for (const p of profiles)
+        for (const k of ["favourites", "progress", "reminders", "teams"])
+          values[p.id + ":" + k] = state.read(p.id + ":" + k, []);
+      state.write("local-backup", { at: Date.now(), values });
+      toast("Backup saved on this TV");
+    }),
+    action("backup-restore", "Restore local backup", () => {
+      const backup = state.read<{ values: Record<string, unknown> } | null>(
+        "local-backup",
+        null,
+      );
+      if (!backup) {
+        toast("No local backup exists");
+        return;
+      }
+      confirm("Restore the saved local backup?", () => {
+        for (const [key, value] of Object.entries(backup.values))
+          state.write(key, value);
+        state.switchProfile(state.profiles()[0].id);
+        applyPreferences();
+        closeOverlay();
+        navigate("settings");
+        toast("Local backup restored");
+      });
+    }),
+    action("backup-close", "Close", closeOverlay),
+  );
+  focus.focus("backup-save");
+}
+function customizeSettings() {
+  const b = openOverlay("Category visibility"),
+    search = input("customize-search", "Find a category"),
+    rows = node("div");
+  b.append(search, rows, action("customize-close", "Close", closeOverlay));
+  const draw = () => {
+    rows.replaceChildren();
+    for (const [kind, cats] of Object.entries(categories))
+      for (const c of cats ?? []) {
+        if (
+          !search.value ||
+          !c.name.toLowerCase().includes(search.value.toLowerCase())
+        )
+          continue;
+        const id = kind + ":" + c.id,
+          hidden = state.read<string[]>("hidden-categories", []);
+        rows.append(
+          action(
+            "hide-" + kind + "-" + c.id,
+            c.name + " · " + (hidden.includes(id) ? "Hidden" : "Visible"),
+            () => {
+              const ids = state.read<string[]>("hidden-categories", []);
+              state.write(
+                "hidden-categories",
+                ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id],
+              );
+              draw();
+            },
+          ),
+        );
+        if (rows.childElementCount >= 30) return;
+      }
+  };
+  search.addEventListener("input", draw);
+  focus.focus(search.id);
+}
+
 function confirm(title: string, yes: () => void) {
   const box = openOverlay(title);
   box.append(
@@ -2206,7 +3080,17 @@ player.onTrace = () => {
 };
 function showDiagnostics() {
   const box = openOverlay("Playback diagnostics");
+  const frame = [...player.trace]
+    .reverse()
+    .find((t) => t.event === "first-decoded-frame");
   box.append(
+    node(
+      "p",
+      "muted",
+      frame
+        ? `Last first decoded frame: ${((frame.attemptElapsed ?? frame.elapsed ?? 0) / 1000).toFixed(1)} seconds. Guide: ${guideSummary?.channels ?? 0} channels. Sports: ${events.length} fixtures.`
+        : `Guide: ${guideSummary?.channels ?? 0} channels. Sports: ${events.length} fixtures. No decoded-frame timing reported yet.`,
+    ),
     node(
       "p",
       "muted",
@@ -2521,6 +3405,7 @@ async function play(m: Media, position?: number, sports = false) {
     preview
   ) {
     preview = false;
+    video.muted = false;
     positionVideo(false);
     renderHud();
     return;
@@ -2530,6 +3415,7 @@ async function play(m: Media, position?: number, sports = false) {
   tracksInitialised = false;
   playingSports = sports;
   preview = false;
+  video.muted = false;
   lastSave = 0;
   video.style.objectFit = state.settings().aspect;
   positionVideo(false);
@@ -2537,7 +3423,10 @@ async function play(m: Media, position?: number, sports = false) {
   if (m.kind === "live") safe(() => state.write("last-channel", m));
   const progress = state.progressFor(m);
   const from =
-    position ?? (progress && !progress.complete ? progress.position : 0);
+    position ??
+    (state.settings().resume && progress && !progress.complete
+      ? progress.position
+      : 0);
   await player.load(
     m,
     sports ? client.sportPlayback(m) : client.playback(m),
@@ -2552,8 +3441,24 @@ player.onState = () => {
       const tracks = player.tracks("subtitle");
       player.selectTrack(
         "subtitle",
-        state.settings().subtitles && tracks.length ? 0 : -1,
+        state.settings().subtitleLanguage !== "off" &&
+          state.settings().subtitles &&
+          tracks.length
+          ? Math.max(
+              0,
+              tracks.findIndex((t) =>
+                t.label
+                  .toLowerCase()
+                  .includes(state.settings().subtitleLanguage),
+              ),
+            )
+          : -1,
       );
+      const audio = player.tracks("audio"),
+        preferred = audio.find((t) =>
+          t.label.toLowerCase().includes(state.settings().audioLanguage),
+        );
+      if (preferred) player.selectTrack("audio", preferred.index);
       tracksInitialised = true;
     }
     if (!preview) {
@@ -2665,7 +3570,7 @@ function renderHud(moveFocus = true) {
       action(
         "play-rewind",
         "10 seconds",
-        () => player.seek(-10),
+        () => player.seek(-state.settings().seekStep),
         "",
         "SEEK_BACK",
       ),
@@ -2684,7 +3589,7 @@ function renderHud(moveFocus = true) {
       action(
         "play-forward",
         "10 seconds",
-        () => player.seek(10),
+        () => player.seek(state.settings().seekStep),
         "",
         "SEEK_FORWARD",
       ),
@@ -2903,6 +3808,11 @@ function backFromPlayer() {
   navigate(route, true);
 }
 focus.onBack = () => {
+  if (channelDigits) {
+    channelDigits = "";
+    clearTimeout(channelDigitTimer);
+    return;
+  }
   if (starting) return;
   focusEpoch++;
   if (!overlay.hidden) {
@@ -2936,12 +3846,18 @@ focus.onBack = () => {
     focus.focus("exit-cancel");
     return;
   }
+  if (
+    route === "settings" &&
+    settingScreen.back(document.getElementById("main")!)
+  )
+    return;
   if (route !== "home" && document.activeElement?.id.startsWith("nav-"))
     navigate("home");
   else navEntry();
 };
 focus.onLong = (el) => {
   if (!overlay.hidden) return false;
+  if (route === "settings" && settingScreen.long(el)) return true;
   if (el.dataset.media) {
     const m = allMedia().find((m) => key(m) === el.dataset.media);
     if (m) {
@@ -2958,8 +3874,16 @@ focus.onLong = (el) => {
   }
   return false;
 };
+let lastRemoteMove = 0;
 focus.onMove = (el, dir) => {
-  if (!overlay.hidden) return false;
+  lastRemoteMove = Date.now();
+  clearTimeout(hoverTimer);
+  if (!overlay.hidden) {
+    if (el.dataset.collection === "episode-list")
+      return collections.get("episode-list")?.move(el, dir) ?? false;
+    return false;
+  }
+  if (route === "settings" && settingScreen.move(el, dir)) return true;
   if (watchPanel) {
     if (dir === "left") {
       watchPanel === "channels" ? openWatchCategories() : openWatchChannels();
@@ -3001,7 +3925,11 @@ focus.onMove = (el, dir) => {
         ) || focus.focus("live-all");
         return true;
       }
-      const target = app.querySelector<HTMLElement>("main [data-focus]");
+      const target = app.querySelector<HTMLElement>(
+        route === "movies" || route === "series"
+          ? "#browse-all"
+          : "main [data-focus]",
+      );
       if (target) focus.focus(target.id);
       return true;
     }
@@ -3062,7 +3990,41 @@ focus.onMove = (el, dir) => {
   }
   return false;
 };
+let channelDigits = "",
+  channelDigitTimer: ReturnType<typeof setTimeout> | undefined;
+function tuneDigits() {
+  const index = Number(channelDigits) - 1;
+  channelDigits = "";
+  clearTimeout(channelDigitTimer);
+  const m = filtered("live")[index];
+  if (m) void play(m);
+  else toast("Channel number unavailable");
+}
 focus.onMedia = (code) => {
+  if (
+    overlay.hidden &&
+    state.settings().channelNumbers &&
+    (route === "live" || currentPlaying?.kind === "live") &&
+    document.activeElement?.tagName !== "INPUT"
+  ) {
+    const digit =
+      code >= 48 && code <= 57
+        ? code - 48
+        : code >= 96 && code <= 105
+          ? code - 96
+          : -1;
+    if (digit >= 0) {
+      channelDigits = (channelDigits + digit).slice(-4);
+      toast("Channel " + channelDigits);
+      clearTimeout(channelDigitTimer);
+      channelDigitTimer = setTimeout(tuneDigits, 1000);
+      return true;
+    }
+    if (code === 13 && channelDigits) {
+      tuneDigits();
+      return true;
+    }
+  }
   if (!currentPlaying) return false;
   if ([415, 19, 10252].includes(code)) {
     safe(() =>
@@ -3081,7 +4043,9 @@ focus.onMedia = (code) => {
     return true;
   }
   if (code === 417 || code === 412) {
-    player.seek(code === 417 ? 30 : -30);
+    player.seek(
+      code === 417 ? state.settings().seekStep : -state.settings().seekStep,
+    );
     renderHud();
     return true;
   }
@@ -3115,10 +4079,10 @@ window.addEventListener("pagehide", () => {
 });
 // Reminders are local and shown while the application is running. No unsupported background wake claim.
 setInterval(() => {
-  if (!client) return;
+  if (!client || !state.settings().remindersEnabled) return;
   for (const e of state.reminders())
     if (
-      e.startUtcMs - Date.now() < 5 * 60000 &&
+      e.startUtcMs - Date.now() < state.settings().reminderLead * 60000 &&
       e.startUtcMs > Date.now() &&
       !state.read<string[]>("reminders-shown", []).includes(e.id)
     ) {

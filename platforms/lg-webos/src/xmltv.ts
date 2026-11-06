@@ -62,23 +62,39 @@ export function programmeFromXml(
 /** Reads programme records even when an XML tag is split across network chunks. */
 export class XmltvStream {
   private buffer = "";
-  feed(chunk: string, onProgramme: (xml: string) => void) {
+  feed(
+    chunk: string,
+    onProgramme: (xml: string) => void,
+    onChannel?: (xml: string) => void,
+  ) {
     this.buffer += chunk;
     while (true) {
-      const start = this.buffer.indexOf("<programme");
+      const p = this.buffer.indexOf("<programme"),
+        c = this.buffer.indexOf("<channel ");
+      const channel = c >= 0 && (p < 0 || c < p);
+      const start = channel ? c : p,
+        closing = channel ? "</channel>" : "</programme>";
       if (start < 0) {
         this.buffer = this.buffer.slice(-20);
         return;
       }
-      const end = this.buffer.indexOf("</programme>", start);
+      const tagEnd = this.buffer.indexOf(">", start);
+      if (channel && tagEnd >= 0 && this.buffer[tagEnd - 1] === "/") {
+        onChannel?.(this.buffer.slice(start, tagEnd + 1));
+        this.buffer = this.buffer.slice(tagEnd + 1);
+        continue;
+      }
+      const end = this.buffer.indexOf(closing, start);
       if (end < 0) {
         this.buffer = this.buffer.slice(start);
         if (this.buffer.length > 2_000_000)
           throw Error("Invalid programme guide record");
         return;
       }
-      onProgramme(this.buffer.slice(start, end + 12));
-      this.buffer = this.buffer.slice(end + 12);
+      const record = this.buffer.slice(start, end + closing.length);
+      if (channel) onChannel?.(record);
+      else onProgramme(record);
+      this.buffer = this.buffer.slice(end + closing.length);
     }
   }
 }

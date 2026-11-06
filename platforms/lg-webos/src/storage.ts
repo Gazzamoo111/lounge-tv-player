@@ -68,8 +68,15 @@ export class LibraryState {
   favourites(): Media[] {
     return this.read(`${this.profile}:favourites`, []);
   }
+  private savedRows?: Media[];
+  private savedIndex = new Set<string>();
   saved(m: Media) {
-    return this.favourites().some((x) => key(x) === key(m));
+    const rows = this.favourites();
+    if (rows !== this.savedRows) {
+      this.savedRows = rows;
+      this.savedIndex = new Set(rows.map(key));
+    }
+    return this.savedIndex.has(key(m));
   }
   toggle(m: Media) {
     const list = this.favourites();
@@ -83,8 +90,15 @@ export class LibraryState {
   progress(): Progress[] {
     return this.read(`${this.profile}:progress`, []);
   }
+  private progressRows?: Progress[];
+  private progressIndex = new Map<string, Progress>();
   progressFor(m: Media) {
-    return this.progress().find((p) => key(p.media) === key(m));
+    const rows = this.progress();
+    if (rows !== this.progressRows) {
+      this.progressRows = rows;
+      this.progressIndex = new Map(rows.map((p) => [key(p.media), p]));
+    }
+    return this.progressIndex.get(key(m));
   }
   updateProgress(media: Media, position: number, duration: number) {
     if (media.kind === "live" || !Number.isFinite(position) || position < 0)
@@ -127,12 +141,42 @@ export class LibraryState {
     );
   }
   settings() {
-    return this.read("settings", {
-      autoplayNext: true,
-      subtitles: false,
-      aspect: "contain",
-      rememberLogin: true,
-    });
+    const saved = this.read<Record<string, any>>("settings", {});
+    return {
+      ...{
+        autoplayNext: true,
+        subtitles: false,
+        aspect: "contain",
+        rememberLogin: true,
+        metadataOnFocus: false,
+        livePreview: false,
+        previewSound: false,
+        channelNumbers: true,
+        resume: true,
+        animations: false,
+        epgOffset: 0,
+        guideDays: 7,
+        guideRefreshHours: 6,
+        audioLanguage: "en",
+        subtitleLanguage: "en",
+        volume: 100,
+        seekStep: 10,
+        tuneTimeout: 22,
+        reconnects: 4,
+        fontSize: 100,
+        accent: "#0084ff",
+        startup: "home",
+        vodColumns: 6,
+        showRatings: true,
+        remindersEnabled: true,
+        reminderLead: 5,
+        backdrop: false,
+      },
+      ...saved,
+      subtitleLanguage: String(
+        saved.subtitleLanguage ?? (saved.subtitles ? "en" : "off"),
+      ),
+    };
   }
   setSettings(value: ReturnType<LibraryState["settings"]>) {
     this.write("settings", value);
@@ -143,6 +187,44 @@ export class LibraryState {
   remember(auth: Credentials | null) {
     if (auth) this.store.setItem("lounge.webos.login", JSON.stringify(auth));
     else this.store.removeItem("lounge.webos.login");
+  }
+  playlists(): { name: string; auth: Credentials }[] {
+    try {
+      const rows = JSON.parse(
+        this.store.getItem("lounge.webos.playlists") ?? "[]",
+      );
+      return Array.isArray(rows)
+        ? rows.filter(
+            (p) =>
+              typeof p?.auth?.username === "string" &&
+              typeof p?.auth?.password === "string",
+          )
+        : [];
+    } catch {
+      return [];
+    }
+  }
+  forgetPlaylist(username: string) {
+    this.store.setItem(
+      "lounge.webos.playlists",
+      JSON.stringify(
+        this.playlists().filter((p) => p.auth.username !== username),
+      ),
+    );
+  }
+  savePlaylist(auth: Credentials, name?: string) {
+    const rows = this.playlists(),
+      existing = rows.find((p) => p.auth.username === auth.username);
+    const playlist = { name: name || existing?.name || auth.username, auth };
+    this.store.setItem(
+      "lounge.webos.playlists",
+      JSON.stringify(
+        [
+          ...rows.filter((p) => p.auth.username !== auth.username),
+          playlist,
+        ].slice(-8),
+      ),
+    );
   }
   credentials(): Credentials | null {
     try {
@@ -155,3 +237,5 @@ export class LibraryState {
     }
   }
 }
+
+export type Settings = ReturnType<LibraryState["settings"]>;

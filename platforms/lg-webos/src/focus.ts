@@ -168,7 +168,7 @@ export class VirtualCollection {
         (Math.ceil(
           (this.host.scrollTop + this.host.clientHeight) / this.rowHeight,
         ) +
-          2) *
+          1) *
           this.columns,
       );
     if (!force && start === this.start && end === this.end) return;
@@ -180,6 +180,7 @@ export class VirtualCollection {
         cell.remove();
         this.cells.delete(index);
       }
+    const fragment = document.createDocumentFragment();
     for (let i = start; i < end; i++) {
       if (this.cells.has(i)) continue;
       const cell = this.draw(i);
@@ -191,8 +192,9 @@ export class VirtualCollection {
       cell.dataset.index = String(i);
       cell.dataset.collection = this.host.id;
       this.cells.set(i, cell);
-      this.host.append(cell);
+      fragment.append(cell);
     }
+    this.host.append(fragment);
     if (active) document.getElementById(active)?.focus({ preventScroll: true });
   }
   focus(index: number) {

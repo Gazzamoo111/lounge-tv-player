@@ -1,3 +1,4 @@
+import { artworkUrl } from "./artwork";
 import glyphs from "./glyphs.json";
 export function node<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -48,7 +49,8 @@ export function image(url: string, className = "", alt = "") {
   el.loading = url.startsWith("assets/") ? "eager" : "lazy";
   el.decoding = "async";
   el.referrerPolicy = "no-referrer";
-  if (/^https?:\/\//i.test(url) || url.startsWith("assets/")) el.src = url;
+  if (/^https?:\/\//i.test(url) || url.startsWith("assets/"))
+    el.src = artworkUrl(url, /art|backdrop|hero/.test(className));
   else el.hidden = true;
   el.addEventListener("error", () => {
     el.hidden = true;

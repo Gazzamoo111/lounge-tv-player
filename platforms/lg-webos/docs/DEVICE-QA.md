@@ -33,3 +33,14 @@ Playback diagnostics: Settings → Playback diagnostics. It retains up to 180 lo
 3. While fullscreen Live plays, press Left → Left → Back → Back. Expect channels → categories → channels → video. Browse another category; the current stream must continue until OK chooses a different channel.
 4. Open a parent heading then another. Only the second stays expanded. Confirm intentional pause/resume, channel switching, return focus and launcher re-entry.
 5. Sport Lounge's limited sports coverage remains deferred by user instruction.
+
+## 0.1.3 priority device gate
+
+User confirmed 0.1.2 played for 15 minutes without the former early stop. Keep this as the playback baseline.
+
+1. Enter Movies and Series from the sidebar: All is focused, Search stays unfocused. Hold D-pad across multiple rows and reverse direction. There must be no multi-second catch-up. Open a movie: Play appears immediately. Open a long series season and move to later episodes; Back restores the poster.
+2. Time Recess 24/7 from OK to visible moving picture. Test several other channels and compare with the reported 6–10 seconds. The client removes duplicate resets, but provider/GOP/native buffering can still dominate. Check Playback diagnostics for first-decoded-frame timing if exposed.
+3. Browse Live categories without focusing every channel. Visible rows must load guide information themselves. Settings → Sources & guide → EPG sources reports matched channels/programmes; refresh, inspect time offset and exact matching. Some upstream channels have no supplied programme data and must remain missing.
+4. Check all twelve Settings groups, search and Quick pinning. Test source refresh, an additional HTTPS XMLTV feed, local playlist switching, profile edits, backup/restore and exposed playback preferences. Unavailable controls must not pretend to work. Source changes apply on the next refresh.
+5. Sport Lounge: compare Today/Upcoming with Android across available sports. Fixtures load progressively from primary feeds; no invented matches for empty leagues. Existing stream recommendations remain confidence-labelled, not guaranteed event verification.
+6. Keep a Live channel playing for at least 15 minutes while also checking the fullscreen Left/Left/Back/Back regression. Confirm no player restart from drawer browsing.

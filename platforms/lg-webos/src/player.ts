@@ -7,6 +7,7 @@ export interface Trace {
   state: PlayerState;
   code?: number;
   elapsed?: number;
+  attemptElapsed?: number;
   position?: number;
   duration?: number;
   readyState?: number;
@@ -44,12 +45,17 @@ export class LgPlayback {
   onProgress: (position: number, duration: number) => void = () => {};
   onEnded: () => void = () => {};
   onTrace: (trace: Trace[]) => void = () => {};
+  private options = { startupTimeout: 22000, reconnects: 4 };
+  configure(options: Partial<{ startupTimeout: number; reconnects: number }>) {
+    this.options = { ...this.options, ...options };
+  }
   private generation = 0;
   private attempt = 0;
   private failures = 0;
   private url = "";
   private resumeAt = 0;
   private opened = 0;
+  private attemptOpened = 0;
   private lastProgress = 0;
   private lastPosition = 0;
   private lastFrames?: number;
@@ -90,6 +96,7 @@ export class LgPlayback {
       state: this.state,
       code,
       elapsed: Math.round(this.clock.now() - this.opened),
+      attemptElapsed: Math.round(this.clock.now() - this.attemptOpened),
       position: Math.round(this.position * 10) / 10,
       duration: this.duration,
       readyState: this.video.readyState,
@@ -141,6 +148,7 @@ export class LgPlayback {
     if (gen !== this.generation || !this.wantsPlayback) return;
     this.detach();
     const attempt = ++this.attempt;
+    this.attemptOpened = this.clock.now();
     this.lastPosition = 0;
     this.lastFrames = undefined;
     this.healthySince = undefined;
@@ -153,6 +161,20 @@ export class LgPlayback {
       this.video.addEventListener(name, guarded);
       this.cleanups.push(() => this.video.removeEventListener(name, guarded));
     };
+    let reportedFrame = false;
+    const frame = () => {
+      if (
+        !reportedFrame &&
+        gen === this.generation &&
+        attempt === this.attempt
+      ) {
+        reportedFrame = true;
+        this.log("first-decoded-frame");
+      }
+    };
+    const frameVideo = this.video as any;
+    if (typeof frameVideo.requestVideoFrameCallback === "function")
+      frameVideo.requestVideoFrameCallback(frame);
     on("loadedmetadata", () => {
       if (
         this.media?.kind !== "live" &&
@@ -202,6 +224,7 @@ export class LgPlayback {
     on("stalled", () => this.log("native-stalled"));
     on("timeupdate", () => {
       this.sample();
+      if ((this.frames() ?? 0) > 0) frame();
       this.onProgress(this.position, this.duration);
     });
     on("error", () => {
@@ -296,7 +319,8 @@ export class LgPlayback {
     if (this.media.kind === "live" && this.video.paused && !this.pauseTimer) {
       void this.resumeNative(gen, this.attempt);
     }
-    const timeout = this.state === "loading" ? 22000 : 20000;
+    const timeout =
+      this.state === "loading" ? this.options.startupTimeout : 20000;
     if (now - this.lastProgress > timeout) {
       this.log("startup-or-stall-timeout");
       this.recover(
@@ -336,7 +360,7 @@ export class LgPlayback {
     // Close the old native connection before starting a replacement; never open parallel feeds.
     this.release();
     this.healthySince = undefined;
-    if (this.failures >= 4) {
+    if (this.failures >= this.options.reconnects) {
       this.set("error");
       return;
     }
@@ -371,7 +395,8 @@ export class LgPlayback {
     this.clock.cancelTimeout(this.retryTimer);
     this.retryTimer = undefined;
     this.detach();
-    this.release();
+    if (this.media || this.video.getAttribute?.("src") || this.video.src)
+      this.release();
     this.state = "idle";
     this.media = undefined;
   }

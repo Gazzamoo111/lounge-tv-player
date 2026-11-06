@@ -1,6 +1,6 @@
 # Lounge TV for LG webOS
 
-Isolated LG client, QA package `nz.loungetv.webos.qa`, version **0.1.2**. Full Android feature and visual parity has not been accepted. The user confirmed substantially faster startup/navigation in 0.1.1, but reported Live playback stopping after 2–3 minutes across five channels. 0.1.2 addresses client recovery and fullscreen geometry; sustained LG playback still requires device acceptance.
+Isolated LG client, QA package `nz.loungetv.webos.qa`, version **0.1.3**. Full Android feature parity is incomplete. The user confirmed substantially faster startup/navigation in 0.1.1 and 15 minutes of Live playback without the former 2–3 minute stop in 0.1.2. 0.1.3 addresses VOD responsiveness, All-tab focus, EPG row loading/matching, Settings structure and sports discovery. Physical LG acceptance of the new changes remains required.
 
 Android reference: published **v5.2.3.10**, commit `44388fa8683df20a51ad5166f3ea73d7b08c8051`. Current `main` is older in application features, despite having newer documentation and EPG changes. See [parity matrix](docs/PARITY.md).
 
@@ -10,7 +10,7 @@ With the `.ipk` downloaded to the Mac's Downloads folder and the existing `loung
 
 ```bash
 cd ~/Downloads
-ares-install --device loungetv-lg nz.loungetv.webos.qa_0.1.2_all.ipk
+ares-install --device loungetv-lg nz.loungetv.webos.qa_0.1.3_all.ipk
 ares-launch --device loungetv-lg nz.loungetv.webos.qa
 ```
 
@@ -26,7 +26,7 @@ npm test
 npm run package
 ```
 
-Output: `artifacts/nz.loungetv.webos.qa_0.1.2_all.ipk`.
+Output: `artifacts/nz.loungetv.webos.qa_0.1.3_all.ipk`.
 
 Browser regressions use Chromium and mock the real API contracts with a large catalogue. They do not establish actual provider playback or customer authentication:
 
@@ -37,6 +37,17 @@ npm run test:browser
 ```
 
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` can point to an existing Chromium executable. `npm run serve` serves the built application at port 4173.
+
+## 0.1.3: responsive libraries, guide, Settings and sports
+
+- Movies/Series were already fully downloaded before Home. Opening artwork is now warmed within a bounded startup budget; poster/backdrop decoding is sized for TV, metadata/backdrop browsing work defaults off, remote navigation uses a small DOM window and profile Saved/progress lookups use indexes. Movie Play/Save appears immediately from the prepared catalogue. A long episode season is virtualised rather than creating every episode at once.
+- Entering Movies/Series from the sidebar starts on All movies/All series, with Search unfocused. Details and playback still restore their previous grid position.
+- Visible Live rows now request missing guides with two concurrent reads. Full-guide matching accepts supplied IDs, canonical stream aliases and unambiguous exact display names; manual EPG matches, extra HTTPS XMLTV sources, source controls, time shift and refresh are available. The canonical gateway already serves Lounge XMLTV: it is not added twice.
+- Settings follows the twelve Android groups, with an imported catalogue of 110 source rows, Search, context help and Quick pinning. Playlist switching/addition, guide configuration, profiles, local backup, appearance/layout and exposed playback preferences work where implemented. Unported and Android engine features are clearly unavailable. This is not full working Settings parity.
+- Sport Lounge adds Android's 31 fixture feeds with four concurrent requests, seven NZ calendar dates, nested tennis/racing/MMA parsing, safe fixture merging and progressive population. Seasonal empty feeds stay empty; matching algorithms and customer channel membership are unchanged.
+- Duplicate blank-player resets are removed from channel changes. First decoded-frame timing is logged where the TV exposes it. No measured LG startup-speed improvement is claimed yet.
+
+See [QA-0.1.3.md](docs/QA-0.1.3.md). `scripts/import-settings.py` regenerates the reference catalogue with explicit `--android-root` and `--core-root` checkouts; it is not required for building the app.
 
 ## 0.1.2: Live playback and fullscreen navigation
 

@@ -1,3 +1,5 @@
+import { discoverSports, mergeFixtures } from "./sports";
+import { guideHash } from "./guide-match";
 import {
   Category,
   Credentials,
@@ -20,9 +22,13 @@ export class ApiError extends Error {
     super(message);
   }
 }
-export async function request(url: string, signal?: AbortSignal): Promise<any> {
+export async function request(
+  url: string,
+  signal?: AbortSignal,
+  timeout = 25000,
+): Promise<any> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 25000);
+  const timer = setTimeout(() => controller.abort(), timeout);
   const abort = () => controller.abort();
   signal?.addEventListener("abort", abort, { once: true });
   try {
@@ -105,7 +111,18 @@ export class LoungeClient {
   guideUrl() {
     return `${GATEWAY}/xmltv.php?${new URLSearchParams({ ...this.auth })}`;
   }
-  async guide(id: string): Promise<Programme[]> {
+  async guide(id: string, epgId?: string): Promise<Programme[]> {
+    if (epgId)
+      try {
+        const d = await request(
+          `https://raw.githubusercontent.com/Gazzamoo111/lounge-tv-player/epg-data/epg/short/${guideHash(epgId)}.json`,
+        );
+        const raw = Array.isArray(d)
+          ? d
+          : (d.epg_listings ?? d.programmes ?? []);
+        const rows = programmes(raw).filter((p) => p.end > Date.now());
+        if (rows.length) return rows;
+      } catch {}
     const d = await request(
       this.url("get_short_epg", { stream_id: id, limit: "20" }),
     );
@@ -165,17 +182,34 @@ export class LoungeClient {
     const type = item.kind === "episode" ? "series" : item.kind;
     return `${GATEWAY}/${type}/${encodeURIComponent(this.auth.username)}/${encodeURIComponent(this.auth.password)}/${encodeURIComponent(item.id)}.${item.ext}`;
   }
-  async events(): Promise<SportEvent[]> {
+  async events(
+    onPartial?: (events: SportEvent[]) => void,
+  ): Promise<SportEvent[]> {
     const now = Date.now();
     const q = new URLSearchParams({
       from: String(now - 12 * 3600000),
       to: String(now + 7 * 86400000),
     });
-    const d = await request(`${SERVICES}/lounge-sports-calendar?${q}`);
-    if (!Array.isArray(d.events))
+    const [discovery, calendar] = await Promise.allSettled([
+      discoverSports((url) => request(url, undefined, 10000), now, onPartial),
+      request(`${SERVICES}/lounge-sports-calendar?${q}`),
+    ]);
+    const primary =
+      discovery.status === "fulfilled" ? discovery.value.events : [];
+    const extra =
+      calendar.status === "fulfilled" && Array.isArray(calendar.value.events)
+        ? calendar.value.events
+        : [];
+    if (
+      !primary.length &&
+      !extra.length &&
+      (discovery.status === "rejected" ||
+        discovery.value.failed === discovery.value.total)
+    )
       throw new ApiError(502, "The sports schedule is unavailable.");
-    return d.events;
+    return mergeFixtures([...primary, ...extra], now);
   }
+
   async candidates(
     event: SportEvent,
   ): Promise<{ media: Media; confidence: string }[]> {

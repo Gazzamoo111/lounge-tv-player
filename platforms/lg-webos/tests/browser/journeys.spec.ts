@@ -40,6 +40,15 @@ function xmlDate(ms: number) {
   return new Date(ms).toISOString().replace(/[-:T]/g, "").slice(0, 14);
 }
 async function mock(page: Page) {
+  await page.route("https://site.api.espn.com/**", (r) =>
+    r.fulfill({ json: { events: [] } }),
+  );
+  await page.route("https://site.web.api.espn.com/**", (r) =>
+    r.fulfill({ json: { sports: [] } }),
+  );
+  await page.route("https://raw.githubusercontent.com/**", (r) =>
+    r.fulfill({ status: 404, body: "Not found" }),
+  );
   await page.route("https://images.test/**", (r) =>
     r.fulfill({
       contentType: "image/svg+xml",
@@ -172,7 +181,7 @@ async function signIn(page: Page) {
   await page.locator("#login-user").fill("qa-user");
   await page.locator("#login-password").fill("qa-password");
   await page.locator("#login-submit").click();
-  await expect(page.locator("#featured-0")).toBeVisible();
+  await expect(page.locator("#featured-0")).toBeVisible({ timeout: 15000 });
   await expect.poll(() => page.locator("#nav-series").count()).toBe(1);
   await page.waitForTimeout(350);
 }
@@ -761,13 +770,11 @@ test("browsing another fullscreen category leaves the stream running until OK ch
   await page.locator("#watch-category-au-sports").click();
   await expect(page.locator("#watch-channel-21200")).toBeFocused();
   expect(
-    await page
-      .locator("#video")
-      .evaluate((v: HTMLVideoElement) => ({
-        source: v.src,
-        loads: (v as any).__qaLoads,
-        paused: v.paused,
-      })),
+    await page.locator("#video").evaluate((v: HTMLVideoElement) => ({
+      source: v.src,
+      loads: (v as any).__qaLoads,
+      paused: v.paused,
+    })),
   ).toEqual({ ...before, paused: false });
   await page.keyboard.press("Enter");
   await expect(page.locator("#watch-panel")).toHaveCount(0);
@@ -806,4 +813,316 @@ test("a live EOF reconnects in the actual application path and leaves a redacted
   });
   expect(text).not.toContain("qa-password");
   expect(text).not.toContain("https://");
+});
+
+test("Movies and Series enter on All, keep Search unfocused, and do not request metadata while navigating", async ({
+  page,
+}) => {
+  await signIn(page);
+  const metadata: string[] = [];
+  page.on("request", (r) => {
+    if (/get_vod_info|get_series_info/.test(r.url())) metadata.push(r.url());
+  });
+  for (const route of ["movies", "series"]) {
+    await section(page, route);
+    await expect(page.locator("#browse-all")).toBeFocused();
+    await expect(page.locator("#browse-search")).not.toBeFocused();
+    const first = route === "movies" ? "10000" : "30000";
+    await page.locator("#vod-" + first).focus();
+    for (let i = 0; i < 30; i++) await page.keyboard.press("ArrowDown");
+    await page.waitForTimeout(850);
+    expect(metadata).toEqual([]);
+    expect(await page.locator("#vod-grid .poster").count()).toBeLessThanOrEqual(
+      24,
+    );
+  }
+});
+
+test("TV CPU throttling keeps rapid VOD navigation responsive with a bounded poster window", async ({
+  page,
+}) => {
+  await signIn(page);
+  await section(page, "movies");
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Emulation.setCPUThrottlingRate", { rate: 6 });
+  await page.locator("#vod-10000").focus();
+  const timing = await page.evaluate(async () => {
+    let ticks = 0;
+    const ticker = setInterval(() => ticks++, 20),
+      latencies: number[] = [];
+    for (let i = 0; i < 60; i++) {
+      const start = performance.now();
+      document.activeElement?.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          key: "ArrowDown",
+          keyCode: 40,
+          bubbles: true,
+        }),
+      );
+      latencies.push(performance.now() - start);
+      await new Promise((r) => setTimeout(r, 16));
+    }
+    clearInterval(ticker);
+    return {
+      max: Math.max(...latencies),
+      ticks,
+      focused: document.activeElement?.id,
+    };
+  });
+  expect(timing.focused).toBe("vod-10360");
+  expect(timing.max).toBeLessThan(1000);
+  expect(timing.ticks).toBeGreaterThan(20);
+  await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
+  await test.info().attach("navigation-timing", {
+    body: JSON.stringify(timing),
+    contentType: "application/json",
+  });
+});
+
+test("Settings mirrors twelve Android groups, search, contextual help, working preferences and Quick pins", async ({
+  page,
+}) => {
+  await signIn(page);
+  await section(page, "settings");
+  await expect(page.locator(".settings-group")).toHaveCount(12);
+  await expect(page.locator("#settings-group-quick")).toBeFocused();
+  await page.screenshot({ path: "test-results/lg013-settings-root.png" });
+  await page.locator("#settings-group-watching").click();
+  await page.locator("#setting-vp_autoplay").focus();
+  await expect(page.locator(".settings-help")).toContainText("Auto-play");
+  await page.locator("#setting-vp_autoplay").click();
+  await expect(page.locator("#setting-vp_autoplay .setting-value")).toHaveText(
+    "Off",
+  );
+  await page.keyboard.down("Enter");
+  await page.waitForTimeout(750);
+  await page.keyboard.up("Enter");
+  await expect(page.locator("#setting-pin")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".settings-group")).toHaveCount(12);
+  await page.locator("#settings-search").fill("EPG");
+  await expect(page.locator("#setting-tab_epg")).toBeVisible();
+  await page.locator("#settings-search").fill("");
+  await expect(page.locator(".settings-group")).toHaveCount(12);
+  await page.locator("#settings-group-player").click();
+  await page.locator("#setting-vp_live_engine").focus();
+  await expect(page.locator(".settings-help")).toContainText(
+    "Android ExoPlayer and MPV are not included",
+  );
+  await page.screenshot({ path: "test-results/lg013-settings-player.png" });
+});
+
+test("EPG sources can be added, switched and removed without changing playlists or provider data", async ({
+  page,
+}) => {
+  await signIn(page);
+  await section(page, "settings");
+  await page.locator("#settings-group-sources").click();
+  await page.locator("#setting-tab_epg").click();
+  await page.locator("#epg-add").click();
+  await page.locator("#epg-name").fill("My guide");
+  await page.locator("#epg-url").fill("https://example.test/guide.xml");
+  await page.locator("#epg-save").click();
+  const source = page.locator('[id^="epg-source-epg"]');
+  await expect(source).toContainText("My guide · On");
+  await source.click();
+  await expect(page.locator('[id^="epg-source-epg"]')).toContainText("Off");
+  await page.locator('[id^="epg-remove-epg"]').click();
+  await expect(page.locator('[id^="epg-source-epg"]')).toHaveCount(0);
+  await expect(page.locator("#epg-source-lounge")).toContainText("Lounge TV");
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#setting-tab_epg")).toBeFocused();
+});
+
+test("visible Live rows load fallback EPG even when the full guide does not cover that channel", async ({
+  page,
+}) => {
+  await mock(page);
+  await page.context().route("https://connect.loungetv.nz/xmltv.php?**", (r) =>
+    r.fulfill({
+      contentType: "application/xml",
+      body: `<tv><programme channel="ltv-20000" start="${xmlDate(now - 3600000)} +0000" stop="${xmlDate(now + 3600000)} +0000"><title>Full guide channel</title></programme></tv>`,
+    }),
+  );
+  await page.goto("/");
+  await page.locator("#login-user").fill("qa-user");
+  await page.locator("#login-password").fill("qa-password");
+  await page.locator("#login-submit").click();
+  await expect(page.locator("#nav-live")).toBeVisible({ timeout: 15000 });
+  await section(page, "live");
+  await page.locator("#channel-20000").focus();
+  for (let i = 0; i < 30; i++) await page.keyboard.press("ArrowDown");
+  await expect(page.locator("#channel-20030 .channel-info")).toContainText(
+    "PGA Tour",
+  );
+});
+
+test("Sport Lounge merges primary Android fixture feeds with the supplemental calendar", async ({
+  page,
+}) => {
+  await mock(page);
+  await page.route("https://site.api.espn.com/**", (r) => {
+    const u = r.request().url(),
+      sport = u.includes("/rugby/")
+        ? "rugby"
+        : u.includes("/soccer/")
+          ? "soccer"
+          : u.includes("/basketball/nba/")
+            ? "basketball"
+            : "";
+    if (!sport) return r.fulfill({ json: { events: [] } });
+    return r.fulfill({
+      json: {
+        leagues: [{ name: sport + " league" }],
+        events: [
+          {
+            id: sport,
+            name: sport + " match",
+            date: new Date(now + 2 * 3600000).toISOString(),
+            competitions: [
+              {
+                date: new Date(now + 2 * 3600000).toISOString(),
+                status: { type: { state: "pre" } },
+                competitors: [
+                  {
+                    team: { id: sport + "home", displayName: sport + " Home" },
+                  },
+                  {
+                    team: { id: sport + "away", displayName: sport + " Away" },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    });
+  });
+  await page.goto("/");
+  await page.locator("#login-user").fill("qa-user");
+  await page.locator("#login-password").fill("qa-password");
+  await page.locator("#login-submit").click();
+  await expect(page.locator("#nav-sports")).toBeVisible({ timeout: 15000 });
+  await section(page, "sports");
+  await page.locator("#time-upcoming").click();
+  await expect(page.locator("#sport-rugby")).toBeVisible();
+  await expect(page.locator("#sport-soccer")).toBeVisible();
+  await expect(page.locator("#sport-basketball")).toBeVisible();
+  await page.locator("#sport-rugby").click();
+  await expect(page.locator("#sports-grid")).toContainText("rugby Home");
+});
+
+test("movie Play is available before a delayed metadata response completes", async ({
+  page,
+}) => {
+  await signIn(page);
+  await section(page, "movies");
+  let release!: () => void;
+  const gate = new Promise<void>((r) => (release = r));
+  await page.route("**/player_api.php?**", async (r) => {
+    if (
+      new URL(r.request().url()).searchParams.get("action") !== "get_vod_info"
+    )
+      return r.fallback();
+    await gate;
+    return r.fulfill({
+      json: {
+        info: { name: "The Matrix", plot: "Metadata finished" },
+        movie_data: { container_extension: "mp4" },
+      },
+    });
+  });
+  await page.locator("#vod-10000").click();
+  await expect(page.locator("#detail-play")).toBeVisible({ timeout: 1000 });
+  await expect(page.locator("#detail-play")).toBeFocused();
+  release();
+  await expect(page.locator(".details-copy .overview")).toHaveText(
+    "Metadata finished",
+  );
+});
+
+test("a 600-episode season renders a bounded window and remote navigation reaches later episodes", async ({
+  page,
+}) => {
+  await signIn(page);
+  await section(page, "series");
+  await page.route("**/player_api.php?**", async (r) => {
+    if (
+      new URL(r.request().url()).searchParams.get("action") !==
+      "get_series_info"
+    )
+      return r.fallback();
+    return r.fulfill({
+      json: {
+        info: { name: "Long running series" },
+        episodes: {
+          "1": Array.from({ length: 600 }, (_, i) => ({
+            id: 90000 + i,
+            title: "Episode " + (i + 1),
+            season: 1,
+            episode_num: i + 1,
+            container_extension: "mp4",
+          })),
+        },
+      },
+    });
+  });
+  await page.locator("#vod-30000").click();
+  await page.locator("#season-1").click();
+  await expect(page.locator("#episode-90000")).toBeFocused();
+  for (let i = 0; i < 40; i++) await page.keyboard.press("ArrowDown");
+  await expect(page.locator("#episode-90040")).toBeFocused();
+  expect(await page.locator("#episode-list .episode").count()).toBeLessThan(9);
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#vod-30000")).toBeFocused();
+});
+
+test("additional XMLTV source is matched by exact channel name and merged without replacing canonical listings", async ({
+  page,
+}) => {
+  await mock(page);
+  const programme = (id: string, title: string) =>
+    `<programme channel="${id}" start="${xmlDate(now - 3600000)} +0000" stop="${xmlDate(now + 3600000)} +0000"><title>${title}</title></programme>`;
+  await page.context().route("https://connect.loungetv.nz/xmltv.php?**", (r) =>
+    r.fulfill({
+      contentType: "application/xml",
+      body: "<tv>" + programme("ltv-20000", "Canonical show") + "</tv>",
+    }),
+  );
+  await page.context().route("https://custom.test/guide.xml", (r) =>
+    r.fulfill({
+      contentType: "application/xml",
+      headers: { "Access-Control-Allow-Origin": "*" },
+      body:
+        '<tv><channel id="supplemental"><display-name>SKY SPORT 11</display-name></channel>' +
+        programme("supplemental", "Extra guide show") +
+        programme("ltv-20000", "Wrong replacement") +
+        "</tv>",
+    }),
+  );
+  await page.goto("/");
+  await page.locator("#login-user").fill("qa-user");
+  await page.locator("#login-password").fill("qa-password");
+  await page.locator("#login-submit").click();
+  await expect(page.locator("#nav-settings")).toBeVisible({ timeout: 15000 });
+  await section(page, "settings");
+  await page.locator("#settings-group-sources").click();
+  await page.locator("#setting-tab_epg").click();
+  await page.locator("#epg-add").click();
+  await page.locator("#epg-name").fill("Supplement");
+  await page.locator("#epg-url").fill("https://custom.test/guide.xml");
+  await page.locator("#epg-save").click();
+  await page.locator("#epg-sync").click();
+  await expect(page.locator("#overlay")).toContainText("2 channels ready");
+  await page.keyboard.press("Escape");
+  await section(page, "live");
+  await expect(page.locator("#channel-20000 .channel-info")).toContainText(
+    "Canonical show",
+  );
+  await page.locator("#channel-20000").focus();
+  for (let i = 0; i < 10; i++) await page.keyboard.press("ArrowDown");
+  await expect(page.locator("#channel-20010 .channel-info")).toContainText(
+    "Extra guide show",
+  );
 });

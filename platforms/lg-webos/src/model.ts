@@ -154,26 +154,30 @@ export function programmes(rows: Record<string, any>[]): Programme[] {
 }
 export const nowProgramme = (rows: Programme[], now = Date.now()) =>
   rows.find((p) => p.start <= now && p.end > now);
-export const nzTime = (ms: number) =>
-  new Intl.DateTimeFormat("en-NZ", {
-    timeZone: "Pacific/Auckland",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(ms);
-export const nzDay = (ms: number) =>
-  new Intl.DateTimeFormat("en-NZ", {
-    timeZone: "Pacific/Auckland",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(ms);
-export const nzDate = (ms: number) =>
-  new Intl.DateTimeFormat("en-NZ", {
-    timeZone: "Pacific/Auckland",
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  }).format(ms);
+const timeFormatter = new Intl.DateTimeFormat("en-NZ", {
+  timeZone: "Pacific/Auckland",
+  hour: "numeric",
+  minute: "2-digit",
+});
+const dayFormatter = new Intl.DateTimeFormat("en-NZ", {
+  timeZone: "Pacific/Auckland",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+const dateFormatter = new Intl.DateTimeFormat("en-NZ", {
+  timeZone: "Pacific/Auckland",
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+});
+export const nzTime = (ms: number) => timeFormatter.format(ms);
+export const nzDay = (ms: number) => {
+  const parts = dayFormatter.formatToParts(ms),
+    get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+  return get("year") + "-" + get("month") + "-" + get("day");
+};
+export const nzDate = (ms: number) => dateFormatter.format(ms);
 export const duration = (seconds: number) =>
   `${Math.floor(seconds / 3600) ? Math.floor(seconds / 3600) + ":" : ""}${String(Math.floor(seconds / 60) % 60).padStart(2, "0")}:${String(Math.floor(seconds) % 60).padStart(2, "0")}`;
 export function sportLabel(s: string) {

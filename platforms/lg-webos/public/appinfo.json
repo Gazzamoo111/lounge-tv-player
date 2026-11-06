@@ -1,6 +1,6 @@
 {
   "id": "nz.loungetv.webos.qa",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "vendor": "Lounge TV",
   "type": "web",
   "main": "index.html",
