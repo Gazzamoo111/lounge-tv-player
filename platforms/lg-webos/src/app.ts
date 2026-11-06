@@ -1770,7 +1770,16 @@ function renderSports(main: HTMLElement) {
       ),
     );
   filter.append(
-    action("sport-refresh", "Refresh", () => loadEvents(), "chip", "REFRESH"),
+    action(
+      "sport-refresh",
+      "Refresh",
+      async () => {
+        await loadEvents();
+        if (route === "sports" && overlay.hidden) navigate("sports", true);
+      },
+      "chip",
+      "REFRESH",
+    ),
   );
   main.append(filter);
   const items = selectEvents(events, sportTime, sportFilter).filter(
@@ -2122,6 +2131,13 @@ function renderSettings(main: HTMLElement) {
       "Sign out",
       () =>
         confirm("Sign out of Lounge TV?", () => {
+          accountGeneration++;
+          startupRevision++;
+          activeAuth = undefined;
+          guideWorker?.terminate();
+          guideWorker = undefined;
+          guideInFlight.clear();
+          detailsInFlight.clear();
           state.remember(null);
           stopPlayback();
           catalogues = {};

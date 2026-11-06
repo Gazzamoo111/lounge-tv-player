@@ -1,6 +1,6 @@
 # Lounge TV for LG webOS
 
-Isolated LG client, QA package `nz.loungetv.webos.qa`, version **0.1.0**. This is an initial installable implementation. Full Android feature and visual parity has not been accepted, and LG playback has not been physically verified.
+Isolated LG client, QA package `nz.loungetv.webos.qa`, version **0.1.1**. This is an initial installable implementation. Full Android feature and visual parity has not been accepted, and LG playback has not been physically verified.
 
 Android reference: published **v5.2.3.10**, commit `44388fa8683df20a51ad5166f3ea73d7b08c8051`. Current `main` is older in application features, despite having newer documentation and EPG changes. See [parity matrix](docs/PARITY.md).
 
@@ -10,7 +10,7 @@ With the `.ipk` downloaded to the Mac's Downloads folder and the existing `loung
 
 ```bash
 cd ~/Downloads
-ares-install --device loungetv-lg nz.loungetv.webos.qa_0.1.0_all.ipk
+ares-install --device loungetv-lg nz.loungetv.webos.qa_0.1.1_all.ipk
 ares-launch --device loungetv-lg nz.loungetv.webos.qa
 ```
 
@@ -26,7 +26,7 @@ npm test
 npm run package
 ```
 
-Output: `artifacts/nz.loungetv.webos.qa_0.1.0_all.ipk`.
+Output: `artifacts/nz.loungetv.webos.qa_0.1.1_all.ipk`.
 
 Browser regressions use Chromium and mock the real API contracts with a large catalogue. They do not establish actual provider playback or customer authentication:
 
@@ -37,6 +37,15 @@ npm run test:browser
 ```
 
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` can point to an existing Chromium executable. `npm run serve` serves the built application at port 4173.
+
+## 0.1.1: startup and navigation repair
+
+- A visible startup flow gates Home until authentication, all three catalogue libraries and initial guide preparation complete. Real counts are shown, with retry/change-login controls on failure.
+- Catalogue and EPG persist in IndexedDB, scoped to the customer account. A fresh cache (six hours) is reused on restart; Settings refresh forces a fresh download. No password is stored in IndexedDB.
+- Full XMLTV parsing runs in a dedicated Worker with bounded input size and timeout. A completed generation is published atomically; previous guide generations are pruned after a successful replacement. Missing/full-guide failures fall back to available short guides with an explicit notice.
+- One persistent app shell. Completion of artwork/sports requests does not rebuild the UI. Scrolling reuses overlapping card nodes; metadata/progress reads are cached and requests deduplicated.
+- Fixed 128 px icons-only sidebar and independent Live category accordion. All returned category IDs, including empty folders, remain visible.
+- Launcher relaunch uses webOS default foreground handling. The former package incorrectly set `handlesRelaunch: true` without a matching handler.
 
 ## Implemented
 

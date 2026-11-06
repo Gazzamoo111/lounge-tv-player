@@ -36,6 +36,9 @@ const event = {
   ],
   broadcasts: [],
 };
+function xmlDate(ms: number) {
+  return new Date(ms).toISOString().replace(/[-:T]/g, "").slice(0, 14);
+}
 async function mock(page: Page) {
   await page.route("https://images.test/**", (r) =>
     r.fulfill({
@@ -73,9 +76,23 @@ async function mock(page: Page) {
         : { events: [event], status: "ok" },
     }),
   );
-  await page.route("https://connect.loungetv.nz/**", (r) => {
+  await page.context().route("https://connect.loungetv.nz/**", (r) => {
     const u = new URL(r.request().url()),
       a = u.searchParams.get("action");
+    if (u.pathname === "/xmltv.php")
+      return r.fulfill({
+        contentType: "application/xml",
+        headers: { "Access-Control-Allow-Origin": "*" },
+        body:
+          '<?xml version="1.0"?><tv>' +
+          live
+            .map(
+              (m) =>
+                `<programme channel="ltv-${m.stream_id}" start="${xmlDate(now - 3600000)} +0000" stop="${xmlDate(now + 3600000)} +0000"><title>PGA Tour</title><desc>Live golf</desc></programme>`,
+            )
+            .join("") +
+          "</tv>",
+      });
     let json: any = { user_info: { auth: 1, status: "Active" } };
     if (a === "get_live_categories")
       json = [
@@ -297,7 +314,7 @@ test("TV Guide decodes the programme and scopes keyboard focus to category overl
   await section(page, "guide");
   await expect(page.locator("#guide-cell-0-0")).toContainText("PGA Tour");
   await page.locator("#guide-category").click();
-  await expect(page.locator("#category-live_nz_sports")).toBeFocused();
+  await expect(page.locator("#picker-all")).toBeFocused();
   await page.keyboard.press("ArrowDown");
   expect(
     await page.evaluate(() =>
@@ -318,9 +335,205 @@ test("bad credentials never open Home and retries keep login keyboard usable", a
   await page.locator("#login-user").fill("wrong");
   await page.locator("#login-password").fill("wrong");
   await page.locator("#login-submit").click();
-  await expect(page.locator(".login .error")).toContainText(
+  await expect(page.locator("#startup-status.error")).toContainText(
     "check your Lounge TV login",
   );
-  await expect(page.locator("#login-submit")).toBeEnabled();
+  await expect(page.locator("#startup-retry")).toBeEnabled();
   await expect(page.locator("main")).toHaveCount(0);
+});
+
+test("startup holds Home until all catalogue libraries and full XMLTV are prepared, then caches restart", async ({
+  page,
+}) => {
+  await mock(page);
+  let release!: () => void;
+  const held = new Promise<void>((r) => (release = r));
+  let catalogueCalls = 0,
+    xmlCalls = 0;
+  await page.route(
+    "https://connect.loungetv.nz/player_api.php?**",
+    async (r) => {
+      const a = new URL(r.request().url()).searchParams.get("action");
+      if (a === "get_series") {
+        catalogueCalls++;
+        await held;
+      }
+      await r.fallback();
+    },
+  );
+  page.on("request", (r) => {
+    if (r.url().includes("xmltv.php")) xmlCalls++;
+  });
+  await page.goto("/");
+  await page.locator("#login-user").fill("qa-user");
+  await page.locator("#login-password").fill("qa-password");
+  await page.locator("#login-submit").click();
+  await expect(page.locator("#startup")).toBeVisible();
+  await expect(page.locator("main")).toHaveCount(0);
+  await expect(page.locator("#startup-status")).toContainText(
+    /libraries|playlist/,
+  );
+  release();
+  await expect(page.locator("#nav-home")).toBeVisible();
+  await expect(page.locator("#startup")).toHaveCount(0);
+  expect(xmlCalls).toBe(1);
+  let freshCatalogueCalls = 0;
+  page.on("request", (r) => {
+    if (/action=get_(live_streams|vod_streams|series)(&|$)/.test(r.url()))
+      freshCatalogueCalls++;
+  });
+  await page.reload();
+  await expect(page.locator("#nav-home")).toBeVisible();
+  expect(catalogueCalls).toBe(1);
+  expect(freshCatalogueCalls).toBe(0);
+  expect(xmlCalls).toBe(1);
+});
+test("fixed sidebar keeps its DOM and width during navigation and delayed sports replies do not steal focus", async ({
+  page,
+}) => {
+  await signIn(page);
+  await page.evaluate(() => {
+    (window as any).__originalNav = document.querySelector("nav");
+  });
+  const width = await page
+    .locator("nav")
+    .evaluate((e) => e.getBoundingClientRect().width);
+  await page.locator("#nav-live").focus();
+  expect(
+    await page.locator("nav").evaluate((e) => e.getBoundingClientRect().width),
+  ).toBe(width);
+  expect(width).toBe(128);
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#live-all")).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => (window as any).__originalNav === document.querySelector("nav"),
+    ),
+  ).toBe(true);
+  await page.locator("#channel-20000").focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator("#channel-20001")).toBeFocused();
+  await section(page, "movies");
+  expect(
+    await page.evaluate(
+      () => (window as any).__originalNav === document.querySelector("nav"),
+    ),
+  ).toBe(true);
+  await expect(page.locator("nav #nav-profile")).toHaveAttribute(
+    "aria-label",
+    "Profiles",
+  );
+});
+test("Live headings expand independently and every supplied category remains available", async ({
+  page,
+}) => {
+  await mock(page);
+  await page.route(
+    "https://connect.loungetv.nz/player_api.php?**",
+    async (r) => {
+      if (
+        new URL(r.request().url()).searchParams.get("action") ===
+        "get_live_categories"
+      )
+        return r.fulfill({
+          json: [
+            { category_id: "nz-tv", category_name: "New Zealand · TV" },
+            {
+              category_id: "live_nz_sports",
+              category_name: "New Zealand · Sport",
+            },
+            { category_id: "au-tv", category_name: "Australia · TV" },
+            { category_id: "empty", category_name: "Sports · Empty folder" },
+          ],
+        });
+      await r.fallback();
+    },
+  );
+  await page.goto("/");
+  await page.locator("#login-user").fill("qa-user");
+  await page.locator("#login-password").fill("qa-password");
+  await page.locator("#login-submit").click();
+  await expect(page.locator("#nav-home")).toBeVisible();
+  await section(page, "live");
+  await expect(page.locator("#live-category-nz-tv")).toBeVisible();
+  await expect(page.locator("#live-category-live_nz_sports")).toBeVisible();
+  await page.locator("#live-group-0").click();
+  await expect(page.locator("#live-category-nz-tv")).toHaveCount(0);
+  await expect(page.locator("#live-group-0")).toBeFocused();
+  await page.locator("#live-group-1").click();
+  await expect(page.locator("#live-category-au-tv")).toBeVisible();
+  await page.locator("#live-group-2").click();
+  await expect(page.locator("#live-category-empty")).toContainText(
+    "Empty folder",
+  );
+  await page.locator("#live-group-0").click();
+  await page.locator("#live-category-live_nz_sports").click();
+  await expect(page.locator("#channel-20000")).toBeFocused();
+  await page.keyboard.press("ArrowLeft");
+  await expect(page.locator("#live-category-live_nz_sports")).toBeFocused();
+});
+test("overlapping virtual windows retain existing poster nodes instead of repainting the whole grid", async ({
+  page,
+}) => {
+  await signIn(page);
+  await section(page, "movies");
+  await page.locator("#vod-10006").focus();
+  await page.evaluate(() => {
+    (window as any).__poster = document.querySelector("#vod-10006");
+  });
+  await page.locator("#vod-10000").focus();
+  for (let i = 0; i < 2; i++) await page.keyboard.press("ArrowDown");
+  expect(
+    await page.evaluate(
+      () => (window as any).__poster === document.querySelector("#vod-10006"),
+    ),
+  ).toBe(true);
+});
+
+test("failed catalogue preparation stays behind startup and retries without exposing a partial Home", async ({
+  page,
+}) => {
+  await mock(page);
+  let failing = true;
+  await page.route(
+    "https://connect.loungetv.nz/player_api.php?**",
+    async (r) => {
+      if (
+        failing &&
+        new URL(r.request().url()).searchParams.get("action") === "get_series"
+      )
+        return r.fulfill({ status: 502, json: { error: "unavailable" } });
+      await r.fallback();
+    },
+  );
+  await page.goto("/");
+  await page.locator("#login-user").fill("qa-user");
+  await page.locator("#login-password").fill("qa-password");
+  await page.locator("#login-submit").click();
+  await expect(page.locator("#startup-retry")).toBeFocused();
+  await expect(page.locator("main")).toHaveCount(0);
+  failing = false;
+  await page.locator("#startup-retry").click();
+  await expect(page.locator("#nav-home")).toBeVisible();
+  await expect(page.locator("#startup")).toHaveCount(0);
+});
+test("full EPG failure falls back to short guides with an explicit notice", async ({
+  page,
+}) => {
+  await mock(page);
+  await page
+    .context()
+    .route("https://connect.loungetv.nz/xmltv.php?**", (r) =>
+      r.fulfill({ status: 502, body: "unavailable" }),
+    );
+  await page.goto("/");
+  await page.locator("#login-user").fill("qa-user");
+  await page.locator("#login-password").fill("qa-password");
+  await page.locator("#login-submit").click();
+  await expect(page.locator("#nav-home")).toBeVisible();
+  await expect(page.locator("#toast")).toContainText(
+    "full guide is unavailable",
+  );
+  await section(page, "live");
+  await expect(page.locator("#channel-20000")).toContainText("PGA Tour");
 });
