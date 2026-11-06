@@ -1,3 +1,4 @@
+import { hasCurrentGuide, mergeGuide } from "./guide-policy";
 import { discoverSports, mergeFixtures } from "./sports";
 import { guideHash } from "./guide-match";
 import {
@@ -111,7 +112,12 @@ export class LoungeClient {
   guideUrl() {
     return `${GATEWAY}/xmltv.php?${new URLSearchParams({ ...this.auth })}`;
   }
-  async guide(id: string, epgId?: string): Promise<Programme[]> {
+  async guide(
+    id: string,
+    epgId?: string,
+    useGateway = true,
+  ): Promise<Programme[]> {
+    let saved: Programme[] = [];
     if (epgId)
       try {
         const d = await request(
@@ -121,12 +127,19 @@ export class LoungeClient {
           ? d
           : (d.epg_listings ?? d.programmes ?? []);
         const rows = programmes(raw).filter((p) => p.end > Date.now());
-        if (rows.length) return rows;
+        if (hasCurrentGuide(rows)) return rows;
+        saved = rows;
       } catch {}
-    const d = await request(
-      this.url("get_short_epg", { stream_id: id, limit: "20" }),
-    );
-    return programmes(d.epg_listings ?? []);
+    if (!useGateway) return saved;
+    try {
+      const d = await request(
+        this.url("get_short_epg", { stream_id: id, limit: "80" }),
+      );
+      return mergeGuide(programmes(d.epg_listings ?? []), saved);
+    } catch (e) {
+      if (saved.length) return saved;
+      throw e;
+    }
   }
   async details(item: Media): Promise<Details> {
     const d = await request(

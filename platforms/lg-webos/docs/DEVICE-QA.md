@@ -44,3 +44,12 @@ User confirmed 0.1.2 played for 15 minutes without the former early stop. Keep t
 4. Check all twelve Settings groups, search and Quick pinning. Test source refresh, an additional HTTPS XMLTV feed, local playlist switching, profile edits, backup/restore and exposed playback preferences. Unavailable controls must not pretend to work. Source changes apply on the next refresh.
 5. Sport Lounge: compare Today/Upcoming with Android across available sports. Fixtures load progressively from primary feeds; no invented matches for empty leagues. Existing stream recommendations remain confidence-labelled, not guaranteed event verification.
 6. Keep a Live channel playing for at least 15 minutes while also checking the fullscreen Left/Left/Back/Back regression. Confirm no player restart from drawer browsing.
+
+## 0.1.4 EPG acceptance
+
+1. Install over 0.1.3. First launch automatically refreshes and migrates guide cache keys; keep the preparation screen open until completion.
+2. Check current and next programmes for TVNZ 1/2, Three, Whakaata Māori and Te Reo. Check Sky Sport without changing its stream.
+3. Check Seven, Channel 9, 9Gem, 9Go, Ten and 10 Bold. Ten and Bold must use independent schedules. AU fallback is explicitly Sydney.
+4. Settings → Sources & guide → EPG sources reports current-entry counts at refresh and per-source status. A source failure must retain valid cached listings for unrelated channels.
+5. Leave the Live list open across a programme boundary. Visible titles/progress update without moving focus or restarting video. Check normal browsing and the 15-minute playback baseline.
+6. Record remaining missing UK/US or rotating-event listings accurately; do not treat this as full upstream guide coverage.

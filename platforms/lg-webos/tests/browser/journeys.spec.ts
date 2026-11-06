@@ -1126,3 +1126,179 @@ test("additional XMLTV source is matched by exact channel name and merged withou
     "Extra guide show",
   );
 });
+
+test("fresh NZ gzip fallback restores an expired TVNZ listing without assigning NZ Bravo to US Bravo", async ({
+  page,
+}) => {
+  await mock(page);
+  const zlib = await import("node:zlib");
+  await page.context().route("https://connect.loungetv.nz/**", async (r) => {
+    const u = new URL(r.request().url()),
+      a = u.searchParams.get("action");
+    if (a === "get_live_categories")
+      return r.fulfill({
+        json: [
+          { category_id: "nz", category_name: "New Zealand · TV" },
+          { category_id: "us", category_name: "Entertainment · US" },
+        ],
+      });
+    if (a === "get_live_streams")
+      return r.fulfill({
+        json: [
+          {
+            stream_id: 1,
+            name: "TVNZ 1",
+            category_id: "nz",
+            epg_channel_id: "mjh-tvnz-1",
+          },
+          {
+            stream_id: 2,
+            name: "Bravo",
+            category_id: "us",
+            epg_channel_id: "Bravo.us",
+          },
+        ],
+      });
+    if (u.pathname === "/xmltv.php")
+      return r.fulfill({
+        contentType: "application/xml",
+        body: `<tv><programme channel="mjh-tvnz-1" start="${xmlDate(now - 7200000)} +0000" stop="${xmlDate(now - 3600000)} +0000"><title>Expired programme</title></programme></tv>`,
+      });
+    return r.fallback();
+  });
+  await page.route(
+    "https://raw.githubusercontent.com/matthuisman/i.mjh.nz/master/nz/epg.xml.gz",
+    (r) =>
+      r.fulfill({
+        contentType: "application/gzip",
+        headers: { "Access-Control-Allow-Origin": "*" },
+        body: zlib.gzipSync(
+          `<tv><channel id="mjh-tvnz-1"><display-name>TVNZ 1</display-name></channel><channel id="mjh-bravo"><display-name>Bravo</display-name></channel><programme channel="mjh-tvnz-1" start="${xmlDate(now - 60000)} +0000" stop="${xmlDate(now + 3600000)} +0000"><title>Fresh NZ programme</title></programme><programme channel="mjh-bravo" start="${xmlDate(now - 60000)} +0000" stop="${xmlDate(now + 3600000)} +0000"><title>NZ Bravo programme</title></programme></tv>`,
+        ),
+      }),
+  );
+  await page.goto("/");
+  await page.locator("#login-user").fill("qa-user");
+  await page.locator("#login-password").fill("qa-password");
+  await page.locator("#login-submit").click();
+  await expect(page.locator("#nav-live")).toBeVisible({ timeout: 15000 });
+  await section(page, "live");
+  await expect(page.locator("#channel-1")).toContainText("Fresh NZ programme");
+  await section(page, "settings");
+  await page.locator("#settings-group-sources").click();
+  await page.locator("#setting-tab_epg").click();
+  await expect(page.locator("#overlay")).toContainText(
+    "New Zealand guide fallback: 1 channels with programmes now",
+  );
+});
+
+test("Australian Ten and 10 Bold keep separate cached programmes even when their supplied EPG IDs collide", async ({
+  page,
+}) => {
+  await mock(page);
+  const zlib = await import("node:zlib");
+  const programme = (id: string, title: string) =>
+    `<programme channel="${id}" start="${xmlDate(now - 60000)} +0000" stop="${xmlDate(now + 3600000)} +0000"><title>${title}</title></programme>`;
+  await page.context().route("https://connect.loungetv.nz/**", async (r) => {
+    const u = new URL(r.request().url()),
+      a = u.searchParams.get("action");
+    if (a === "get_live_categories")
+      return r.fulfill({
+        json: [{ category_id: "au", category_name: "Australia · TV" }],
+      });
+    if (a === "get_live_streams")
+      return r.fulfill({
+        json: [
+          {
+            stream_id: 1,
+            name: "Ten",
+            category_id: "au",
+            epg_channel_id: "10Bold.au",
+          },
+          {
+            stream_id: 2,
+            name: "10 BOLD",
+            category_id: "au",
+            epg_channel_id: "10Bold.au",
+          },
+        ],
+      });
+    if (u.pathname === "/xmltv.php")
+      return r.fulfill({
+        contentType: "application/xml",
+        body: "<tv>" + programme("10Bold.au", "Bold programme") + "</tv>",
+      });
+    return r.fallback();
+  });
+  await page.route(
+    "https://raw.githubusercontent.com/matthuisman/i.mjh.nz/master/au/Sydney/epg.xml.gz",
+    (r) =>
+      r.fulfill({
+        contentType: "application/gzip",
+        headers: { "Access-Control-Allow-Origin": "*" },
+        body: zlib.gzipSync(
+          "<tv>" +
+            programme("mjh-10-nsw", "Main Ten programme") +
+            programme("mjh-10bold-nsw", "Alternative Bold listing") +
+            "</tv>",
+        ),
+      }),
+  );
+  await page.goto("/");
+  await page.locator("#login-user").fill("qa-user");
+  await page.locator("#login-password").fill("qa-password");
+  await page.locator("#login-submit").click();
+  await expect(page.locator("#nav-live")).toBeVisible({ timeout: 15000 });
+  await section(page, "live");
+  await expect(page.locator("#channel-1")).toContainText("Main Ten programme");
+  await expect(page.locator("#channel-2")).toContainText("Bold programme");
+  await expect(page.locator("#channel-1")).not.toContainText("Bold programme");
+});
+
+test("a failed canonical refresh retains valid previous listings while publishing a healthy regional supplement", async ({
+  page,
+}) => {
+  await mock(page);
+  let fail = false;
+  const zlib = await import("node:zlib");
+  await page.context().route("https://connect.loungetv.nz/**", (r) => {
+    const u = new URL(r.request().url());
+    if (
+      fail &&
+      (u.pathname === "/xmltv.php" ||
+        u.searchParams.get("action") === "get_short_epg")
+    )
+      return r.fulfill({ status: 503, body: "Unavailable" });
+    return r.fallback();
+  });
+  await page.route(
+    "https://raw.githubusercontent.com/matthuisman/i.mjh.nz/master/nz/epg.xml.gz",
+    (r) =>
+      fail
+        ? r.fulfill({
+            contentType: "application/gzip",
+            headers: { "Access-Control-Allow-Origin": "*" },
+            body: zlib.gzipSync(
+              `<tv><programme channel="ltv-20000" start="${xmlDate(now - 60000)} +0000" stop="${xmlDate(now + 3600000)} +0000"><title>Supplement programme</title></programme></tv>`,
+            ),
+          })
+        : r.fulfill({ status: 503, body: "Unavailable" }),
+  );
+  await page.goto("/");
+  await page.locator("#login-user").fill("qa-user");
+  await page.locator("#login-password").fill("qa-password");
+  await page.locator("#login-submit").click();
+  await expect(page.locator("#nav-settings")).toBeVisible({ timeout: 15000 });
+  fail = true;
+  await section(page, "settings");
+  await page.locator("#settings-group-sources").click();
+  await page.locator("#setting-tab_epg").click();
+  await page.locator("#epg-sync").click();
+  await expect(page.locator("#overlay")).toContainText("1 channels ready");
+  await page.keyboard.press("Escape");
+  await section(page, "live");
+  await expect(page.locator("#channel-20000")).toContainText(
+    "Supplement programme",
+  );
+  await expect(page.locator("#channel-20001")).toContainText("PGA Tour");
+});

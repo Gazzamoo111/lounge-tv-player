@@ -74,7 +74,7 @@ export class DeviceCache {
       throw Error("Unable to cache the programme guide on this TV.");
     }
   }
-  async pruneGuides(account: string, keep: string) {
+  async pruneGuides(account: string, keep: string, fallback?: string) {
     try {
       const db = await this.open();
       await new Promise<void>((resolve, reject) => {
@@ -88,7 +88,11 @@ export class DeviceCache {
           const cursor = req.result;
           if (cursor) {
             if (
-              !String(cursor.key).startsWith(account + ":xmltv:" + keep + ":")
+              ![keep, fallback]
+                .filter(Boolean)
+                .some((g) =>
+                  String(cursor.key).startsWith(account + ":xmltv:" + g + ":"),
+                )
             )
               cursor.delete();
             cursor.continue();

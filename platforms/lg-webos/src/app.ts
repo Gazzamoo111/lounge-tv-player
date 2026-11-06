@@ -1,3 +1,5 @@
+import { hasCurrentGuide, mergeGuide } from "./guide-policy";
+import { channelRegion } from "./guide-match";
 import { mergeFixtures } from "./sports";
 import { SettingsScreen, SettingControl, SETTINGS_ROWS } from "./settings";
 import { LoungeClient, request } from "./api";
@@ -96,6 +98,16 @@ let cacheAccount = "",
         channels: number;
         records: number;
         failedSources?: number;
+        fallbackGeneration?: string;
+        currentChannels?: number;
+        totalChannels?: number;
+        sourceStats?: {
+          id: string;
+          name: string;
+          status: string;
+          currentChannels: number;
+          records: number;
+        }[];
       }
     | undefined;
 let startupRevision = 0,
@@ -589,16 +601,28 @@ async function loadFullGuide(onProgress: (text: string) => void) {
         void writes
           .then(async () => {
             if (done || generation !== accountGeneration) return;
+            const previous = guideSummary;
             guideSummary = {
               generation: version,
+              fallbackGeneration:
+                data.failed && previous
+                  ? previous.fallbackGeneration || previous.generation
+                  : undefined,
               at: now,
               channels: data.channels,
               records: data.records,
               failedSources: data.failed,
+              currentChannels: data.currentChannels,
+              totalChannels: data.totalChannels,
+              sourceStats: data.sourceStats,
             };
             await deviceCache.put(account + ":guide-summary", guideSummary);
-            state.write("guide-client-revision", 3);
-            void deviceCache.pruneGuides(account, version);
+            state.write("guide-client-revision", 4);
+            void deviceCache.pruneGuides(
+              account,
+              version,
+              guideSummary.fallbackGeneration,
+            );
             finish();
           })
           .catch(() => finish(Error("TV guide could not be cached.")));
@@ -609,7 +633,15 @@ async function loadFullGuide(onProgress: (text: string) => void) {
         .filter((s) => s.enabled)
         .map((s) => s.url),
       ids,
-      channels: catalogues.live ?? [],
+      sources: guideSources().filter((s) => s.enabled),
+      channels: (catalogues.live ?? []).map((m) => ({
+        ...m,
+        cacheKey: "stream:" + m.id,
+        region: channelRegion(
+          m,
+          categories.live?.find((c) => c.id === m.category)?.name,
+        ),
+      })),
       overrides: state.read("guide-matches", {}),
       now,
       days: state.settings().guideDays,
@@ -645,6 +677,7 @@ async function startSession(auth: Credentials, force = false) {
   guideInFlight.clear();
   detailsInFlight.clear();
   epgCache.clear();
+  guideFallbackAt.clear();
   detailCache.clear();
   activeAuth = auth;
   client = new LoungeClient(auth);
@@ -705,9 +738,11 @@ async function startSession(auth: Credentials, force = false) {
     if (
       force ||
       !guideSummary ||
-      state.read("guide-client-revision", 0) < 3 ||
+      state.read("guide-client-revision", 0) < 4 ||
       Date.now() - guideSummary.at >
-        state.settings().guideRefreshHours * 3600000
+        (guideSummary.failedSources
+          ? 15 * 60000
+          : state.settings().guideRefreshHours * 3600000)
     ) {
       try {
         await loadFullGuide((text) => startupStage("guide", text));
@@ -1221,9 +1256,16 @@ async function cachedGuide(id: string): Promise<Programme[] | undefined> {
   let rows: Programme[] | undefined;
   if (m?.epgId && guideSummary) {
     const full = await deviceCache.get<{ at: number; rows: Programme[] }>(
-      `${account}:xmltv:${guideSummary.generation}:${m.epgId}`,
+      `${account}:xmltv:${guideSummary.generation}:stream:${m.id}`,
     );
     if (full && full.rows.some((p) => p.end > Date.now())) rows = full.rows;
+    if (guideSummary.fallbackGeneration && !hasCurrentGuide(rows)) {
+      const retained = await deviceCache.get<{ at: number; rows: Programme[] }>(
+        `${account}:xmltv:${guideSummary.fallbackGeneration}:stream:${m.id}`,
+      );
+      if (retained?.rows.some((p) => p.end > Date.now()))
+        rows = mergeGuide(rows ?? [], retained.rows);
+    }
   }
   if (!rows && state.read("guide-canonical-enabled", true)) {
     const saved = await deviceCache.guide(account, id);
@@ -1235,18 +1277,27 @@ async function cachedGuide(id: string): Promise<Programme[] | undefined> {
   }
   return rows;
 }
+const guideFallbackAt = new Map<string, number>();
 const visibleGuideQueue: {
   id: string;
   view: number;
   resolve: (rows: Programme[]) => void;
 }[] = [];
 let visibleGuideActive = 0;
+const visibleGuidePending = new Map<string, Promise<Programme[]>>();
 function queuedGuide(id: string): Promise<Programme[]> {
-  return new Promise((resolve) => {
+  const key = accountGeneration + ":" + view + ":" + id,
+    pending = visibleGuidePending.get(key);
+  if (pending) return pending;
+  const work = new Promise<Programme[]>((resolve) => {
     visibleGuideQueue.push({ id, view, resolve });
     drainGuides();
   });
+  visibleGuidePending.set(key, work);
+  void work.finally(() => visibleGuidePending.delete(key));
+  return work;
 }
+
 function drainGuides() {
   while (visibleGuideActive < 2 && visibleGuideQueue.length) {
     const job = visibleGuideQueue.shift()!;
@@ -1271,15 +1322,22 @@ async function guideRaw(id: string): Promise<Programme[]> {
     account = cacheAccount,
     source = client;
   const work = (async () => {
-    const memory = epgCache.get(id);
-    if (memory && !memory.rows.length && Date.now() - memory.at < 60000)
-      return [];
     const cached = await cachedGuide(id);
-    if (cached?.some((p) => p.end > Date.now())) return cached;
-    const m = catalogues.live?.find((m) => m.id === id);
-    const rows = state.read("guide-canonical-enabled", true)
-      ? await source.guide(id, m?.epgId)
-      : [];
+    if (hasCurrentGuide(cached)) return cached!;
+    if (Date.now() - (guideFallbackAt.get(id) ?? 0) < 60000)
+      return cached ?? [];
+    const m = catalogues.live?.find((m) => m.id === id),
+      override = state.read<Record<string, string>>("guide-matches", {})[id];
+    let rows: Programme[] = [];
+    try {
+      if (state.read("guide-canonical-enabled", true))
+        rows = await source.guide(id, override || m?.epgId, !override);
+    } catch {
+      if (!cached?.length) throw Error("Programme guide unavailable");
+    } finally {
+      if (generation === accountGeneration) guideFallbackAt.set(id, Date.now());
+    }
+    rows = mergeGuide(rows, cached ?? []);
     await deviceCache.saveGuide(account, id, { at: Date.now(), rows });
     return rows;
   })()
@@ -1306,18 +1364,61 @@ interface GuideSource {
   name: string;
   url: string;
   enabled: boolean;
+  builtin?: boolean;
+  regions?: string[];
 }
+let guideRegionRows: Media[] | undefined,
+  guideRegionSet = new Set<string | undefined>();
 function guideSources(): GuideSource[] {
+  const disabled = state.read<string[]>("guide-builtins-disabled", []);
+  if (guideRegionRows !== catalogues.live) {
+    guideRegionRows = catalogues.live;
+    guideRegionSet = new Set(
+      (catalogues.live ?? []).map((m) =>
+        channelRegion(
+          m,
+          categories.live?.find((c) => c.id === m.category)?.name,
+        ),
+      ),
+    );
+  }
+  const regions = guideRegionSet;
   return [
     {
       id: "lounge",
       name: "Lounge TV programme guide",
       url: client.guideUrl(),
       enabled: state.read("guide-canonical-enabled", true),
+      builtin: true,
     },
+    ...(regions.has("nz")
+      ? [
+          {
+            id: "nz",
+            name: "New Zealand guide fallback",
+            url: "https://raw.githubusercontent.com/matthuisman/i.mjh.nz/master/nz/epg.xml.gz",
+            enabled: !disabled.includes("nz"),
+            builtin: true,
+            regions: ["nz"],
+          },
+        ]
+      : []),
+    ...(regions.has("au")
+      ? [
+          {
+            id: "au",
+            name: "Australia guide fallback (Sydney)",
+            url: "https://raw.githubusercontent.com/matthuisman/i.mjh.nz/master/au/Sydney/epg.xml.gz",
+            enabled: !disabled.includes("au"),
+            builtin: true,
+            regions: ["au"],
+          },
+        ]
+      : []),
     ...state.read<GuideSource[]>("guide-sources", []),
   ];
 }
+
 function progressBar(p: Programme | undefined) {
   const line = node("div", "progress");
   const fill = node("i");
@@ -2535,10 +2636,10 @@ function settingControl(id: string): SettingControl | undefined {
   if (id === "vp_measured_stats" || id === "vp_logging" || id === "diagnostics")
     return open(player.trace.length + " entries", showDiagnostics);
   if (id === "about")
-    return open("0.1.3", () => {
+    return open("0.1.4", () => {
       const b = openOverlay("Lounge TV for LG");
       b.append(
-        node("p", "", "QA 0.1.3 · Native webOS player"),
+        node("p", "", "QA 0.1.4 · Native webOS player"),
         node(
           "p",
           "muted",
@@ -2744,10 +2845,18 @@ function epgSettings() {
       "p",
       "muted",
       guideSummary
-        ? `${guideSummary.channels} matched guide channels · ${guideSummary.records.toLocaleString()} programmes · Updated ${nzDate(guideSummary.at)} ${nzTime(guideSummary.at)}${guideSummary.failedSources ? " · " + guideSummary.failedSources + " sources failed" : ""}`
+        ? `${guideSummary.currentChannels ?? guideSummary.channels} channels with programmes now in refreshed data / ${guideSummary.totalChannels ?? catalogues.live?.length ?? 0} · ${guideSummary.channels} matched guide channels · ${guideSummary.records.toLocaleString()} programmes · Updated ${nzDate(guideSummary.at)} ${nzTime(guideSummary.at)}${guideSummary.failedSources ? " · " + guideSummary.failedSources + " sources failed" : ""}${guideSummary.fallbackGeneration ? " · Previous valid guide retained for missing entries" : ""}`
         : "Guide not yet loaded",
     ),
   );
+  for (const result of guideSummary?.sourceStats ?? [])
+    b.append(
+      node(
+        "p",
+        "muted",
+        `${result.name}: ${result.status === "ready" ? result.currentChannels + " channels with programmes now" : "Unavailable; other guides retained"}`,
+      ),
+    );
   for (const source of guideSources())
     b.append(
       action(
@@ -2756,7 +2865,18 @@ function epgSettings() {
         () => {
           if (source.id === "lounge")
             state.write("guide-canonical-enabled", !source.enabled);
-          else
+          else if (source.builtin) {
+            const disabled = state.read<string[]>(
+              "guide-builtins-disabled",
+              [],
+            );
+            state.write(
+              "guide-builtins-disabled",
+              source.enabled
+                ? [...disabled, source.id]
+                : disabled.filter((id) => id !== source.id),
+            );
+          } else
             state.write(
               "guide-sources",
               state
@@ -2770,7 +2890,7 @@ function epgSettings() {
           epgSettings();
         },
       ),
-      ...(source.id === "lounge"
+      ...(source.builtin
         ? []
         : [
             action("epg-remove-" + source.id, "Remove " + source.name, () => {
@@ -4077,6 +4197,26 @@ window.addEventListener("pagehide", () => {
     );
   player.stop();
 });
+// Update only visible guide rows. No shell rebuild, focus change or player reload.
+setInterval(() => {
+  if (
+    starting ||
+    document.hidden ||
+    route !== "live" ||
+    !overlay.hidden ||
+    (currentPlaying && !preview)
+  )
+    return;
+  const token = view;
+  for (const row of document.querySelectorAll<HTMLElement>(
+    "#channels .channel-row",
+  )) {
+    const id = row.id.replace(/^channel-/, "");
+    void queuedGuide(id).then((rows) => {
+      if (token === view && row.isConnected) setChannelGuide(row, rows);
+    });
+  }
+}, 60000);
 // Reminders are local and shown while the application is running. No unsupported background wake claim.
 setInterval(() => {
   if (!client || !state.settings().remindersEnabled) return;

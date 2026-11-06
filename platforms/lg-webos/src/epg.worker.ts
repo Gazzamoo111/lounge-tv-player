@@ -1,3 +1,4 @@
+import { mergeGuide, hasCurrentGuide } from "./guide-policy";
 import { GuideMatcher, GuideChannel } from "./guide-match";
 import { XmltvStream, programmeFromXml, xmlText } from "./xmltv";
 import type { Programme } from "./model";
@@ -8,6 +9,7 @@ scope.onmessage = async ({
   data: {
     url: string;
     urls?: string[];
+    sources?: { url: string; id?: string; name?: string; regions?: string[] }[];
     ids: string[];
     channels?: GuideChannel[];
     overrides?: Record<string, string>;
@@ -18,20 +20,46 @@ scope.onmessage = async ({
   const controller = new AbortController(),
     timeout = setTimeout(() => controller.abort(), 120000);
   try {
-    const matcher = new GuideMatcher(
-      data.channels ?? data.ids.map((id) => ({ id, epgId: id, name: "" })),
-      data.overrides,
-    );
+    const channels =
+      data.channels ??
+      data.ids.map((id) => ({ id, epgId: id, name: "" }) as GuideChannel);
     const rows = new Map<string, Programme[]>();
     let records = 0,
       last = 0,
       bytes = 0,
       succeeded = 0,
       failed = 0;
-    for (const [sourceIndex, url] of (data.urls ?? [data.url]).entries()) {
+    const sourceStats: {
+      id: string;
+      name: string;
+      status: string;
+      currentChannels: number;
+      records: number;
+    }[] = [];
+    const sources =
+      data.sources ??
+      (data.urls ?? [data.url]).map((url, i) => ({
+        url,
+        id: String(i),
+        name: "Programme guide",
+        regions: undefined,
+      }));
+    for (const [sourceIndex, source] of sources.entries()) {
+      const matcher = new GuideMatcher(
+        source.regions?.length
+          ? channels.filter(
+              (c) => !!c.region && source.regions!.includes(c.region),
+            )
+          : channels,
+        data.overrides,
+      );
+      const feedController = new AbortController(),
+        abort = () => feedController.abort();
+      controller.signal.addEventListener("abort", abort, { once: true });
+      const feedTimer = setTimeout(abort, sourceIndex === 0 ? 45000 : 20000);
       try {
-        const response = await fetch(url, {
-          signal: controller.signal,
+        const response = await fetch(source.url, {
+          signal: feedController.signal,
           credentials: "omit",
           cache: "no-store",
         });
@@ -66,6 +94,13 @@ scope.onmessage = async ({
         const sourceRows = new Map<string, Programme[]>();
         let tail = "";
         const collect = (xml: string) => {
+          const id = xmlText(
+            xml
+              .slice(0, xml.indexOf(">") + 1)
+              .match(/\bchannel\s*=\s*["']([^"']*)["']/)?.[1] ?? "",
+          );
+          const targets = matcher.targets(id);
+          if (!targets.length) return;
           const entry = programmeFromXml(xml);
           if (
             !entry ||
@@ -73,7 +108,7 @@ scope.onmessage = async ({
             entry.programme.start > data.now + (data.days ?? 7) * 86400000
           )
             return;
-          for (const target of matcher.targets(entry.channel)) {
+          for (const target of targets) {
             const list = sourceRows.get(target) ?? [];
             list.push(entry.programme);
             sourceRows.set(target, list);
@@ -112,16 +147,33 @@ scope.onmessage = async ({
         if (!tail.includes("</tv>")) throw Error("Incomplete guide");
         for (const [id, list] of sourceRows) {
           const existing = rows.get(id) ?? [];
-          const fresh = list.filter(
-            (p) => !existing.some((e) => p.start < e.end && p.end > e.start),
-          );
-          rows.set(id, [...existing, ...fresh]);
-          records += fresh.length;
+          const merged = mergeGuide(existing, list, data.now);
+          records += merged.length - existing.length;
+          rows.set(id, merged);
         }
+        sourceStats.push({
+          id: source.id ?? String(sourceIndex),
+          name: source.name ?? "Programme guide",
+          status: "ready",
+          currentChannels: [...sourceRows.values()].filter((r) =>
+            hasCurrentGuide(r, data.now),
+          ).length,
+          records: [...sourceRows.values()].reduce((n, r) => n + r.length, 0),
+        });
         succeeded++;
       } catch {
         failed++;
+        sourceStats.push({
+          id: source.id ?? String(sourceIndex),
+          name: source.name ?? "Programme guide",
+          status: "unavailable",
+          currentChannels: 0,
+          records: 0,
+        });
         scope.postMessage({ type: "source-error", sourceIndex });
+      } finally {
+        clearTimeout(feedTimer);
+        controller.signal.removeEventListener("abort", abort);
       }
     }
     if (!succeeded || !records) throw Error("No programme entries available");
@@ -140,6 +192,11 @@ scope.onmessage = async ({
       type: "complete",
       records,
       channels: rows.size,
+      currentChannels: [...rows.values()].filter((r) =>
+        hasCurrentGuide(r, data.now),
+      ).length,
+      totalChannels: channels.length,
+      sourceStats,
       failed,
     });
   } catch {

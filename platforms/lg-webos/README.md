@@ -1,6 +1,6 @@
 # Lounge TV for LG webOS
 
-Isolated LG client, QA package `nz.loungetv.webos.qa`, version **0.1.3**. Full Android feature parity is incomplete. The user confirmed substantially faster startup/navigation in 0.1.1 and 15 minutes of Live playback without the former 2–3 minute stop in 0.1.2. 0.1.3 addresses VOD responsiveness, All-tab focus, EPG row loading/matching, Settings structure and sports discovery. Physical LG acceptance of the new changes remains required.
+Isolated LG client, QA package `nz.loungetv.webos.qa`, version **0.1.4**. Full Android feature parity is incomplete. The user confirmed substantially faster startup/navigation in 0.1.1 and 15 minutes of Live playback without the former 2–3 minute stop in 0.1.2. 0.1.3 addresses VOD responsiveness, All-tab focus, EPG row loading/matching, Settings structure and sports discovery. Physical LG acceptance of the new changes remains required.
 
 Android reference: published **v5.2.3.10**, commit `44388fa8683df20a51ad5166f3ea73d7b08c8051`. Current `main` is older in application features, despite having newer documentation and EPG changes. See [parity matrix](docs/PARITY.md).
 
@@ -10,7 +10,7 @@ With the `.ipk` downloaded to the Mac's Downloads folder and the existing `loung
 
 ```bash
 cd ~/Downloads
-ares-install --device loungetv-lg nz.loungetv.webos.qa_0.1.3_all.ipk
+ares-install --device loungetv-lg nz.loungetv.webos.qa_0.1.4_all.ipk
 ares-launch --device loungetv-lg nz.loungetv.webos.qa
 ```
 
@@ -26,7 +26,7 @@ npm test
 npm run package
 ```
 
-Output: `artifacts/nz.loungetv.webos.qa_0.1.3_all.ipk`.
+Output: `artifacts/nz.loungetv.webos.qa_0.1.4_all.ipk`.
 
 Browser regressions use Chromium and mock the real API contracts with a large catalogue. They do not establish actual provider playback or customer authentication:
 
@@ -37,6 +37,17 @@ npm run test:browser
 ```
 
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` can point to an existing Chromium executable. `npm run serve` serves the built application at port 4173.
+
+## 0.1.4: EPG recovery
+
+- Adds automatic, region-restricted NZ and Australian (Sydney) guide fallbacks, fetched directly from the existing public regional guide repository. Current canonical entries retain priority; supplemental entries fill real gaps. First launch refreshes the guide cache automatically.
+- Separates cached guide data by stream identity. Reviewed regional aliases resolve Australian FTA names; Ten no longer inherits 10 Bold's schedule from their duplicated upstream guide ID.
+- Future-only cached entries no longer suppress a request for the programme on now. Short-guide fallback merges current and future entries; explicit manual mappings do not silently fall back to the previous guide identity.
+- Preserves a previous valid guide generation if some feeds fail. A partial refresh cannot replace every unrelated channel's guide with blanks. Failed sources become eligible for retry after 15 minutes on the next startup.
+- Settings reports current-entry counts and per-source health. Visible Live rows update quietly each minute. Guide parsing skips unneeded channels before decoding full programme descriptions.
+- Upstream UK/US, PPV and rotating-channel gaps remain. This does not invent listings or change channel membership, source bindings, playback routing or the shared production API.
+
+See [QA-0.1.4.md](docs/QA-0.1.4.md) for real-feed audit evidence and limitations.
 
 ## 0.1.3: responsive libraries, guide, Settings and sports
 

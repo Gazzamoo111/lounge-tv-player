@@ -29,20 +29,22 @@ export function xmlText(raw: string): string {
 export function programmeFromXml(
   xml: string,
 ): { channel: string; programme: Programme } | undefined {
-  const attr = (name: string) =>
-    xml.match(new RegExp("\\b" + name + "=[\"\\']([^\"\\']*)[\"\\']"))?.[1] ??
-    "";
-  const field = (name: string) =>
-    xmlText(
-      xml.match(
-        new RegExp("<" + name + "(?:\\s[^>]*)?>([\\s\\S]*?)<\\/" + name + ">"),
-      )?.[1] ?? "",
+  const attributes = xml.slice(0, xml.indexOf(">") + 1);
+  const start = xmltvTime(
+      attributes.match(/\bstart\s*=\s*["']([^"']*)["']/)?.[1] ?? "",
+    ),
+    end = xmltvTime(
+      attributes.match(/\bstop\s*=\s*["']([^"']*)["']/)?.[1] ?? "",
+    ),
+    channel = xmlText(
+      attributes.match(/\bchannel\s*=\s*["']([^"']*)["']/)?.[1] ?? "",
+    ),
+    title = xmlText(
+      xml.match(/<title(?:\s[^>]*)?>([\s\S]*?)<\/title>/)?.[1] ?? "",
     );
-  const start = xmltvTime(attr("start")),
-    end = xmltvTime(attr("stop")),
-    channel = xmlText(attr("channel"));
   if (
     !channel ||
+    !title.trim() ||
     !Number.isFinite(start) ||
     !Number.isFinite(end) ||
     end <= start
@@ -52,8 +54,10 @@ export function programmeFromXml(
     channel,
     programme: {
       id: channel + ":" + start,
-      title: field("title"),
-      description: field("desc"),
+      title,
+      description: xmlText(
+        xml.match(/<desc(?:\s[^>]*)?>([\s\S]*?)<\/desc>/)?.[1] ?? "",
+      ),
       start,
       end,
     },
