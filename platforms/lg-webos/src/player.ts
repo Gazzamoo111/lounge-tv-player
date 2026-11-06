@@ -1,3 +1,8 @@
+import {
+  AdaptiveFault,
+  adaptiveFault,
+  adaptiveFailureMessage,
+} from "./adaptive-fault";
 import { createAdaptiveSession, AdaptiveSession } from "./adaptive";
 import type { FreeviewSource } from "./freeview";
 import { Media } from "./model";
@@ -24,6 +29,8 @@ export interface Trace {
   ended?: boolean;
   bufferedAhead?: number;
   frames?: number;
+  width?: number;
+  height?: number;
   attempt?: number;
   failures?: number;
 }
@@ -58,6 +65,13 @@ export class LgPlayback {
     this.options = { ...this.options, ...options };
   }
   private source?: FreeviewSource;
+  private nativeFallback = false;
+  private adaptiveProblem?: AdaptiveFault;
+  get failureSummary() {
+    return this.adaptiveProblem
+      ? adaptiveFailureMessage(this.adaptiveProblem)
+      : "";
+  }
   private adaptive?: AdaptiveSession;
   private closing?: Promise<void>;
   private generation = 0;
@@ -118,6 +132,8 @@ export class LgPlayback {
       ended: this.video.ended,
       bufferedAhead: this.bufferedAhead(),
       frames: this.frames(),
+      width: this.video.videoWidth || undefined,
+      height: this.video.videoHeight || undefined,
       attempt: this.attempt,
       failures: this.failures,
     });
@@ -146,6 +162,8 @@ export class LgPlayback {
     this.stop();
     this.media = media;
     this.source = source;
+    this.nativeFallback = false;
+    this.adaptiveProblem = undefined;
     this.url = source?.url ?? url;
     this.resumeAt = position;
     this.failures = 0;
@@ -207,6 +225,7 @@ export class LgPlayback {
     on("playing", () => {
       this.clock.cancelTimeout(this.pauseTimer);
       this.pauseTimer = undefined;
+      if (this.nativeFallback) this.adaptiveProblem = undefined;
       this.set("playing");
       this.sample();
     });
@@ -277,22 +296,29 @@ export class LgPlayback {
       target = u.toString();
     }
     this.watchdog = this.clock.interval(() => this.check(gen), 2000);
+    const adaptive = !!this.source && !this.nativeFallback;
     try {
-      if (this.source?.manifest === "dash" && this.source.license) {
-        const session = await this.adaptiveFactory((code, fatal) => {
+      if (adaptive) {
+        const session = await this.adaptiveFactory((code, fatal, fault) => {
           if (gen !== this.generation || attempt !== this.attempt) return;
           this.log("adaptive-error", code);
-          if (fatal) this.recover(gen, "adaptive-error");
+          if (fatal)
+            this.adaptiveFailure(
+              gen,
+              fault ?? new AdaptiveFault(code, "player"),
+            );
         });
         if (gen !== this.generation || attempt !== this.attempt) {
           await session.destroy();
           return;
         }
         this.adaptive = session;
-        this.log("adaptive-widevine");
+        this.log(
+          this.source?.license ? "adaptive-widevine" : "adaptive-hls-hd",
+        );
         await session.attach(this.video);
         if (gen !== this.generation || attempt !== this.attempt) return;
-        await session.load(target, this.source.license);
+        await session.load(target, this.source?.license, this.source?.manifest);
         if (gen !== this.generation || attempt !== this.attempt) return;
       } else {
         this.video.src = target;
@@ -300,9 +326,30 @@ export class LgPlayback {
       }
       this.attemptPrepared = true;
       await this.video.play();
-    } catch {
-      if (gen === this.generation && attempt === this.attempt)
-        this.recover(gen, "play-rejected");
+    } catch (error) {
+      if (gen === this.generation && attempt === this.attempt) {
+        if (adaptive) this.adaptiveFailure(gen, adaptiveFault(error));
+        else this.recover(gen, "play-rejected");
+      }
+    }
+  }
+  private adaptiveFailure(gen: number, fault: AdaptiveFault) {
+    if (this.retryTimer || this.state === "error") return;
+    this.adaptiveProblem = fault;
+    this.log(
+      `adaptive-${fault.phase}${fault.status ? "-http-" + fault.status : ""}`,
+      fault.code,
+    );
+    if (this.source?.manifest === "hls") {
+      this.nativeFallback = true;
+      this.log("freeview-native-fallback");
+      this.recover(gen, "adaptive-hls-fallback");
+    } else {
+      const permanent =
+        [9001, 9002, 6001].includes(fault.code) ||
+        fault.status === 401 ||
+        fault.status === 403;
+      this.recover(gen, "adaptive-" + fault.phase, !permanent);
     }
   }
   private sample() {
@@ -388,7 +435,7 @@ export class LgPlayback {
         this.recover(gen, "resume-rejected");
     }
   }
-  private recover(gen: number, reason: string) {
+  private recover(gen: number, reason: string, retryable = true) {
     if (
       gen !== this.generation ||
       this.retryTimer ||
@@ -402,7 +449,7 @@ export class LgPlayback {
     // Close the old native connection before starting a replacement; never open parallel feeds.
     this.release();
     this.healthySince = undefined;
-    if (this.failures >= this.options.reconnects) {
+    if (!retryable || this.failures >= this.options.reconnects) {
       this.set("error");
       return;
     }

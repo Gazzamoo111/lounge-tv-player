@@ -1,3 +1,4 @@
+import { heroAsset } from "./hero-art";
 import { freeviewSource } from "./freeview";
 import { GuideGrid } from "./guide-grid";
 import { hasCurrentGuide, mergeGuide } from "./guide-policy";
@@ -956,28 +957,6 @@ function renderHome(main: HTMLElement) {
       ),
     );
 }
-function heroAsset(e: SportEvent) {
-  const s = e.sport;
-  const n =
-    s === "basketball"
-      ? "nba"
-      : s === "football"
-        ? "nfl"
-        : s === "rugby-league"
-          ? "league"
-          : s === "rugby"
-            ? "rugby"
-            : s === "soccer"
-              ? "soccer"
-              : s === "racing"
-                ? "f1"
-                : s === "cricket"
-                  ? "cricket"
-                  : s === "mma" || s === "boxing" || s === "wrestling"
-                    ? "combat"
-                    : undefined;
-  return n ? `assets/lounge_hero_${n}.webp` : undefined;
-}
 function renderHero(hero: HTMLElement) {
   const old = (document.activeElement as HTMLElement)?.id;
   hero.replaceChildren();
@@ -1005,8 +984,20 @@ function renderHero(hero: HTMLElement) {
     hero.append(copy);
     return;
   }
-  const art = event.hero_art_url || heroAsset(event);
-  if (art) hero.append(image(art, "hero-image"));
+  const fallback = heroAsset(event.sport),
+    art = event.hero_art_url || fallback;
+  if (art) {
+    const cover = image(art, "hero-image");
+    cover.loading = "eager";
+    let usedFallback = art === fallback;
+    cover.addEventListener("error", () => {
+      if (usedFallback || !fallback) return;
+      usedFallback = true;
+      cover.hidden = false;
+      cover.src = fallback;
+    });
+    hero.append(cover);
+  }
   hero.append(node("div", "hero-wash"));
   const copy = node("div", "hero-copy");
   copy.append(node("div", "eyebrow", "BIG EVENTS. LIVE ON LOUNGE."));
@@ -2667,10 +2658,10 @@ function settingControl(id: string): SettingControl | undefined {
   if (id === "vp_measured_stats" || id === "vp_logging" || id === "diagnostics")
     return open(player.trace.length + " entries", showDiagnostics);
   if (id === "about")
-    return open("0.1.5", () => {
+    return open("0.1.6", () => {
       const b = openOverlay("Lounge TV for LG");
       b.append(
-        node("p", "", "QA 0.1.5 · webOS native + TVNZ adaptive player"),
+        node("p", "", "QA 0.1.6 · webOS native + NZ adaptive player"),
         node(
           "p",
           "muted",
@@ -3620,7 +3611,8 @@ function renderHud(moveFocus = true) {
       node(
         "p",
         "muted",
-        "This stream stopped and automatic reconnection did not succeed. Try again or choose another channel.",
+        player.failureSummary ||
+          "This stream stopped and automatic reconnection did not succeed. Try again or choose another channel.",
       ),
       action(
         "play-retry",

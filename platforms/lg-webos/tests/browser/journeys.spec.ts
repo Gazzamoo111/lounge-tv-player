@@ -1410,7 +1410,7 @@ test("Hero previews events on directional focus without Enter, hides logos, and 
   await page.screenshot({ path: "test-results/hero-clean-015.png" });
 });
 
-test("TVNZ selects direct Widevine DASH, HLS Freeview stays native, and switching destroys the adaptive session", async ({
+test("TVNZ selects direct Widevine DASH, NZ HLS starts with HD adaptation, and provider playback remains native", async ({
   page,
 }) => {
   await syntheticNativeVideo(page);
@@ -1489,16 +1489,38 @@ test("TVNZ selects direct Widevine DASH, HLS Freeview stays native, and switchin
   await page.keyboard.press("Enter");
   await expect
     .poll(() =>
+      page.evaluate(
+        () =>
+          (window as any).__adaptiveCalls.filter((c: any[]) => c[0] === "load")
+            .length,
+      ),
+    )
+    .toBe(2);
+  const hlsCalls = await page.evaluate(() => (window as any).__adaptiveCalls);
+  expect(hlsCalls.filter((c: any[]) => c[0] === "load")[1]).toEqual([
+    "load",
+    "https://i.mjh.nz/.r/three.m3u8",
+    "application/x-mpegurl",
+  ]);
+  const config = hlsCalls.filter((c: any[]) => c[0] === "configure")[1][1];
+  expect(config.abr.defaultBandwidthEstimate).toBe(8000000);
+  expect(config.abr.restrictions.maxHeight).toBe(1080);
+  expect(config.abr.enabled).toBe(true);
+  await page.keyboard.press("Escape");
+  await page.locator("#channel-20002").focus();
+  await page.keyboard.press("Enter");
+  await expect
+    .poll(() =>
       page.locator("#video").evaluate((v) => (v as HTMLVideoElement).src),
     )
-    .toBe("https://i.mjh.nz/.r/three.m3u8");
+    .toContain("/live/qa-user/qa-password/20002.ts");
   expect(
     await page.evaluate(
       () =>
         (window as any).__adaptiveCalls.filter((c: any[]) => c[0] === "destroy")
           .length,
     ),
-  ).toBe(1);
+  ).toBe(2);
 });
 
 test("Guide delayed programme arrival keeps the selected row and unequal programme lengths never skip channels", async ({
@@ -1608,4 +1630,145 @@ test("Clock and date stay inside the fixed header on every page with long channe
   }
   await section(page, "home");
   await page.screenshot({ path: "test-results/clock-long-names-015.png" });
+});
+
+test("all twelve discovery sports decode packaged hero artwork and a failed remote image falls back locally", async ({
+  page,
+}) => {
+  await mock(page);
+  const sports = [
+    ["basketball", "nba"],
+    ["football", "nfl"],
+    ["rugby-league", "league"],
+    ["rugby", "rugby"],
+    ["soccer", "soccer"],
+    ["racing", "f1"],
+    ["cricket", "cricket"],
+    ["mma", "combat"],
+    ["golf", "golf"],
+    ["tennis", "tennis"],
+    ["hockey", "hockey"],
+    ["baseball", "baseball"],
+  ];
+  const leagues = [
+    "NBA",
+    "NFL",
+    "NRL",
+    "International Rugby",
+    "Premier League",
+    "F1",
+    "Cricket",
+    "UFC",
+    "PGA",
+    "ATP",
+    "NHL",
+    "MLB",
+  ];
+  const fixtures = sports.map(([sport], i) => ({
+    ...event,
+    id: "art-" + i,
+    externalId: "art-" + i,
+    sport,
+    leagueName: leagues[i],
+    feedId: sport + "/" + leagues[i],
+    title: leagues[i] + " artwork QA",
+    hero_art_url:
+      sport === "hockey" ? "https://images.test/broken-hero.jpg" : undefined,
+  }));
+  await page.route("https://images.test/broken-hero.jpg", (r) =>
+    r.fulfill({ status: 404, body: "missing" }),
+  );
+  await page.route("https://liqocisegeqzbyuqloql.supabase.co/**", (r) =>
+    r.fulfill({ json: { events: fixtures, status: "ok" } }),
+  );
+  await page.goto("/");
+  await page.locator("#login-user").fill("qa-user");
+  await page.locator("#login-password").fill("qa-password");
+  await page.locator("#login-submit").click();
+  await expect(page.locator(".hero-pager button")).toHaveCount(12, {
+    timeout: 15000,
+  });
+  for (let i = 0; i < sports.length; i++) {
+    await page
+      .locator(`.hero-pager button[aria-label="${leagues[i]} artwork QA"]`)
+      .focus();
+    await expect(page.locator("#major-hero h2")).toHaveText(
+      leagues[i] + " artwork QA",
+    );
+    const art = page.locator("#major-hero .hero-image");
+    await expect(art).toBeVisible();
+    await expect
+      .poll(() => art.evaluate((el) => (el as HTMLImageElement).naturalWidth))
+      .toBeGreaterThan(1000);
+    await expect(art).toHaveAttribute(
+      "src",
+      `assets/lounge_hero_${sports[i][1]}.webp`,
+    );
+  }
+  await page.locator("#major-hero .hero-image").evaluate(async el => { await (el as HTMLImageElement).decode(); await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))); });
+  await page.screenshot({ path: "test-results/hero-baseball-016.png" });
+});
+
+test("TVNZ license refusal reports a readable stage and HTTP code without repeated retries or exposed URLs", async ({
+  page,
+}) => {
+  await syntheticNativeVideo(page);
+  await page.addInitScript(() => {
+    (window as any).__licenseLoads = 0;
+    class Player {
+      static isBrowserSupported() {
+        return true;
+      }
+      addEventListener() {}
+      async attach() {}
+      configure() {}
+      async load() {
+        (window as any).__licenseLoads++;
+        throw {
+          code: 6007,
+          data: [
+            {
+              code: 1001,
+              data: [
+                "https://private.test/token",
+                403,
+                "PRIVATE LICENSE BODY",
+                {},
+                2,
+              ],
+            },
+          ],
+        };
+      }
+      async destroy() {}
+    }
+    (window as any).shaka = { Player, polyfill: { installAll() {} } };
+  });
+  await mock(page);
+  await page
+    .context()
+    .route("https://connect.loungetv.nz/**action=get_live_streams*", (r) =>
+      r.fulfill({
+        json: [{ ...live[0], name: "TVNZ 1", epg_channel_id: "mjh-tvnz-1" }],
+      }),
+    );
+  await page.goto("/");
+  await page.locator("#login-user").fill("qa-user");
+  await page.locator("#login-password").fill("qa-password");
+  await page.locator("#login-submit").click();
+  await expect(page.locator("#featured-0")).toBeVisible({ timeout: 15000 });
+  await section(page, "live");
+  await page.locator("#channel-20000").focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".player-error")).toContainText(
+    "DRM / license failed (HTTP 403). Code 6007.",
+  );
+  await page.clock.install();
+  await page.clock.fastForward(60000);
+  expect(await page.evaluate(() => (window as any).__licenseLoads)).toBe(1);
+  await page.locator("#play-diagnostics").click();
+  await expect(page.locator("#overlay")).not.toContainText("private.test");
+  await expect(page.locator("#overlay")).not.toContainText(
+    "PRIVATE LICENSE BODY",
+  );
 });

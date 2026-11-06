@@ -1,6 +1,6 @@
 # Lounge TV for LG webOS
 
-Isolated LG client, QA package `nz.loungetv.webos.qa`, version **0.1.5**. Full Android feature parity is incomplete. The user confirmed substantially faster startup/navigation in 0.1.1 and 15 minutes of Live playback without the former 2–3 minute stop in 0.1.2. 0.1.3 addresses VOD responsiveness, All-tab focus, EPG row loading/matching, Settings structure and sports discovery. Physical LG acceptance of the new changes remains required.
+Isolated LG client, QA package `nz.loungetv.webos.qa`, version **0.1.6**. Full Android feature parity is incomplete. The user confirmed substantially faster startup/navigation in 0.1.1 and 15 minutes of Live playback without the former 2–3 minute stop in 0.1.2. 0.1.3 addresses VOD responsiveness, All-tab focus, EPG row loading/matching, Settings structure and sports discovery. Physical LG acceptance of the new changes remains required.
 
 Android reference: published **v5.2.3.10**, commit `44388fa8683df20a51ad5166f3ea73d7b08c8051`. Current `main` is older in application features, despite having newer documentation and EPG changes. See [parity matrix](docs/PARITY.md).
 
@@ -10,7 +10,7 @@ With the `.ipk` downloaded to the Mac's Downloads folder and the existing `loung
 
 ```bash
 cd ~/Downloads
-ares-install --device loungetv-lg nz.loungetv.webos.qa_0.1.5_all.ipk
+ares-install --device loungetv-lg nz.loungetv.webos.qa_0.1.6_all.ipk
 ares-launch --device loungetv-lg nz.loungetv.webos.qa
 ```
 
@@ -18,7 +18,7 @@ Sign in with an existing Lounge TV customer username and password. There is no s
 
 ## Build from source
 
-Node 24 LTS. `npm ci` installs the pinned build dependencies. Shaka Player 4.16.12 is pinned, bundled with its Apache license, and loaded only for TVNZ DASH/Widevine. Other channels keep the native LG video path.
+Node 24 LTS. `npm ci` installs the pinned build dependencies. Shaka Player 4.16.12 is pinned, bundled with its Apache license, and loaded only for audited NZ Freeview streams (TVNZ DASH/Widevine and Three/Māori/Te Reo HLS). Other channels keep the native LG video path.
 
 ```bash
 npm ci
@@ -26,7 +26,7 @@ npm test
 npm run package
 ```
 
-Output: `artifacts/nz.loungetv.webos.qa_0.1.5_all.ipk`.
+Output: `artifacts/nz.loungetv.webos.qa_0.1.6_all.ipk`.
 
 Browser regressions use Chromium and mock the real API contracts with a large catalogue. They do not establish actual provider playback or customer authentication:
 
@@ -37,6 +37,14 @@ npm run test:browser
 ```
 
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` can point to an existing Chromium executable. `npm run serve` serves the built application at port 4173.
+
+## 0.1.6: Complete sport art and NZ HD startup
+
+- Adds golf, tennis, hockey and baseball artwork. Every primary discovery sport has a packaged background, and failed remote event artwork falls back locally.
+- Only direct NZ Freeview HLS uses HD adaptive startup, with an 8 Mbps initial estimate, a 1080p ceiling and automatic bandwidth adjustment. If unsupported, it falls back to the previous native path. Ordinary provider playback is unchanged.
+- TVNZ uses hardware-first normal Widevine negotiation and clearer playlist/license/device errors. TVNZ picture/audio remains unverified and the user's on-TV error code is needed; this release does not claim that TVNZ is fixed.
+
+See [QA-0.1.6.md](docs/QA-0.1.6.md) for evidence, validation and device checks.
 
 ## 0.1.5: Remote navigation and NZ playback
 

@@ -1,6 +1,7 @@
+import { AdaptiveFault, adaptiveFault } from "./adaptive-fault";
 export interface AdaptiveSession {
   attach(video: HTMLVideoElement): Promise<void>;
-  load(url: string, license: string): Promise<void>;
+  load(url: string, license?: string, manifest?: "hls" | "dash"): Promise<void>;
   destroy(): Promise<void>;
 }
 let library: Promise<any> | undefined;
@@ -24,25 +25,57 @@ function shakaLibrary(): Promise<any> {
   }));
 }
 export async function createAdaptiveSession(
-  onError: (code: number, fatal: boolean) => void,
+  onError: (code: number, fatal: boolean, fault?: AdaptiveFault) => void,
 ): Promise<AdaptiveSession> {
-  const shaka = await shakaLibrary();
+  const shaka = await shakaLibrary().catch(() => {
+    throw new AdaptiveFault(9002, "player");
+  });
   shaka.polyfill.installAll();
   if (!shaka.Player.isBrowserSupported())
-    throw Error("Adaptive playback is unavailable on this TV");
+    throw new AdaptiveFault(9001, "player");
   const player = new shaka.Player();
-  player.addEventListener("error", (e: any) =>
-    onError(Number(e.detail?.code) || 0, e.detail?.severity === 2),
-  );
+  player.addEventListener("error", (e: any) => {
+    const fault = adaptiveFault(e.detail);
+    onError(fault.code, e.detail?.severity === 2, fault);
+  });
   return {
     attach: (video) => player.attach(video),
-    async load(url, license) {
+    async load(url, license, manifest = license ? "dash" : "hls") {
       player.configure({
-        drm: { servers: { "com.widevine.alpha": license } },
-        streaming: { bufferingGoal: 12, rebufferingGoal: 2 },
+        drm: license
+          ? {
+              servers: { "com.widevine.alpha": license },
+              preferredKeySystems: ["com.widevine.alpha"],
+              advanced: {
+                "com.widevine.alpha": {
+                  videoRobustness: ["HW_SECURE_ALL", ""],
+                },
+              },
+            }
+          : { servers: {} },
+        abr: {
+          enabled: true,
+          defaultBandwidthEstimate: 8000000,
+          restrictions: { maxHeight: 1080 },
+        },
+        streaming: {
+          bufferingGoal: 12,
+          rebufferingGoal: 2,
+          preferNativeHls: false,
+        },
         manifest: { retryParameters: { maxAttempts: 2, timeout: 15000 } },
       });
-      await player.load(url, undefined, "application/dash+xml");
+      try {
+        await player.load(
+          url,
+          undefined,
+          manifest === "dash"
+            ? "application/dash+xml"
+            : "application/x-mpegurl",
+        );
+      } catch (error) {
+        throw adaptiveFault(error, "manifest");
+      }
     },
     destroy: () => player.destroy(),
   };

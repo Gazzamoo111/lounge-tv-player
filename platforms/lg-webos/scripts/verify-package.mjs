@@ -35,7 +35,20 @@ try {
     "icon.png",
     "assets/jakarta.ttf",
     "assets/nav-mark.png",
-    "assets/lounge_hero_nba.webp",
+    ...[
+      "nba",
+      "nfl",
+      "league",
+      "rugby",
+      "soccer",
+      "f1",
+      "cricket",
+      "combat",
+      "golf",
+      "tennis",
+      "hockey",
+      "baseball",
+    ].map((sport) => `assets/lounge_hero_${sport}.webp`),
   ])
     assert.ok(existsSync(join(base, name)), `Missing ${name}`);
   const js = readFileSync(join(base, "app.js"), "utf8");

@@ -480,3 +480,47 @@ test("DRM startup waits for manifest/license preparation without watchdog play o
   assert.equal(p.state, "playing");
   p.stop();
 });
+
+test("NZ HLS adaptive failure falls back to its same native source, without touching provider playback", async () => {
+  const clock = new Clock(),
+    video = new LiveVideo();
+  const p = new LgPlayback(video as any, clock.api, async () => {
+    throw Error("adaptive unavailable");
+  });
+  await p.load({ ...m, kind: "live" }, "https://gateway.test/live/3.ts", 0, {
+    url: "https://source.test/three.m3u8",
+    manifest: "hls",
+  });
+  assert.equal(p.state, "buffering");
+  await clock.advance(1000);
+  assert.equal(video.src, "https://source.test/three.m3u8");
+  assert.equal(p.state, "playing");
+  assert.equal(p.failureSummary, "");
+  assert.ok(p.trace.some((t) => t.event === "freeview-native-fallback"));
+  p.stop();
+});
+test("TVNZ manifest refusal surfaces its safe error immediately instead of looping retries", async () => {
+  const { AdaptiveFault } = await import("../src/adaptive-fault.ts");
+  const clock = new Clock(),
+    video = new LiveVideo();
+  const p = new LgPlayback(video as any, clock.api, async () => ({
+    async attach() {},
+    async load() {
+      throw new AdaptiveFault(1001, "manifest", 403);
+    },
+    async destroy() {},
+  }));
+  await p.load({ ...m, kind: "live" }, "https://gateway.test/live/1.ts", 0, {
+    url: "https://source.test/tvnz.mpd",
+    manifest: "dash",
+    license: "https://license.test/wv",
+  });
+  assert.equal(p.state, "error");
+  assert.match(
+    p.failureSummary,
+    /Channel playlist failed \(HTTP 403\). Code 1001/,
+  );
+  await clock.advance(60000);
+  assert.ok(!p.trace.some((t) => t.event === "reconnect"));
+  p.stop();
+});

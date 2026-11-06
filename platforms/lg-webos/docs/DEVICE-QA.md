@@ -62,3 +62,7 @@ User confirmed 0.1.2 played for 15 minutes without the former early stop. Keep t
 4. Leave focus on a programme for 2 minutes; the next Up/Down must move immediately. Repeat in Live. Delayed EPG titles must not move focus.
 5. Play TVNZ 1 and TVNZ 2, then Three, Whakaata Māori and Te Reo. Confirm actual picture and audio. TVNZ uses normal Widevine and needs TV/network/license acceptance; browser mocks do not establish this. If it fails, collect Playback diagnostics numeric errors without entering a media URL.
 6. Switch TVNZ to Sky Sport and back repeatedly. Confirm one video/audio session, Back restoration and no stale player takeover. Retain the 15-minute Live baseline and test VOD resume.
+
+## 0.1.6 art and NZ quality acceptance
+
+Follow [QA-0.1.6.md](QA-0.1.6.md). TVNZ remains open until its actual error code and real picture/audio are verified. Ordinary streaming on 0.1.5 was confirmed smooth by the user.
