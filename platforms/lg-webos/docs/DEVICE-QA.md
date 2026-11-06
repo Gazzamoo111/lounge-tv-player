@@ -15,7 +15,7 @@ Install the provided `.ipk`; sign in with an existing Lounge TV customer login. 
 9. Network: interrupt connectivity, restore and observe bounded recovery and error controls. Switch quickly between channels; old loads must not take over new video.
 10. Long session: 60 minutes Live, 60 minutes VOD, repeated navigation and app background/relaunch. Check memory, audio sync, remote focus and overlays.
 
-Playback diagnostics: Settings → Playback diagnostics. It retains up to 160 local state/error entries with timing and position, without stream URLs or credentials. An error code or successful HTML play promise is not proof of a decoded frame.
+Playback diagnostics: Settings → Playback diagnostics. It retains up to 180 local native-event/state/error entries with timing, position, decoded-frame counters and recovery attempts, without stream URLs or credentials. An error code or successful HTML play promise is not proof of a decoded frame.
 
 ## Current validation record
 
@@ -23,4 +23,13 @@ Playback diagnostics: Settings → Playback diagnostics. It retains up to 160 lo
 - QA 0.1.1: 23 domain/native-lifecycle checks and 15 mocked browser journeys pass. They cover full XMLTV cache, restart reuse, startup readiness, a fixed persistent sidebar, accordion retention and virtual-card reuse.
 - Real gateway unauthenticated denial/CORS and real calendar/metadata JSON checked read-only.
 - User testing of 0.1.0 confirmed installation/launch and exposed severe navigation/loading problems and failing channels.
-- QA 0.1.1 physical launcher re-entry, startup, responsiveness, playback, audio/track selection and long sessions: **awaiting LG testing**. This workspace cannot reach the LAN television.
+- User testing of 0.1.1 confirmed substantially faster startup/navigation, but Live stopped after 2–3 minutes on five channels.
+- QA 0.1.2: 31 domain/native-player tests and 19 mocked browser journeys pass. Sustained physical playback remains unverified. This workspace cannot reach the LAN television.
+
+## 0.1.2 priority device gate
+
+1. Install over 0.1.1 without uninstalling. Play one of the previously failing channels for at least 10 minutes without touching the remote. Check video, audio, any interruption and elapsed time. Repeat on the other four reported channels.
+2. If playback stops, open Playback details or Settings → Playback diagnostics. Record the last native events, error code and retry reason. The trace is retained after restart; do not clear application data before collecting it.
+3. While fullscreen Live plays, press Left → Left → Back → Back. Expect channels → categories → channels → video. Browse another category; the current stream must continue until OK chooses a different channel.
+4. Open a parent heading then another. Only the second stays expanded. Confirm intentional pause/resume, channel switching, return focus and launcher re-entry.
+5. Sport Lounge's limited sports coverage remains deferred by user instruction.

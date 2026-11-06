@@ -93,6 +93,12 @@ let cacheAccount = "",
 let startupRevision = 0,
   guideWorker: Worker | undefined;
 const liveExpanded = new Set<string>();
+let watchPanel: "channels" | "categories" | null = null,
+  watchCategory = "",
+  watchChannelCursor = "",
+  watchChannelScroll = 0;
+let traceSaveTimer: ReturnType<typeof setTimeout> | undefined;
+
 const guideInFlight = new Map<string, Promise<Programme[]>>(),
   detailsInFlight = new Map<string, Promise<Details>>();
 let browseItem: Media | undefined,
@@ -142,7 +148,16 @@ function action(
 function resize() {
   const scale = Math.min(innerWidth / 1920, innerHeight / 1080);
   const el = document.getElementById("viewport")!;
-  el.style.transform = `translate(-50%,-50%) scale(${scale})`;
+  const nativeSize = innerWidth === 1920 && innerHeight === 1080;
+  if (nativeSize || (currentPlaying && !preview)) {
+    el.style.left = "0";
+    el.style.top = "0";
+    el.style.transform = "none";
+  } else {
+    el.style.left = "50%";
+    el.style.top = "50%";
+    el.style.transform = `translate(-50%,-50%) scale(${scale})`;
+  }
 }
 window.addEventListener("resize", resize);
 resize();
@@ -993,10 +1008,11 @@ function liveCategoryPanel(
   host: HTMLElement,
   prefix: string,
   onSelect: (id: string) => void,
+  selectedId = selected.live,
 ) {
   const rows = categories.live ?? [],
     groups = categoryGroups(rows),
-    selectedCategory = rows.find((c) => c.id === selected.live);
+    selectedCategory = rows.find((c) => c.id === selectedId);
   const counts = new Map<string, number>();
   for (const m of catalogues.live ?? [])
     counts.set(m.category, (counts.get(m.category) ?? 0) + 1);
@@ -1010,7 +1026,7 @@ function liveCategoryPanel(
         prefix + "all",
         "All channels",
         () => onSelect(""),
-        "category-row" + (selected.live === "" ? " chosen" : ""),
+        "category-row" + (selectedId === "" ? " chosen" : ""),
         "LIVE_TV",
       ),
     );
@@ -1022,7 +1038,10 @@ function liveCategoryPanel(
         group.name,
         () => {
           if (liveExpanded.has(group.name)) liveExpanded.delete(group.name);
-          else liveExpanded.add(group.name);
+          else {
+            liveExpanded.clear();
+            liveExpanded.add(group.name);
+          }
           draw();
           focus.focus(id, false);
         },
@@ -1039,11 +1058,11 @@ function liveCategoryPanel(
             cat.label,
             () => onSelect(cat.id),
             "category-row subcategory" +
-              (selected.live === cat.id ? " chosen" : ""),
+              (selectedId === cat.id ? " chosen" : ""),
           );
           b.setAttribute(
             "aria-current",
-            selected.live === cat.id ? "true" : "false",
+            selectedId === cat.id ? "true" : "false",
           );
           b.append(node("small", "category-count", String(count)));
           b.dataset.category = cat.id;
@@ -2158,7 +2177,7 @@ function renderSettings(main: HTMLElement) {
       "settings-row",
       "INFO",
     ),
-    node("p", "muted", "Lounge TV for LG · QA 0.1.1"),
+    node("p", "muted", "Lounge TV for LG · QA 0.1.2"),
   );
   main.append(list);
 }
@@ -2170,6 +2189,21 @@ function confirm(title: string, yes: () => void) {
   );
   focus.focus("confirm-no");
 }
+function persistPlaybackTrace() {
+  if (cacheAccount)
+    try {
+      state.write("last-playback-trace", player.trace.slice(-180));
+    } catch {
+      /* Playback must survive a full local store. */
+    }
+}
+player.onTrace = () => {
+  if (traceSaveTimer) return;
+  traceSaveTimer = setTimeout(() => {
+    traceSaveTimer = undefined;
+    persistPlaybackTrace();
+  }, 500);
+};
 function showDiagnostics() {
   const box = openOverlay("Playback diagnostics");
   box.append(
@@ -2181,7 +2215,14 @@ function showDiagnostics() {
     node(
       "pre",
       "diagnostics",
-      JSON.stringify(player.trace.slice(-30), null, 2),
+      JSON.stringify(
+        (player.trace.length
+          ? player.trace
+          : state.read<typeof player.trace>("last-playback-trace", [])
+        ).slice(-50),
+        null,
+        2,
+      ),
     ),
     action("diagnostics-close", "Close", closeOverlay),
   );
@@ -2421,6 +2462,7 @@ function contextMenu(m: Media) {
   focus.focus("context-play");
 }
 function stopPlayback() {
+  closeWatchPanel(false);
   if (currentPlaying && currentPlaying.kind !== "live")
     safe(() =>
       state.updateProgress(currentPlaying!, player.position, player.duration),
@@ -2430,10 +2472,13 @@ function stopPlayback() {
   hud.hidden = true;
   currentPlaying = undefined;
   preview = false;
+  resize();
   clearTimeout(hudTimer);
 }
 function positionVideo(small: boolean) {
   video.hidden = false;
+  resize();
+  player.note(small ? "preview" : "fullscreen");
   video.className = small ? "video-preview" : "video-full";
   if (small) {
     const stage = document.getElementById("preview-stage");
@@ -2449,12 +2494,15 @@ function positionVideo(small: boolean) {
   } else {
     video.style.left = "0";
     video.style.top = "0";
-    video.style.width = "1920px";
-    video.style.height = "1080px";
+    video.style.width = "100vw";
+    video.style.height = "100vh";
   }
 }
 async function play(m: Media, position?: number, sports = false) {
   savePosition();
+  closeWatchPanel(false);
+  watchCategory = m.category;
+  watchChannelCursor = m.id;
   if (m.kind === "series") {
     await openDetails(m);
     return;
@@ -2511,7 +2559,7 @@ player.onState = () => {
     if (!preview) {
       clearTimeout(hudTimer);
       hudTimer = setTimeout(() => {
-        if (player.state === "playing" && overlay.hidden)
+        if (player.state === "playing" && overlay.hidden && !watchPanel)
           hud.classList.add("dimmed");
       }, 6000);
     }
@@ -2571,7 +2619,7 @@ function renderHud(moveFocus = true) {
       node(
         "p",
         "muted",
-        "LG could not start this stream. Try again or choose another channel.",
+        "This stream stopped and automatic reconnection did not succeed. Try again or choose another channel.",
       ),
       action(
         "play-retry",
@@ -2580,13 +2628,20 @@ function renderHud(moveFocus = true) {
         "primary",
         "REFRESH",
       ),
+      action(
+        "play-diagnostics",
+        "Playback details",
+        showDiagnostics,
+        "",
+        "INFO",
+      ),
       action("play-back", "Back", () => {
         stopPlayback();
         navigate(route, true);
       }),
     );
     hud.append(error);
-    focus.focus("play-retry");
+    if (!watchPanel) focus.focus("play-retry");
     return;
   }
   const bottom = node("div", "player-bottom");
@@ -2657,6 +2712,7 @@ function renderHud(moveFocus = true) {
   );
   bottom.append(controls);
   hud.append(bottom);
+  if (watchPanel) return;
   if (moveFocus) focus.focus("play-pause");
   else if (active?.startsWith("play-")) focus.focus(active, false);
 }
@@ -2707,6 +2763,129 @@ function tracks(type: "audio" | "subtitle") {
         : "tracks-close",
   );
 }
+function closeWatchPanel(restore = true) {
+  const host = document.getElementById("watch-panel");
+  if (!host && !watchPanel) return;
+  const list = document.getElementById("watch-channels");
+  if (list) watchChannelScroll = list.scrollTop;
+  collections.get("watch-channels")?.destroy();
+  collections.delete("watch-channels");
+  host?.remove();
+  watchPanel = null;
+  player.note("panel-close");
+  if (restore && currentPlaying && !preview) {
+    hud.classList.add("dimmed");
+    focus.focus(player.state === "error" ? "play-retry" : "play-pause", false);
+  }
+}
+function watchPanelShell(title: string, kind: "channels" | "categories") {
+  closeWatchPanel(false);
+  watchPanel = kind;
+  clearTimeout(hudTimer);
+  hud.classList.add("dimmed");
+  const layer = node("section", "watch-panel");
+  layer.id = "watch-panel";
+  layer.dataset.focusScope = "";
+  layer.setAttribute("aria-label", title);
+  layer.append(node("div", "watch-panel-wash"));
+  const box = node("div", "watch-panel-box");
+  box.append(
+    node("h2", "", title),
+    node(
+      "p",
+      "muted",
+      kind === "channels" ? "◀ Categories · Back Close" : "Back Channels",
+    ),
+  );
+  layer.append(box);
+  document.getElementById("viewport")!.append(layer);
+  player.note("panel-open");
+  return box;
+}
+function openWatchChannels(categoryId = watchCategory) {
+  if (!currentPlaying || currentPlaying.kind !== "live") return;
+  watchCategory = categoryId;
+  const title =
+      categories.live?.find((c) => c.id === watchCategory)?.label ??
+      (watchCategory ? "Current channel" : "All channels"),
+    box = watchPanelShell(title, "channels");
+  const rows = watchCategory
+    ? (catalogues.live ?? []).filter((m) => m.category === watchCategory)
+    : [...(catalogues.live ?? [])];
+  if (!rows.length && currentPlaying.category === watchCategory)
+    rows.push(currentPlaying);
+  const host = node("div", "watch-channel-list");
+  host.id = "watch-channels";
+  host.dataset.scroll = "";
+  box.append(host);
+  const collection = new VirtualCollection(host, rows.length, 1, 88, (i) => {
+    const m = rows[i],
+      b = action(
+        "watch-channel-" + m.id,
+        "",
+        () => {
+          selected.live = watchCategory;
+          if (
+            m.id === currentPlaying?.id &&
+            ["playing", "paused"].includes(player.state)
+          ) {
+            closeWatchPanel();
+            return;
+          }
+          void play(m, undefined, m.category === "sports-backend");
+        },
+        "watch-channel-row" + (m.id === currentPlaying?.id ? " tuned" : ""),
+      );
+    b.append(image(m.image, "channel-logo"), node("div", "watch-channel-text"));
+    const text = b.querySelector(".watch-channel-text")!;
+    text.append(node("b", "", m.name));
+    const cached = epgCache.get(m.id)?.rows,
+      now = cached && nowProgramme(cached);
+    if (now) text.append(node("small", "muted", now.title));
+    b.addEventListener("focus", () => (watchChannelCursor = m.id));
+    return b;
+  });
+  collections.set(host.id, collection);
+  host.scrollTop = watchChannelScroll;
+  collection.render();
+  const index = rows.findIndex(
+    (m) => m.id === (watchChannelCursor || currentPlaying?.id),
+  );
+  if (!collection.focus(Math.max(0, index))) {
+    box.append(
+      message(
+        "No channels in this category",
+        "Press Left to choose another category.",
+      ),
+    );
+    const back = action("watch-empty-back", "Categories", openWatchCategories);
+    box.append(back);
+    focus.focus(back.id);
+  }
+}
+function openWatchCategories() {
+  if (!currentPlaying || currentPlaying.kind !== "live") return;
+  const box = watchPanelShell("Categories", "categories"),
+    tree = node("div", "watch-category-tree");
+  box.append(tree);
+  const section = categories.live?.find((c) => c.id === watchCategory)?.section;
+  if (section) {
+    liveExpanded.clear();
+    liveExpanded.add(section);
+  }
+  liveCategoryPanel(
+    tree,
+    "watch-",
+    (id) => {
+      watchChannelCursor = "";
+      watchChannelScroll = 0;
+      openWatchChannels(id);
+    },
+    watchCategory,
+  );
+  const id = watchCategory ? "watch-category-" + watchCategory : "watch-all";
+  focus.focus(id) || focus.focus("watch-all");
+}
 function backFromPlayer() {
   if (
     currentPlaying?.kind === "live" &&
@@ -2728,6 +2907,11 @@ focus.onBack = () => {
   focusEpoch++;
   if (!overlay.hidden) {
     closeOverlay();
+    return;
+  }
+  if (watchPanel) {
+    if (watchPanel === "categories") openWatchChannels();
+    else closeWatchPanel();
     return;
   }
   if (currentPlaying && !preview) {
@@ -2776,6 +2960,32 @@ focus.onLong = (el) => {
 };
 focus.onMove = (el, dir) => {
   if (!overlay.hidden) return false;
+  if (watchPanel) {
+    if (dir === "left") {
+      watchPanel === "channels" ? openWatchCategories() : openWatchChannels();
+      return true;
+    }
+    if (dir === "right") {
+      watchPanel === "categories" ? openWatchChannels() : closeWatchPanel();
+      return true;
+    }
+    if (watchPanel === "channels") {
+      const collection = collections.get("watch-channels");
+      if (collection?.move(el, dir)) return true;
+      return true;
+    }
+    const host = document.getElementById("watch-panel")!,
+      buttons = Array.from(host.querySelectorAll<HTMLElement>("[data-focus]")),
+      at = buttons.indexOf(el),
+      next = buttons[at + (dir === "up" ? -1 : 1)];
+    if (next) focus.focus(next.id);
+    return true;
+  }
+  if (currentPlaying?.kind === "live" && !preview && dir === "left") {
+    openWatchChannels();
+    return true;
+  }
+
   if (currentPlaying && !preview) {
     hud.classList.remove("dimmed");
     return false;
@@ -2855,7 +3065,13 @@ focus.onMove = (el, dir) => {
 focus.onMedia = (code) => {
   if (!currentPlaying) return false;
   if ([415, 19, 10252].includes(code)) {
-    safe(() => player.toggle());
+    safe(() =>
+      code === 415
+        ? player.resumeByUser()
+        : code === 19
+          ? player.pauseByUser()
+          : player.toggle(),
+    );
     renderHud();
     return true;
   }
@@ -2879,14 +3095,18 @@ focus.onMedia = (code) => {
   return false;
 };
 document.addEventListener("visibilitychange", () => {
+  player.note(document.hidden ? "app-hidden" : "app-visible");
   if (document.hidden && currentPlaying) {
     safe(() =>
       state.updateProgress(currentPlaying!, player.position, player.duration),
     );
     stopPlayback();
+    persistPlaybackTrace();
   }
 });
 window.addEventListener("pagehide", () => {
+  player.note("pagehide");
+  persistPlaybackTrace();
   if (currentPlaying)
     safe(() =>
       state.updateProgress(currentPlaying!, player.position, player.duration),

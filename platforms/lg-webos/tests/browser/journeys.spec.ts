@@ -537,3 +537,273 @@ test("full EPG failure falls back to short guides with an explicit notice", asyn
   await section(page, "live");
   await expect(page.locator("#channel-20000")).toContainText("PGA Tour");
 });
+
+async function syntheticNativeVideo(page: Page) {
+  await page.addInitScript(() => {
+    const data = new WeakMap<
+      HTMLMediaElement,
+      { source: string; paused: boolean; time: number; ended: boolean }
+    >();
+    function value(el: HTMLMediaElement) {
+      let d = data.get(el);
+      if (!d) {
+        d = { source: "", paused: true, time: 0, ended: false };
+        data.set(el, d);
+      }
+      return d;
+    }
+    Object.defineProperty(HTMLMediaElement.prototype, "src", {
+      configurable: true,
+      get() {
+        return value(this).source;
+      },
+      set(v) {
+        value(this).source = String(v);
+      },
+    });
+    Object.defineProperty(HTMLMediaElement.prototype, "paused", {
+      configurable: true,
+      get() {
+        return value(this).paused;
+      },
+    });
+    Object.defineProperty(HTMLMediaElement.prototype, "currentTime", {
+      configurable: true,
+      get() {
+        return value(this).time;
+      },
+      set(v) {
+        value(this).time = Number(v);
+      },
+    });
+    Object.defineProperty(HTMLMediaElement.prototype, "ended", {
+      configurable: true,
+      get() {
+        return value(this).ended;
+      },
+    });
+    HTMLMediaElement.prototype.play = async function () {
+      value(this).paused = false;
+      value(this).ended = false;
+      this.dispatchEvent(new Event("playing"));
+    };
+    HTMLMediaElement.prototype.pause = function () {
+      const d = value(this);
+      if (!d.paused) {
+        d.paused = true;
+        this.dispatchEvent(new Event("pause"));
+      }
+    };
+    HTMLMediaElement.prototype.load = function () {
+      (this as any).__qaLoads = ((this as any).__qaLoads ?? 0) + 1;
+      value(this).time = 0;
+      value(this).ended = false;
+    };
+    const remove = HTMLMediaElement.prototype.removeAttribute;
+    HTMLMediaElement.prototype.removeAttribute = function (name) {
+      if (name === "src") value(this).source = "";
+      remove.call(this, name);
+    };
+  });
+}
+test("only one Live parent remains expanded after another parent is opened", async ({
+  page,
+}) => {
+  await mock(page);
+  await page.route(
+    "https://connect.loungetv.nz/player_api.php?**",
+    async (r) => {
+      if (
+        new URL(r.request().url()).searchParams.get("action") ===
+        "get_live_categories"
+      )
+        return r.fulfill({
+          json: [
+            {
+              category_id: "live_nz_sports",
+              category_name: "New Zealand · Sports",
+            },
+            { category_id: "au-sports", category_name: "Australia · Sports" },
+            { category_id: "uk-sports", category_name: "Sports · UK" },
+          ],
+        });
+      await r.fallback();
+    },
+  );
+  await page.goto("/");
+  await page.locator("#login-user").fill("qa-user");
+  await page.locator("#login-password").fill("qa-password");
+  await page.locator("#login-submit").click();
+  await expect(page.locator("#nav-home")).toBeVisible();
+  await section(page, "live");
+  await page.locator("#live-group-1").click();
+  await expect(page.locator("#live-group-0")).toHaveAttribute(
+    "aria-expanded",
+    "false",
+  );
+  await expect(page.locator("#live-category-live_nz_sports")).toHaveCount(0);
+  await expect(
+    page.locator('.live-category-tree [aria-expanded="true"]'),
+  ).toHaveCount(1);
+  await page.locator("#live-group-2").click();
+  await expect(page.locator("#live-group-1")).toHaveAttribute(
+    "aria-expanded",
+    "false",
+  );
+  await expect(
+    page.locator('.live-category-tree [aria-expanded="true"]'),
+  ).toHaveCount(1);
+});
+test("fullscreen video has native geometry and Left Left Back Back browses without stopping or reloading it", async ({
+  page,
+}) => {
+  await syntheticNativeVideo(page);
+  await signIn(page);
+  await section(page, "live");
+  await page.locator("#channel-20000").click();
+  await expect(page.locator("#play-pause")).toBeFocused();
+  const before = await page
+    .locator("#video")
+    .evaluate((v: HTMLVideoElement) => ({
+      source: v.src,
+      loads: (v as any).__qaLoads,
+    }));
+  const geometry = await page.locator("#video").evaluate((v) => {
+    const r = v.getBoundingClientRect();
+    let el: Element | null = v;
+    const transforms: string[] = [];
+    while (el) {
+      transforms.push(getComputedStyle(el).transform);
+      el = el.parentElement;
+    }
+    return {
+      left: r.left,
+      top: r.top,
+      width: r.width,
+      height: r.height,
+      transforms,
+    };
+  });
+  expect(geometry).toEqual({
+    left: 0,
+    top: 0,
+    width: 1920,
+    height: 1080,
+    transforms: ["none", "none", "none", "none"],
+  });
+  await page.keyboard.press("ArrowLeft");
+  await expect(page.locator("#watch-channel-20000")).toBeFocused();
+  await page.keyboard.press("ArrowLeft");
+  await expect(page.locator("#watch-category-live_nz_sports")).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#watch-channel-20000")).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#watch-panel")).toHaveCount(0);
+  await expect(page.locator("#video")).toHaveClass("video-full");
+  const after = await page
+    .locator("#video")
+    .evaluate((v: HTMLVideoElement) => ({
+      source: v.src,
+      loads: (v as any).__qaLoads,
+      paused: v.paused,
+    }));
+  expect(after).toEqual({ ...before, paused: false });
+});
+test("browsing another fullscreen category leaves the stream running until OK chooses a channel", async ({
+  page,
+}) => {
+  await syntheticNativeVideo(page);
+  await mock(page);
+  await page.route(
+    "https://connect.loungetv.nz/player_api.php?**",
+    async (r) => {
+      const a = new URL(r.request().url()).searchParams.get("action");
+      if (a === "get_live_categories")
+        return r.fulfill({
+          json: [
+            {
+              category_id: "live_nz_sports",
+              category_name: "New Zealand · Sports",
+            },
+            { category_id: "au-sports", category_name: "Australia · Sports" },
+          ],
+        });
+      if (a === "get_live_streams")
+        return r.fulfill({
+          json: live.map((m, i) => ({
+            ...m,
+            category_id: i < 1200 ? "live_nz_sports" : "au-sports",
+          })),
+        });
+      await r.fallback();
+    },
+  );
+  await page.goto("/");
+  await page.locator("#login-user").fill("qa-user");
+  await page.locator("#login-password").fill("qa-password");
+  await page.locator("#login-submit").click();
+  await expect(page.locator("#nav-home")).toBeVisible();
+  await section(page, "live");
+  await page.locator("#channel-20000").click();
+  const before = await page
+    .locator("#video")
+    .evaluate((v: HTMLVideoElement) => ({
+      source: v.src,
+      loads: (v as any).__qaLoads,
+    }));
+  await page.keyboard.press("ArrowLeft");
+  await page.keyboard.press("ArrowLeft");
+  await page.locator("#watch-group-1").click();
+  await expect(page.locator("#watch-group-0")).toHaveAttribute(
+    "aria-expanded",
+    "false",
+  );
+  await page.locator("#watch-category-au-sports").click();
+  await expect(page.locator("#watch-channel-21200")).toBeFocused();
+  expect(
+    await page
+      .locator("#video")
+      .evaluate((v: HTMLVideoElement) => ({
+        source: v.src,
+        loads: (v as any).__qaLoads,
+        paused: v.paused,
+      })),
+  ).toEqual({ ...before, paused: false });
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#watch-panel")).toHaveCount(0);
+  await expect
+    .poll(() => page.locator("#video").evaluate((v: HTMLVideoElement) => v.src))
+    .toContain("/21200.ts");
+});
+test("a live EOF reconnects in the actual application path and leaves a redacted diagnostic record", async ({
+  page,
+}) => {
+  await syntheticNativeVideo(page);
+  await signIn(page);
+  await section(page, "live");
+  await page.locator("#channel-20000").click();
+  await page
+    .locator("#video")
+    .evaluate((v) => v.dispatchEvent(new Event("ended")));
+  await expect
+    .poll(() => page.locator("#video").evaluate((v: HTMLVideoElement) => v.src))
+    .toContain("_ltv_restart=");
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const key = Object.keys(localStorage).find((k) =>
+          k.endsWith(":last-playback-trace"),
+        );
+        return key ? localStorage.getItem(key) : "";
+      }),
+    )
+    .toContain("live-eof");
+  const text = await page.evaluate(() => {
+    const key = Object.keys(localStorage).find((k) =>
+      k.endsWith(":last-playback-trace"),
+    );
+    return key ? localStorage.getItem(key) : "";
+  });
+  expect(text).not.toContain("qa-password");
+  expect(text).not.toContain("https://");
+});

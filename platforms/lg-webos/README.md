@@ -1,6 +1,6 @@
 # Lounge TV for LG webOS
 
-Isolated LG client, QA package `nz.loungetv.webos.qa`, version **0.1.1**. This is an initial installable implementation. Full Android feature and visual parity has not been accepted, and LG playback has not been physically verified.
+Isolated LG client, QA package `nz.loungetv.webos.qa`, version **0.1.2**. Full Android feature and visual parity has not been accepted. The user confirmed substantially faster startup/navigation in 0.1.1, but reported Live playback stopping after 2–3 minutes across five channels. 0.1.2 addresses client recovery and fullscreen geometry; sustained LG playback still requires device acceptance.
 
 Android reference: published **v5.2.3.10**, commit `44388fa8683df20a51ad5166f3ea73d7b08c8051`. Current `main` is older in application features, despite having newer documentation and EPG changes. See [parity matrix](docs/PARITY.md).
 
@@ -10,7 +10,7 @@ With the `.ipk` downloaded to the Mac's Downloads folder and the existing `loung
 
 ```bash
 cd ~/Downloads
-ares-install --device loungetv-lg nz.loungetv.webos.qa_0.1.1_all.ipk
+ares-install --device loungetv-lg nz.loungetv.webos.qa_0.1.2_all.ipk
 ares-launch --device loungetv-lg nz.loungetv.webos.qa
 ```
 
@@ -26,7 +26,7 @@ npm test
 npm run package
 ```
 
-Output: `artifacts/nz.loungetv.webos.qa_0.1.1_all.ipk`.
+Output: `artifacts/nz.loungetv.webos.qa_0.1.2_all.ipk`.
 
 Browser regressions use Chromium and mock the real API contracts with a large catalogue. They do not establish actual provider playback or customer authentication:
 
@@ -37,6 +37,17 @@ npm run test:browser
 ```
 
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` can point to an existing Chromium executable. `npm run serve` serves the built application at port 4173.
+
+## 0.1.2: Live playback and fullscreen navigation
+
+- Native fullscreen video occupies the viewport at 0,0 without transformed ancestors. LG warns that transforms can prevent fullscreen recognition and allow the screensaver to run. This is a plausible contributor, not a proven diagnosis of the reported stop.
+- Live EOF reconnects instead of ending the viewing session. Unexpected foreground pauses resume the existing connection; intentional pauses remain respected. Recovery releases the old connection first, permits four consecutive retries, and resets that budget after 30 seconds of healthy progress.
+- Progress detection tolerates backwards transport-clock changes and samples decoded frame counts where available. Missing timeupdate events alone do not trigger a restart.
+- Redacted native event, timing, buffer and retry diagnostics persist locally across relaunch. Playback errors expose a Playback details button.
+- Only one Live parent heading is expanded. Fullscreen Live: Left opens channels, Left again opens categories. Back returns one level. Browsing never changes the stream until a different channel is selected.
+- Sport Lounge coverage is deferred. No backend or Android changes.
+
+See [QA-0.1.2.md](docs/QA-0.1.2.md) for evidence and the physical-device gate.
 
 ## 0.1.1: startup and navigation repair
 

@@ -8,37 +8,116 @@ export interface Trace {
   code?: number;
   elapsed?: number;
   position?: number;
+  duration?: number;
+  readyState?: number;
+  networkState?: number;
+  paused?: boolean;
+  ended?: boolean;
+  bufferedAhead?: number;
+  frames?: number;
+  attempt?: number;
+  failures?: number;
 }
+export interface PlaybackClock {
+  now: () => number;
+  timeout: (fn: () => void, ms: number) => ReturnType<typeof setTimeout>;
+  cancelTimeout: (id: ReturnType<typeof setTimeout> | undefined) => void;
+  interval: (fn: () => void, ms: number) => ReturnType<typeof setInterval>;
+  cancelInterval: (id: ReturnType<typeof setInterval> | undefined) => void;
+  foreground: () => boolean;
+}
+const defaults: PlaybackClock = {
+  now: () => performance.now(),
+  timeout: (fn, ms) => setTimeout(fn, ms),
+  cancelTimeout: (id) => clearTimeout(id),
+  interval: (fn, ms) => setInterval(fn, ms),
+  cancelInterval: (id) => clearInterval(id),
+  foreground: () => typeof document === "undefined" || !document.hidden,
+};
+/** One native video surface. Recovery is bounded per outage, not per viewing session. */
 export class LgPlayback {
   state: PlayerState = "idle";
   media?: Media;
+  lastFailure = "";
+  trace: Trace[] = [];
+  onState: (state: PlayerState) => void = () => {};
+  onProgress: (position: number, duration: number) => void = () => {};
+  onEnded: () => void = () => {};
+  onTrace: (trace: Trace[]) => void = () => {};
   private generation = 0;
-  private retries = 0;
+  private attempt = 0;
+  private failures = 0;
   private url = "";
   private resumeAt = 0;
   private opened = 0;
   private lastProgress = 0;
   private lastPosition = 0;
+  private lastFrames?: number;
+  private healthySince?: number;
+  private lastHeartbeat = 0;
+  private wantsPlayback = false;
   private watchdog?: ReturnType<typeof setInterval>;
   private retryTimer?: ReturnType<typeof setTimeout>;
+  private pauseTimer?: ReturnType<typeof setTimeout>;
   private cleanups: (() => void)[] = [];
-  trace: Trace[] = [];
-  onState: (state: PlayerState) => void = () => {};
-  onProgress: (position: number, duration: number) => void = () => {};
-  onEnded: () => void = () => {};
-  constructor(public video: HTMLVideoElement) {}
+  constructor(
+    public video: HTMLVideoElement,
+    private clock: PlaybackClock = defaults,
+  ) {}
+  private frames() {
+    try {
+      const n =
+        this.video.getVideoPlaybackQuality?.().totalVideoFrames ??
+        (this.video as any).webkitDecodedFrameCount;
+      return Number.isFinite(n) ? Number(n) : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+  private bufferedAhead() {
+    try {
+      const ranges = this.video.buffered;
+      for (let i = 0; i < ranges.length; i++)
+        if (ranges.start(i) <= this.position && ranges.end(i) >= this.position)
+          return Math.round((ranges.end(i) - this.position) * 10) / 10;
+    } catch {}
+    return 0;
+  }
   private log(event: string, code?: number) {
     this.trace.push({
       at: Date.now(),
       event,
       state: this.state,
       code,
-      elapsed: Date.now() - this.opened,
-      position: this.position,
+      elapsed: Math.round(this.clock.now() - this.opened),
+      position: Math.round(this.position * 10) / 10,
+      duration: this.duration,
+      readyState: this.video.readyState,
+      networkState: this.video.networkState,
+      paused: this.video.paused,
+      ended: this.video.ended,
+      bufferedAhead: this.bufferedAhead(),
+      frames: this.frames(),
+      attempt: this.attempt,
+      failures: this.failures,
     });
-    if (this.trace.length > 160) this.trace.shift();
+    if (this.trace.length > 180) this.trace.shift();
+    this.onTrace(this.trace);
+  }
+  note(
+    event:
+      | "app-hidden"
+      | "app-visible"
+      | "pagehide"
+      | "fullscreen"
+      | "preview"
+      | "panel-open"
+      | "panel-close",
+  ) {
+    this.log(event);
   }
   private set(state: PlayerState) {
+    if (this.state === state) return;
     this.state = state;
     this.log(state);
     this.onState(state);
@@ -48,26 +127,38 @@ export class LgPlayback {
     this.media = media;
     this.url = url;
     this.resumeAt = position;
-    this.retries = 0;
-    this.opened = Date.now();
-    this.lastProgress = Date.now();
+    this.failures = 0;
+    this.attempt = 0;
+    this.lastFailure = "";
+    this.wantsPlayback = true;
+    this.opened = this.clock.now();
+    this.lastProgress = this.opened;
+    this.lastHeartbeat = this.opened;
+    this.log("load");
     await this.start(this.generation);
   }
   private async start(gen: number) {
-    if (gen !== this.generation) return;
+    if (gen !== this.generation || !this.wantsPlayback) return;
     this.detach();
-    this.set("loading");
-    this.lastProgress = Date.now();
+    const attempt = ++this.attempt;
     this.lastPosition = 0;
+    this.lastFrames = undefined;
+    this.healthySince = undefined;
+    this.lastProgress = this.clock.now();
+    this.set("loading");
     const on = (name: string, fn: () => void) => {
       const guarded = () => {
-        if (gen === this.generation) fn();
+        if (gen === this.generation && attempt === this.attempt) fn();
       };
       this.video.addEventListener(name, guarded);
       this.cleanups.push(() => this.video.removeEventListener(name, guarded));
     };
     on("loadedmetadata", () => {
-      if (this.resumeAt > 0 && Number.isFinite(this.video.duration))
+      if (
+        this.media?.kind !== "live" &&
+        this.resumeAt > 0 &&
+        Number.isFinite(this.video.duration)
+      )
         this.video.currentTime = Math.min(
           this.resumeAt,
           Math.max(0, this.video.duration - 2),
@@ -75,91 +166,244 @@ export class LgPlayback {
       this.log("metadata");
     });
     on("playing", () => {
-      this.lastProgress = Date.now();
+      this.clock.cancelTimeout(this.pauseTimer);
+      this.pauseTimer = undefined;
       this.set("playing");
+      this.sample();
     });
     on("pause", () => {
-      if (this.state !== "ended" && this.state !== "error") this.set("paused");
-    });
-    on("waiting", () => this.set("buffering"));
-    on("stalled", () => this.log("stalled"));
-    on("timeupdate", () => {
-      const p = this.position;
-      if (p > this.lastPosition + 0.1) {
-        this.lastProgress = Date.now();
-        this.lastPosition = p;
+      this.log("native-pause");
+      if (!this.wantsPlayback) {
+        this.set("paused");
+        return;
       }
-      this.onProgress(p, this.duration);
+      if (
+        this.media?.kind === "live" &&
+        this.clock.foreground() &&
+        !this.video.ended
+      ) {
+        this.set("buffering");
+        this.clock.cancelTimeout(this.pauseTimer);
+        this.pauseTimer = this.clock.timeout(() => {
+          this.pauseTimer = undefined;
+          if (
+            gen === this.generation &&
+            attempt === this.attempt &&
+            this.wantsPlayback
+          )
+            void this.resumeNative(gen, attempt);
+        }, 500);
+      } else if (this.state !== "error" && this.state !== "ended")
+        this.set("paused");
+    });
+    on("waiting", () => {
+      if (this.wantsPlayback) this.set("buffering");
+    });
+    on("stalled", () => this.log("native-stalled"));
+    on("timeupdate", () => {
+      this.sample();
+      this.onProgress(this.position, this.duration);
     });
     on("error", () => {
       this.log("native-error", this.video.error?.code);
-      this.recover(gen);
+      this.recover(gen, "native-error");
     });
     on("ended", () => {
+      this.log("native-ended");
+      if (this.media?.kind === "live") {
+        if (this.wantsPlayback) this.recover(gen, "live-eof");
+        return;
+      }
+      this.wantsPlayback = false;
       this.onProgress(this.duration, this.duration);
       this.set("ended");
       this.onEnded();
     });
-    this.video.src = this.url;
+    for (const event of [
+      "loadeddata",
+      "canplay",
+      "suspend",
+      "abort",
+      "emptied",
+      "durationchange",
+    ])
+      on(event, () => this.log("native-" + event));
+    // Reconnects request the same canonical gateway route, with a new browser cache identity.
+    let target = this.url;
+    if (attempt > 1) {
+      const u = new URL(target);
+      u.searchParams.set("_ltv_restart", `${Date.now()}-${attempt}`);
+      target = u.toString();
+    }
+    this.video.src = target;
     this.video.load();
-    this.watchdog = setInterval(() => {
-      if (gen !== this.generation) return;
-      const timeout = this.state === "loading" ? 20000 : 18000;
-      if (
-        ["loading", "buffering", "playing"].includes(this.state) &&
-        Date.now() - this.lastProgress > timeout
-      ) {
-        this.log("startup-or-stall-timeout");
-        this.recover(gen);
-      }
-    }, 2000);
+    this.watchdog = this.clock.interval(() => this.check(gen), 2000);
     try {
       await this.video.play();
     } catch {
-      if (gen === this.generation && this.state !== "error") this.recover(gen);
+      if (gen === this.generation && attempt === this.attempt)
+        this.recover(gen, "play-rejected");
     }
   }
-  private recover(gen: number) {
-    if (gen !== this.generation || this.retryTimer || this.state === "error")
+  private sample() {
+    const now = this.clock.now(),
+      position = this.position,
+      frames = this.frames();
+    const moved = Math.abs(position - this.lastPosition) > 0.1,
+      decoded =
+        frames !== undefined &&
+        this.lastFrames !== undefined &&
+        frames > this.lastFrames;
+    if (moved || decoded) {
+      if (position < this.lastPosition - 1) this.log("clock-discontinuity");
+      this.lastProgress = now;
+      this.healthySince ??= now;
+      if (this.failures && now - this.healthySince >= 30000) {
+        this.failures = 0;
+        this.log("recovery-budget-reset");
+      }
+      this.lastPosition = position;
+      this.lastFrames = frames;
+      if (
+        this.wantsPlayback &&
+        this.state === "buffering" &&
+        !this.retryTimer &&
+        !this.video.paused
+      )
+        this.set("playing");
+    } else if (this.lastFrames === undefined && frames !== undefined)
+      this.lastFrames = frames;
+  }
+  private check(gen: number) {
+    if (
+      gen !== this.generation ||
+      !this.media ||
+      !this.wantsPlayback ||
+      !this.clock.foreground() ||
+      this.state === "error"
+    )
       return;
+    const now = this.clock.now();
+    this.sample();
+    if (now - this.lastHeartbeat >= 30000) {
+      this.lastHeartbeat = now;
+      this.log("heartbeat");
+    }
+    if (this.media.kind === "live" && this.video.ended) {
+      this.recover(gen, "live-ended-without-event");
+      return;
+    }
+    if (this.media.kind === "live" && this.video.paused && !this.pauseTimer) {
+      void this.resumeNative(gen, this.attempt);
+    }
+    const timeout = this.state === "loading" ? 22000 : 20000;
+    if (now - this.lastProgress > timeout) {
+      this.log("startup-or-stall-timeout");
+      this.recover(
+        gen,
+        this.state === "loading" ? "startup-timeout" : "stall-timeout",
+      );
+    }
+  }
+  private async resumeNative(gen: number, attempt: number) {
+    if (
+      gen !== this.generation ||
+      attempt !== this.attempt ||
+      !this.wantsPlayback ||
+      !this.clock.foreground() ||
+      this.retryTimer
+    )
+      return;
+    this.log("resume-unexpected-pause");
+    try {
+      await this.video.play();
+    } catch {
+      if (gen === this.generation && attempt === this.attempt)
+        this.recover(gen, "resume-rejected");
+    }
+  }
+  private recover(gen: number, reason: string) {
+    if (
+      gen !== this.generation ||
+      this.retryTimer ||
+      this.state === "error" ||
+      !this.wantsPlayback
+    )
+      return;
+    this.lastFailure = reason;
+    this.log(reason);
     this.detach();
-    if (this.retries >= 2) {
-      this.video.pause();
+    // Close the old native connection before starting a replacement; never open parallel feeds.
+    this.release();
+    this.healthySince = undefined;
+    if (this.failures >= 4) {
       this.set("error");
       return;
     }
-    this.retries++;
+    this.failures++;
     this.log("reconnect");
-    this.resumeAt = this.media?.kind === "live" ? 0 : this.position;
+    this.resumeAt = this.media?.kind === "live" ? 0 : this.lastPosition;
     this.set("buffering");
-    this.retryTimer = setTimeout(() => {
-      this.retryTimer = undefined;
-      void this.start(gen);
-    }, 1200 * this.retries);
+    this.retryTimer = this.clock.timeout(
+      () => {
+        this.retryTimer = undefined;
+        if (gen === this.generation) void this.start(gen);
+      },
+      Math.min(8000, 1000 * 2 ** (this.failures - 1)),
+    );
   }
   private detach() {
-    clearInterval(this.watchdog);
+    this.clock.cancelInterval(this.watchdog);
+    this.watchdog = undefined;
+    this.clock.cancelTimeout(this.pauseTimer);
+    this.pauseTimer = undefined;
     this.cleanups.splice(0).forEach((fn) => fn());
   }
-  stop() {
-    this.generation++;
-    clearTimeout(this.retryTimer);
-    this.retryTimer = undefined;
-    this.detach();
+  private release() {
     this.video.pause();
     this.video.removeAttribute("src");
     this.video.load();
+  }
+  stop() {
+    if (this.media) this.log("stop");
+    this.generation++;
+    this.wantsPlayback = false;
+    this.clock.cancelTimeout(this.retryTimer);
+    this.retryTimer = undefined;
+    this.detach();
+    this.release();
     this.state = "idle";
     this.media = undefined;
   }
+  pauseByUser() {
+    this.wantsPlayback = false;
+    this.clock.cancelTimeout(this.pauseTimer);
+    this.pauseTimer = undefined;
+    this.clock.cancelTimeout(this.retryTimer);
+    this.retryTimer = undefined;
+    this.log("user-pause");
+    this.video.pause();
+    this.set("paused");
+  }
+  async resumeByUser() {
+    if (!this.media) return;
+    this.wantsPlayback = true;
+    this.lastProgress = this.clock.now();
+    this.healthySince = undefined;
+    this.log("user-resume");
+    if (!this.video.getAttribute?.("src") && !this.video.src) {
+      await this.start(this.generation);
+      return;
+    }
+    try {
+      await this.video.play();
+    } catch {
+      this.recover(this.generation, "user-resume-rejected");
+    }
+  }
   async toggle() {
-    if (this.video.paused) {
-      try {
-        await this.video.play();
-      } catch {
-        this.set("error");
-      }
-    } else this.video.pause();
+    if (this.wantsPlayback) this.pauseByUser();
+    else await this.resumeByUser();
   }
   seek(delta: number) {
     if (this.media?.kind === "live") return;
@@ -167,7 +411,9 @@ export class LgPlayback {
       0,
       Math.min(this.duration - 1, this.position + delta),
     );
-    this.lastProgress = Date.now();
+    this.lastPosition = this.position;
+    this.lastProgress = this.clock.now();
+    this.healthySince = undefined;
   }
   get position() {
     return Number.isFinite(this.video.currentTime) ? this.video.currentTime : 0;
