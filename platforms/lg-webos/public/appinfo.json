@@ -1,0 +1,17 @@
+{
+  "id": "nz.loungetv.webos.qa",
+  "version": "0.1.0",
+  "vendor": "Lounge TV",
+  "type": "web",
+  "main": "index.html",
+  "title": "Lounge TV QA",
+  "icon": "icon.png",
+  "largeIcon": "assets/brand.png",
+  "resolution": "1920x1080",
+  "bgColor": "#050a14",
+  "disableBackHistoryAPI": true,
+  "handlesRelaunch": true,
+  "transparent": false,
+  "requiredMemory": 256,
+  "requiredACG": []
+}
