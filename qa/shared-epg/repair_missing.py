@@ -91,6 +91,12 @@ def make(manifest,existing,sources,out,now=None):
    cid=max(viable,key=lambda c:max(b for _,b,_,_ in programmes[c]));entries=programmes[cid]
    options[target].append((max(b for _,b,_,_ in entries),label,cid,channels[cid],entries,reg));matched+=1
   health.append(dict(source=label,region=reg,channels=len(channels),matched=matched))
+ # Bound retained history for validated targets; keep all other data untouched.
+ expired=[n for n in root.findall('programme') if n.get('channel') in options and dt(n.get('stop')) and dt(n.get('stop')) < now-timedelta(days=2)]
+ expired_ids={id(n) for n in expired}
+ expected=[E.tostring(n,with_tail=False) for n in root.findall('programme') if id(n) not in expired_ids]
+ for n in expired:root.remove(n)
+ for target in options:baseline[target]=[n for n in baseline[target] if id(n) not in expired_ids]
  repaired=[];added=0
  for target,choices in options.items():
   # Prefer the longest validated horizon. Only fill gaps, never replace an existing interval.
@@ -107,12 +113,12 @@ def make(manifest,existing,sources,out,now=None):
   repaired.append(dict(epgId=target,name=targets[target][0]['name'],region=reg,source=label,sourceId=cid,sourceName=name,newProgrammes=len(append),newlyCurrent=not any(a and b and a<=now<b for a,b in [(dt(p.get('start')),dt(p.get('stop')))for p in prior[:-len(append)]])))
  # Preserve every input programme in its original order and bytes, including NZ/AU/loops.
  after=[E.tostring(n,with_tail=False)for n in root.findall('programme')]
- assert after[:len(original)]==original,'Existing guide programme preservation failed'
+ assert after[:len(expected)]==expected,'Non-expired programme preservation failed'
  out=Path(out);(out/'short').mkdir(parents=True,exist_ok=True)
  for r in repaired:short(baseline[r['epgId']],r['epgId'],out/'short'/(fnv(r['epgId'])+'.json'),now)
  xml=E.tostring(root,encoding='UTF-8',xml_declaration=True);(out/'guide.xml').write_bytes(xml)
  with gzip.open(out/'guide.xml.gz','wb',compresslevel=6)as f:f.write(xml)
- report=dict(generatedAt=now.isoformat(),eligible=len(rows),sources=health,modifiedTargets=len(repaired),newlyCurrentTargets=sum(r['newlyCurrent']for r in repaired),addedProgrammes=added,preservedProgrammes=len(original),guideProgrammes=len(after),repaired=repaired)
+ report=dict(generatedAt=now.isoformat(),eligible=len(rows),sources=health,modifiedTargets=len(repaired),newlyCurrentTargets=sum(r['newlyCurrent']for r in repaired),addedProgrammes=added,preservedProgrammes=len(expected),inputProgrammes=len(original),prunedExpiredProgrammes=len(expired),guideProgrammes=len(after),repaired=repaired)
  (out/'report.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps({k:v for k,v in report.items()if k!='repaired'},indent=2));return report
 
 if __name__=='__main__':

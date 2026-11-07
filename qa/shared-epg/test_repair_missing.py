@@ -22,5 +22,8 @@ class RepairTests(unittest.TestCase):
   r,out,s=self.build(existing=xml('Demo.us','Existing',0));self.assertEqual(r['newlyCurrentTargets'],0);self.assertIn('Existing',out);self.assertEqual(r['addedProgrammes'],1)
  def test_uk_generic_foreign_channel_not_assumed(self):
   self.assertFalse(scoped_name('Disney Channel','uk','talk-uk'));self.assertTrue(scoped_name('UK - Discovery History','uk','talk-uk'));self.assertTrue(scoped_name('Sky Sports Golf HD','uk','talk-uk'))
+ def test_only_expired_managed_history_is_pruned(self):
+  expired='<programme channel="Demo.us" start="20261103000000 +0000" stop="20261103020000 +0000"><title>Expired demo</title></programme>'
+  r,out,_=self.build(existing=expired);self.assertEqual(r['prunedExpiredProgrammes'],1);self.assertNotIn('Expired demo',out);self.assertIn('NZ untouched',out)
  def test_quality_alias_keeps_delay(self):self.assertNotEqual(key('Sky Sports +'),key('Sky Sports'));self.assertEqual(key('TNT (Pacific)'),key('TNT West'))
 if __name__=='__main__':unittest.main()
