@@ -1,0 +1,105 @@
+name: Lounge TV shared US UK guide gap repair
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/epg-missing-us-uk.yml
+      - qa/shared-epg/**
+  schedule:
+    - cron: '11 2,8,14,20 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lounge-epg-us-uk-gap-repair
+  cancel-in-progress: false
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: source
+      - uses: actions/checkout@v4
+        with:
+          ref: epg-data
+          path: published
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install lxml==5.4.0
+      - name: Verify matching and preservation regressions
+        working-directory: source/qa/shared-epg
+        run: python -m unittest test_repair_missing -v
+      - name: Download US UK sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir feeds
+          python - <<'PY'
+          import urllib.request,concurrent.futures,gzip,pathlib
+          jobs={
+            'talk-us':'https://raw.githubusercontent.com/acidjesuz/EPGTalk/master/US_guide.xml.gz',
+            'talk-uk':'https://raw.githubusercontent.com/acidjesuz/EPGTalk/master/UK_guide.xml.gz',
+            'share-us':'https://epgshare01.online/epgshare01/epg_ripper_US2.xml.gz',
+            'share-uk':'https://epgshare01.online/epgshare01/epg_ripper_UK1.xml.gz',
+          }
+          def get(item):
+            key,url=item
+            try:
+              request=urllib.request.Request(url,headers={'User-Agent':'LoungeTV-EPG/1.0'})
+              with urllib.request.urlopen(request,timeout=120) as response:data=response.read()
+              gzip.decompress(data)
+              pathlib.Path('feeds',key+'.gz').write_bytes(data)
+              print(key,len(data))
+            except Exception as error:print(key,type(error).__name__)
+          with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:list(pool.map(get,jobs.items()))
+          assert pathlib.Path('feeds/talk-us.gz').exists() and pathlib.Path('feeds/talk-uk.gz').exists()
+          PY
+      - name: Build additive candidate against frozen published guide
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(--source talk-us:us=feeds/talk-us.gz --source talk-uk:uk=feeds/talk-uk.gz)
+          if test -s feeds/share-us.gz; then args+=(--source share-us:us=feeds/share-us.gz); fi
+          if test -s feeds/share-uk.gz; then args+=(--source share-uk:uk=feeds/share-uk.gz); fi
+          python source/qa/shared-epg/repair_missing.py \
+            --manifest source/qa/shared-epg/current-manifest.json \
+            --existing published/epg/guide.xml.gz \
+            "${args[@]}" --out candidate
+          python - <<'PY'
+          import json,pathlib,gzip
+          r=json.loads(pathlib.Path('candidate/report.json').read_text())
+          assert r['preservedProgrammes']>=10000
+          assert r['guideProgrammes']>=r['preservedProgrammes']
+          assert len(list(pathlib.Path('candidate/short').glob('*.json')))==r['modifiedTargets']
+          assert gzip.decompress(pathlib.Path('candidate/guide.xml.gz').read_bytes())==pathlib.Path('candidate/guide.xml').read_bytes()
+          assert all(x['region'] in ('us','uk') for x in r['repaired'])
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shared-epg-gap-repair
+          path: candidate/report.json
+          retention-days: 14
+      - name: Publish shared guide with concurrent-writer guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(python -c 'import json; print(json.load(open("candidate/report.json"))["modifiedTargets"])')" -gt 0 || exit 0
+          expected="$(git -C published rev-parse HEAD)"
+          actual="$(git -C published ls-remote origin refs/heads/epg-data | cut -f1)"
+          if test "$expected" != "$actual"; then
+            echo 'Published EPG advanced; refusing to overwrite a newer guide. Next run retries.'
+            exit 1
+          fi
+          cp candidate/guide.xml candidate/guide.xml.gz published/epg/
+          cp candidate/short/*.json published/epg/short/
+          cp candidate/report.json published/epg/shared-us-uk-repair.json
+          git -C published config user.name 'Lounge TV EPG Automation'
+          git -C published config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C published add epg/guide.xml epg/guide.xml.gz epg/short epg/shared-us-uk-repair.json
+          git -C published commit -m 'epg: fill verified US UK schedule gaps for all Lounge clients'
+          git -C published push origin HEAD:epg-data
