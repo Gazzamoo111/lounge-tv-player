@@ -1,0 +1,2597 @@
+{
+  "generatedAt": "2026-11-07T02:32:15.236565+00:00",
+  "eligible": 757,
+  "sources": [
+    {
+      "source": "talk-us",
+      "region": "us",
+      "channels": 738,
+      "matched": 173
+    },
+    {
+      "source": "talk-uk",
+      "region": "uk",
+      "channels": 560,
+      "matched": 49
+    },
+    {
+      "source": "share-us",
+      "region": "us",
+      "channels": 792,
+      "matched": 214
+    },
+    {
+      "source": "share-uk",
+      "region": "uk",
+      "channels": 487,
+      "matched": 81
+    }
+  ],
+  "modifiedTargets": 256,
+  "newlyCurrentTargets": 72,
+  "addedProgrammes": 21861,
+  "preservedProgrammes": 47016,
+  "guideProgrammes": 68877,
+  "repaired": [
+    {
+      "epgId": "DisneyJunior.us",
+      "name": "DISNEY JR",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I289.74796.schedulesdirect.org",
+      "sourceName": "DISNEY JR US",
+      "newProgrammes": 341,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "live:jewelry-television",
+      "name": "JEWELRY TELEVISION",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I313.16604.schedulesdirect.org",
+      "sourceName": "Jewelry Television",
+      "newProgrammes": 58,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "GACFamily.us",
+      "name": "GREAT AMERICAN FAMILY",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I326.16062.schedulesdirect.org",
+      "sourceName": "Great American Family",
+      "newProgrammes": 48,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "HeroesAndIconsTV.us",
+      "name": "HEROES & ICONS",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I1167.61780.gracenote.com",
+      "sourceName": "Heroes & Icons",
+      "newProgrammes": 165,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "live:love-nature",
+      "name": "LOVE NATURE",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I1625.52745.schedulesdirect.org",
+      "sourceName": "Love Nature",
+      "newProgrammes": 86,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "HistoryChannel.us",
+      "name": "HISTORY",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I269.14771.schedulesdirect.org",
+      "sourceName": "History",
+      "newProgrammes": 105,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:hsn",
+      "name": "HSN",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I240.62077.schedulesdirect.org",
+      "sourceName": "HSN",
+      "newProgrammes": 148,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "IndependentFilmChannel.us",
+      "name": "IFC",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I333.14873.schedulesdirect.org",
+      "sourceName": "IFC",
+      "newProgrammes": 180,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "INSP.us",
+      "name": "INSP",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I364.11066.schedulesdirect.org",
+      "sourceName": "INSP",
+      "newProgrammes": 107,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "US-Lifetime Movies - East",
+      "name": "LIFETIME MOVIE NETWORK",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I253.18480.schedulesdirect.org",
+      "sourceName": "Lifetime Movie Network",
+      "newProgrammes": 93,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "live:oxygen-true-crime",
+      "name": "OXYGEN TRUE CRIME",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I251.21484.schedulesdirect.org",
+      "sourceName": "Oxygen True Crime",
+      "newProgrammes": 94,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "MagnoliaNetwork.us",
+      "name": "MAGNOLIA NETWORK",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I230.18544.schedulesdirect.org",
+      "sourceName": "Magnolia Network",
+      "newProgrammes": 104,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:paramount-with-showtime-west",
+      "name": "PARAMOUNT+ WITH SHOWTIME WEST",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I546.11117.schedulesdirect.org",
+      "sourceName": "Paramount+ with Showtime (Pacific)",
+      "newProgrammes": 81,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "live:shop-lc",
+      "name": "SHOP LC",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I226.56032.schedulesdirect.org",
+      "sourceName": "Shop LC",
+      "newProgrammes": 96,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "OutdoorChannel.us",
+      "name": "OUTDOOR CHANNEL",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I606.14776.schedulesdirect.org",
+      "sourceName": "Outdoor Channel",
+      "newProgrammes": 180,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Ovation.us",
+      "name": "OVATION",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I274.15807.schedulesdirect.org",
+      "sourceName": "Ovation",
+      "newProgrammes": 95,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "QVC.us",
+      "name": "QVC",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I275.11069.schedulesdirect.org",
+      "sourceName": "QVC",
+      "newProgrammes": 75,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Syfy.us",
+      "name": "SYFY",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I244.11097.schedulesdirect.org",
+      "sourceName": "Syfy",
+      "newProgrammes": 98,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "US| TBS WEST HD",
+      "name": "TBS WEST",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I247.67890.schedulesdirect.org",
+      "sourceName": "TBS HD (Pacific)",
+      "newProgrammes": 236,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "US-Turner Classic Movies USA",
+      "name": "TCM",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I256.12852.schedulesdirect.org",
+      "sourceName": "TCM US",
+      "newProgrammes": 82,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "live:tudn",
+      "name": "TUDN",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I464.75176.schedulesdirect.org",
+      "sourceName": "TUDN",
+      "newProgrammes": 95,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "WeatherChannel.us",
+      "name": "THE WEATHER CHANNEL",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I362.11187.schedulesdirect.org",
+      "sourceName": "The Weather Channel",
+      "newProgrammes": 98,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "TNT.us",
+      "name": "TNT",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I245.11164.schedulesdirect.org",
+      "sourceName": "TNT",
+      "newProgrammes": 73,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "US| TNT WEST HD",
+      "name": "TNT WEST",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I245.61340.schedulesdirect.org",
+      "sourceName": "TNT HD (Pacific)",
+      "newProgrammes": 110,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "truTV.us",
+      "name": "TRUTV",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I246.10153.schedulesdirect.org",
+      "sourceName": "Tru TV",
+      "newProgrammes": 146,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "TVLand.us",
+      "name": "TV LAND",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I106.16123.gracenote.com",
+      "sourceName": "TV Land",
+      "newProgrammes": 164,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "VH1.us",
+      "name": "VH1",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I335.11218.schedulesdirect.org",
+      "sourceName": "VH1",
+      "newProgrammes": 156,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "ViceOnTV.us",
+      "name": "VICE",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I271.18822.schedulesdirect.org",
+      "sourceName": "Vice",
+      "newProgrammes": 171,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "WeTV.us",
+      "name": "WE TV",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I260.16409.schedulesdirect.org",
+      "sourceName": "WE TV",
+      "newProgrammes": 106,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "US-Cartoon Network USA - Pacific Feed",
+      "name": "CARTOON NETWORK WEST",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I297.18151.schedulesdirect.org",
+      "sourceName": "Cartoon Network (Pacific)",
+      "newProgrammes": 435,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "US-Disney - Pacific Feed",
+      "name": "DISNEY CHANNEL WEST",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I291.12510.schedulesdirect.org",
+      "sourceName": "Disney Channel (Pacific)",
+      "newProgrammes": 274,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "DisneyXD.us",
+      "name": "DISNEY XD",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I292.18279.schedulesdirect.org",
+      "sourceName": "Disney XD",
+      "newProgrammes": 191,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "us.Nickelodeon USA - Pacific Feed",
+      "name": "NICKELODEON WEST",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I300.11007.schedulesdirect.org",
+      "sourceName": "Nickelodeon (Pacific)",
+      "newProgrammes": 211,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "US-Cinemax - Pacific Feed",
+      "name": "CINEMAX WEST",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I516.12508.schedulesdirect.org",
+      "sourceName": "Cinemax (Pacific)",
+      "newProgrammes": 82,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "ShowtimeExtreme.us",
+      "name": "SHOWTIME EXTREME",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I549.18086.schedulesdirect.org",
+      "sourceName": "Showtime Extreme",
+      "newProgrammes": 50,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "ShowtimeWomen.us",
+      "name": "SHOWTIME WOMEN",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I1850.25272.gracenote.com",
+      "sourceName": "Showtime Women",
+      "newProgrammes": 53,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Starz.us",
+      "name": "STARZ",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I525.12719.schedulesdirect.org",
+      "sourceName": "Starz",
+      "newProgrammes": 59,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "StarzEncore.us",
+      "name": "STARZ ENCORE",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I535.10178.schedulesdirect.org",
+      "sourceName": "Starz Encore",
+      "newProgrammes": 57,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "US-Starz Encore - Pacific",
+      "name": "STARZ ENCORE WEST",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I536.17125.schedulesdirect.org",
+      "sourceName": "Starz Encore (Pacific)",
+      "newProgrammes": 85,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "US-Starz - Pacific",
+      "name": "STARZ WEST",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I526.12741.schedulesdirect.org",
+      "sourceName": "Starz (Pacific)",
+      "newProgrammes": 98,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "TMC The Movie Channel",
+      "name": "THE MOVIE CHANNEL",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I553.11160.schedulesdirect.org",
+      "sourceName": "The Movie Channel",
+      "newProgrammes": 52,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "US-CNBC USA",
+      "name": "CNBC",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I355.10139.schedulesdirect.org",
+      "sourceName": "CNBC",
+      "newProgrammes": 141,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "us.The Fight Network (United States) SDTV",
+      "name": "FIGHT NETWORK",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I388.81448.schedulesdirect.org",
+      "sourceName": "Fight Network",
+      "newProgrammes": 141,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "GolfChannel.us",
+      "name": "GOLF CHANNEL",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I218.14899.schedulesdirect.org",
+      "sourceName": "Golf Channel",
+      "newProgrammes": 63,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "TennisChannel.us",
+      "name": "TENNIS CHANNEL",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I217.33395.schedulesdirect.org",
+      "sourceName": "Tennis Channel",
+      "newProgrammes": 30,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "MLBNetwork.us",
+      "name": "MLB NETWORK",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I213.62079.schedulesdirect.org",
+      "sourceName": "MLB Network",
+      "newProgrammes": 73,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "BigTenNetwork.us",
+      "name": "BIG TEN NETWORK",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I610.56783.schedulesdirect.org",
+      "sourceName": "Big Ten Network",
+      "newProgrammes": 105,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "NHLNetwork.us",
+      "name": "NHL NETWORK",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I215.58570.schedulesdirect.org",
+      "sourceName": "NHL Network",
+      "newProgrammes": 121,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "US-CBS Sports Network USA",
+      "name": "CBS SPORTS NETWORK",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I221.16365.schedulesdirect.org",
+      "sourceName": "CBS Sports Network",
+      "newProgrammes": 69,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "NBATV.us",
+      "name": "NBA TV",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I216.32281.schedulesdirect.org",
+      "sourceName": "NBA TV",
+      "newProgrammes": 127,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "ESPN.us",
+      "name": "ESPN",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I206.10179.schedulesdirect.org",
+      "sourceName": "ESPN",
+      "newProgrammes": 80,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "ESPN2.us",
+      "name": "ESPN 2",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I209.12444.schedulesdirect.org",
+      "sourceName": "ESPN2",
+      "newProgrammes": 72,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "ESPNNews.us",
+      "name": "ESPNEWS",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I207.16485.schedulesdirect.org",
+      "sourceName": "ESPNEWS",
+      "newProgrammes": 114,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:espnu",
+      "name": "ESPNU",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I208.45654.schedulesdirect.org",
+      "sourceName": "ESPNU",
+      "newProgrammes": 50,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Fanduel.us",
+      "name": "FANDUEL TV",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I602.21345.gracenote.com",
+      "sourceName": "Fanduel TV",
+      "newProgrammes": 21,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:fox-soccer-plus",
+      "name": "FOX SOCCER PLUS",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I621.66879.schedulesdirect.org",
+      "sourceName": "Fox Soccer Plus",
+      "newProgrammes": 56,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "FoxSports1.us",
+      "name": "FOX SPORTS 1",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I219.82541.schedulesdirect.org",
+      "sourceName": "Fox Sports 1 US",
+      "newProgrammes": 102,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "FoxSports2.us",
+      "name": "FOX SPORTS 2",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I618.33178.schedulesdirect.org",
+      "sourceName": "Fox Sports 2 US",
+      "newProgrammes": 101,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "US-NFL Red Zone",
+      "name": "NFL REDZONE",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I211.65025.schedulesdirect.org",
+      "sourceName": "NFL Redzone",
+      "newProgrammes": 22,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "SECNetwork.us",
+      "name": "SEC NETWORK",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I611.89535.schedulesdirect.org",
+      "sourceName": "SEC Network",
+      "newProgrammes": 57,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:abc-localish",
+      "name": "ABC LOCALISH",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I1178.35892.gracenote.com",
+      "sourceName": "ABC Localish",
+      "newProgrammes": 262,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "live:bet-west",
+      "name": "BET WEST",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I329.64673.schedulesdirect.org",
+      "sourceName": "BET HD (Pacific)",
+      "newProgrammes": 215,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "AntennaTV.us",
+      "name": "ANTENNA TV",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I1185.31044.gracenote.com",
+      "sourceName": "Antenna TV",
+      "newProgrammes": 179,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "BBCAmerica.us",
+      "name": "BBC AMERICA",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I264.18332.schedulesdirect.org",
+      "sourceName": "BBC America",
+      "newProgrammes": 65,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "BET.us",
+      "name": "BET",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I329.10051.schedulesdirect.org",
+      "sourceName": "BET",
+      "newProgrammes": 158,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Bravo.us",
+      "name": "BRAVO",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I237.10057.schedulesdirect.org",
+      "sourceName": "Bravo",
+      "newProgrammes": 95,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "CMT.us",
+      "name": "CMT",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I327.10138.schedulesdirect.org",
+      "sourceName": "CMT",
+      "newProgrammes": 163,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "ComedyCentral.us",
+      "name": "COMEDY CENTRAL WEST",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I249.64599.schedulesdirect.org",
+      "sourceName": "Comedy Central HD (Pacific)",
+      "newProgrammes": 256,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "CookingChannel.us",
+      "name": "COOKING CHANNEL",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I232.30156.schedulesdirect.org",
+      "sourceName": "Cooking Channel",
+      "newProgrammes": 147,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "DestinationAmerica.us",
+      "name": "DESTINATION AMERICA",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I286.16617.schedulesdirect.org",
+      "sourceName": "Destination America",
+      "newProgrammes": 182,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:galavision",
+      "name": "GALAVISION",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I404.10222.schedulesdirect.org",
+      "sourceName": "Galavision",
+      "newProgrammes": 177,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "live:gem-shopping-network",
+      "name": "GEM SHOPPING NETWORK",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I1081.26643.gracenote.com",
+      "sourceName": "Gem Shopping Network",
+      "newProgrammes": 25,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "Freeform.us",
+      "name": "FREEFORM",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I311.10093.schedulesdirect.org",
+      "sourceName": "FREEFORM",
+      "newProgrammes": 104,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:home-shopping-network",
+      "name": "HOME SHOPPING NETWORK",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I240.10269.schedulesdirect.org",
+      "sourceName": "Home Shopping Network",
+      "newProgrammes": 96,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "US-FX Movie Channel",
+      "name": "FXM",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I258.14988.schedulesdirect.org",
+      "sourceName": "FXM",
+      "newProgrammes": 73,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "DiscoveryHistory.uk",
+      "name": "DISCOVERY HISTORY",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I428.24280.schedulesdirect.org",
+      "sourceName": "UK - Discovery History",
+      "newProgrammes": 167,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "DiscoveryScience.uk",
+      "name": "DISCOVERY SCIENCE",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I431.24282.schedulesdirect.org",
+      "sourceName": "UK - Discovery Science",
+      "newProgrammes": 193,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "uk.Disc.Turbo",
+      "name": "DISCOVERY TURBO +1",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I435.110284.schedulesdirect.org",
+      "sourceName": "UK - Discovery Turbo +1",
+      "newProgrammes": 125,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "HistoryChannel.uk",
+      "name": "SKY HISTORY",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1028.21558.schedulesdirect.org",
+      "sourceName": "Sky History",
+      "newProgrammes": 194,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "uk.Boomerang +1",
+      "name": "BOOMERANG +1",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I284.48928.schedulesdirect.org",
+      "sourceName": "Boomerang +1",
+      "newProgrammes": 196,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "5Action.uk",
+      "name": "5 ACTION",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I12.109246.schedulesdirect.org",
+      "sourceName": "UK - 5 Action",
+      "newProgrammes": 142,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Film4.uk",
+      "name": "FILM 4",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I487.21494.schedulesdirect.org",
+      "sourceName": "UK - Film4",
+      "newProgrammes": 58,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:film-4-1",
+      "name": "FILM 4 +1",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1000.25630.schedulesdirect.org",
+      "sourceName": "Film4 +1",
+      "newProgrammes": 58,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "GreatAction.uk",
+      "name": "GREAT! ACTION",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I532.59406.schedulesdirect.org",
+      "sourceName": "UK - GREAT! action+1",
+      "newProgrammes": 169,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "GreatMovies.uk",
+      "name": "GREAT! MOVIES",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I533.81450.schedulesdirect.org",
+      "sourceName": "UK - GREAT! movies",
+      "newProgrammes": 156,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "SkyAction.uk",
+      "name": "SKY CINEMA ACTION",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1002.61177.schedulesdirect.org",
+      "sourceName": "SKY Cinema Action",
+      "newProgrammes": 64,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "SkyCinemaComedy.uk",
+      "name": "SKY CINEMA COMEDY",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1001.24039.schedulesdirect.org",
+      "sourceName": "Sky Cinema Comedy",
+      "newProgrammes": 66,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "SkyCinemaDrama.uk",
+      "name": "SKY CINEMA DRAMA",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1000.61179.schedulesdirect.org",
+      "sourceName": "SKY Cinema Drama",
+      "newProgrammes": 71,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "SkyCinemaGreats.uk",
+      "name": "SKY CINEMA GREATS",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1007.24042.schedulesdirect.org",
+      "sourceName": "Sky Cinema Greats",
+      "newProgrammes": 81,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "SkyCinemaHits.uk",
+      "name": "SKY CINEMA HITS",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1003.49453.schedulesdirect.org",
+      "sourceName": "Sky Cinema Hits",
+      "newProgrammes": 66,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "SkyPremiere.uk",
+      "name": "SKY CINEMA PREMIER",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1008.59691.schedulesdirect.org",
+      "sourceName": "Sky Cinema Premiere",
+      "newProgrammes": 72,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "SkyCinemaSelect.uk",
+      "name": "SKY CINEMA SELECT",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1004.65340.schedulesdirect.org",
+      "sourceName": "Sky Cinema Select HD",
+      "newProgrammes": 72,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "SkyThriller.uk",
+      "name": "SKY CINEMA THRILLER",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1005.50176.schedulesdirect.org",
+      "sourceName": "Sky Cinema Thriller",
+      "newProgrammes": 72,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "SkyCinemaAnimation.uk",
+      "name": "SKY CINEMA ANIMATION",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I998.115495.schedulesdirect.org",
+      "sourceName": "Sky Cinema Animation",
+      "newProgrammes": 37,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "uk.Sky Cinema Family",
+      "name": "SKY CINEMA FAMILY",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1005.24040.schedulesdirect.org",
+      "sourceName": "Sky Cinema Family",
+      "newProgrammes": 93,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "SkySportsGolf.uk",
+      "name": "SKY SPORTS GOLF",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1002.67695.schedulesdirect.org",
+      "sourceName": "Sky Sports Golf HD",
+      "newProgrammes": 112,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "SkySportsArena.uk",
+      "name": "SKY SPORTS +",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1069.104324.schedulesdirect.org",
+      "sourceName": "Sky Sports+ HD",
+      "newProgrammes": 106,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "SkySportsAction.uk",
+      "name": "SKY SPORTS ACTION",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1072.59533.schedulesdirect.org",
+      "sourceName": "Sky Sports Action HD",
+      "newProgrammes": 176,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "SkySportsCricket.uk",
+      "name": "SKY SPORTS CRICKET",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1079.51204.schedulesdirect.org",
+      "sourceName": "Sky Sports Cricket",
+      "newProgrammes": 167,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "SkySportsFootball.uk",
+      "name": "SKY SPORTS FOOTBALL",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1001.104327.schedulesdirect.org",
+      "sourceName": "Sky Sports Football",
+      "newProgrammes": 270,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "SkySportsMainEvent.uk",
+      "name": "SKY SPORTS MAIN EVENT",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1000.49609.schedulesdirect.org",
+      "sourceName": "Sky Sports Main Event",
+      "newProgrammes": 89,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "SkySportsMix.uk",
+      "name": "SKY SPORTS MIX",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1093.100265.schedulesdirect.org",
+      "sourceName": "SKY Sports Mix",
+      "newProgrammes": 199,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "SkySportsNews.uk",
+      "name": "SKY SPORTS NEWS",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1095.20643.schedulesdirect.org",
+      "sourceName": "Sky Sports News",
+      "newProgrammes": 156,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "live:sky-sports-tennis",
+      "name": "SKY SPORTS TENNIS",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1103.147889.schedulesdirect.org",
+      "sourceName": "Sky Sports Tennis",
+      "newProgrammes": 123,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "uk.Cartoon Network",
+      "name": "CARTOON NETWORK",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I306.17667.schedulesdirect.org",
+      "sourceName": "UK - Cartoon Network",
+      "newProgrammes": 208,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "uk.MTV HD",
+      "name": "MTV",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I758.80924.schedulesdirect.org",
+      "sourceName": "UK - MTV HD",
+      "newProgrammes": 191,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "5star.uk",
+      "name": "5 STAR",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I15.52336.schedulesdirect.org",
+      "sourceName": "UK - 5 Star",
+      "newProgrammes": 136,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "uk.5STAR +1",
+      "name": "5 STAR+1",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1012.97290.schedulesdirect.org",
+      "sourceName": "5 Star +1",
+      "newProgrammes": 137,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "FiveUSA.uk",
+      "name": "5 USA",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I22.52335.schedulesdirect.org",
+      "sourceName": "UK - 5 USA",
+      "newProgrammes": 113,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "uk.5 USA +1",
+      "name": "5 USA +1",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I23.56890.schedulesdirect.org",
+      "sourceName": "5USA +1",
+      "newProgrammes": 114,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "BBC1.uk",
+      "name": "BBC ONE",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I128.69387.schedulesdirect.org",
+      "sourceName": "UK - BBC ONE",
+      "newProgrammes": 230,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "BBC2.uk",
+      "name": "BBC TWO",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1003.50059.schedulesdirect.org",
+      "sourceName": "UK - BBC TWO",
+      "newProgrammes": 125,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Channel4.uk",
+      "name": "CHANNEL 4",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1021.50716.schedulesdirect.org",
+      "sourceName": "Channel 4 HD",
+      "newProgrammes": 163,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:channel-4-1",
+      "name": "CHANNEL 4 +1",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1023.56892.schedulesdirect.org",
+      "sourceName": "Channel 4 +1",
+      "newProgrammes": 163,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:comedy-central-1",
+      "name": "COMEDY CENTRAL +1",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I393.47480.schedulesdirect.org",
+      "sourceName": "UK - Comedy Central+1",
+      "newProgrammes": 244,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "QuestRed.uk",
+      "name": "D+| QUEST RED",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I893.102764.schedulesdirect.org",
+      "sourceName": "Quest Red +1",
+      "newProgrammes": 152,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "UandDave.uk",
+      "name": "DAVE",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1306.73129.schedulesdirect.org",
+      "sourceName": "UK - Dave",
+      "newProgrammes": 163,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "Drama.uk",
+      "name": "DRAMA",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1309.82575.schedulesdirect.org",
+      "sourceName": "Drama",
+      "newProgrammes": 138,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "uk.E4+1",
+      "name": "E4 +1",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1009.33882.schedulesdirect.org",
+      "sourceName": "E4 +1",
+      "newProgrammes": 212,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "live:great-tv-1",
+      "name": "GREAT! TV +1",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I530.89657.schedulesdirect.org",
+      "sourceName": "Great TV +1",
+      "newProgrammes": 158,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "ITV1.uk",
+      "name": "ITV 1",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I635.17468.schedulesdirect.org",
+      "sourceName": "UK - ITV 1",
+      "newProgrammes": 119,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Legend.uk",
+      "name": "LEGEND",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I712.73970.schedulesdirect.org",
+      "sourceName": "UK - LEGEND",
+      "newProgrammes": 93,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "More4.uk",
+      "name": "MORE 4",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I747.47657.schedulesdirect.org",
+      "sourceName": "UK - More4",
+      "newProgrammes": 142,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Quest.uk",
+      "name": "QUEST",
+      "region": "uk",
+      "source": "talk-uk",
+      "sourceId": "I1012.65394.schedulesdirect.org",
+      "sourceName": "Quest +1",
+      "newProgrammes": 176,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "live:infast",
+      "name": "INFAST",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "INFAST.US.us2",
+      "sourceName": "INFAST US",
+      "newProgrammes": 115,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "US| DISNEY JR WEST HD",
+      "name": "DISNEY JR WEST",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Disney.Junior.HD.(Pacific).us2",
+      "sourceName": "Disney Junior HD (Pacific)",
+      "newProgrammes": 173,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "HallmarkMoviesMysteries.us",
+      "name": "HALLMARK MYSTERY",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Hallmark.Mystery.HD.us2",
+      "sourceName": "Hallmark Mystery HD",
+      "newProgrammes": 12,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:love-kills",
+      "name": "LOVE KILLS",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Love.Kills.us2",
+      "sourceName": "Love Kills",
+      "newProgrammes": 29,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "HLN.us",
+      "name": "HLN",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "HLN.HD.us2",
+      "sourceName": "HLN HD",
+      "newProgrammes": 45,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "INDIEplex.us",
+      "name": "INDIEPLEX",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "IndiePlex.HD.us2",
+      "sourceName": "IndiePlex HD",
+      "newProgrammes": 15,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:moviesphere-gold",
+      "name": "MOVIESPHERE GOLD",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "MovieSphere.Gold.us2",
+      "sourceName": "MovieSphere Gold",
+      "newProgrammes": 14,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "IonMystery.us",
+      "name": "ION MYSTERY",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "ION.Mystery.us2",
+      "sourceName": "ION Mystery",
+      "newProgrammes": 24,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "LawAndCrime.us",
+      "name": "LAW AND CRIME",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Law.and.Crime.us2",
+      "sourceName": "Law and Crime",
+      "newProgrammes": 33,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "LRW.us",
+      "name": "LIFETIME REAL WOMEN",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Lifetime.Real.Women.us2",
+      "sourceName": "Lifetime Real Women",
+      "newProgrammes": 27,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:lmn",
+      "name": "LMN",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "LMN.HD.us2",
+      "sourceName": "LMN HD",
+      "newProgrammes": 15,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "us.Local Programming",
+      "name": "LOCAL NOW",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Local.Now.us2",
+      "sourceName": "Local Now",
+      "newProgrammes": 24,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Logo.us",
+      "name": "LOGO",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Logo.us2",
+      "sourceName": "Logo",
+      "newProgrammes": 26,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:pureflix-tv",
+      "name": "PUREFLIX TV",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Pure.Flix.TV.us2",
+      "sourceName": "Pure Flix TV",
+      "newProgrammes": 17,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:racer-network",
+      "name": "RACER NETWORK",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "RACER.Network.HD.us2",
+      "sourceName": "RACER Network HD",
+      "newProgrammes": 31,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:stories-by-amc",
+      "name": "STORIES BY AMC",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Stories.by.AMC.us2",
+      "sourceName": "Stories by AMC",
+      "newProgrammes": 27,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "QVCPlus.us",
+      "name": "QVC 2",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "QVC2.us2",
+      "sourceName": "QVC2",
+      "newProgrammes": 14,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:tastemade-home",
+      "name": "TASTEMADE HOME",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Tastemade.Home.us2",
+      "sourceName": "Tastemade Home",
+      "newProgrammes": 11,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:tastemade-travel",
+      "name": "TASTEMADE TRAVEL",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Tastemade.Travel.us2",
+      "sourceName": "Tastemade Travel",
+      "newProgrammes": 10,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "recipetv-hd",
+      "name": "RECIPE TV",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Recipe.TV.HD.us2",
+      "sourceName": "Recipe TV HD",
+      "newProgrammes": 42,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "RETROplex.us",
+      "name": "RETROPLEX",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "RetroPlex.HD.us2",
+      "sourceName": "RetroPlex HD",
+      "newProgrammes": 20,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:the-repair-shop",
+      "name": "THE REPAIR SHOP",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "The.Repair.Shop.us2",
+      "sourceName": "The Repair Shop",
+      "newProgrammes": 29,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "US| SYFY WEST HD",
+      "name": "SYFY WEST",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Syfy.HD.(Pacific).us2",
+      "sourceName": "Syfy HD (Pacific)",
+      "newProgrammes": 57,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "live:tribeca-festival",
+      "name": "TRIBECA FESTIVAL+",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Tribeca.Festival.+.us2",
+      "sourceName": "Tribeca Festival +",
+      "newProgrammes": 19,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:unimas-west",
+      "name": "UNIMAS WEST",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "UniMas.HD.(Pacific).us2",
+      "sourceName": "UniMas HD (Pacific)",
+      "newProgrammes": 84,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "US-TeenNick - Eastern",
+      "name": "TEEN NICK",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Teen.Nick.us2",
+      "sourceName": "Teen Nick",
+      "newProgrammes": 55,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:universo",
+      "name": "UNIVERSO",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "UNIVERSO.HD.us2",
+      "sourceName": "UNIVERSO HD",
+      "newProgrammes": 24,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "US| TLC WEST",
+      "name": "TLC WEST",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "TLC.HD.(Pacific).us2",
+      "sourceName": "TLC HD (Pacific)",
+      "newProgrammes": 73,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "US| TRUTV WEST HD",
+      "name": "TRUTV WEST",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "truTV.HD.(Pacific).us2",
+      "sourceName": "truTV HD (Pacific)",
+      "newProgrammes": 90,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "US| USA NETWORK WEST HD",
+      "name": "USA NETWORK WEST",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "USA.Network.HD.(Pacific).us2",
+      "sourceName": "USA Network HD (Pacific)",
+      "newProgrammes": 66,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "US| DISNEY XD WEST HD",
+      "name": "DISNEY XD WEST",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Disney.XD.HD.(Pacific).us2",
+      "sourceName": "Disney XD HD (Pacific)",
+      "newProgrammes": 149,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "CatchyComedy.us",
+      "name": "CATCHY COMEDY",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Catchy.Comedy.us2",
+      "sourceName": "Catchy Comedy",
+      "newProgrammes": 45,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "HBO2.us",
+      "name": "HBO 2",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "HBO2.HD.us2",
+      "sourceName": "HBO2 HD",
+      "newProgrammes": 16,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "HBOComedy.us",
+      "name": "HBO COMEDY",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "HBO.Comedy.HD.us2",
+      "sourceName": "HBO Comedy HD",
+      "newProgrammes": 18,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "HBOSignature.us",
+      "name": "HBO SIGNATURE",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "HBO.Signature.HD.us2",
+      "sourceName": "HBO Signature HD",
+      "newProgrammes": 11,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "HBOZone.us",
+      "name": "HBO ZONE",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "HBO.Zone.HD.us2",
+      "sourceName": "HBO Zone HD",
+      "newProgrammes": 13,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "MOVIEplex.us",
+      "name": "MOVIEPLEX",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "MoviePlex.HD.us2",
+      "sourceName": "MoviePlex HD",
+      "newProgrammes": 15,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "ScreenPix.us",
+      "name": "SCREENPIX",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "ScreenPix.us2",
+      "sourceName": "ScreenPix",
+      "newProgrammes": 15,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "ScreenPixAction.us",
+      "name": "SCREENPIX ACTION",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "ScreenPix.Action.us2",
+      "sourceName": "ScreenPix Action",
+      "newProgrammes": 14,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "ScreenPixVoices.us",
+      "name": "SCREENPIX VOICES",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "ScreenPix.Voices.us2",
+      "sourceName": "ScreenPix Voices",
+      "newProgrammes": 15,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "ScreenPixWestern.us",
+      "name": "SCREENPIX WESTERNS",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "ScreenPix.Westerns.us2",
+      "sourceName": "ScreenPix Westerns",
+      "newProgrammes": 19,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Showtime2.us",
+      "name": "SHOWTIME 2",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Showtime.2.HD.us2",
+      "sourceName": "Showtime 2 HD",
+      "newProgrammes": 11,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "TFD.us",
+      "name": "THE FILM DETECTIVE",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "The.Film.Detective.us2",
+      "sourceName": "The Film Detective",
+      "newProgrammes": 23,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:acc-digital-network",
+      "name": "ACC DIGITAL NETWORK",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "ACC.Digital.Network.us2",
+      "sourceName": "ACC Digital Network",
+      "newProgrammes": 9,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "BilliardsTV.kr",
+      "name": "BILLIARD TV",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Billiard.TV.us2",
+      "sourceName": "Billiard TV",
+      "newProgrammes": 15,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "CBSSportsGolazo.us",
+      "name": "CBS Sports Golazo Network",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "CBS.Sports.Golazo.Network.us2",
+      "sourceName": "CBS Sports Golazo Network",
+      "newProgrammes": 22,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:espn8-the-ocho",
+      "name": "ESPN8: THE OCHO",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "ESPN8.The.Ocho.us2",
+      "sourceName": "ESPN8 The Ocho",
+      "newProgrammes": 35,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:fox-sports",
+      "name": "FOX SPORTS",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Fox.Sports.4K.us2",
+      "sourceName": "Fox Sports 4K",
+      "newProgrammes": 9,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "live:marquee-sports-network",
+      "name": "MARQUEE SPORTS NETWORK",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Marquee.Sports.Network.HD.us2",
+      "sourceName": "Marquee Sports Network HD",
+      "newProgrammes": 21,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "us.MSG 2",
+      "name": "MSG 2",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "MSG2.HD.us2",
+      "sourceName": "MSG2 HD",
+      "newProgrammes": 3,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "MadisonSquareGardenPlus.us",
+      "name": "MSG PLUS",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "MSG.Plus.us2",
+      "sourceName": "MSG Plus",
+      "newProgrammes": 25,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:nbc-sports-california-plus",
+      "name": "NBC SPORTS CALIFORNIA PLUS",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "NBC.Sports.California.Plus.us2",
+      "sourceName": "NBC Sports California Plus",
+      "newProgrammes": 24,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:nbc-sports-now",
+      "name": "NBC SPORTS NOW",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "NBC.Sports.Now.us2",
+      "sourceName": "NBC Sports Now",
+      "newProgrammes": 27,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:nbc-sports-uhd-4k",
+      "name": "NBC SPORTS UHD/4K",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "NBC.Sports.4K.us2",
+      "sourceName": "NBC Sports 4K",
+      "newProgrammes": 6,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:sportsgrid",
+      "name": "SPORTSGRID",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "SportsGrid.us2",
+      "sourceName": "SportsGrid",
+      "newProgrammes": 19,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:america-s-test-kitchen",
+      "name": "AMERICA'S TEST KITCHEN",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "America\u2019s.Test.Kitchen.us2",
+      "sourceName": "America\u2019s Test Kitchen",
+      "newProgrammes": 47,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "US| ANIMAL PLANET WEST HD",
+      "name": "ANIMAL PLANET WEST",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Animal.Planet.HD.(Pacific).us2",
+      "sourceName": "Animal Planet HD (Pacific)",
+      "newProgrammes": 77,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "live:cinemax-action",
+      "name": "CINEMAX ACTION",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Cinemax.Action.us2",
+      "sourceName": "Cinemax Action",
+      "newProgrammes": 13,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:cinemax-classics",
+      "name": "CINEMAX CLASSICS",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Cinemax.Classics.us2",
+      "sourceName": "Cinemax Classics",
+      "newProgrammes": 14,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:cinemax-hits",
+      "name": "CINEMAX HITS",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Cinemax.Hits.us2",
+      "sourceName": "Cinemax Hits",
+      "newProgrammes": 13,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "BETjams.us",
+      "name": "BET JAMS",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "BET.Jams.us2",
+      "sourceName": "BET Jams",
+      "newProgrammes": 24,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "BETSoul.us",
+      "name": "BET SOUL",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "BET.Soul.us2",
+      "sourceName": "BET Soul",
+      "newProgrammes": 16,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "BlazeTV.us",
+      "name": "BLAZE TV",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Blaze.TV.us2",
+      "sourceName": "Blaze TV",
+      "newProgrammes": 16,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "BounceTV.us",
+      "name": "BOUNCE TV",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Bounce.TV.us2",
+      "sourceName": "Bounce TV",
+      "newProgrammes": 23,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "US| BRAVO WEST HD",
+      "name": "BRAVO WEST",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Bravo.(Pacific).us2",
+      "sourceName": "Bravo (Pacific)",
+      "newProgrammes": 67,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "live:danger-tv",
+      "name": "DANGER TV",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "DangerTV.us2",
+      "sourceName": "DangerTV",
+      "newProgrammes": 35,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "ChargeTV.us",
+      "name": "CHARGE!",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "CHARGE!.us2",
+      "sourceName": "CHARGE!",
+      "newProgrammes": 30,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Comet.us",
+      "name": "COMET",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Comet.us2",
+      "sourceName": "Comet",
+      "newProgrammes": 27,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:family-movie-classics",
+      "name": "FAMILY MOVIE CLASSICS",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Family.Movie.Classics.us2",
+      "sourceName": "Family Movie Classics",
+      "newProgrammes": 15,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:fox-soul",
+      "name": "FOX SOUL",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "FOX.SOUL.us2",
+      "sourceName": "FOX SOUL",
+      "newProgrammes": 34,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:great-american-romcoms",
+      "name": "GREAT AMERICAN ROMCOMS",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Great.American.Romcoms.us2",
+      "sourceName": "Great American Romcoms",
+      "newProgrammes": 15,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:hbo-latino",
+      "name": "HBO LATINO",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "HBO.Latino.HD.us2",
+      "sourceName": "HBO Latino HD",
+      "newProgrammes": 21,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "US| FREEFORM WEST HD",
+      "name": "FREEFORM WEST",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "Freeform.Pacific.us2",
+      "sourceName": "Freeform Pacific",
+      "newProgrammes": 66,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "US| FX WEST HD",
+      "name": "FX WEST",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "FX.HD.(Pacific).us2",
+      "sourceName": "FX HD (Pacific)",
+      "newProgrammes": 48,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "US| FXX WEST HD",
+      "name": "FXX WEST",
+      "region": "us",
+      "source": "share-us",
+      "sourceId": "FXX.HD.(Pacific).us2",
+      "sourceName": "FXX HD (Pacific)",
+      "newProgrammes": 141,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "NickJunior.uk",
+      "name": "NICK JR",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Nick.Jr..HD.uk",
+      "sourceName": "Nick Jr. HD",
+      "newProgrammes": 202,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "5Select.uk",
+      "name": "5 SELECT",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "5SELECT.uk",
+      "sourceName": "5SELECT",
+      "newProgrammes": 49,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "InvestigationDiscovery.uk",
+      "name": "ID +1",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "ID+1.uk",
+      "sourceName": "ID+1",
+      "newProgrammes": 74,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "NatGeo.uk",
+      "name": "NAT GEO",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Nat.Geo.HD.uk",
+      "sourceName": "Nat Geo HD",
+      "newProgrammes": 52,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "NatGeoWild.uk",
+      "name": "NAT GEO WILD",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Nat.Geo.Wild.uk",
+      "sourceName": "Nat Geo Wild",
+      "newProgrammes": 52,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "SkyCrime.uk",
+      "name": "SKY CRIME",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Sky.Crime.HD.uk",
+      "sourceName": "Sky Crime HD",
+      "newProgrammes": 53,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "SkyDocumentaries.uk",
+      "name": "SKY DOCUMENTARIES",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Sky.Documentaries.HD.uk",
+      "sourceName": "Sky Documentaries HD",
+      "newProgrammes": 34,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "SkyNature.uk",
+      "name": "SKY NATURE",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Sky.Nature.HD.uk",
+      "sourceName": "Sky Nature HD",
+      "newProgrammes": 55,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Boomerang.uk",
+      "name": "BOOMERANG",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Boomerang.HD.uk",
+      "sourceName": "Boomerang HD",
+      "newProgrammes": 64,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "GreatRomance.uk",
+      "name": "GREAT! ROMANCE",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "GREAT!.romance.uk",
+      "sourceName": "GREAT! romance",
+      "newProgrammes": 72,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "LiverpoolFCTV.uk",
+      "name": "LFC TV",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "LFCTV.HD.uk",
+      "sourceName": "LFCTV HD",
+      "newProgrammes": 52,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "MUTV.uk",
+      "name": "MUTV",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "MUTV.HD.uk",
+      "sourceName": "MUTV HD",
+      "newProgrammes": 63,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "TNT.Sports.1.HD.uk",
+      "name": "TNT SPORTS 1",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "TNT.Sports.1.HD.uk",
+      "sourceName": "TNT Sports 1 HD",
+      "newProgrammes": 39,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "TNT.Sports.2.HD.uk",
+      "name": "TNT SPORTS 2",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "TNT.Sports.2.HD.uk",
+      "sourceName": "TNT Sports 2 HD",
+      "newProgrammes": 49,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "TNT.Sports.3.HD.uk",
+      "name": "TNT SPORTS 3",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "TNT.Sports.3.HD.uk",
+      "sourceName": "TNT Sports 3 HD",
+      "newProgrammes": 45,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "TNT.Sports.4.HD.uk",
+      "name": "TNT SPORTS 4",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "TNT.Sports.4.HD.uk",
+      "sourceName": "TNT Sports 4 HD",
+      "newProgrammes": 61,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "TNT.Sports.5.HD.uk",
+      "name": "TNT SPORTS 5",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "TNT.Sports.5.HD.uk",
+      "sourceName": "TNT Sports 5 HD",
+      "newProgrammes": 7,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Nicktoons.uk",
+      "name": "NICKTOONS",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Nicktoons.uk",
+      "sourceName": "Nicktoons",
+      "newProgrammes": 101,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "SkyArts.uk",
+      "name": "SKY ARTS 1",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Sky.Arts.HD.uk",
+      "sourceName": "Sky Arts HD",
+      "newProgrammes": 45,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Sky.Drama.HD.uk",
+      "name": "SKY DRAMA",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Sky.Drama.HD.uk",
+      "sourceName": "Sky Drama HD",
+      "newProgrammes": 22,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:sky-greats",
+      "name": "SKY GREATS",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Sky.Greats.HD.uk",
+      "sourceName": "Sky Greats HD",
+      "newProgrammes": 38,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "live:sky-sci-fi",
+      "name": "SKY SCI-FI",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Sky.Sci-Fi.HD.uk",
+      "sourceName": "Sky Sci-Fi HD",
+      "newProgrammes": 52,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:sky-thriller",
+      "name": "SKY THRILLER",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Sky.Thriller.HD.uk",
+      "sourceName": "Sky Thriller HD",
+      "newProgrammes": 22,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "SkyWitness.uk",
+      "name": "SKY WITNESS",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Sky.Witness.HD.uk",
+      "sourceName": "Sky Witness HD",
+      "newProgrammes": 62,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:skyadventure",
+      "name": "SKYADVENTURE",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Sky.Adventure.uk",
+      "sourceName": "Sky Adventure",
+      "newProgrammes": 30,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "BestDirect.uk",
+      "name": "BEST DIRECT",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Best.Direct.uk",
+      "sourceName": "Best Direct",
+      "newProgrammes": 22,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Blaze.uk",
+      "name": "BLAZE",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "BLAZE.uk",
+      "sourceName": "BLAZE",
+      "newProgrammes": 63,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Challenge.uk",
+      "name": "CHALLENGE",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Challenge.uk",
+      "sourceName": "Challenge",
+      "newProgrammes": 56,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Channel5.uk",
+      "name": "CHANNEL 5",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Channel.5.HD.uk",
+      "sourceName": "Channel 5 HD",
+      "newProgrammes": 137,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "uk.Channel 5+1",
+      "name": "CHANNEL 5 +1",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Channel.5+1.uk",
+      "sourceName": "Channel 5+1",
+      "newProgrammes": 92,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "ComedyCentral.uk",
+      "name": "COMEDY CENTRAL",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "ComedyCentral.uk",
+      "sourceName": "ComedyCentral",
+      "newProgrammes": 77,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:daystar",
+      "name": "DAYSTAR",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "DAYSTAR.HD.uk",
+      "sourceName": "DAYSTAR HD",
+      "newProgrammes": 92,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "GOLD.uk",
+      "name": "GOLD",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "U.and.Gold.uk",
+      "sourceName": "Gold",
+      "newProgrammes": 15,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "GreatTV.uk",
+      "name": "GREAT! TV",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "GREAT!.tv.uk",
+      "sourceName": "GREAT! tv",
+      "newProgrammes": 58,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "HighStreet1.uk",
+      "name": "HIGH STREET TV 1",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "High.Street.TV.1.uk",
+      "sourceName": "High Street TV 1",
+      "newProgrammes": 94,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "HighStreet2.uk",
+      "name": "HIGH STREET TV 2",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "High.Street.TV.2.uk",
+      "sourceName": "High Street TV 2",
+      "newProgrammes": 94,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "HighStreet3.uk",
+      "name": "HIGH STREET TV 3",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "High.Street.TV.3.uk",
+      "sourceName": "High Street TV 3",
+      "newProgrammes": 94,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "HighStreet4.uk",
+      "name": "HIGH STREET TV 4",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "High.Street.TV.4.uk",
+      "sourceName": "High Street TV 4",
+      "newProgrammes": 54,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "UK| ITV 1",
+      "name": "ITV 1 +1",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "ITV1+1.uk",
+      "sourceName": "ITV1+1",
+      "newProgrammes": 48,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "LoveWorld.us",
+      "name": "LOVE WORLD",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "LoveWorld.HD.uk",
+      "sourceName": "LoveWorld HD",
+      "newProgrammes": 61,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "PBSAmerica.uk",
+      "name": "PBS AMERICA",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "PBS.America.uk",
+      "sourceName": "PBS America",
+      "newProgrammes": 37,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "uk.QVC Beauty",
+      "name": "QVC BEAUTY",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "QVC.Beauty.uk",
+      "sourceName": "QVC Beauty",
+      "newProgrammes": 48,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "uk.QVC Extra",
+      "name": "QVC EXTRA",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "QVC.Extra.uk",
+      "sourceName": "QVC Extra",
+      "newProgrammes": 48,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "uk.QVC Style",
+      "name": "QVC STYLE",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "QVC.Style.HD.uk",
+      "sourceName": "QVC Style HD",
+      "newProgrammes": 48,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Really.uk",
+      "name": "REALLY",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Really.uk",
+      "sourceName": "Really",
+      "newProgrammes": 51,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "S4C.uk",
+      "name": "S4C",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "S4C.HD.uk",
+      "sourceName": "S4C HD",
+      "newProgrammes": 128,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "SkyAtlantic.uk",
+      "name": "SKY ATLANTIC",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Sky.Atlantic.HD.uk",
+      "sourceName": "Sky Atlantic HD",
+      "newProgrammes": 45,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "SkyComedy.uk",
+      "name": "SKY COMEDY",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Sky.Comedy.HD.uk",
+      "sourceName": "Sky Comedy HD",
+      "newProgrammes": 80,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "PickTV.uk",
+      "name": "SKY MIX",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Sky.Mix.HD.uk",
+      "sourceName": "Sky Mix HD",
+      "newProgrammes": 69,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "TheJewelryChannel.uk",
+      "name": "TJC",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "TJC.HD.uk",
+      "sourceName": "TJC HD",
+      "newProgrammes": 70,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "TLC.uk",
+      "name": "TLC",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "TLC.HD.uk",
+      "sourceName": "TLC HD",
+      "newProgrammes": 116,
+      "newlyCurrent": true
+    },
+    {
+      "epgId": "TogetherTV.uk",
+      "name": "TOGETHER",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Together.uk",
+      "sourceName": "Together",
+      "newProgrammes": 49,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "TrueCrime.uk",
+      "name": "TRUE CRIME",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "True.Crime.uk",
+      "sourceName": "True Crime",
+      "newProgrammes": 73,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:true-crime-xtra",
+      "name": "TRUE CRIME XTRA",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "True.Crime.Xtra.uk",
+      "sourceName": "True Crime Xtra",
+      "newProgrammes": 85,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "TVWarehouse.uk",
+      "name": "TV WAREHOUSE",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "TV.Warehouse.uk",
+      "sourceName": "TV Warehouse",
+      "newProgrammes": 96,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "U.and.YESTERDAY.uk",
+      "name": "YESTERDAY",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "U.and.YESTERDAY.uk",
+      "sourceName": "U and YESTERDAY",
+      "newProgrammes": 52,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Cartoonito.uk",
+      "name": "CARTOONITO",
+      "region": "uk",
+      "source": "share-uk",
+      "sourceId": "Cartoonito.uk",
+      "sourceName": "Cartoonito",
+      "newProgrammes": 65,
+      "newlyCurrent": false
+    }
+  ]
+}
