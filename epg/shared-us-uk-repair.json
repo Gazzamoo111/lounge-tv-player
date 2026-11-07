@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-07T02:37:23.293105+00:00",
+  "generatedAt": "2026-11-07T14:53:49.024570+00:00",
   "eligible": 811,
   "blockedConflictingIds": [
     "DiscoveryTurbo.uk",
@@ -22,7 +22,7 @@
       "source": "share-us",
       "region": "us",
       "channels": 792,
-      "matched": 217
+      "matched": 216
     },
     {
       "source": "share-uk",
@@ -31,73 +31,503 @@
       "matched": 79
     }
   ],
-  "modifiedTargets": 6,
-  "newlyCurrentTargets": 5,
-  "addedProgrammes": 1231,
-  "preservedProgrammes": 68877,
-  "inputProgrammes": 68877,
-  "prunedExpiredProgrammes": 0,
-  "guideProgrammes": 70108,
+  "modifiedTargets": 49,
+  "newlyCurrentTargets": 0,
+  "addedProgrammes": 3642,
+  "preservedProgrammes": 65621,
+  "inputProgrammes": 66232,
+  "prunedExpiredProgrammes": 611,
+  "guideProgrammes": 69263,
   "repaired": [
     {
-      "epgId": "live:cartoon-network-1",
-      "name": "CARTOON NETWORK +1",
-      "region": "uk",
-      "source": "talk-uk",
-      "sourceId": "I307.50222.schedulesdirect.org",
-      "sourceName": "Cartoon Network +1",
-      "newProgrammes": 207,
-      "newlyCurrent": true
-    },
-    {
-      "epgId": "live:nickelodeon-1",
-      "name": "NICKELODEON +1",
-      "region": "uk",
-      "source": "talk-uk",
-      "sourceId": "I811.97277.schedulesdirect.org",
-      "sourceName": "Nickelodeon +1",
-      "newProgrammes": 317,
-      "newlyCurrent": true
-    },
-    {
-      "epgId": "live:3abn-kids-network",
-      "name": "3ABN KIDS NETWORK",
+      "epgId": "live:jewelry-television",
+      "name": "JEWELRY TELEVISION",
       "region": "us",
-      "source": "share-us",
-      "sourceId": "3ABN.Kids.Network.us2",
-      "sourceName": "3ABN Kids Network",
-      "newProgrammes": 203,
-      "newlyCurrent": true
-    },
-    {
-      "epgId": "MeTV.Toons.us2",
-      "name": "METV TOONS",
-      "region": "us",
-      "source": "share-us",
-      "sourceId": "MeTV.Toons.us2",
-      "sourceName": "MeTV Toons",
-      "newProgrammes": 65,
+      "source": "talk-us",
+      "sourceId": "I313.16604.schedulesdirect.org",
+      "sourceName": "Jewelry Television",
+      "newProgrammes": 43,
       "newlyCurrent": false
     },
     {
-      "epgId": "BABYUS Baby TV US",
-      "name": "BABY TV",
+      "epgId": "GACFamily.us",
+      "name": "GREAT AMERICAN FAMILY",
       "region": "us",
-      "source": "share-us",
-      "sourceId": "Baby.TV.US.us2",
-      "sourceName": "Baby TV US",
-      "newProgrammes": 151,
-      "newlyCurrent": true
+      "source": "talk-us",
+      "sourceId": "I326.16062.schedulesdirect.org",
+      "sourceName": "Great American Family",
+      "newProgrammes": 36,
+      "newlyCurrent": false
     },
     {
-      "epgId": "live:sky-kids",
-      "name": "SKY KIDS",
-      "region": "uk",
-      "source": "share-uk",
-      "sourceId": "Sky.Kids.HD.uk",
-      "sourceName": "Sky Kids HD",
-      "newProgrammes": 288,
-      "newlyCurrent": true
+      "epgId": "live:love-nature",
+      "name": "LOVE NATURE",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I1625.52745.schedulesdirect.org",
+      "sourceName": "Love Nature",
+      "newProgrammes": 59,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "HistoryChannel.us",
+      "name": "HISTORY",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I269.14771.schedulesdirect.org",
+      "sourceName": "History",
+      "newProgrammes": 79,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "IndependentFilmChannel.us",
+      "name": "IFC",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I333.14873.schedulesdirect.org",
+      "sourceName": "IFC",
+      "newProgrammes": 132,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "INSP.us",
+      "name": "INSP",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I364.11066.schedulesdirect.org",
+      "sourceName": "INSP",
+      "newProgrammes": 81,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:oxygen-true-crime",
+      "name": "OXYGEN TRUE CRIME",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I251.21484.schedulesdirect.org",
+      "sourceName": "Oxygen True Crime",
+      "newProgrammes": 70,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "MagnoliaNetwork.us",
+      "name": "MAGNOLIA NETWORK",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I230.18544.schedulesdirect.org",
+      "sourceName": "Magnolia Network",
+      "newProgrammes": 78,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:shop-lc",
+      "name": "SHOP LC",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I226.56032.schedulesdirect.org",
+      "sourceName": "Shop LC",
+      "newProgrammes": 72,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "OutdoorChannel.us",
+      "name": "OUTDOOR CHANNEL",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I606.14776.schedulesdirect.org",
+      "sourceName": "Outdoor Channel",
+      "newProgrammes": 134,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Ovation.us",
+      "name": "OVATION",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I274.15807.schedulesdirect.org",
+      "sourceName": "Ovation",
+      "newProgrammes": 73,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "QVC.us",
+      "name": "QVC",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I275.11069.schedulesdirect.org",
+      "sourceName": "QVC",
+      "newProgrammes": 57,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Syfy.us",
+      "name": "SYFY",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I244.11097.schedulesdirect.org",
+      "sourceName": "Syfy",
+      "newProgrammes": 82,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:tudn",
+      "name": "TUDN",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I464.75176.schedulesdirect.org",
+      "sourceName": "TUDN",
+      "newProgrammes": 71,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "WeatherChannel.us",
+      "name": "THE WEATHER CHANNEL",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I362.11187.schedulesdirect.org",
+      "sourceName": "The Weather Channel",
+      "newProgrammes": 74,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "TNT.us",
+      "name": "TNT",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I245.11164.schedulesdirect.org",
+      "sourceName": "TNT",
+      "newProgrammes": 57,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "truTV.us",
+      "name": "TRUTV",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I246.10153.schedulesdirect.org",
+      "sourceName": "Tru TV",
+      "newProgrammes": 109,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "TVLand.us",
+      "name": "TV LAND",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I106.16123.gracenote.com",
+      "sourceName": "TV Land",
+      "newProgrammes": 122,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "VH1.us",
+      "name": "VH1",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I335.11218.schedulesdirect.org",
+      "sourceName": "VH1",
+      "newProgrammes": 114,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "WeTV.us",
+      "name": "WE TV",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I260.16409.schedulesdirect.org",
+      "sourceName": "WE TV",
+      "newProgrammes": 82,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "DisneyXD.us",
+      "name": "DISNEY XD",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I292.18279.schedulesdirect.org",
+      "sourceName": "Disney XD",
+      "newProgrammes": 143,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "ShowtimeExtreme.us",
+      "name": "SHOWTIME EXTREME",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I549.18086.schedulesdirect.org",
+      "sourceName": "Showtime Extreme",
+      "newProgrammes": 38,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "ShowtimeWomen.us",
+      "name": "SHOWTIME WOMEN",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I1850.25272.gracenote.com",
+      "sourceName": "Showtime Women",
+      "newProgrammes": 40,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Starz.us",
+      "name": "STARZ",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I525.12719.schedulesdirect.org",
+      "sourceName": "Starz",
+      "newProgrammes": 42,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "StarzEncore.us",
+      "name": "STARZ ENCORE",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I535.10178.schedulesdirect.org",
+      "sourceName": "Starz Encore",
+      "newProgrammes": 42,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "TMC The Movie Channel",
+      "name": "THE MOVIE CHANNEL",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I553.11160.schedulesdirect.org",
+      "sourceName": "The Movie Channel",
+      "newProgrammes": 39,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "GolfChannel.us",
+      "name": "GOLF CHANNEL",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I218.14899.schedulesdirect.org",
+      "sourceName": "Golf Channel",
+      "newProgrammes": 46,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "TennisChannel.us",
+      "name": "TENNIS CHANNEL",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I217.33395.schedulesdirect.org",
+      "sourceName": "Tennis Channel",
+      "newProgrammes": 22,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "MLBNetwork.us",
+      "name": "MLB NETWORK",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I213.62079.schedulesdirect.org",
+      "sourceName": "MLB Network",
+      "newProgrammes": 55,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "BigTenNetwork.us",
+      "name": "BIG TEN NETWORK",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I610.56783.schedulesdirect.org",
+      "sourceName": "Big Ten Network",
+      "newProgrammes": 85,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "NHLNetwork.us",
+      "name": "NHL NETWORK",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I215.58570.schedulesdirect.org",
+      "sourceName": "NHL Network",
+      "newProgrammes": 89,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "US-CBS Sports Network USA",
+      "name": "CBS SPORTS NETWORK",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I221.16365.schedulesdirect.org",
+      "sourceName": "CBS Sports Network",
+      "newProgrammes": 51,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "NBATV.us",
+      "name": "NBA TV",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I216.32281.schedulesdirect.org",
+      "sourceName": "NBA TV",
+      "newProgrammes": 96,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "ESPN.us",
+      "name": "ESPN",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I206.10179.schedulesdirect.org",
+      "sourceName": "ESPN",
+      "newProgrammes": 61,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "ESPN2.us",
+      "name": "ESPN 2",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I209.12444.schedulesdirect.org",
+      "sourceName": "ESPN2",
+      "newProgrammes": 53,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "ESPNNews.us",
+      "name": "ESPNEWS",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I207.16485.schedulesdirect.org",
+      "sourceName": "ESPNEWS",
+      "newProgrammes": 85,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:espnu",
+      "name": "ESPNU",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I208.45654.schedulesdirect.org",
+      "sourceName": "ESPNU",
+      "newProgrammes": 42,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Fanduel.us",
+      "name": "FANDUEL TV",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I602.21345.gracenote.com",
+      "sourceName": "Fanduel TV",
+      "newProgrammes": 16,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:fox-soccer-plus",
+      "name": "FOX SOCCER PLUS",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I621.66879.schedulesdirect.org",
+      "sourceName": "Fox Soccer Plus",
+      "newProgrammes": 42,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "SECNetwork.us",
+      "name": "SEC NETWORK",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I611.89535.schedulesdirect.org",
+      "sourceName": "SEC Network",
+      "newProgrammes": 45,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "AntennaTV.us",
+      "name": "ANTENNA TV",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I1185.31044.gracenote.com",
+      "sourceName": "Antenna TV",
+      "newProgrammes": 132,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "BBCAmerica.us",
+      "name": "BBC AMERICA",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I264.18332.schedulesdirect.org",
+      "sourceName": "BBC America",
+      "newProgrammes": 45,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "BET.us",
+      "name": "BET",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I329.10051.schedulesdirect.org",
+      "sourceName": "BET",
+      "newProgrammes": 119,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Bravo.us",
+      "name": "BRAVO",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I237.10057.schedulesdirect.org",
+      "sourceName": "Bravo",
+      "newProgrammes": 70,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "CMT.us",
+      "name": "CMT",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I327.10138.schedulesdirect.org",
+      "sourceName": "CMT",
+      "newProgrammes": 124,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "CookingChannel.us",
+      "name": "COOKING CHANNEL",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I232.30156.schedulesdirect.org",
+      "sourceName": "Cooking Channel",
+      "newProgrammes": 104,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "DestinationAmerica.us",
+      "name": "DESTINATION AMERICA",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I286.16617.schedulesdirect.org",
+      "sourceName": "Destination America",
+      "newProgrammes": 139,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "Freeform.us",
+      "name": "FREEFORM",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I311.10093.schedulesdirect.org",
+      "sourceName": "FREEFORM",
+      "newProgrammes": 80,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:home-shopping-network",
+      "name": "HOME SHOPPING NETWORK",
+      "region": "us",
+      "source": "talk-us",
+      "sourceId": "I240.10269.schedulesdirect.org",
+      "sourceName": "Home Shopping Network",
+      "newProgrammes": 72,
+      "newlyCurrent": false
     }
   ]
 }
