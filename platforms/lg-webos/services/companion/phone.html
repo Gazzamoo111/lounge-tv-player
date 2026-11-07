@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lounge TV sign-in</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #050a14;
+        color: #f1f6ff;
+        font:
+          17px system-ui,
+          sans-serif;
+        padding: 40px 24px;
+      }
+      main {
+        max-width: 420px;
+        margin: 7vh auto;
+      }
+      h1 {
+        font-size: 35px;
+        margin-bottom: 10px;
+      }
+      p {
+        color: #aabbd3;
+        line-height: 1.5;
+      }
+      label {
+        display: block;
+        margin-top: 24px;
+        font-weight: 600;
+      }
+      input,
+      button {
+        font: inherit;
+        width: 100%;
+        border-radius: 14px;
+        padding: 17px;
+        margin-top: 9px;
+      }
+      input {
+        background: #0d1d32;
+        border: 1px solid #2a425e;
+        color: white;
+      }
+      button {
+        border: 0;
+        background: #0985ff;
+        color: white;
+        font-weight: 750;
+        margin-top: 28px;
+      }
+      button:disabled {
+        opacity: 0.6;
+      }
+      #message {
+        min-height: 3em;
+      }
+      small {
+        color: #8fa7c4;
+      }
+      .brand {
+        color: #32d5ff;
+        font-weight: 800;
+        letter-spacing: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="brand">LOUNGE TV</div>
+      <h1>Sign in on your TV</h1>
+      <p>
+        Enter your Lounge TV details here. Your TV will finish signing in
+        automatically.
+      </p>
+      <form id="phone-form">
+        <label for="username">Username</label
+        ><input
+          id="username"
+          name="username"
+          autocomplete="username"
+          autocapitalize="none"
+          spellcheck="false"
+          required
+          maxlength="256"
+        /><label for="password">Password</label
+        ><input
+          id="password"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          required
+          maxlength="512"
+        /><button id="submit" type="submit">Sign in on TV</button>
+      </form>
+      <p id="message" role="status"></p>
+      <small>Keep this phone and your TV on the same Wi-Fi.</small>
+    </main>
+    <script src="/phone.js"></script>
+  </body>
+</html>

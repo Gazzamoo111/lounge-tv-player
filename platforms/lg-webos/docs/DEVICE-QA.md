@@ -66,3 +66,7 @@ User confirmed 0.1.2 played for 15 minutes without the former early stop. Keep t
 ## 0.1.6 art and NZ quality acceptance
 
 Follow [QA-0.1.6.md](QA-0.1.6.md). TVNZ remains open until its actual error code and real picture/audio are verified. Ordinary streaming on 0.1.5 was confirmed smooth by the user.
+
+## 0.1.7 splash and QR acceptance
+
+Follow [QA-0.1.7.md](QA-0.1.7.md). Keep existing login data when installing. The complete IPK includes the phone companion; QR sign-in needs the phone and TV on the same Wi-Fi. TVNZ remains open until physical picture/audio is confirmed.

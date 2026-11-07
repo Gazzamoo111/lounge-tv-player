@@ -1,0 +1,7 @@
+{
+  "name": "nz.loungetv.webos.qa.companion",
+  "version": "0.1.7",
+  "main": "index.js",
+  "description": "Lounge TV local phone sign-in",
+  "license": "GPL-3.0-only"
+}

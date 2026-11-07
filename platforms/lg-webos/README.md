@@ -1,6 +1,6 @@
 # Lounge TV for LG webOS
 
-Isolated LG client, QA package `nz.loungetv.webos.qa`, version **0.1.6**. Full Android feature parity is incomplete. The user confirmed substantially faster startup/navigation in 0.1.1 and 15 minutes of Live playback without the former 2–3 minute stop in 0.1.2. 0.1.3 addresses VOD responsiveness, All-tab focus, EPG row loading/matching, Settings structure and sports discovery. Physical LG acceptance of the new changes remains required.
+Isolated LG client, QA package `nz.loungetv.webos.qa`, version **0.1.7**. Full Android feature parity is incomplete. The user confirmed substantially faster startup/navigation in 0.1.1 and 15 minutes of Live playback without the former 2–3 minute stop in 0.1.2. 0.1.3 addresses VOD responsiveness, All-tab focus, EPG row loading/matching, Settings structure and sports discovery. Physical LG acceptance of the new changes remains required.
 
 Android reference: published **v5.2.3.10**, commit `44388fa8683df20a51ad5166f3ea73d7b08c8051`. Current `main` is older in application features, despite having newer documentation and EPG changes. See [parity matrix](docs/PARITY.md).
 
@@ -10,7 +10,7 @@ With the `.ipk` downloaded to the Mac's Downloads folder and the existing `loung
 
 ```bash
 cd ~/Downloads
-ares-install --device loungetv-lg nz.loungetv.webos.qa_0.1.6_all.ipk
+ares-install --device loungetv-lg nz.loungetv.webos.qa_0.1.7_all.ipk
 ares-launch --device loungetv-lg nz.loungetv.webos.qa
 ```
 
@@ -26,7 +26,7 @@ npm test
 npm run package
 ```
 
-Output: `artifacts/nz.loungetv.webos.qa_0.1.6_all.ipk`.
+Output: `artifacts/nz.loungetv.webos.qa_0.1.7_all.ipk`.
 
 Browser regressions use Chromium and mock the real API contracts with a large catalogue. They do not establish actual provider playback or customer authentication:
 
@@ -37,6 +37,15 @@ npm run test:browser
 ```
 
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` can point to an existing Chromium executable. `npm run serve` serves the built application at port 4173.
+
+## 0.1.7: Logo splash and QR phone login
+
+- Logo splash precedes login or the existing preparation screen. Saved logins still go directly into startup.
+- Scan the QR from a phone on the same Wi-Fi, enter your Lounge TV credentials there, and let the TV finish signing in. A bundled local JavaScript service provides the one-use, ten-minute handoff. Username/password entry with the remote remains available.
+- The package command includes the companion service. Install the complete IPK; packaging only the web `dist` directory omits phone login.
+- Early playback startup exceptions and hung teardown now produce retained visible diagnostics. Error log shows its latest issue and newest records first. TVNZ actual playback remains unverified.
+
+See [QA-0.1.7.md](docs/QA-0.1.7.md) for implementation and device checks.
 
 ## 0.1.6: Complete sport art and NZ HD startup
 

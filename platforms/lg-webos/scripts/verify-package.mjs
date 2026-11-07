@@ -28,6 +28,7 @@ try {
     "epg.worker.js",
     "vendor/shaka-player.compiled.js",
     "vendor/SHAKA-LICENSE.txt",
+    "vendor/QR-LICENSE.txt",
     "largeIcon.png",
     "index.html",
     "app.js",
@@ -51,6 +52,26 @@ try {
     ].map((sport) => `assets/lounge_hero_${sport}.webp`),
   ])
     assert.ok(existsSync(join(base, name)), `Missing ${name}`);
+  const companion = join(
+    work,
+    "usr/palm/services/nz.loungetv.webos.qa.companion",
+  );
+  for (const name of [
+    "package.json",
+    "services.json",
+    "index.js",
+    "core.js",
+    "phone.html",
+    "phone.js",
+  ])
+    assert.ok(existsSync(join(companion, name)), `Missing companion ${name}`);
+  const service = JSON.parse(
+    readFileSync(join(companion, "package.json"), "utf8"),
+  );
+  assert.equal(service.name, meta.id + ".companion");
+  assert.ok(
+    readFileSync(join(base, "index.html"), "utf8").includes("boot-splash"),
+  );
   const js = readFileSync(join(base, "app.js"), "utf8");
   assert.ok(js.includes("https://connect.loungetv.nz"));
   assert.ok(!/line\.bestnz|service_role|SUPABASE_DB_URL|qa-password/.test(js));

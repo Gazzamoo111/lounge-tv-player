@@ -1,0 +1,14 @@
+{
+  "id": "nz.loungetv.webos.qa.companion",
+  "description": "Lounge TV phone sign-in",
+  "services": [
+    {
+      "name": "nz.loungetv.webos.qa.companion",
+      "commands": [
+        { "name": "start", "public": true },
+        { "name": "take", "public": true },
+        { "name": "stop", "public": true }
+      ]
+    }
+  ]
+}

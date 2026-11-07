@@ -46,4 +46,4 @@ Android Movie/Series ViewModels use local `FavoriteDao`, `ProgressDao`, `Profile
 
 ## Acceptance status
 
-**QA 0.1.6 remains an isolated QA build, not a finished exact replica.** User testing confirmed improved responsiveness in 0.1.1 and 15 minutes of Live continuity in 0.1.2. The user confirmed the 0.1.3 improvements and 0.1.4 EPG update. The 0.1.5 remote/guide and TVNZ adaptive path need physical LG acceptance. Screen/row presence and passing mock checks do not establish functional parity. The workspace cannot reach the TV LAN address.
+**QA 0.1.7 remains an isolated QA build, not a finished exact replica.** User testing confirmed improved responsiveness in 0.1.1 and 15 minutes of Live continuity in 0.1.2. The user confirmed the 0.1.3 improvements and 0.1.4 EPG update. The 0.1.5 remote/guide and TVNZ adaptive path need physical LG acceptance. Screen/row presence and passing mock checks do not establish functional parity. The workspace cannot reach the TV LAN address.

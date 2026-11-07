@@ -1,3 +1,4 @@
+import { beginPhoneLogin, qrMarkup } from "./phone-login";
 import { heroAsset } from "./hero-art";
 import { freeviewSource } from "./freeview";
 import { GuideGrid } from "./guide-grid";
@@ -187,9 +188,14 @@ resize();
 window.addEventListener("error", () =>
   toast("Something went wrong. Press Back and try again."),
 );
-window.addEventListener("unhandledrejection", () =>
-  toast("Unable to complete that action. Please try again."),
-);
+window.addEventListener("unhandledrejection", (event) => {
+  player.reportUnhandled(event.reason);
+  persistPlaybackTrace();
+  toast(
+    player.failureSummary ||
+      "Unable to complete that action. Please try again.",
+  );
+});
 function savePosition() {
   if (
     !app.querySelector("main") ||
@@ -679,7 +685,10 @@ async function primeGuide() {
   });
   return { failed, total: ids.length };
 }
+let cancelPhoneLogin: (() => void) | undefined;
 async function startSession(auth: Credentials, force = false) {
+  cancelPhoneLogin?.();
+  cancelPhoneLogin = undefined;
   const revision = ++startupRevision;
   showStartup();
   const generation = ++accountGeneration;
@@ -811,6 +820,8 @@ async function startSession(auth: Credentials, force = false) {
   }
 }
 function login(error = "") {
+  cancelPhoneLogin?.();
+  cancelPhoneLogin = undefined;
   destroyViews();
   routePositions.clear();
   app.replaceChildren();
@@ -856,9 +867,63 @@ function login(error = "") {
       focus.focus("login-submit");
     }
   });
-  screen.append(form, node("p", "login-footer", "LOUNGE TV · LG webOS"));
+  const choices = node("div", "login-choices"),
+    remote = node("section", "login-remote");
+  remote.append(node("h2", "", "Use your remote"), form);
+  const phone = node("section", "login-phone");
+  phone.append(
+    node("h2", "", "Sign in with your phone"),
+    node(
+      "p",
+      "muted",
+      "Scan the QR code on the same Wi-Fi. Enter your details on your phone.",
+    ),
+  );
+  const qr = node("div", "login-qr");
+  qr.id = "login-qr";
+  const status = node(
+    "p",
+    "muted",
+    "Choose phone sign-in to show your QR code.",
+  );
+  status.id = "phone-status";
+  const refresh = action(
+    "login-phone",
+    "Show QR code",
+    () => {
+      cancelPhoneLogin?.();
+      qr.replaceChildren();
+      status.textContent = "Preparing your QR code…";
+      cancelPhoneLogin = beginPhoneLogin({
+        ready: (url) => {
+          if (!screen.isConnected) return;
+          qr.innerHTML = qrMarkup(url);
+          qr.setAttribute("role", "img");
+          qr.setAttribute("aria-label", "Scan to sign in on this LG TV");
+          status.textContent =
+            "Ready to scan. This code expires in 10 minutes.";
+          refresh.querySelector("span")!.textContent = "Refresh QR code";
+        },
+        credentials: (auth) => {
+          if (screen.isConnected) void startSession(auth);
+        },
+        error: (message) => {
+          if (screen.isConnected) {
+            status.textContent = message;
+            qr.replaceChildren();
+          }
+        },
+      });
+    },
+    "primary",
+    "PHONE",
+  );
+  phone.append(qr, status, refresh);
+  choices.append(phone, remote);
+  screen.append(choices, node("p", "login-footer", "LOUNGE TV · LG webOS"));
   app.append(screen);
-  focus.focus("login-user");
+  focus.focus("login-phone");
+  if ((window as any).PalmServiceBridge) refresh.click();
 }
 function profiles() {
   const box = openOverlay("Who’s watching?");
@@ -2658,10 +2723,10 @@ function settingControl(id: string): SettingControl | undefined {
   if (id === "vp_measured_stats" || id === "vp_logging" || id === "diagnostics")
     return open(player.trace.length + " entries", showDiagnostics);
   if (id === "about")
-    return open("0.1.6", () => {
+    return open("0.1.7", () => {
       const b = openOverlay("Lounge TV for LG");
       b.append(
-        node("p", "", "QA 0.1.6 · webOS native + NZ adaptive player"),
+        node("p", "", "QA 0.1.7 · LG phone sign-in"),
         node(
           "p",
           "muted",
@@ -3222,7 +3287,28 @@ player.onTrace = () => {
 };
 function showDiagnostics() {
   const box = openOverlay("Playback diagnostics");
-  const frame = [...player.trace]
+  const history =
+    player.trace.length > 1
+      ? player.trace
+      : state.read<typeof player.trace>("last-playback-trace", player.trace);
+  const lastIssue = [...history]
+    .reverse()
+    .find((t) =>
+      /error|exception|timeout|adaptive-.*http|play-rejected|unhandled-promise/i.test(
+        t.event,
+      ),
+    );
+  box.append(
+    node(
+      "h3",
+      "diagnostic-summary",
+      player.failureSummary ||
+        (lastIssue
+          ? `Latest issue: ${lastIssue.event}${lastIssue.code ? " · Code " + lastIssue.code : ""}`
+          : "No failure code captured. Startup milestones are shown below, newest first."),
+    ),
+  );
+  const frame = [...history]
     .reverse()
     .find((t) => t.event === "first-decoded-frame");
   box.append(
@@ -3241,14 +3327,7 @@ function showDiagnostics() {
     node(
       "pre",
       "diagnostics",
-      JSON.stringify(
-        (player.trace.length
-          ? player.trace
-          : state.read<typeof player.trace>("last-playback-trace", [])
-        ).slice(-50),
-        null,
-        2,
-      ),
+      JSON.stringify(history.slice(-30).reverse(), null, 2),
     ),
     action("diagnostics-close", "Close", closeOverlay),
   );
@@ -4265,6 +4344,7 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 window.addEventListener("pagehide", () => {
+  cancelPhoneLogin?.();
   player.note("pagehide");
   persistPlaybackTrace();
   if (currentPlaying)
@@ -4321,6 +4401,8 @@ setInterval(() => {
 }, 30000);
 async function boot() {
   video.hidden = true;
+  const splash = document.getElementById("boot-splash");
+  if (splash) await new Promise<void>((resolve) => setTimeout(resolve, 650));
   const auth = state.credentials();
   if (!auth) {
     login();

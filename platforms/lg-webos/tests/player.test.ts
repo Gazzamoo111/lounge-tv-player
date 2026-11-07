@@ -524,3 +524,56 @@ test("TVNZ manifest refusal surfaces its safe error immediately instead of loopi
   assert.ok(!p.trace.some((t) => t.event === "reconnect"));
   p.stop();
 });
+
+test("an exception before the first player attempt becomes a retained startup error instead of an unhandled rejection", async () => {
+  const clock = new Clock(),
+    v = new LiveVideo();
+  const original = clock.api.cancelInterval;
+  let thrown = false;
+  clock.api.cancelInterval = (id: any) => {
+    if (!thrown && (p as any).media) {
+      thrown = true;
+      throw new TypeError("private URL https://secret.test");
+    }
+    original(id);
+  };
+  const p = new LgPlayback(v as any, clock.api);
+  await p.load({ ...m, kind: "live" }, "https://provider.test/live/1.ts");
+  assert.equal(p.state, "error");
+  assert.match(p.failureSummary, /Code 9003/);
+  assert.ok(p.trace.some((t) => t.event === "startup-enter"));
+  assert.ok(p.trace.some((t) => t.event === "startup-exception"));
+  assert.ok(!JSON.stringify(p.trace).includes("secret.test"));
+  p.stop();
+});
+test("a stuck adaptive teardown reports a bounded failure and cannot attach a second player", async () => {
+  const clock = new Clock(),
+    v = new LiveVideo();
+  let attaches = 0;
+  const p = new LgPlayback(v as any, clock.api, async () => ({
+    async attach() {
+      attaches++;
+    },
+    async load() {},
+    destroy() {
+      return new Promise<void>(() => {});
+    },
+  }));
+  await p.load({ ...m, kind: "live" }, "https://provider.test/live/1.ts", 0, {
+    url: "https://source.test/live.mpd",
+    manifest: "dash",
+    license: "https://license.test",
+  });
+  const next = p.load(
+    { ...m, id: "2", kind: "live" },
+    "https://provider.test/live/2.ts",
+  );
+  await clock.advance(8001);
+  await next;
+  assert.equal(p.state, "error");
+  assert.match(p.failureSummary, /9010/);
+  assert.ok(p.trace.some((t) => t.event === "teardown-timeout"));
+  assert.equal(attaches, 1);
+  assert.equal(v.src, "");
+  p.stop();
+});

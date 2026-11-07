@@ -1,6 +1,6 @@
 {
   "name": "lounge-tv-webos",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "private": true,
   "type": "module",
   "description": "Isolated LG webOS client of Lounge TV, Android v5.2.3.10 parity work",
@@ -9,7 +9,7 @@
     "build": "tsc --noEmit && node scripts/build.mjs",
     "test": "node --import ./scripts/ts-loader.mjs --test tests/*.test.ts",
     "test:browser": "playwright test",
-    "package": "npm run build && ares-package dist -o artifacts && node scripts/verify-package.mjs",
+    "package": "npm run build && ares-package dist services/companion -o artifacts && node scripts/verify-package.mjs",
     "serve": "python3 -m http.server 4173 --directory dist"
   },
   "devDependencies": {
@@ -19,6 +19,7 @@
     "typescript": "7.0.2"
   },
   "dependencies": {
+    "qrcode-generator": "1.4.4",
     "shaka-player": "4.16.12"
   }
 }

@@ -19,6 +19,9 @@ export interface Trace {
   event: string;
   state: PlayerState;
   code?: number;
+  exception?: string;
+  scriptLine?: number;
+  scriptColumn?: number;
   elapsed?: number;
   attemptElapsed?: number;
   position?: number;
@@ -116,12 +119,42 @@ export class LgPlayback {
     } catch {}
     return 0;
   }
-  private log(event: string, code?: number) {
+  private exceptionInfo(error: unknown) {
+    const name = (error as any)?.name;
+    const exception = [
+      "TypeError",
+      "ReferenceError",
+      "RangeError",
+      "DOMException",
+      "Error",
+    ].includes(name)
+      ? name
+      : "unknown";
+    const match = String((error as any)?.stack || "").match(
+      /app\.js:(\d+):(\d+)/,
+    );
+    return {
+      exception,
+      ...(match
+        ? { scriptLine: Number(match[1]), scriptColumn: Number(match[2]) }
+        : {}),
+    };
+  }
+  private log(
+    event: string,
+    code?: number,
+    diagnostic?: {
+      exception: string;
+      scriptLine?: number;
+      scriptColumn?: number;
+    },
+  ) {
     this.trace.push({
       at: Date.now(),
       event,
       state: this.state,
       code,
+      ...diagnostic,
       elapsed: Math.round(this.clock.now() - this.opened),
       attemptElapsed: Math.round(this.clock.now() - this.attemptOpened),
       position: Math.round(this.position * 10) / 10,
@@ -177,8 +210,56 @@ export class LgPlayback {
     await this.start(this.generation);
   }
   private async start(gen: number) {
+    try {
+      await this.startAttempt(gen);
+    } catch (error) {
+      if (gen !== this.generation || !this.wantsPlayback) return;
+      this.adaptiveProblem =
+        error instanceof AdaptiveFault
+          ? error
+          : new AdaptiveFault(9003, "player");
+      this.log(
+        "startup-exception",
+        Number((error as any)?.code) || 9003,
+        this.exceptionInfo(error),
+      );
+      try {
+        this.detach();
+      } catch {
+        /* Preserve the original failure if cleanup also fails. */
+      }
+      this.lastFailure = "startup-exception";
+      this.set("error");
+    }
+  }
+  private async startAttempt(gen: number) {
     if (gen !== this.generation || !this.wantsPlayback) return;
-    if (this.closing) await this.closing;
+    this.log("startup-enter");
+    if (this.closing) {
+      this.log("teardown-wait");
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      try {
+        await Promise.race([
+          this.closing,
+          new Promise<void>((_, reject) => {
+            timer = this.clock.timeout(
+              () => reject(new AdaptiveFault(9010, "player")),
+              8000,
+            );
+          }),
+        ]);
+      } catch (error) {
+        if (gen === this.generation && this.wantsPlayback) {
+          this.adaptiveProblem = new AdaptiveFault(9010, "player");
+          this.lastFailure = "teardown-timeout";
+          this.log("teardown-timeout", 9010);
+          this.set("error");
+        }
+        return;
+      } finally {
+        this.clock.cancelTimeout(timer);
+      }
+    }
     if (gen !== this.generation || !this.wantsPlayback) return;
     this.detach();
     const attempt = ++this.attempt;
@@ -350,6 +431,22 @@ export class LgPlayback {
         fault.status === 401 ||
         fault.status === 403;
       this.recover(gen, "adaptive-" + fault.phase, !permanent);
+    }
+  }
+  reportUnhandled(error: unknown) {
+    const kind = [
+      "TypeError",
+      "ReferenceError",
+      "RangeError",
+      "DOMException",
+    ].includes((error as any)?.name)
+      ? (error as any).name
+      : "unknown";
+    this.log("unhandled-promise-" + kind, Number((error as any)?.code) || 9003);
+    if (this.media && this.wantsPlayback && !this.attempt) {
+      this.adaptiveProblem = new AdaptiveFault(9003, "player");
+      this.lastFailure = "startup-exception";
+      this.set("error");
     }
   }
   private sample() {

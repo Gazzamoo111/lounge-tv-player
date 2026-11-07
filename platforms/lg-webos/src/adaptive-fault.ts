@@ -48,6 +48,10 @@ export function adaptiveFault(
   return new AdaptiveFault(code, phase);
 }
 export function adaptiveFailureMessage(fault: AdaptiveFault) {
+  if (fault.code === 9003)
+    return "The player could not start. Open Playback details for the startup record. Code 9003.";
+  if (fault.code === 9010)
+    return "The previous player did not close. Restart Lounge TV before trying this channel again. Code 9010.";
   if (fault.code === 9001)
     return "This TV did not expose the required adaptive playback capability. Code 9001.";
   if (fault.code === 9002)

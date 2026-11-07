@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import { test, expect, Page } from "@playwright/test";
 const poster = "https://images.test/poster.jpg";
 const movies = Array.from({ length: 5142 }, (_, i) => ({
@@ -1705,7 +1706,12 @@ test("all twelve discovery sports decode packaged hero artwork and a failed remo
       `assets/lounge_hero_${sports[i][1]}.webp`,
     );
   }
-  await page.locator("#major-hero .hero-image").evaluate(async el => { await (el as HTMLImageElement).decode(); await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))); });
+  await page.locator("#major-hero .hero-image").evaluate(async (el) => {
+    await (el as HTMLImageElement).decode();
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    );
+  });
   await page.screenshot({ path: "test-results/hero-baseball-016.png" });
 });
 
@@ -1770,5 +1776,109 @@ test("TVNZ license refusal reports a readable stage and HTTP code without repeat
   await expect(page.locator("#overlay")).not.toContainText("private.test");
   await expect(page.locator("#overlay")).not.toContainText(
     "PRIVATE LICENSE BODY",
+  );
+});
+
+test("splash precedes simple sign-in and a real phone submission reaches the existing playlist preparation screen", async ({
+  page,
+  context,
+}) => {
+  const { createCompanion } = createRequire(import.meta.url)(
+    "../../services/companion/core.js",
+  );
+  const companion = createCompanion({
+    address: "127.0.0.1",
+    bind: "127.0.0.1",
+  });
+  let qrUrl = "";
+  try {
+    await page.exposeFunction(
+      "__phoneService",
+      async (method: string, payload: any) => {
+        if (method === "start")
+          return new Promise((resolve, reject) =>
+            companion.start((error: any, result: any) => {
+              if (error) reject(error);
+              else {
+                qrUrl = result.url;
+                resolve(result);
+              }
+            }),
+          );
+        if (method === "take") return companion.take(payload.token);
+        return companion.stop(payload.token);
+      },
+    );
+    await page.addInitScript(() => {
+      (window as any).PalmServiceBridge = class {
+        onservicecallback = (raw: string) => {};
+        cancel() {}
+        call(uri: string, payload: string) {
+          (window as any)
+            .__phoneService(uri.split("/").pop(), JSON.parse(payload))
+            .then((result: any) =>
+              this.onservicecallback(JSON.stringify(result)),
+            );
+        }
+      };
+    });
+    await mock(page);
+    await page
+      .context()
+      .route(
+        "https://connect.loungetv.nz/**action=get_vod_streams*",
+        async (r) => {
+          await new Promise((resolve) => setTimeout(resolve, 600));
+          await r.fulfill({ json: movies });
+        },
+      );
+    await page.goto("/");
+    await expect(page.locator("#boot-splash")).toBeVisible();
+    await page.screenshot({ path: "test-results/lg-splash-017.png" });
+    await expect(page.locator("#login-qr svg")).toBeVisible();
+    await expect(page.locator("#phone-status")).toContainText("Ready to scan");
+    await expect(page.locator("#login-user")).toBeVisible();
+    await page.screenshot({ path: "test-results/lg-phone-login-017.png" });
+    const phone = await context.newPage();
+    await phone.setViewportSize({ width: 390, height: 844 });
+    await phone.goto(qrUrl);
+    await phone.locator("#username").fill("qa-user");
+    await phone.locator("#password").fill("qa-password");
+    await phone.locator("#submit").click();
+    await expect(phone.locator("#message")).toContainText("Details sent");
+    await expect(page.locator(".startup")).toBeVisible();
+    await expect(page.locator("#featured-0")).toBeVisible({ timeout: 15000 });
+    await expect(page.locator("#login-user")).toHaveCount(0);
+    await phone.close();
+  } finally {
+    companion.close();
+  }
+});
+
+test("a pre-attempt playback exception is retained and the error log shows its latest issue at the top", async ({
+  page,
+}) => {
+  await syntheticNativeVideo(page);
+  await signIn(page);
+  await section(page, "live");
+  await page.locator("#channel-20000").focus();
+  await page.keyboard.press("Enter");
+  await page.evaluate(() =>
+    window.dispatchEvent(
+      new PromiseRejectionEvent("unhandledrejection", {
+        promise: Promise.resolve(),
+        reason: new ReferenceError("PRIVATE https://secret.test"),
+      }),
+    ),
+  );
+  await page.keyboard.press("Escape");
+  await section(page, "settings");
+  await page.locator("#settings-menu-diagnostics").click();
+  await expect(page.locator(".diagnostic-summary")).toContainText(
+    "unhandled-promise-ReferenceError",
+  );
+  await expect(page.locator("#overlay")).not.toContainText("secret.test");
+  await expect(page.locator("#overlay .diagnostics")).toContainText(
+    "unhandled-promise-ReferenceError",
   );
 });
