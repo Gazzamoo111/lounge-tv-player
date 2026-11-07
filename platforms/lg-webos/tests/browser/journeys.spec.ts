@@ -1893,12 +1893,21 @@ test("splash logo stays centred at a restrained size for six full seconds after 
   await page
     .locator("#boot-splash img")
     .evaluate((img) => (img as HTMLImageElement).decode());
+  const alpha = await page.locator("#boot-splash img").evaluate((element) => {
+    const image = element as HTMLImageElement;
+    const canvas = document.createElement("canvas");
+    canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
+    const context = canvas.getContext("2d")!;
+    context.drawImage(image, 0, 0);
+    return context.getImageData(0, 0, 1, 1).data[3];
+  });
+  expect(alpha).toBe(0);
   const logo = await page.locator("#boot-splash img").boundingBox();
-  expect(logo!.width).toBe(940);
-  expect(logo!.height).toBe(530);
+  expect(logo!.width).toBe(900);
+  expect(logo!.height).toBe(300);
   await page.clock.fastForward(5999);
   await expect(page.locator("#boot-splash")).toBeVisible();
-  await page.screenshot({ path: "test-results/lg-splash-018.png" });
+  await page.screenshot({ path: "test-results/lg-splash-019.png" });
   await page.clock.fastForward(1);
   await expect(page.locator("#login-user")).toBeVisible();
 });

@@ -36,6 +36,7 @@ try {
     "icon.png",
     "assets/jakarta.ttf",
     "assets/nav-mark.png",
+    "assets/splash-logo-transparent.png",
     ...[
       "nba",
       "nfl",

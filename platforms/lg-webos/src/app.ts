@@ -2723,10 +2723,10 @@ function settingControl(id: string): SettingControl | undefined {
   if (id === "vp_measured_stats" || id === "vp_logging" || id === "diagnostics")
     return open(player.trace.length + " entries", showDiagnostics);
   if (id === "about")
-    return open("0.1.8", () => {
+    return open("0.1.9", () => {
       const b = openOverlay("Lounge TV for LG");
       b.append(
-        node("p", "", "QA 0.1.8 · TVNZ license transport"),
+        node("p", "", "QA 0.1.9 · Transparent splash"),
         node(
           "p",
           "muted",

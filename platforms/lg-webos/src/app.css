@@ -2399,23 +2399,23 @@ body[data-motion="false"] * {
   }
 }
 
-/* Keep the original logo centred at half the former full-screen size. */
+/* Transparent brand asset with comfortable TV-safe spacing. */
 .boot-splash .splash-wordmark {
   position: absolute;
   left: 50%;
-  top: 48%;
-  width: 940px;
-  height: 530px;
+  top: 46%;
+  width: 900px;
+  height: 300px;
   transform: translate(-50%, -50%);
   object-fit: contain;
 }
 .boot-splash span {
   position: absolute;
-  top: 73%;
+  top: 64%;
 }
 .boot-splash i {
   position: absolute;
-  top: 79%;
+  top: 70%;
 }
 .login-logo {
   object-fit: cover;
