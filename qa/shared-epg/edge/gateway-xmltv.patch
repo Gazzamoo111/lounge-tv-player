@@ -1,0 +1,11 @@
+--- lounge-core-xtream/index.ts
++++ lounge-core-xtream/index.ts
+@@ -957,7 +957,7 @@
+ async function xmltv(){
+   try{
+     const r=await fetch(LIVE_XMLTV_URL,{headers:{Accept:"application/xml,text/xml,*/*","User-Agent":"LoungeTV-Gateway/1.0"},signal:AbortSignal.timeout(30000)});
+-    return new Response(await r.text(),{status:r.status,headers:{"Content-Type":"application/xml; charset=utf-8","Cache-Control":"public, max-age=120","Access-Control-Allow-Origin":"*"}});
++    return new Response(r.body,{status:r.status,headers:{"Content-Type":"application/xml; charset=utf-8","Cache-Control":"public, max-age=120","Access-Control-Allow-Origin":"*"}});
+   }catch{return new Response("<?xml version=\"1.0\"?><tv></tv>",{status:502,headers:{"Content-Type":"application/xml; charset=utf-8"}});}
+ }
+ 
