@@ -880,7 +880,7 @@ test("TV CPU throttling keeps rapid VOD navigation responsive with a bounded pos
   });
 });
 
-test("Settings mirrors twelve Android groups, search, contextual help, working preferences and Quick pins", async ({
+test("LG Settings shows working controls, search, contextual help and Quick pins", async ({
   page,
 }) => {
   await signIn(page);
@@ -907,9 +907,17 @@ test("Settings mirrors twelve Android groups, search, contextual help, working p
   await page.locator("#settings-search").fill("");
   await expect(page.locator(".settings-group")).toHaveCount(12);
   await page.locator("#settings-group-player").click();
-  await page.locator("#setting-vp_live_engine").focus();
-  await expect(page.locator(".settings-help")).toContainText(
-    "Android ExoPlayer and MPV are not included",
+  await expect(page.locator("#setting-vp_live_engine")).toHaveCount(0);
+  await expect(page.locator("#setting-vp_vod_engine")).toHaveCount(0);
+  await expect(page.locator("#setting-vp_vod_reconnects")).toBeVisible();
+  await page.locator("#settings-back").click();
+  await page.locator("#settings-group-app").click();
+  await page.locator("#setting-check_updates").click();
+  await expect(page.locator("#overlay")).toContainText(
+    "Installed version: 0.1.10",
+  );
+  await expect(page.locator("#overlay")).toContainText(
+    "Automatic app updates are not enabled",
   );
   await page.screenshot({ path: "test-results/lg013-settings-player.png" });
 });
@@ -1359,7 +1367,7 @@ test("Guide refresh after an idle minute preserves focused programme and immedia
   await expect(page.locator("#guide-cell-2-0")).toBeFocused();
 });
 
-test("Hero previews events on directional focus without Enter, hides logos, and stays clear of the clock", async ({
+test("Hero previews on focus, shows team crests, hides individual event logos and clears clock", async ({
   page,
 }) => {
   await mock(page);
@@ -1367,7 +1375,13 @@ test("Hero previews events on directional focus without Enter, hides logos, and 
     r.fulfill({
       json: {
         events: [
-          event,
+          {
+            ...event,
+            competitors: event.competitors.map((t) => ({
+              ...t,
+              crestUrl: "https://images.test/crest-" + t.id + ".png",
+            })),
+          },
           {
             ...event,
             id: "golf-final",
@@ -1392,6 +1406,10 @@ test("Hero previews events on directional focus without Enter, hides logos, and 
   await expect(page.locator("#hero-page-1")).toBeVisible({ timeout: 15000 });
   await page.locator("#hero-page-1").focus();
   await expect(page.locator("#major-hero h2")).toHaveText("Warriors at Heat");
+  await expect(page.locator("#major-hero .team-crest")).toHaveCount(2);
+  await expect(page.locator("#major-hero .hero-teams")).toContainText(
+    "Warriors",
+  );
   await page.keyboard.press("ArrowLeft");
   await expect(page.locator("#hero-page-0")).toBeFocused();
   await expect(page.locator("#major-hero h2")).toHaveText(
@@ -1896,7 +1914,8 @@ test("splash logo stays centred at a restrained size for six full seconds after 
   const alpha = await page.locator("#boot-splash img").evaluate((element) => {
     const image = element as HTMLImageElement;
     const canvas = document.createElement("canvas");
-    canvas.width = image.naturalWidth; canvas.height = image.naturalHeight;
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
     const context = canvas.getContext("2d")!;
     context.drawImage(image, 0, 0);
     return context.getImageData(0, 0, 1, 1).data[3];

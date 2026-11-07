@@ -1,6 +1,6 @@
 {
   "name": "lounge-tv-webos",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "type": "module",
   "description": "Isolated LG webOS client of Lounge TV, Android v5.2.3.10 parity work",

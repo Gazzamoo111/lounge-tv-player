@@ -75,7 +75,9 @@ export class SettingsScreen {
       }
       main.append(menu);
       const grid = node("section", "settings-group-grid");
-      for (const g of catalogue.groups) {
+      for (const g of catalogue.groups.filter(
+        (g) => this.rows(g.id).length > 0,
+      )) {
         const b = button(
           "settings-group-" + g.id,
           "",
@@ -194,13 +196,17 @@ export class SettingsScreen {
             .map((k) => catalogue.rows.find((r) => r.key === k))
             .filter((r): r is (typeof catalogue.rows)[number] => !!r)
         : catalogue.rows.filter((r) => r.group === group);
-    return this.query
+    const matches = this.query
       ? catalogue.rows.filter((r) =>
           (r.title + " " + r.description + " " + r.group)
             .toLowerCase()
             .includes(this.query.toLowerCase()),
         )
       : rows;
+    return matches.filter((r) => {
+      const control = this.host.control(r.key);
+      return !!control && control.supported !== false;
+    });
   }
   long(el: HTMLElement) {
     const key = el.dataset.setting;

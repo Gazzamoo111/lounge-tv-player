@@ -10,67 +10,67 @@
     {
       "id": "profile",
       "title": "Profile",
-      "description": "Viewers, kids mode, PIN locks",
+      "description": "Viewers and profile management",
       "icon": "PERSON"
     },
     {
       "id": "sources",
       "title": "Sources & guide",
-      "description": "Playlists, EPG, reminders, catch-up",
+      "description": "Playlists, EPG and reminders",
       "icon": "LIST"
     },
     {
       "id": "appearance",
       "title": "Appearance",
-      "description": "Theme, accent, glass, text",
+      "description": "Accent, text size and animations",
       "icon": "PALETTE"
     },
     {
       "id": "layout",
       "title": "Layout",
-      "description": "Navigation, panels, Home, menus",
+      "description": "Catalogue layout and startup page",
       "icon": "GRID"
     },
     {
       "id": "content_metadata",
       "title": "Content & metadata",
-      "description": "Categories, TMDB, subtitles",
+      "description": "Categories, artwork and details",
       "icon": "MOVIE"
     },
     {
       "id": "player",
       "title": "Player",
-      "description": "Which player, streaming",
+      "description": "Playback reconnection",
       "icon": "PLAY"
     },
     {
       "id": "picture",
       "title": "Picture",
-      "description": "Decode, HDR, zoom, frame rate",
+      "description": "Picture fit and zoom",
       "icon": "VIDEO"
     },
     {
       "id": "sound",
       "title": "Sound & subtitles",
-      "description": "Volume, surround, languages",
+      "description": "Volume, audio and subtitle languages",
       "icon": "AUDIO"
     },
     {
       "id": "live",
       "title": "Live TV",
-      "description": "Preview, rewind, latency, start-up",
+      "description": "Live preview, channel numbers and tuning",
       "icon": "LIVE_TV"
     },
     {
       "id": "watching",
       "title": "Watching & recording",
-      "description": "Skip, resume, multiview, recording",
+      "description": "Seeking, resume and auto-play",
       "icon": "PLAY"
     },
     {
       "id": "app",
       "title": "App",
-      "description": "Language, updates, network, diagnostics",
+      "description": "Startup, sports, updates and diagnostics",
       "icon": "INFO"
     }
   ],
@@ -127,7 +127,7 @@
       "key": "epg_offset",
       "group": "sources",
       "title": "EPG time offset",
-      "description": "Shift the whole guide when a feed’s times don’t match what’s actually on. A single channel can be shifted on its own from its long-press menu (Live TV or Guide) — that’s the one for East/West versions sharing a guide."
+      "description": "Shift the whole guide when a feed\u2019s times don\u2019t match what\u2019s actually on. A single channel can be shifted on its own from its long-press menu (Live TV or Guide) \u2014 that\u2019s the one for East/West versions sharing a guide."
     },
     {
       "key": "guide_days",
@@ -157,7 +157,7 @@
       "key": "accent",
       "group": "appearance",
       "title": "Accent color",
-      "description": "Tint the interface — presets, palette or hex code"
+      "description": "Tint the interface \u2014 presets, palette or hex code"
     },
     {
       "key": "focus_highlight",
@@ -199,7 +199,7 @@
       "key": "animations",
       "group": "appearance",
       "title": "Animations",
-      "description": "Turn interface motion on or off — Off feels snappier on lower-end TV boxes"
+      "description": "Turn interface motion on or off \u2014 Off feels snappier on lower-end TV boxes"
     },
     {
       "key": "tab_weather",
@@ -300,8 +300,8 @@
     {
       "key": "check_updates",
       "group": "app",
-      "title": "Check for updates",
-      "description": "Get the latest version from GitHub Releases"
+      "title": "App updates",
+      "description": "Installed version and how to update this LG app."
     },
     {
       "key": "update_startup",
@@ -367,13 +367,13 @@
       "key": "vp_reset_live_pins",
       "group": "player",
       "title": "Reset saved live TV player choices",
-      "description": "Switching a channel between ExoPlayer and mpv in the player saves that choice for the channel. Reset makes every channel follow the “Live TV player” setting again. Saved choices for movies and episodes are kept."
+      "description": "Switching a channel between ExoPlayer and mpv in the player saves that choice for the channel. Reset makes every channel follow the \u201cLive TV player\u201d setting again. Saved choices for movies and episodes are kept."
     },
     {
       "key": "vp_vod_engine",
       "group": "player",
       "title": "Movies & Series player",
-      "description": "mpv (recommended) has the widest format support — DTS/TrueHD audio, unusual files. ExoPlayer plays some streams mpv can't on certain TVs, but can't decode DTS/TrueHD audio. The combined options try the other player automatically when the first one fails; the single-player options never do, which saves a few seconds of black screen if the second player never works on your TV."
+      "description": "mpv (recommended) has the widest format support \u2014 DTS/TrueHD audio, unusual files. ExoPlayer plays some streams mpv can't on certain TVs, but can't decode DTS/TrueHD audio. The combined options try the other player automatically when the first one fails; the single-player options never do, which saves a few seconds of black screen if the second player never works on your TV."
     },
     {
       "key": "vp_vod_engine_sources",
@@ -451,19 +451,19 @@
       "key": "vp_afr_resolution",
       "group": "picture",
       "title": "Match resolution",
-      "description": "Films only. When the display mode changes for a film, the TV also switches to its resolution — 1080p for an HD film on a 4K TV — never above the resolution it started on. Off leaves the resolution alone and lets the TV upscale, usually the better picture."
+      "description": "Films only. When the display mode changes for a film, the TV also switches to its resolution \u2014 1080p for an HD film on a 4K TV \u2014 never above the resolution it started on. Off leaves the resolution alone and lets the TV upscale, usually the better picture."
     },
     {
       "key": "vp_vod_buffer",
       "group": "player",
       "title": "Film buffer",
-      "description": "How far ahead films, episodes and catch-up are loaded. Auto uses what suits this device. A longer buffer rides out a bad connection better; this device’s memory still sets the limit, so a high-bitrate film may hold less than chosen."
+      "description": "How far ahead films, episodes and catch-up are loaded. Auto uses what suits this device. A longer buffer rides out a bad connection better; this device\u2019s memory still sets the limit, so a high-bitrate film may hold less than chosen."
     },
     {
       "key": "vp_vod_timeout",
       "group": "player",
       "title": "Network timeout",
-      "description": "How long films, episodes and catch-up wait on a silent server before the connection counts as lost. Auto keeps each player’s own wait: 60 seconds on mpv, 20 on ExoPlayer."
+      "description": "How long films, episodes and catch-up wait on a silent server before the connection counts as lost. Auto keeps each player\u2019s own wait: 60 seconds on mpv, 20 on ExoPlayer."
     },
     {
       "key": "vp_vod_reconnects",
@@ -475,7 +475,7 @@
       "key": "vp_channel_numbers",
       "group": "live",
       "title": "Channel numbers",
-      "description": "Show your provider's channel number beside the name in the Live TV list, the channel-list overlay and the player — and type a number on the remote during full-screen playback to jump straight to that channel (OK tunes at once, Back cancels). Off hides every number and ignores the number keys; nothing is lost, and turning it back on restores them."
+      "description": "Show your provider's channel number beside the name in the Live TV list, the channel-list overlay and the player \u2014 and type a number on the remote during full-screen playback to jump straight to that channel (OK tunes at once, Back cancels). Off hides every number and ignores the number keys; nothing is lost, and turning it back on restores them."
     },
     {
       "key": "vp_live_preview",
@@ -565,13 +565,13 @@
       "key": "vp_multiview",
       "group": "watching",
       "title": "Multiview",
-      "description": "Watch several live channels at once. You choose how many each time, up to this limit — every tile uses one of your provider's connections."
+      "description": "Watch several live channels at once. You choose how many each time, up to this limit \u2014 every tile uses one of your provider's connections."
     },
     {
       "key": "vp_multiview_tiles",
       "group": "watching",
       "title": "Most tiles",
-      "description": "Watch several live channels at once. You choose how many each time, up to this limit — every tile uses one of your provider's connections."
+      "description": "Watch several live channels at once. You choose how many each time, up to this limit \u2014 every tile uses one of your provider's connections."
     },
     {
       "key": "vp_mini",
@@ -631,7 +631,7 @@
       "key": "vp_output_audio_delay",
       "group": "sound",
       "title": "Delay for this output",
-      "description": "Added on top of “Audio sync” and kept separately for each output — HDMI, a soundbar on HDMI ARC, Bluetooth, the built-in speakers, headphones. Set it while listening on the output it is for."
+      "description": "Added on top of \u201cAudio sync\u201d and kept separately for each output \u2014 HDMI, a soundbar on HDMI ARC, Bluetooth, the built-in speakers, headphones. Set it while listening on the output it is for."
     },
     {
       "key": "vp_reset_audio_delay",
@@ -655,7 +655,7 @@
       "key": "vp_sub_style",
       "group": "sound",
       "title": "Subtitle appearance",
-      "description": "Size, text color, on-screen position and background transparency. While off, subtitles keep their stock look — including the styling broadcasters embed in Live TV subtitles."
+      "description": "Size, text color, on-screen position and background transparency. While off, subtitles keep their stock look \u2014 including the styling broadcasters embed in Live TV subtitles."
     },
     {
       "key": "vp_resume",
@@ -667,19 +667,19 @@
       "key": "vp_autoplay",
       "group": "watching",
       "title": "Auto-play next episode",
-      "description": "When an episode ends, automatically start the next one — and roll into the next season. Catch-up plays on to the next programme too."
+      "description": "When an episode ends, automatically start the next one \u2014 and roll into the next season. Catch-up plays on to the next programme too."
     },
     {
       "key": "vp_measured_stats",
       "group": "app",
       "title": "Measured stream stats",
-      "description": "Show live fps, bitrate and dropped frames in the stream-info overlay (measured while the overlay is open, for streams that don't declare these values). Turn off only if a low-end TV stutters — it never affects the actual video, only the diagnostic numbers."
+      "description": "Show live fps, bitrate and dropped frames in the stream-info overlay (measured while the overlay is open, for streams that don't declare these values). Turn off only if a low-end TV stutters \u2014 it never affects the actual video, only the diagnostic numbers."
     },
     {
       "key": "vp_logging",
       "group": "app",
       "title": "Detailed playback logging",
-      "description": "Keep a full trace of what the live engine does — every tune, fallback and reconnect — in Logcat and in the exported report. Leave it off unless you are chasing a problem; it never changes playback, only how much is written down."
+      "description": "Keep a full trace of what the live engine does \u2014 every tune, fallback and reconnect \u2014 in Logcat and in the exported report. Leave it off unless you are chasing a problem; it never changes playback, only how much is written down."
     },
     {
       "key": "profiles_title",
@@ -708,7 +708,7 @@
     {
       "key": "settings_record_watching",
       "group": "watching",
-      "title": "Record what I’m watching",
+      "title": "Record what I\u2019m watching",
       "description": ""
     },
     {

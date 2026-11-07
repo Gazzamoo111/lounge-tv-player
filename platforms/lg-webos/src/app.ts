@@ -1064,6 +1064,37 @@ function renderHero(hero: HTMLElement) {
     hero.append(cover);
   }
   hero.append(node("div", "hero-wash"));
+  const teamSports = new Set([
+    "basketball",
+    "hockey",
+    "ice-hockey",
+    "rugby",
+    "rugby-union",
+    "rugby-league",
+    "soccer",
+    "football",
+    "baseball",
+    "cricket",
+    "nfl",
+    "nba",
+    "nhl",
+  ]);
+  if (
+    teamSports.has(event.sport.toLowerCase()) &&
+    event.competitors.length === 2
+  ) {
+    const teams = node("div", "hero-teams");
+    teams.setAttribute("aria-label", "Teams");
+    event.competitors.forEach((team, index) => {
+      if (index) teams.append(node("span", "versus", "vs"));
+      const club = node("div", "hero-team");
+      if (team.crestUrl)
+        club.append(image(team.crestUrl, "team-crest", team.name + " crest"));
+      club.append(node("b", "", team.shortName || team.name));
+      teams.append(club);
+    });
+    hero.append(teams);
+  }
   const copy = node("div", "hero-copy");
   copy.append(node("div", "eyebrow", "BIG EVENTS. LIVE ON LOUNGE."));
   const tags = node("div", "tags");
@@ -2526,9 +2557,7 @@ const quickDefaults = [
   "vp_live_preview",
   "vp_preview_audio",
   "vp_channel_numbers",
-  "vp_hdr",
   "vp_autoplay",
-  "update_startup",
 ];
 const settingScreen = new SettingsScreen({
   control: settingControl,
@@ -2722,15 +2751,38 @@ function settingControl(id: string): SettingControl | undefined {
     return open(events.length + " fixtures", () => navigate("sports"));
   if (id === "vp_measured_stats" || id === "vp_logging" || id === "diagnostics")
     return open(player.trace.length + " entries", showDiagnostics);
+  if (id === "check_updates")
+    return open(
+      "Manual install",
+      () => {
+        const b = openOverlay("App updates");
+        b.append(
+          node("p", "", "Installed version: 0.1.10"),
+          node(
+            "p",
+            "",
+            "This test app updates by installing the latest Lounge TV LG package from your computer using the existing TV connection. Keep the app installed when updating.",
+          ),
+          node(
+            "p",
+            "muted",
+            "Automatic app updates are not enabled in this build. Playlists and EPG refresh separately in Sources & guide.",
+          ),
+          action("update-close", "Close", closeOverlay),
+        );
+        focus.focus("update-close");
+      },
+      "How to update this LG test app.",
+    );
   if (id === "about")
-    return open("0.1.9", () => {
+    return open("0.1.10", () => {
       const b = openOverlay("Lounge TV for LG");
       b.append(
-        node("p", "", "QA 0.1.9 · Transparent splash"),
+        node("p", "", "QA 0.1.10 · LG settings and team crests"),
         node(
           "p",
           "muted",
-          "Android reference v5.2.3.10. LG feature coverage is shown per setting.",
+          "Built for LG webOS. Settings show the features available on this TV.",
         ),
         action("about-close", "Close", closeOverlay),
       );
