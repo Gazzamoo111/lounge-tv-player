@@ -23,6 +23,8 @@ def source_key(s,region):
  return key(s)
 
 def region(c):
+ m=re.match(r'^(us|uk)(?:-nowtv)?\s*[|:]',c.get('sourceName') or '',re.I)
+ if m:return m[1].lower()
  if c.get('region') in ('us','uk'):return c['region']
  for value in [c.get('epg_id',''),c.get('subcategory','')]:
   m=re.match(r'^(us|uk)(?:[ .|:-]|$)',value or '',re.I)
@@ -30,6 +32,8 @@ def region(c):
  return None
 
 def eligible(c):
+ explicit=re.search(r'\.(us|uk)$',c.get('epg_id') or '',re.I)
+ if explicit and region(c) and explicit[1].lower()!=region(c):return False
  return c['category'] not in ('24/7','Streaming','PPV','New Zealand','Australia') and c['subcategory'] not in ('CINEMANIA TV SHOWS','Sky Store') and region(c) in ('us','uk')
 
 def scoped_name(name,reg,label):
@@ -54,7 +58,12 @@ def short(entries,target,path,now):
 
 def make(manifest,existing,sources,out,now=None):
  now=now or datetime.now(UTC);end=now+timedelta(days=7)
- rows=[r for r in json.loads(Path(manifest).read_text())['rows'] if eligible(r)]
+ manifest_rows=json.loads(Path(manifest).read_text())['rows']
+ blocked=set()
+ for r in manifest_rows:
+  explicit=re.search(r'\.(us|uk)$',r.get('epg_id') or '',re.I)
+  if explicit and region(r) and explicit[1].lower()!=region(r):blocked.add(r['epgId'])
+ rows=[r for r in manifest_rows if eligible(r) and r['epgId'] not in blocked]
  targets=defaultdict(list)
  for c in rows:targets[c['epgId']].append(c)
  root=E.parse(gzip.open(existing,'rb'),E.XMLParser(no_network=True,resolve_entities=False,huge_tree=True)).getroot()
@@ -79,6 +88,9 @@ def make(manifest,existing,sources,out,now=None):
   matched=0
   for target,cs in targets.items():
    if any(region(c)!=reg for c in cs):continue
+   # A shared ID across delay or coast variants must be fixed in catalogue metadata first.
+   variants={(bool(re.search(r'\+\s*1',c['name'])),bool(re.search(r'\b(?:WEST|PACIFIC)\b',c['name'],re.I))) for c in cs}
+   if len(variants)>1:continue
    # Explicit country-qualified identifiers take precedence over name aliases.
    candidates=[target] if target in channels and programmes.get(target) and target.lower().endswith('.'+reg) else sorted(set(cid for c in cs for cid in by_name.get(key(c['name']),[])))
    if not candidates:continue
@@ -118,7 +130,7 @@ def make(manifest,existing,sources,out,now=None):
  for r in repaired:short(baseline[r['epgId']],r['epgId'],out/'short'/(fnv(r['epgId'])+'.json'),now)
  xml=E.tostring(root,encoding='UTF-8',xml_declaration=True);(out/'guide.xml').write_bytes(xml)
  with gzip.open(out/'guide.xml.gz','wb',compresslevel=6)as f:f.write(xml)
- report=dict(generatedAt=now.isoformat(),eligible=len(rows),sources=health,modifiedTargets=len(repaired),newlyCurrentTargets=sum(r['newlyCurrent']for r in repaired),addedProgrammes=added,preservedProgrammes=len(expected),inputProgrammes=len(original),prunedExpiredProgrammes=len(expired),guideProgrammes=len(after),repaired=repaired)
+ report=dict(generatedAt=now.isoformat(),eligible=len(rows),blockedConflictingIds=sorted(blocked),sources=health,modifiedTargets=len(repaired),newlyCurrentTargets=sum(r['newlyCurrent']for r in repaired),addedProgrammes=added,preservedProgrammes=len(expected),inputProgrammes=len(original),prunedExpiredProgrammes=len(expired),guideProgrammes=len(after),repaired=repaired)
  (out/'report.json').write_text(json.dumps(report,indent=2)+'\n');print(json.dumps({k:v for k,v in report.items()if k!='repaired'},indent=2));return report
 
 if __name__=='__main__':

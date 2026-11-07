@@ -7,3 +7,5 @@ The manifest records the customer catalogue at 7 November 2026. Regenerate it fr
 Tests: `python -m unittest test_repair_missing -v` (requires lxml==5.4.0). Actual mapping evidence is written to `epg/shared-us-uk-repair.json` on epg-data. A current schedule proves listings availability, not video content identity on every receiver.
 
 History older than 48 hours is pruned only for targets with a validated replacement source. Other channels and all current/future intervals are preserved.
+
+Original provider country prefixes are included as evidence for channels whose public category omits country. Conflicting declared guide-country IDs are blocked across all rows sharing the identifier. Shared East/West or +1/base identifiers are never automatically populated until their identity is corrected.

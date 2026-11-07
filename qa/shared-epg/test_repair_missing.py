@@ -1,7 +1,7 @@
 import unittest,tempfile,gzip,json
 from pathlib import Path
 from datetime import datetime,timezone
-from repair_missing import make,key,scoped_name
+from repair_missing import make,key,scoped_name,region,eligible
 NOW=datetime(2026,11,7,1,tzinfo=timezone.utc)
 def xml(cid,title='Show',hour=0):return f'<programme channel="{cid}" start="20261107{hour:02d}0000 +0000" stop="20261107{hour+2:02d}0000 +0000"><title>{title}</title></programme>'
 class RepairTests(unittest.TestCase):
@@ -25,5 +25,8 @@ class RepairTests(unittest.TestCase):
  def test_only_expired_managed_history_is_pruned(self):
   expired='<programme channel="Demo.us" start="20261103000000 +0000" stop="20261103020000 +0000"><title>Expired demo</title></programme>'
   r,out,_=self.build(existing=expired);self.assertEqual(r['prunedExpiredProgrammes'],1);self.assertNotIn('Expired demo',out);self.assertIn('NZ untouched',out)
+ def test_provider_country_is_evidence_not_a_guess(self):
+  self.assertEqual(region(dict(sourceName='UK-NOWTV| CARTOON NETWORK',region=None)), 'uk')
+  self.assertFalse(eligible(dict(sourceName='US| DISCOVERY CHANNEL WEST',region='us',name='Discovery Channel West',category='Entertainment',subcategory='US TV',epg_id='DiscoveryTurbo.uk')))
  def test_quality_alias_keeps_delay(self):self.assertNotEqual(key('Sky Sports +'),key('Sky Sports'));self.assertEqual(key('TNT (Pacific)'),key('TNT West'))
 if __name__=='__main__':unittest.main()
