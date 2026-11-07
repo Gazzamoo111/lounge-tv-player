@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-07T14:53:49.024570+00:00",
+  "generatedAt": "2026-11-07T23:38:39.520375+00:00",
   "eligible": 811,
   "blockedConflictingIds": [
     "DiscoveryTurbo.uk",
@@ -34,10 +34,10 @@
   "modifiedTargets": 49,
   "newlyCurrentTargets": 0,
   "addedProgrammes": 3642,
-  "preservedProgrammes": 65621,
-  "inputProgrammes": 66232,
-  "prunedExpiredProgrammes": 611,
-  "guideProgrammes": 69263,
+  "preservedProgrammes": 60252,
+  "inputProgrammes": 61050,
+  "prunedExpiredProgrammes": 798,
+  "guideProgrammes": 63894,
   "repaired": [
     {
       "epgId": "live:jewelry-television",
