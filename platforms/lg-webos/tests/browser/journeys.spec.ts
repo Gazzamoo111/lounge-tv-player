@@ -1,3 +1,5 @@
+import officialCrests from "../../src/team-crests.json" with { type: "json" };
+import rlwcCalendar from "../fixtures/rlwc-calendar.json" with { type: "json" };
 import { createRequire } from "node:module";
 import { test, expect, Page } from "@playwright/test";
 const poster = "https://images.test/poster.jpg";
@@ -914,7 +916,7 @@ test("LG Settings shows working controls, search, contextual help and Quick pins
   await page.locator("#settings-group-app").click();
   await page.locator("#setting-check_updates").click();
   await expect(page.locator("#overlay")).toContainText(
-    "Installed version: 0.1.10",
+    "Installed version: 0.1.11",
   );
   await expect(page.locator("#overlay")).toContainText(
     "Automatic app updates are not enabled",
@@ -1407,6 +1409,7 @@ test("Hero previews on focus, shows team crests, hides individual event logos an
   await page.locator("#hero-page-1").focus();
   await expect(page.locator("#major-hero h2")).toHaveText("Warriors at Heat");
   await expect(page.locator("#major-hero .team-crest")).toHaveCount(2);
+  await expect(page.locator("#major-hero .team-crest").first()).toBeVisible();
   await expect(page.locator("#major-hero .hero-teams")).toContainText(
     "Warriors",
   );
@@ -2103,4 +2106,54 @@ test("real Shaka networking receives the native HTTP 502 as a structured license
     }
   });
   expect(outcome).toEqual({ typed: true, code: 1001, status: 502 });
+});
+
+test("Real calendar fixture with null crest URLs loads both bundled national-team crests", async ({
+  page,
+}) => {
+  await mock(page);
+  const fixture = rlwcCalendar.find((e) => e.title === "New Zealand vs Tonga")!;
+  expect(fixture.competitors.every((team) => team.crestUrl === null)).toBe(
+    true,
+  );
+  await page.route("https://liqocisegeqzbyuqloql.supabase.co/**", (route) =>
+    route.fulfill({
+      json: {
+        events: [{ ...fixture, startUtcMs: Date.now() + 3600000 }],
+        status: "ok",
+      },
+    }),
+  );
+  await page.goto("/");
+  await page.locator("#login-user").fill("qa-user");
+  await page.locator("#login-password").fill("qa-password");
+  await page.locator("#login-submit").click();
+  await expect(page.locator("#major-hero h2")).toHaveText(
+    "New Zealand vs Tonga",
+    { timeout: 15000 },
+  );
+  const logos = page.locator("#major-hero .team-crest");
+  await expect(logos).toHaveCount(2);
+  await expect(logos.nth(0)).toHaveAttribute(
+    "src",
+    "assets/teams/new-zealand.svg",
+  );
+  await expect(logos.nth(1)).toHaveAttribute("src", "assets/teams/tonga.png");
+  for (const logo of await logos.all()) {
+    await expect(logo).toBeVisible();
+    await expect
+      .poll(() =>
+        logo.evaluate((img) => (img as HTMLImageElement).naturalWidth),
+      )
+      .toBeGreaterThan(0);
+  }
+  const decoded = await page.evaluate(async (paths) => {
+    return Promise.all(paths.map(async (path) => {
+      const logo = new Image(); logo.src = path; await logo.decode();
+      return logo.naturalWidth > 0;
+    }));
+  }, Object.values(officialCrests).map((crest) => crest.path));
+  expect(decoded).toHaveLength(15);
+  expect(decoded.every(Boolean)).toBe(true);
+  await page.screenshot({ path: "test-results/hero-real-crests-0111.png" });
 });

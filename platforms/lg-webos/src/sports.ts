@@ -58,7 +58,13 @@ function competitor(c: any) {
         t.name ??
         "",
     ),
-    crestUrl: t.logo ?? t.flag?.href ?? t.headshot?.href,
+    crestUrl:
+      t.crestUrl ||
+      t.logo ||
+      t.logoDark ||
+      t.logos?.[0]?.href ||
+      t.flag?.href ||
+      t.headshot?.href,
     home: c.homeAway === "home",
     score:
       typeof c.score === "object"
@@ -178,6 +184,15 @@ export function mergeFixtures(rows: SportEvent[], now = Date.now()) {
         ...old,
         ...e,
         id: existingId,
+        competitors: e.competitors.map((team) => {
+          const previous = old.competitors.find(
+            (t) =>
+              t.id === team.id ||
+              t.name.toLowerCase().replace(/[^a-z0-9]/g, "") ===
+                team.name.toLowerCase().replace(/[^a-z0-9]/g, ""),
+          );
+          return { ...team, crestUrl: team.crestUrl || previous?.crestUrl };
+        }),
         broadcasts: [
           ...new Map(
             [...old.broadcasts, ...e.broadcasts].map((b) => [b.name, b]),

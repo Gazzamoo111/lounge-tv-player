@@ -1,4 +1,5 @@
 import { beginPhoneLogin, qrMarkup } from "./phone-login";
+import { teamCrest } from "./team-crests";
 import { heroAsset } from "./hero-art";
 import { freeviewSource } from "./freeview";
 import { GuideGrid } from "./guide-grid";
@@ -1088,8 +1089,12 @@ function renderHero(hero: HTMLElement) {
     event.competitors.forEach((team, index) => {
       if (index) teams.append(node("span", "versus", "vs"));
       const club = node("div", "hero-team");
-      if (team.crestUrl)
-        club.append(image(team.crestUrl, "team-crest", team.name + " crest"));
+      const crest = teamCrest(event, team);
+      if (crest) {
+        const logo = image(crest, "team-crest", team.name + " crest");
+        logo.loading = "eager";
+        club.append(logo);
+      }
       club.append(node("b", "", team.shortName || team.name));
       teams.append(club);
     });
@@ -2204,7 +2209,7 @@ function eventCard(e: SportEvent) {
     : e.competitors.slice(0, 2)) {
     const team = node("div", "event-team");
     team.append(
-      image(t.crestUrl ?? "", "crest"),
+      image(teamCrest(e, t), "crest"),
       node("b", "", t.shortName || t.name),
     );
     if (t.score) team.append(node("strong", "score", t.score));
@@ -2757,7 +2762,7 @@ function settingControl(id: string): SettingControl | undefined {
       () => {
         const b = openOverlay("App updates");
         b.append(
-          node("p", "", "Installed version: 0.1.10"),
+          node("p", "", "Installed version: 0.1.11"),
           node(
             "p",
             "",
@@ -2775,10 +2780,10 @@ function settingControl(id: string): SettingControl | undefined {
       "How to update this LG test app.",
     );
   if (id === "about")
-    return open("0.1.10", () => {
+    return open("0.1.11", () => {
       const b = openOverlay("Lounge TV for LG");
       b.append(
-        node("p", "", "QA 0.1.10 · LG settings and team crests"),
+        node("p", "", "QA 0.1.11 · Calendar crest data fix"),
         node(
           "p",
           "muted",

@@ -1,0 +1,92 @@
+{
+  "australia": {
+    "path": "assets/teams/australia.svg",
+    "source": "https://assets.rlwc2026.com/globalassets/rlwc/teams-logo/australia-badge.svg",
+    "officialName": "Australia",
+    "bytes": 10811
+  },
+  "samoa": {
+    "path": "assets/teams/samoa.png",
+    "source": "https://assets.rlwc2026.com/globalassets/rlwc/teams-logo/samoa_mens_and-womens_logo-2.png",
+    "officialName": "Samoa",
+    "bytes": 4590
+  },
+  "new-zealand": {
+    "path": "assets/teams/new-zealand.svg",
+    "source": "https://assets.rlwc2026.com/globalassets/rlwc/teams-logo/newzealand_mens_logo-1.svg",
+    "officialName": "New Zealand",
+    "bytes": 20261
+  },
+  "england": {
+    "path": "assets/teams/england.svg",
+    "source": "https://assets.rlwc2026.com/globalassets/rlwc/teams-logo/england_rlwc_2026.svg",
+    "officialName": "England",
+    "bytes": 73636
+  },
+  "lebanon": {
+    "path": "assets/teams/lebanon.svg",
+    "source": "https://assets.rlwc2026.com/globalassets/rlwc/teams-logo/lebanon_cedars.svg",
+    "officialName": "Lebanon",
+    "bytes": 56012
+  },
+  "tonga": {
+    "path": "assets/teams/tonga.png",
+    "source": "https://assets.rlwc2026.com/globalassets/rlwc/teams-logo/tongaxiii_mens_and_womens-logo.png",
+    "officialName": "Tonga",
+    "bytes": 9300
+  },
+  "fiji": {
+    "path": "assets/teams/fiji.svg",
+    "source": "https://assets.rlwc2026.com/globalassets/rlwc/teams-logo/fiji_mens_logo.svg",
+    "officialName": "Fiji",
+    "bytes": 56429
+  },
+  "papua-new-guinea": {
+    "path": "assets/teams/papua-new-guinea.svg",
+    "source": "https://assets.rlwc2026.com/globalassets/rlwc/teams-logo/kumuls_logo_vector-1-2.svg",
+    "officialName": "Papua New Guinea",
+    "bytes": 9987
+  },
+  "france": {
+    "path": "assets/teams/france.svg",
+    "source": "https://assets.rlwc2026.com/globalassets/rlwc/teams-logo/france.svg",
+    "officialName": "France",
+    "bytes": 5762
+  },
+  "cook-islands": {
+    "path": "assets/teams/cook-islands.svg",
+    "source": "https://assets.rlwc2026.com/globalassets/rlwc/teams-logo/cook-islands.svg",
+    "officialName": "Cook Islands",
+    "bytes": 74073
+  },
+  "australia-women": {
+    "path": "assets/teams/australia-women.svg",
+    "source": "https://assets.rlwc2026.com/globalassets/rlwc/teams-logo/australian-jillaroos-badge.svg",
+    "officialName": "Australian Jillaroos",
+    "bytes": 22057
+  },
+  "new-zealand-women": {
+    "path": "assets/teams/new-zealand-women.png",
+    "source": "https://assets.rlwc2026.com/globalassets/nz_womens_2026.png",
+    "officialName": "500217",
+    "bytes": 6231
+  },
+  "wales": {
+    "path": "assets/teams/wales.svg",
+    "source": "https://assets.rlwc2026.com/globalassets/rlwc/teams-logo/wales-2-badge.svg",
+    "officialName": "Wales Women",
+    "bytes": 31580
+  },
+  "fiji-women": {
+    "path": "assets/teams/fiji-women.png",
+    "source": "https://assets.rlwc2026.com/globalassets/rlwc/teams-logo/fiji_womens_rlwc_2026.png",
+    "officialName": "Fiji Women",
+    "bytes": 10356
+  },
+  "ireland": {
+    "path": "assets/teams/ireland.png",
+    "source": "https://assets.rlwc2026.com/globalassets/rlwc/teams-logo/ireland_rlwc_2026.png",
+    "officialName": "Ireland",
+    "bytes": 7581
+  }
+}

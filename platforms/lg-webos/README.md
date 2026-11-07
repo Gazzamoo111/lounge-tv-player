@@ -1,6 +1,6 @@
 # Lounge TV for LG webOS
 
-Isolated LG client, QA package `nz.loungetv.webos.qa`, version **0.1.10**. Full Android feature parity is incomplete. The user confirmed substantially faster startup/navigation in 0.1.1 and 15 minutes of Live playback without the former 2–3 minute stop in 0.1.2. 0.1.3 addresses VOD responsiveness, All-tab focus, EPG row loading/matching, Settings structure and sports discovery. Physical LG acceptance of the new changes remains required.
+Isolated LG client, QA package `nz.loungetv.webos.qa`, version **0.1.11**. Full Android feature parity is incomplete. The user confirmed substantially faster startup/navigation in 0.1.1 and 15 minutes of Live playback without the former 2–3 minute stop in 0.1.2. 0.1.3 addresses VOD responsiveness, All-tab focus, EPG row loading/matching, Settings structure and sports discovery. Physical LG acceptance of the new changes remains required.
 
 Android reference: published **v5.2.3.10**, commit `44388fa8683df20a51ad5166f3ea73d7b08c8051`. Current `main` is older in application features, despite having newer documentation and EPG changes. See [parity matrix](docs/PARITY.md).
 
@@ -10,7 +10,7 @@ With the `.ipk` downloaded to the Mac's Downloads folder and the existing `loung
 
 ```bash
 cd ~/Downloads
-ares-install --device loungetv-lg nz.loungetv.webos.qa_0.1.10_all.ipk
+ares-install --device loungetv-lg nz.loungetv.webos.qa_0.1.11_all.ipk
 ares-launch --device loungetv-lg nz.loungetv.webos.qa
 ```
 
@@ -26,7 +26,7 @@ npm test
 npm run package
 ```
 
-Output: `artifacts/nz.loungetv.webos.qa_0.1.10_all.ipk`.
+Output: `artifacts/nz.loungetv.webos.qa_0.1.11_all.ipk`.
 
 Browser regressions use Chromium and mock the real API contracts with a large catalogue. They do not establish actual provider playback or customer authentication:
 
@@ -143,3 +143,7 @@ Transparent couch and wordmark on the existing dark splash background, with rest
 ## 0.1.10: LG settings and team crests
 
 LG-only implemented settings, accurate manual-update guidance, team crests restored for two-team hero fixtures. Generic individual-event logos remain hidden. See [QA-0.1.10.md](docs/QA-0.1.10.md).
+
+## 0.1.11: Calendar crest data fix
+
+Live calendar supplied null crest URLs for every RLWC fixture. Bundle official RLWC nation crests, select men/women artwork, preserve discovered crest URLs during fixture merge, and parse ESPN logo arrays. See [QA-0.1.11.md](docs/QA-0.1.11.md).

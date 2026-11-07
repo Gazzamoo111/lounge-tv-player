@@ -504,6 +504,9 @@ main {
   width: 180px;
   height: 180px;
   object-fit: contain;
+  padding: 14px;
+  border-radius: 18px;
+  background: #f4f7fc;
 }
 .hero-team b {
   font-size: 18px;
@@ -2242,9 +2245,6 @@ body[data-motion="false"] * {
 }
 .home-scroll {
   top: 110px;
-}
-.hero-teams {
-  display: none;
 }
 .guide-grid {
   bottom: 28px;

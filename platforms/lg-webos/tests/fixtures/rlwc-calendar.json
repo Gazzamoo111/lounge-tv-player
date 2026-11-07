@@ -1,0 +1,218 @@
+[
+  {
+    "id": "rlwc:rugby-league/rlwc#women-sf-nz-samoa",
+    "source": "rlwc",
+    "externalId": "women-sf-nz-samoa",
+    "sport": "rugby-league",
+    "leagueId": "rugby-league/rlwc",
+    "leagueName": "Rugby League World Cup",
+    "feedId": "rugby-league/rlwc",
+    "leagueSlug": "rlwc",
+    "title": "New Zealand vs Samoa",
+    "subtitle": "Women's World Cup semi-final",
+    "startUtcMs": 1794033900000,
+    "state": "scheduled",
+    "statusText": "Upcoming",
+    "venue": "McDonald Jones Stadium, Newcastle",
+    "broadcasts": [
+      {
+        "name": "Sky Sport 2",
+        "market": "NZ"
+      },
+      {
+        "name": "ThreeNow",
+        "market": "NZ"
+      },
+      {
+        "name": "Seven",
+        "market": "AU"
+      },
+      {
+        "name": "7plus",
+        "market": "AU"
+      }
+    ],
+    "competitors": [
+      {
+        "id": "rlwc-New Zealand",
+        "name": "New Zealand",
+        "shortName": "New Zealand",
+        "abbreviation": "",
+        "crestUrl": null,
+        "home": true,
+        "score": null
+      },
+      {
+        "id": "rlwc-Samoa",
+        "name": "Samoa",
+        "shortName": "Samoa",
+        "abbreviation": "",
+        "crestUrl": null,
+        "home": false,
+        "score": null
+      }
+    ],
+    "sourceUpdatedAtMs": 1794014178445,
+    "lastSuccessfulUpdateMs": 1794014178445
+  },
+  {
+    "id": "rlwc:rugby-league/rlwc#men-sf-nz-tonga",
+    "source": "rlwc",
+    "externalId": "men-sf-nz-tonga",
+    "sport": "rugby-league",
+    "leagueId": "rugby-league/rlwc",
+    "leagueName": "Rugby League World Cup",
+    "feedId": "rugby-league/rlwc",
+    "leagueSlug": "rlwc",
+    "title": "New Zealand vs Tonga",
+    "subtitle": "Men's World Cup semi-final",
+    "startUtcMs": 1794042300000,
+    "state": "scheduled",
+    "statusText": "Upcoming",
+    "venue": "McDonald Jones Stadium, Newcastle",
+    "broadcasts": [
+      {
+        "name": "Sky Sport 2",
+        "market": "NZ"
+      },
+      {
+        "name": "ThreeNow",
+        "market": "NZ"
+      },
+      {
+        "name": "Seven",
+        "market": "AU"
+      },
+      {
+        "name": "7plus",
+        "market": "AU"
+      }
+    ],
+    "competitors": [
+      {
+        "id": "rlwc-New Zealand",
+        "name": "New Zealand",
+        "shortName": "New Zealand",
+        "abbreviation": "",
+        "crestUrl": null,
+        "home": true,
+        "score": null
+      },
+      {
+        "id": "rlwc-Tonga",
+        "name": "Tonga",
+        "shortName": "Tonga",
+        "abbreviation": "",
+        "crestUrl": null,
+        "home": false,
+        "score": null
+      }
+    ],
+    "sourceUpdatedAtMs": 1794014178445,
+    "lastSuccessfulUpdateMs": 1794014178445
+  },
+  {
+    "id": "rlwc:rugby-league/rlwc#women-sf-aus-fiji",
+    "source": "rlwc",
+    "externalId": "women-sf-aus-fiji",
+    "sport": "rugby-league",
+    "leagueId": "rugby-league/rlwc",
+    "leagueName": "Rugby League World Cup",
+    "feedId": "rugby-league/rlwc",
+    "leagueSlug": "rlwc",
+    "title": "Australia vs Fiji",
+    "subtitle": "Women's World Cup semi-final",
+    "startUtcMs": 1794120300000,
+    "state": "scheduled",
+    "statusText": "Upcoming",
+    "venue": "Allianz Stadium, Sydney",
+    "broadcasts": [
+      {
+        "name": "Sky Sport 1",
+        "market": "NZ"
+      },
+      {
+        "name": "Seven",
+        "market": "AU"
+      },
+      {
+        "name": "7plus",
+        "market": "AU"
+      }
+    ],
+    "competitors": [
+      {
+        "id": "rlwc-Australia",
+        "name": "Australia",
+        "shortName": "Australia",
+        "abbreviation": "",
+        "crestUrl": null,
+        "home": true,
+        "score": null
+      },
+      {
+        "id": "rlwc-Fiji",
+        "name": "Fiji",
+        "shortName": "Fiji",
+        "abbreviation": "",
+        "crestUrl": null,
+        "home": false,
+        "score": null
+      }
+    ],
+    "sourceUpdatedAtMs": 1794014178445,
+    "lastSuccessfulUpdateMs": 1794014178445
+  },
+  {
+    "id": "rlwc:rugby-league/rlwc#men-sf-aus-samoa",
+    "source": "rlwc",
+    "externalId": "men-sf-aus-samoa",
+    "sport": "rugby-league",
+    "leagueId": "rugby-league/rlwc",
+    "leagueName": "Rugby League World Cup",
+    "feedId": "rugby-league/rlwc",
+    "leagueSlug": "rlwc",
+    "title": "Australia vs Samoa",
+    "subtitle": "Men's World Cup semi-final",
+    "startUtcMs": 1794128700000,
+    "state": "scheduled",
+    "statusText": "Upcoming",
+    "venue": "Allianz Stadium, Sydney",
+    "broadcasts": [
+      {
+        "name": "Sky Sport 1",
+        "market": "NZ"
+      },
+      {
+        "name": "Seven",
+        "market": "AU"
+      },
+      {
+        "name": "7plus",
+        "market": "AU"
+      }
+    ],
+    "competitors": [
+      {
+        "id": "rlwc-Australia",
+        "name": "Australia",
+        "shortName": "Australia",
+        "abbreviation": "",
+        "crestUrl": null,
+        "home": true,
+        "score": null
+      },
+      {
+        "id": "rlwc-Samoa",
+        "name": "Samoa",
+        "shortName": "Samoa",
+        "abbreviation": "",
+        "crestUrl": null,
+        "home": false,
+        "score": null
+      }
+    ],
+    "sourceUpdatedAtMs": 1794014178445,
+    "lastSuccessfulUpdateMs": 1794014178445
+  }
+]

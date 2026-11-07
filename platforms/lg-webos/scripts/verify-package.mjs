@@ -37,6 +37,14 @@ try {
     "assets/jakarta.ttf",
     "assets/nav-mark.png",
     "assets/splash-logo-transparent.png",
+    ...Object.values(
+      JSON.parse(
+        readFileSync(
+          new URL("../src/team-crests.json", import.meta.url),
+          "utf8",
+        ),
+      ),
+    ).map((team) => team.path),
     ...[
       "nba",
       "nfl",
