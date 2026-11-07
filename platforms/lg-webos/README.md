@@ -1,6 +1,6 @@
 # Lounge TV for LG webOS
 
-Isolated LG client, QA package `nz.loungetv.webos.qa`, version **0.1.7**. Full Android feature parity is incomplete. The user confirmed substantially faster startup/navigation in 0.1.1 and 15 minutes of Live playback without the former 2–3 minute stop in 0.1.2. 0.1.3 addresses VOD responsiveness, All-tab focus, EPG row loading/matching, Settings structure and sports discovery. Physical LG acceptance of the new changes remains required.
+Isolated LG client, QA package `nz.loungetv.webos.qa`, version **0.1.8**. Full Android feature parity is incomplete. The user confirmed substantially faster startup/navigation in 0.1.1 and 15 minutes of Live playback without the former 2–3 minute stop in 0.1.2. 0.1.3 addresses VOD responsiveness, All-tab focus, EPG row loading/matching, Settings structure and sports discovery. Physical LG acceptance of the new changes remains required.
 
 Android reference: published **v5.2.3.10**, commit `44388fa8683df20a51ad5166f3ea73d7b08c8051`. Current `main` is older in application features, despite having newer documentation and EPG changes. See [parity matrix](docs/PARITY.md).
 
@@ -10,7 +10,7 @@ With the `.ipk` downloaded to the Mac's Downloads folder and the existing `loung
 
 ```bash
 cd ~/Downloads
-ares-install --device loungetv-lg nz.loungetv.webos.qa_0.1.7_all.ipk
+ares-install --device loungetv-lg nz.loungetv.webos.qa_0.1.8_all.ipk
 ares-launch --device loungetv-lg nz.loungetv.webos.qa
 ```
 
@@ -26,7 +26,7 @@ npm test
 npm run package
 ```
 
-Output: `artifacts/nz.loungetv.webos.qa_0.1.7_all.ipk`.
+Output: `artifacts/nz.loungetv.webos.qa_0.1.8_all.ipk`.
 
 Browser regressions use Chromium and mock the real API contracts with a large catalogue. They do not establish actual provider playback or customer authentication:
 
@@ -37,6 +37,14 @@ npm run test:browser
 ```
 
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` can point to an existing Chromium executable. `npm run serve` serves the built application at port 4173.
+
+## 0.1.8: Smaller six-second splash and TVNZ licenses
+
+- Centres the splash artwork at about half its former width and holds it for six seconds after decoding.
+- Only TVNZ 1/2 use an app-restricted native license transport, preserving normal CDM request bytes, binary headers and validated redirects. Other streams retain their current path. Actual license approval and TVNZ picture/audio still need LG confirmation.
+- Preserves the QR login and existing playlist/EPG preparation screen.
+
+See [QA-0.1.8.md](docs/QA-0.1.8.md) for evidence and limits.
 
 ## 0.1.7: Logo splash and QR phone login
 

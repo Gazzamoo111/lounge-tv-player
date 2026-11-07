@@ -61,6 +61,7 @@ try {
     "services.json",
     "index.js",
     "core.js",
+    "license.js",
     "phone.html",
     "phone.js",
   ])

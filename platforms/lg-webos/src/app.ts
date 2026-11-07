@@ -2723,10 +2723,10 @@ function settingControl(id: string): SettingControl | undefined {
   if (id === "vp_measured_stats" || id === "vp_logging" || id === "diagnostics")
     return open(player.trace.length + " entries", showDiagnostics);
   if (id === "about")
-    return open("0.1.7", () => {
+    return open("0.1.8", () => {
       const b = openOverlay("Lounge TV for LG");
       b.append(
-        node("p", "", "QA 0.1.7 · LG phone sign-in"),
+        node("p", "", "QA 0.1.8 · TVNZ license transport"),
         node(
           "p",
           "muted",
@@ -4402,7 +4402,11 @@ setInterval(() => {
 async function boot() {
   video.hidden = true;
   const splash = document.getElementById("boot-splash");
-  if (splash) await new Promise<void>((resolve) => setTimeout(resolve, 650));
+  if (splash) {
+    const logo = splash.querySelector<HTMLImageElement>("img");
+    if (logo?.decode) await logo.decode().catch(() => {});
+    await new Promise<void>((resolve) => setTimeout(resolve, 6000));
+  }
   const auth = state.credentials();
   if (!auth) {
     login();

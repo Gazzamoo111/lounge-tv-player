@@ -70,3 +70,7 @@ Follow [QA-0.1.6.md](QA-0.1.6.md). TVNZ remains open until its actual error code
 ## 0.1.7 splash and QR acceptance
 
 Follow [QA-0.1.7.md](QA-0.1.7.md). Keep existing login data when installing. The complete IPK includes the phone companion; QR sign-in needs the phone and TV on the same Wi-Fi. TVNZ remains open until physical picture/audio is confirmed.
+
+## 0.1.8 splash and TVNZ acceptance
+
+Follow [QA-0.1.8.md](QA-0.1.8.md). Device evidence identifies TVNZ 6007 / HTTP 502. This update changes only that license transport and splash sizing/duration; actual TVNZ approval remains unverified.

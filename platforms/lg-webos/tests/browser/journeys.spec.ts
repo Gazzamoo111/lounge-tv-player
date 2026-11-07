@@ -393,7 +393,7 @@ test("startup holds Home until all catalogue libraries and full XMLTV are prepar
       freshCatalogueCalls++;
   });
   await page.reload();
-  await expect(page.locator("#nav-home")).toBeVisible();
+  await expect(page.locator("#nav-home")).toBeVisible({ timeout: 15000 });
   expect(catalogueCalls).toBe(1);
   expect(freshCatalogueCalls).toBe(0);
   expect(xmlCalls).toBe(1);
@@ -1835,7 +1835,7 @@ test("splash precedes simple sign-in and a real phone submission reaches the exi
     await page.goto("/");
     await expect(page.locator("#boot-splash")).toBeVisible();
     await page.screenshot({ path: "test-results/lg-splash-017.png" });
-    await expect(page.locator("#login-qr svg")).toBeVisible();
+    await expect(page.locator("#login-qr svg")).toBeVisible({ timeout: 12000 });
     await expect(page.locator("#phone-status")).toContainText("Ready to scan");
     await expect(page.locator("#login-user")).toBeVisible();
     await page.screenshot({ path: "test-results/lg-phone-login-017.png" });
@@ -1881,4 +1881,198 @@ test("a pre-attempt playback exception is retained and the error log shows its l
   await expect(page.locator("#overlay .diagnostics")).toContainText(
     "unhandled-promise-ReferenceError",
   );
+});
+
+test("splash logo stays centred at a restrained size for six full seconds after decoding", async ({
+  page,
+}) => {
+  await mock(page);
+  await page.clock.install();
+  await page.clock.pauseAt(new Date());
+  await page.goto("/");
+  await page
+    .locator("#boot-splash img")
+    .evaluate((img) => (img as HTMLImageElement).decode());
+  const logo = await page.locator("#boot-splash img").boundingBox();
+  expect(logo!.width).toBe(940);
+  expect(logo!.height).toBe(530);
+  await page.clock.fastForward(5999);
+  await expect(page.locator("#boot-splash")).toBeVisible();
+  await page.screenshot({ path: "test-results/lg-splash-018.png" });
+  await page.clock.fastForward(1);
+  await expect(page.locator("#login-user")).toBeVisible();
+});
+
+test("TVNZ uses the native license transport with an unchanged binary challenge and opaque response", async ({
+  page,
+}) => {
+  await syntheticNativeVideo(page);
+  await page.addInitScript(() => {
+    (window as any).__licenseRequests = [];
+    (window as any).__licenseResponse = [];
+    (window as any).PalmServiceBridge = class {
+      onservicecallback = (raw: string) => {};
+      cancel() {}
+      call(uri: string, raw: string) {
+        const payload = JSON.parse(raw);
+        if (!uri.endsWith("/license"))
+          return this.onservicecallback(
+            JSON.stringify({
+              returnValue: false,
+              errorText: "Test phone service unavailable",
+            }),
+          );
+        (window as any).__licenseRequests.push(payload);
+        this.onservicecallback(
+          JSON.stringify({
+            returnValue: true,
+            data: btoa(String.fromCharCode(9, 8, 7)),
+            httpStatus: 200,
+          }),
+        );
+      }
+    };
+    class Operation {
+      promise: any;
+      abort: any;
+      constructor(promise: any, abort: any) {
+        this.promise = promise;
+        this.abort = abort;
+      }
+      static failed(error: any) {
+        return new Operation(Promise.reject(error), () => Promise.resolve());
+      }
+    }
+    class Player {
+      static isBrowserSupported() {
+        return true;
+      }
+      addEventListener() {}
+      async attach() {}
+      configure(value: any) {
+        (window as any).__licenseUri = value.drm.servers["com.widevine.alpha"];
+      }
+      async load() {
+        const response = await (window as any).__licensePlugin(
+          (window as any).__licenseUri,
+          { body: new Uint8Array([1, 2, 3, 4]).buffer },
+        ).promise;
+        (window as any).__licenseResponse = Array.from(
+          new Uint8Array(response.data),
+        );
+      }
+      async destroy() {}
+    }
+    (window as any).shaka = {
+      Player,
+      polyfill: { installAll() {} },
+      net: {
+        NetworkingEngine: {
+          registerScheme(_: string, fn: any) {
+            (window as any).__licensePlugin = fn;
+          },
+        },
+      },
+      util: { AbortableOperation: Operation },
+    };
+  });
+  await mock(page);
+  await page
+    .context()
+    .route("https://connect.loungetv.nz/**action=get_live_streams*", (r) =>
+      r.fulfill({
+        json: [{ ...live[0], name: "TVNZ 1", epg_channel_id: "mjh-tvnz-1" }],
+      }),
+    );
+  await page.goto("/");
+  await page.locator("#login-user").fill("qa-user");
+  await page.locator("#login-password").fill("qa-password");
+  await page.locator("#login-submit").click();
+  await expect(page.locator("#featured-0")).toBeVisible({ timeout: 15000 });
+  await section(page, "live");
+  await page.locator("#channel-20000").focus();
+  await page.keyboard.press("Enter");
+  await expect
+    .poll(() => page.evaluate(() => (window as any).__licenseResponse))
+    .toEqual([9, 8, 7]);
+  expect(await page.evaluate(() => (window as any).__licenseUri)).toBe(
+    "loungetv-license:tvnz-1",
+  );
+  const sent = await page.evaluate(() => (window as any).__licenseRequests[0]);
+  expect(sent.channel).toBe("tvnz-1");
+  expect(Buffer.from(sent.challenge, "base64")).toEqual(
+    Buffer.from([1, 2, 3, 4]),
+  );
+});
+
+test("real Shaka networking receives the native HTTP 502 as a structured license-network failure", async ({
+  page,
+}) => {
+  const { build } = await import("esbuild");
+  const bundle = await build({
+    entryPoints: ["src/tvnz-license.ts"],
+    bundle: true,
+    write: false,
+    format: "iife",
+    globalName: "LoungeLicenseTransport",
+    target: "chrome87",
+  });
+  await page.addInitScript({
+    content:
+      bundle.outputFiles[0].text +
+      "\nwindow.LoungeLicenseTransport = LoungeLicenseTransport;",
+  });
+  await page.addInitScript(() => {
+    (window as any).PalmServiceBridge = class {
+      onservicecallback = (raw: string) => {};
+      cancel() {}
+      call() {
+        this.onservicecallback(
+          JSON.stringify({
+            returnValue: false,
+            errorCode: 6007,
+            httpStatus: 502,
+            errorText: "License server refused the request",
+          }),
+        );
+      }
+    };
+  });
+  await page.goto("/");
+  await page.addScriptTag({ url: "/vendor/shaka-player.compiled.js" });
+  const outcome = await page.evaluate(async () => {
+    const shaka = (window as any).shaka;
+    (window as any).LoungeLicenseTransport.installTvLicenseTransport(shaka);
+    const network = new shaka.net.NetworkingEngine();
+    network.configure({
+      forceHTTP: false,
+      forceHTTPS: false,
+      minBytesForProgressEvents: 16000,
+    });
+    const request = shaka.net.NetworkingEngine.makeRequest(
+      ["loungetv-license:tvnz-1"],
+      {
+        ...shaka.net.NetworkingEngine.defaultRetryParameters(),
+        maxAttempts: 1,
+      },
+    );
+    request.method = "POST";
+    request.body = new Uint8Array([1, 2, 3, 4]).buffer;
+    try {
+      await network.request(
+        shaka.net.NetworkingEngine.RequestType.LICENSE,
+        request,
+      ).promise;
+      return { unexpected: true };
+    } catch (error: any) {
+      return {
+        typed: error instanceof shaka.util.Error,
+        code: error.code,
+        status: error.data?.[1],
+      };
+    } finally {
+      await network.destroy();
+    }
+  });
+  expect(outcome).toEqual({ typed: true, code: 1001, status: 502 });
 });

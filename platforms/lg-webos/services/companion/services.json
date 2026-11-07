@@ -5,9 +5,22 @@
     {
       "name": "nz.loungetv.webos.qa.companion",
       "commands": [
-        { "name": "start", "public": true },
-        { "name": "take", "public": true },
-        { "name": "stop", "public": true }
+        {
+          "name": "start",
+          "public": true
+        },
+        {
+          "name": "take",
+          "public": true
+        },
+        {
+          "name": "stop",
+          "public": true
+        },
+        {
+          "name": "license",
+          "public": true
+        }
       ]
     }
   ]

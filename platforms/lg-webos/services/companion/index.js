@@ -29,3 +29,15 @@ service.register("stop", function (message) {
     return message.respond({ returnValue: false, errorText: "Not authorised" });
   message.respond(companion.stop(message.payload.token));
 });
+// Normal Widevine challenges and responses remain opaque; only this TV app may request transport.
+service.register("license", function (message) {
+  if (!permitted(message))
+    return message.respond({
+      returnValue: false,
+      errorCode: 9030,
+      errorText: "Not authorised",
+    });
+  require("./license").requestLicense(message.payload, function (result) {
+    message.respond(result);
+  });
+});

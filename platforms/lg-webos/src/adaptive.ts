@@ -1,3 +1,4 @@
+import { installTvLicenseTransport } from "./tvnz-license";
 import { AdaptiveFault, adaptiveFault } from "./adaptive-fault";
 export interface AdaptiveSession {
   attach(video: HTMLVideoElement): Promise<void>;
@@ -41,14 +42,23 @@ export async function createAdaptiveSession(
   return {
     attach: (video) => player.attach(video),
     async load(url, license, manifest = license ? "dash" : "hls") {
+      const channel = license?.match(
+        /^https:\/\/c\.mjh\.nz\/(tvnz-[12])-wv$/,
+      )?.[1];
+      const nativeLicense = channel && installTvLicenseTransport(shaka);
       player.configure({
         drm: license
           ? {
-              servers: { "com.widevine.alpha": license },
+              servers: {
+                "com.widevine.alpha": nativeLicense
+                  ? "loungetv-license:" + channel
+                  : license,
+              },
               preferredKeySystems: ["com.widevine.alpha"],
               advanced: {
                 "com.widevine.alpha": {
                   videoRobustness: ["HW_SECURE_ALL", ""],
+                  headers: { "Content-Type": "application/octet-stream" },
                 },
               },
             }
