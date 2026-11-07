@@ -1,0 +1,7 @@
+Lounge TV for LG webOS
+Application: GPL-3.0-only. See GPL-3.0.txt.
+Source: https://github.com/Gazzamoo111/lounge-tv-player
+
+Shaka Player 4.16.12: Apache-2.0; licence bundled at vendor/SHAKA-LICENSE.txt.
+QR Code Generator for JavaScript 1.4.4: MIT; licence bundled at vendor/QR-LICENSE.txt.
+Plus Jakarta Sans: SIL Open Font License 1.1; see Plus-Jakarta-Sans-OFL.txt.

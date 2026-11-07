@@ -12,9 +12,12 @@ export default defineConfig({
     },
   },
   webServer: {
-    command: "npm run serve",
+    command:
+      process.env.LOUNGE_CHANNEL === "customer"
+        ? "npm run serve:customer"
+        : "npm run serve",
     url: "http://127.0.0.1:4173",
-    reuseExistingServer: true,
+    reuseExistingServer: false,
   },
   reporter: [
     ["list"],

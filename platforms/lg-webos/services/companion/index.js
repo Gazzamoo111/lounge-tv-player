@@ -4,7 +4,10 @@ var service = new Service(require("./package.json").name);
 var companion = require("./core").createCompanion();
 var owner;
 function permitted(message) {
-  return message.sender === "nz.loungetv.webos.qa";
+  return (
+    message.sender ===
+    require("./package.json").name.replace(/\.companion$/, "")
+  );
 }
 service.register("start", function (message) {
   if (!permitted(message))

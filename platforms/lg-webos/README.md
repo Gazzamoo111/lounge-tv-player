@@ -147,3 +147,11 @@ LG-only implemented settings, accurate manual-update guidance, team crests resto
 ## 0.1.11: Calendar crest data fix
 
 Live calendar supplied null crest URLs for every RLWC fixture. Bundle official RLWC nation crests, select men/women artwork, preserve discovered crest URLs during fixture merge, and parse ESPN logo arrays. See [QA-0.1.11.md](docs/QA-0.1.11.md).
+
+## Customer release candidate
+
+`npm run package:customer` builds Lounge TV 1.0.0 as `nz.loungetv.webos`, alongside the unchanged QA identity. It writes `dist-customer` and stages a matching bundled service in `build-customer/companion`. Output: `artifacts/nz.loungetv.webos_1.0.0_all.ipk`.
+
+The optional `LOUNGE_CUSTOMER_APP_ID` must match the Seller Lounge registration before public release. Keep this ID for every customer update. `LOUNGE_CUSTOMER_VERSION` accepts a three-part numeric webOS version.
+
+See [customer readiness](docs/customer-release/READINESS.md) and [physical acceptance](docs/customer-release/PHYSICAL-ACCEPTANCE.md). This is a submission/acceptance candidate, not a store-approved listing.

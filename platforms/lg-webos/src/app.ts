@@ -1,3 +1,4 @@
+import { APP_VERSION, CUSTOMER_RELEASE } from "./identity";
 import { beginPhoneLogin, qrMarkup } from "./phone-login";
 import { teamCrest } from "./team-crests";
 import { heroAsset } from "./hero-art";
@@ -2758,32 +2759,36 @@ function settingControl(id: string): SettingControl | undefined {
     return open(player.trace.length + " entries", showDiagnostics);
   if (id === "check_updates")
     return open(
-      "Manual install",
+      CUSTOMER_RELEASE ? "Installation source" : "Manual install",
       () => {
         const b = openOverlay("App updates");
         b.append(
-          node("p", "", "Installed version: 0.1.11"),
+          node("p", "", "Installed version: " + APP_VERSION),
           node(
             "p",
             "",
-            "This test app updates by installing the latest Lounge TV LG package from your computer using the existing TV connection. Keep the app installed when updating.",
+            CUSTOMER_RELEASE
+              ? "For a store installation, open LG Apps and check for Lounge TV updates. For any other installation, contact Lounge TV support."
+              : "App updates come through the source used to install Lounge TV. For a Developer Mode installation, install the latest package using the existing TV connection.",
           ),
           node(
             "p",
             "muted",
-            "Automatic app updates are not enabled in this build. Playlists and EPG refresh separately in Sources & guide.",
+            CUSTOMER_RELEASE
+              ? "Playlists and the programme guide refresh separately in Sources & guide."
+              : "Automatic app updates are not enabled in this build. Playlists and EPG refresh separately in Sources & guide.",
           ),
           action("update-close", "Close", closeOverlay),
         );
         focus.focus("update-close");
       },
-      "How to update this LG test app.",
+      "How to update Lounge TV.",
     );
   if (id === "about")
-    return open("0.1.11", () => {
+    return open(APP_VERSION, () => {
       const b = openOverlay("Lounge TV for LG");
       b.append(
-        node("p", "", "QA 0.1.11 · Calendar crest data fix"),
+        node("p", "", (CUSTOMER_RELEASE ? "Lounge TV " : "QA ") + APP_VERSION),
         node(
           "p",
           "muted",
@@ -4055,6 +4060,12 @@ focus.onBack = () => {
   if (currentPlaying && preview) {
     stopPlayback();
     navigate(route, true);
+    return;
+  }
+  if (CUSTOMER_RELEASE && (route === "home" || !activeAuth)) {
+    const system = (window as any).webOS?.platformBack;
+    if (system) system();
+    else window.close();
     return;
   }
   if (document.activeElement?.closest("nav")) {

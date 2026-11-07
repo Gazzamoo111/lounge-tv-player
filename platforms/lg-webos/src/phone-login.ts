@@ -1,6 +1,6 @@
 import qrcode from "qrcode-generator";
 import type { Credentials } from "./model";
-const URI = "luna://nz.loungetv.webos.qa.companion/";
+import { SERVICE_URI as URI } from "./identity";
 export function phoneService(
   method: string,
   payload: Record<string, unknown> = {},

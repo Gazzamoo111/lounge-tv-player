@@ -1,3 +1,4 @@
+import { SERVICE_URI } from "./identity";
 import { AdaptiveFault } from "./adaptive-fault";
 /** The TV's genuine CDM challenge passes unchanged to its normal license service. */
 export function installTvLicenseTransport(shaka: any) {
@@ -69,7 +70,7 @@ export function installTvLicenseTransport(shaka: any) {
           }
         };
         bridge.call(
-          "luna://nz.loungetv.webos.qa.companion/license",
+          SERVICE_URI + "license",
           JSON.stringify({ channel, challenge: btoa(binary) }),
         );
       });

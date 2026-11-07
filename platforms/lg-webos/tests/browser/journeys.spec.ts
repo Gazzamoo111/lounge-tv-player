@@ -916,10 +916,14 @@ test("LG Settings shows working controls, search, contextual help and Quick pins
   await page.locator("#settings-group-app").click();
   await page.locator("#setting-check_updates").click();
   await expect(page.locator("#overlay")).toContainText(
-    "Installed version: 0.1.11",
+    process.env.LOUNGE_CHANNEL === "customer"
+      ? "Installed version: 1.0.0"
+      : "Installed version: 0.1.12",
   );
   await expect(page.locator("#overlay")).toContainText(
-    "Automatic app updates are not enabled",
+    process.env.LOUNGE_CHANNEL === "customer"
+      ? "programme guide refresh separately"
+      : "Automatic app updates are not enabled",
   );
   await page.screenshot({ path: "test-results/lg013-settings-player.png" });
 });
@@ -2147,12 +2151,19 @@ test("Real calendar fixture with null crest URLs loads both bundled national-tea
       )
       .toBeGreaterThan(0);
   }
-  const decoded = await page.evaluate(async (paths) => {
-    return Promise.all(paths.map(async (path) => {
-      const logo = new Image(); logo.src = path; await logo.decode();
-      return logo.naturalWidth > 0;
-    }));
-  }, Object.values(officialCrests).map((crest) => crest.path));
+  const decoded = await page.evaluate(
+    async (paths) => {
+      return Promise.all(
+        paths.map(async (path) => {
+          const logo = new Image();
+          logo.src = path;
+          await logo.decode();
+          return logo.naturalWidth > 0;
+        }),
+      );
+    },
+    Object.values(officialCrests).map((crest) => crest.path),
+  );
   expect(decoded).toHaveLength(15);
   expect(decoded.every(Boolean)).toBe(true);
   await page.screenshot({ path: "test-results/hero-real-crests-0111.png" });
