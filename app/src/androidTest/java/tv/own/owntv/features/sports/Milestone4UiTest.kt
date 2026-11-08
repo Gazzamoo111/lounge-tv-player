@@ -71,10 +71,10 @@ class Milestone4UiTest {
             PremiumSportsContent(SportsHubState(discovery = SportLoungeDiscoverySnapshot(matches = matches)), 40.mpx, null,
                 { focusEntry = it }, {},
                 onSelect = { selections++; selectedEvent = it }, onOpenMatch = { opened++ }, onOpenLeague = {}, onFollow = {}, onHold = {},
-                detail = { match -> SportsPreviewPanel(match, emptyList(), null, false,
+                detail = { match, compact -> SportsPreviewPanel(match, emptyList(), null, false,
                     onOpen = { opened++ }, onPreview = { error("TEST must not tune a stream") },
                     onFullScreen = { error("TEST must not tune a stream") },
-                    notice = "TEST preview: no provider connection", preview = {}) })
+                    notice = "TEST preview: no provider connection", compact = compact, preview = {}) })
         } }
         compose.onNodeWithText("My Sports").assertExists()
         // Exercise the screen's real entry focus hook, just as the TV shell does.
@@ -98,7 +98,6 @@ class Milestone4UiTest {
         compose.onNodeWithText("All Events").assertIsFocused()
         compose.onNodeWithText("All Events").performKeyInput { pressKey(Key.DirectionCenter) }
         compose.onNodeWithText("Choose Leagues").assertExists()
-        capture("02-all-events-test-data")
         compose.onNodeWithText("Choose Leagues").performClick()
         compose.onNode(hasText("All") and isFocused()).assertExists()
         androidx.test.espresso.Espresso.pressBack()
@@ -109,6 +108,7 @@ class Milestone4UiTest {
         compose.onNodeWithText("Choose Leagues").performKeyInput { pressKey(Key.DirectionDown) }
         compose.onNode(hasText("TEST competition") and isFocused()).assertExists()
         compose.runOnIdle { assertEquals("live", selectedEvent?.id) }
+        capture("02-all-events-test-data")
         compose.onNode(isFocused()).performKeyInput { pressKey(Key.DirectionDown) }
         compose.onNode(hasText("TEST competition") and isFocused()).assertExists()
         compose.runOnIdle { assertEquals("soon", selectedEvent?.id) }

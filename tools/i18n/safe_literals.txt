@@ -2159,6 +2159,6 @@
 2	protocol	app/src/main/java/tv/own/owntv/features/sports/PremiumFollowScreen.kt	\0
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/PremiumSportsPresentation.kt	Pacific/Auckland
 1	technical	app/src/main/java/tv/own/owntv/features/sports/PremiumSportsScreen.kt	EEE d MMM
-1	technical	app/src/main/java/tv/own/owntv/features/sports/PremiumSportsScreen.kt	EEE d MMM · h:mm a z
+1	technical	app/src/main/java/tv/own/owntv/features/sports/PremiumSportsScreen.kt	EEE d MMM · h:mm a
 2	technical	app/src/main/java/tv/own/owntv/player/PremiumLivePanel.kt	h:mm a
 3	json	app/src/main/java/tv/own/owntv/features/sports/data/SportEvent.kt	color

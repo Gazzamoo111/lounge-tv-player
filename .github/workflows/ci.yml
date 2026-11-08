@@ -121,7 +121,7 @@ jobs:
                 *) echo "Expected isolated auditqa package, got: $APK_ID"; exit 1 ;;
               esac
             fi
-            "$APKSIGNER" verify "$QA_APK"
+            "$APKSIGNER" verify --print-certs "$QA_APK"
           else
             EXPECTED_PACKAGE=com.loungetv.player.qa
             if [ "$LOUNGE_TV_2_QA" = "true" ]; then EXPECTED_PACKAGE=com.loungetv.player.v2qa; fi

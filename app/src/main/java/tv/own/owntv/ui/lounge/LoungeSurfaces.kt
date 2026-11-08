@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
@@ -34,6 +35,9 @@ internal fun LoungeAction(label: String, selected: Boolean = false, modifier: Mo
             .border(1.mpx, LoungeSurface.Line, RoundedCornerShape(28.mpx))) { focused ->
         Text(label, style = stageText(21, 700), color = if (selected) LoungeSurface.Navy else Color.White,
             maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 22.mpx))
+        // Stage's glow sits outside the surface; clipping a pill hides it. Keep a distinct,
+        // high-contrast inner outline so focused and merely selected pills cannot look identical.
+        if (focused) Box(Modifier.matchParentSize().border(2.mpx, Color.White, RoundedCornerShape(28.mpx)))
     }
 }
 
@@ -41,7 +45,15 @@ internal fun LoungeAction(label: String, selected: Boolean = false, modifier: Mo
 internal fun LoungeLogo(url: String?, fallback: String, modifier: Modifier = Modifier) {
     Box(modifier, contentAlignment = Alignment.Center) {
         if (!url.isNullOrBlank()) AsyncImage(url, contentDescription = fallback, modifier = Modifier.fillMaxSize())
-        else Text(fallback.take(3), style = stageText(24, 800), color = Color.White)
+        else BoxWithConstraints(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            val initials = fallback.take(3)
+            val style = stageText(24, 800)
+            // A 36px channel badge and a 78px hero badge need different fallback type sizes.
+            // Fit to actual density/font scale rather than wrapping or clipping an abbreviation.
+            val fitted = with(LocalDensity.current) { (maxWidth / (initials.length.coerceAtLeast(1) * 1.05f)).toSp() }
+            Text(initials, style = style.copy(fontSize = if (fitted < style.fontSize) fitted else style.fontSize),
+                color = Color.White, maxLines = 1, softWrap = false, overflow = TextOverflow.Clip)
+        }
     }
 }
 

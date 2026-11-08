@@ -4,6 +4,8 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -74,7 +76,7 @@ internal fun PremiumSportsScreen(vm: SportsViewModel, liveVm: LiveViewModel,
         } else PremiumSportsContent(state, contentStart, restoreKey, onEntryHook, onChildFocused,
             onSelect = { selected = it }, onOpenMatch = onOpenMatch, onOpenLeague = onOpenLeague,
             onFollow = { following = true }, onHold = { menuFor = it }, modifier = modifier,
-            detail = { m ->
+            detail = { m, compact ->
                 val valid = selected?.key == m?.key && selected?.startMs == m?.startMs
                 SportsPreviewPanel(m, if (valid) options else emptyList(), previewMeta.title.takeIf { previewPlaying },
                     PremiumSportsPresentation.previewMatches(session, m, playing?.id),
@@ -85,6 +87,7 @@ internal fun PremiumSportsScreen(vm: SportsViewModel, liveVm: LiveViewModel,
                         liveVm.playPreview(o.channel)
                     } },
                     onFullScreen = { o -> if (m != null) { vm.playedFrom(m, options, o.channel); onPlayChannel(o.channel, options.map { it.channel }) } },
+                    compact = compact,
                     notice = when { previewBlocked -> stringResource(R.string.m4_preview_blocked); previewLoading -> stringResource(R.string.m4_preview_loading); else -> null },
                     preview = { if (active && playing != null) ExoPreviewSurface(liveVm.previewEngine, Modifier.fillMaxSize()) })
             })
@@ -101,7 +104,7 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
     onEntryHook: (((() -> Boolean)?) -> Unit)?, onChildFocused: () -> Unit,
     onSelect: (Match?) -> Unit, onOpenMatch: (Match) -> Unit, onOpenLeague: (String) -> Unit,
     onFollow: () -> Unit, onHold: (Match) -> Unit, modifier: Modifier = Modifier,
-    detail: @Composable (Match?) -> Unit) {
+    detail: @Composable (Match?, Boolean) -> Unit) {
     var destination by rememberSaveable { mutableStateOf(SportsDestination.MY_SPORTS) }
     var sportName by rememberSaveable { mutableStateOf<String?>(null) }
     val sport = Sport.entries.firstOrNull { it.name == sportName }
@@ -198,7 +201,7 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
                                 LoungeAction(stringResource(R.string.m4_next)) { heroIndex = PremiumSportsPresentation.carouselIndex(heroIndex, 1, heroes.size) }
                             }
                         }
-                        Box(Modifier.weight(1f)) { detail(featured) }
+                        Box(Modifier.weight(1f)) { detail(featured, true) }
                     }
                 }
                 item { SportsEventRail(stringResource(R.string.m4_live_upcoming), ranked.take(24), state.config, onOpenMatch, onHold) }
@@ -239,7 +242,7 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
                             }
                         }
                     }
-                    Box(Modifier.weight(1f)) { detail(selected) }
+                    Box(Modifier.weight(1f)) { detail(selected, false) }
                 }
             }
             SportsDestination.TABLES, SportsDestination.NETWORKS -> {
@@ -288,7 +291,7 @@ private fun SportsEventRail(title: String, matches: List<Match>, config: SportsC
 internal fun PremiumEventCard(m: Match, spoilerFree: Boolean, featured: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit, onHold: () -> Unit) {
     StageSurface(onClick, radius = 24.mpx, modifier = modifier.clip(RoundedCornerShape(24.mpx))
         .background(Brush.horizontalGradient(listOf(teamTint(m.home?.team)?.copy(alpha = 0.65f) ?: Color(0xFF11385A), teamTint(m.away?.team)?.copy(alpha = 0.65f) ?: Color(0xFF18283D))))
-        .border(1.mpx, LoungeSurface.Line, RoundedCornerShape(24.mpx)), focusStyle = StageFocus.FX, onLongClick = onHold) { _ ->
+        .border(1.mpx, LoungeSurface.Line, RoundedCornerShape(24.mpx)), focusStyle = StageFocus.FX, onLongClick = onHold) { focused ->
         Column(Modifier.fillMaxSize().padding(if (featured) 26.mpx else 18.mpx), verticalArrangement = Arrangement.SpaceBetween) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(m.leagueName, style = stageText(if (featured) 23 else 18, 700), color = LoungeSurface.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
@@ -303,33 +306,43 @@ internal fun PremiumEventCard(m: Match, spoilerFree: Boolean, featured: Boolean,
                     }
                 }
             } else Text(m.title, style = stageText(if (featured) 34 else 25, 800), color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            val local = Instant.ofEpochMilli(m.startMs).atZone(PremiumSportsPresentation.zone).format(DateTimeFormatter.ofPattern("EEE d MMM · h:mm a z"))
+            val local = Instant.ofEpochMilli(m.startMs).atZone(PremiumSportsPresentation.zone).format(DateTimeFormatter.ofPattern("EEE d MMM · h:mm a")) +
+                stringResource(R.string.content_epg_bits_separator) + stringResource(R.string.m4_nz_time)
             Text(listOfNotNull(if (m.isLive) m.clock?.display?.takeIf { it.isNotBlank() } ?: m.statusText else if (m.state == MatchState.PRE) local else m.statusText, m.venue.takeIf { featured }).joinToString(stringResource(R.string.content_epg_bits_separator)),
                 style = stageText(if (featured) 20 else 17, 600), color = LoungeSurface.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
+        if (focused) Box(Modifier.matchParentSize().border(2.mpx, LoungeSurface.Cyan, RoundedCornerShape(24.mpx)))
     }
 }
 
 @Composable
 internal fun SportsPreviewPanel(match: Match?, options: List<WatchOption>, playingName: String?, matching: Boolean,
-    onOpen: () -> Unit, onPreview: (WatchOption) -> Unit, onFullScreen: (WatchOption) -> Unit, notice: String?, preview: @Composable () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(14.mpx)) {
+    onOpen: () -> Unit, onPreview: (WatchOption) -> Unit, onFullScreen: (WatchOption) -> Unit, notice: String?,
+    compact: Boolean = false, preview: @Composable () -> Unit) {
+    Column(Modifier.fillMaxWidth().then(if (compact) Modifier else Modifier.fillMaxHeight()),
+        verticalArrangement = Arrangement.spacedBy(14.mpx)) {
+        // Keep the decoder's surface outside the scrollable feed details. D-pad navigation to a
+        // lower action never scrolls away the preview or replaces its playback owner.
         Box(Modifier.fillMaxWidth().aspectRatio(16f / 9).clip(RoundedCornerShape(24.mpx)).background(Color.Black), contentAlignment = Alignment.Center) {
             preview()
             if (playingName == null) Text(notice ?: stringResource(R.string.m4_preview_empty), style = stageText(21, 500), color = LoungeSurface.Muted, modifier = Modifier.padding(24.mpx))
         }
-        if (playingName != null) Text(playingName, style = stageText(20, 800), color = Color.White)
-        Text(stringResource(if (playingName == null) R.string.m4_preview_empty else if (matching) R.string.m4_preview_selected else R.string.m4_preview_unrelated), style = stageText(19, 500), color = LoungeSurface.Muted)
-        if (match != null) {
-            LoungeAction(stringResource(R.string.m4_event_details), onClick = onOpen)
-            val option = options.firstOrNull()
-            if (option == null) Text(stringResource(R.string.m4_feed_none), style = stageText(19, 500), color = LoungeSurface.Muted)
-            else {
-                Text(option.channel.name, style = stageText(22, 800), color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(stringResource(when (option.tier) { WatchTier.GUIDE -> R.string.m4_feed_epg; WatchTier.REMEMBERED -> R.string.m4_feed_saved; else -> R.string.m4_feed_possible }), style = stageText(18, 500), color = LoungeSurface.Muted)
-                Row(horizontalArrangement = Arrangement.spacedBy(12.mpx)) {
-                    LoungeAction(stringResource(R.string.m4_preview_feed)) { onPreview(option) }
-                    LoungeAction(stringResource(R.string.m4_fullscreen)) { onFullScreen(option) }
+        Column(Modifier.fillMaxWidth().then(if (compact) Modifier else Modifier.weight(1f).verticalScroll(rememberScrollState())),
+            verticalArrangement = Arrangement.spacedBy(14.mpx)) {
+            if (!compact && playingName != null) Text(playingName, style = stageText(20, 800), color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (!compact || playingName != null) Text(stringResource(if (playingName == null) R.string.m4_preview_empty else if (matching) R.string.m4_preview_selected else R.string.m4_preview_unrelated), style = stageText(19, 500), color = LoungeSurface.Muted)
+            if (match != null) {
+                val option = options.firstOrNull()
+                if (!compact || option == null) LoungeAction(stringResource(R.string.m4_event_details), onClick = onOpen)
+                if (option == null) {
+                    if (!compact) Text(stringResource(R.string.m4_feed_none), style = stageText(19, 500), color = LoungeSurface.Muted)
+                } else {
+                    if (!compact) Text(option.channel.name, style = stageText(22, 800), color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(stringResource(when (option.tier) { WatchTier.GUIDE -> R.string.m4_feed_epg; WatchTier.REMEMBERED -> R.string.m4_feed_saved; else -> R.string.m4_feed_possible }), style = stageText(18, 500), color = LoungeSurface.Muted)
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.mpx)) {
+                        LoungeAction(stringResource(R.string.m4_preview_feed)) { onPreview(option) }
+                        LoungeAction(stringResource(R.string.m4_fullscreen)) { onFullScreen(option) }
+                    }
                 }
             }
         }
