@@ -53,7 +53,10 @@ jobs:
         if: always()
         run: |
           mkdir -p m4-ui-results
-          adb pull /sdcard/Android/data/com.loungetv.player.v2qa/files/m4-screenshots m4-ui-results/ || true
+          # Test PNGs are saved in the debuggable target's internal files directory.
+          # Android 15 emulator scoped storage may not expose /sdcard/Android/data via adb pull.
+          adb exec-out run-as com.loungetv.player.v2qa tar -cf - -C files m4-screenshots | tar -xf - -C m4-ui-results/ || true
+          find m4-ui-results -name '*.png' -type f -print || true
           adb logcat -d > m4-ui-results/logcat.txt || true
           cp /tmp/lounge-emulator.log m4-ui-results/ || true
           cp /tmp/lounge-restart-results.txt m4-ui-results/ || true
