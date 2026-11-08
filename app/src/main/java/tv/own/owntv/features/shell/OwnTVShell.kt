@@ -855,7 +855,8 @@ fun OwnTVShell(
     // The preview runs on the ExoPlayer live engine, not mpv: stopping only mpv here (as when the preview
     // was mpv) left it decoding and holding a provider connection after a shortcut or deep link out.
     LaunchedEffect(selectedSection, playerMode) {
-        if (selectedSection != MainSection.LIVE_TV && selectedSection != MainSection.EPG && playerMode == PlayerMode.NONE) liveVm.stopPreview()
+        if (selectedSection != MainSection.LIVE_TV && selectedSection != MainSection.EPG &&
+            !(tv.own.owntv.BuildConfig.LOUNGE_TV_2 && selectedSection == MainSection.SPORTS) && playerMode == PlayerMode.NONE) liveVm.stopPreview()
         if (selectedSection != MainSection.HOME || playerMode != PlayerMode.NONE) homeVm.stopPreview()
     }
 
@@ -1739,6 +1740,30 @@ fun OwnTVShell(
                         }
                     } else null,
                     // Guide card for the playing channel (nowNext follows previewChannel = what's playing).
+                    premiumLivePanel = if (tv.own.owntv.BuildConfig.LOUNGE_TV_2 && isLiveChannel && !timeshifted) {
+                        { chips, playFocus, more ->
+                            val engine = if (liveOnExo) liveVm.previewEngine else mpvEngine
+                            val meta by engine.currentMeta.collectAsStateWithLifecycle()
+                            val epg by liveVm.nowNext.collectAsStateWithLifecycle()
+                            val playingNow by engine.isPlaying.collectAsStateWithLifecycle()
+                            val recent by liveVm.recentlyWatched.collectAsStateWithLifecycle()
+                            val current = epg?.now
+                            tv.own.owntv.player.PremiumLivePanel(
+                                title = meta.title.orEmpty(), number = meta.subtitle, logo = meta.logoUrl,
+                                current = current, next = epg?.next, technical = chips, isPlaying = playingNow,
+                                recent = recent.filter { it.id != previewChannel?.id }, playFocus = playFocus,
+                                onToggle = engine::togglePlayPause,
+                                onGuide = { exitPlayer(); onSelectSection(MainSection.EPG) },
+                                onMore = more,
+                                onRecent = { ch -> scope.launch { liveVm.ensurePlayingByIdAsync(ch.id, recent) } },
+                                artwork = {
+                                    val programme = current?.let { tv.own.owntv.core.database.entity.EpgProgrammeEntity(
+                                        0, previewChannel?.sourceId ?: 0, "", it.startMs, it.stopMs, it.title, description = it.description) }
+                                    tv.own.owntv.features.live.ProgrammeArtwork(programme, meta.logoUrl, Modifier.fillMaxSize())
+                                },
+                            )
+                        }
+                    } else null,
                     liveEpgCard = if (isLiveChannel) {
                         {
                             val epg by liveVm.nowNext.collectAsStateWithLifecycle()

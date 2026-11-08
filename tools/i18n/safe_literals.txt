@@ -1124,7 +1124,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/shell/components/WeatherConditionIcon.kt	sunny
 1	technical	app/src/main/java/tv/own/owntv/features/shell/components/WeatherConditionIcon.kt	thunder
 1	technical	app/src/main/java/tv/own/owntv/features/shell/OwnTVShell.kt	·
-3	technical	app/src/main/java/tv/own/owntv/features/shell/OwnTVShell.kt	\0
+4	protocol	app/src/main/java/tv/own/owntv/features/shell/OwnTVShell.kt	\0
 1	protocol	app/src/main/java/tv/own/owntv/features/shell/OwnTVShell.kt	ass
 1	technical	app/src/main/java/tv/own/owntv/features/shell/OwnTVShell.kt	cricket
 1	performance	app/src/main/java/tv/own/owntv/features/shell/OwnTVShell.kt	epg-preload
@@ -2156,3 +2156,8 @@
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsEvidenceReader.kt	__LTV_EVIDENCE__:
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsEvidenceReader.kt	likely
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsEvidenceReader.kt	maybe
+2	protocol	app/src/main/java/tv/own/owntv/features/sports/PremiumFollowScreen.kt	\0
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/PremiumSportsPresentation.kt	Pacific/Auckland
+1	technical	app/src/main/java/tv/own/owntv/features/sports/PremiumSportsScreen.kt	EEE d MMM
+1	technical	app/src/main/java/tv/own/owntv/features/sports/PremiumSportsScreen.kt	EEE d MMM · h:mm a z
+2	technical	app/src/main/java/tv/own/owntv/player/PremiumLivePanel.kt	h:mm a
