@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -91,6 +92,10 @@ fun ChannelListOverlay(
     /** The last highlighted channel in this category, even if it was not played. */
     initialFocusedChannelId: Long? = null,
     onChannelFocused: ((ChannelEntity) -> Unit)? = null,
+    /** Hold OK to save into a profile folder without changing the current channel. */
+    onLongPress: ((ChannelEntity) -> Unit)? = null,
+    /** Increment after closing the chooser to restore the highlighted row. */
+    returnFocusVersion: Int = 0,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val dismissDirection = if (alignEnd) HorizontalDirection.END else HorizontalDirection.START
@@ -115,6 +120,14 @@ fun ChannelListOverlay(
     LaunchedEffect(Unit) {
         runCatching { listState.scrollToItem(currentIndex) }
         runCatching { focusTarget.requestFocus() }
+    }
+    LaunchedEffect(returnFocusVersion) {
+        if (returnFocusVersion > 0) {
+            targetIndex = focusedIndex.coerceIn(0, channels.lastIndex.coerceAtLeast(0))
+            runCatching { listState.scrollToItem(targetIndex) }
+            withFrameNanos { }
+            runCatching { focusTarget.requestFocus() }
+        }
     }
     BackHandler { onDismiss() }
 
@@ -224,7 +237,7 @@ fun ChannelListOverlay(
                             onChannelFocused?.invoke(ch)
                         },
                         onClick = { onSelect(ch) },
-                        onLongClick = {},
+                        onLongClick = { onLongPress?.invoke(ch) },
                         trailing = watchedAt?.let { times ->
                             {
                                 Text(
@@ -252,6 +265,7 @@ fun ChannelListOverlay(
                         alignEnd -> "▶" to stringResource(R.string.content_close)
                         else -> null
                     },
+                    if (onLongPress != null) stringResource(R.string.content_key_hold_ok) to stringResource(R.string.lounge_v2_save_favourite_folder) else null,
                     "CH±" to stringResource(R.string.content_key_page),
                     stringResource(R.string.common_back) to stringResource(R.string.content_close),
                 ),

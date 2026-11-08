@@ -262,6 +262,14 @@ fun OwnTVShell(
     // up/down (CH+/CH-). Guide tunes start through LiveViewModel too (they set zapSource = LIVE_TV), so
     // there is exactly ONE zap path: liveVm's. The Guide keeps its own EpgViewModel only for the grid.
     val liveVm = org.koin.androidx.compose.koinViewModel<LiveViewModel>()
+    var fullscreenFavouriteChannel by remember { mutableStateOf<ChannelEntity?>(null) }
+    var fullscreenCreateFavouriteFolder by remember { mutableStateOf(false) }
+    var fullscreenFolderFocusVersion by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    val dismissFullscreenFavouriteFolder = {
+        fullscreenFavouriteChannel = null
+        fullscreenCreateFavouriteFolder = false
+        fullscreenFolderFocusVersion++
+    }
     // "Previous" from the system media controls on a live channel goes back a channel.
     DisposableEffect(playbackSession, liveVm) {
         playbackSession.livePrevious = { liveVm.previousChannel() }
@@ -1896,6 +1904,8 @@ fun OwnTVShell(
                             onChannelFocused = { channel ->
                                 browsingKey?.let { lastBrowsedChannel[it] = channel.id }
                             },
+                            onLongPress = { fullscreenFavouriteChannel = it },
+                            returnFocusVersion = fullscreenFolderFocusVersion,
                             onSelect = {
                                 liveVm.ensurePlaying(it)
                                 showChannelList = false
@@ -1923,6 +1933,8 @@ fun OwnTVShell(
                         title = stringResource(R.string.content_category_recently_watched),
                         showNumbers = directTuneEnabled,
                         alignEnd = true,
+                        onLongPress = { fullscreenFavouriteChannel = it },
+                        returnFocusVersion = fullscreenFolderFocusVersion,
                         onSelect = { liveVm.ensurePlaying(it); showHistoryList = false },
                         onDismiss = { showHistoryList = false },
                         modifier = Modifier.fillMaxSize(),
@@ -1943,6 +1955,31 @@ fun OwnTVShell(
             }
         }
       }
+
+    // The browsing overlay stays behind the picker; saving never retunes the stream.
+    fullscreenFavouriteChannel?.let { channel ->
+        if (fullscreenCreateFavouriteFolder) {
+            tv.own.owntv.ui.components.TextInputDialog(
+                title = stringResource(R.string.lounge_v2_new_favourite_folder),
+                hint = stringResource(R.string.lounge_v2_favourite_folder_name_hint),
+                confirmLabel = stringResource(R.string.common_create),
+                allowBlank = false,
+                onConfirm = {
+                    liveVm.createFavouriteFolderAndSave(it, channel)
+                    dismissFullscreenFavouriteFolder()
+                },
+                onDismiss = { fullscreenCreateFavouriteFolder = false },
+            )
+        } else {
+            val folders by liveVm.favouriteFolderTargets.collectAsStateWithLifecycle()
+            tv.own.owntv.features.customize.FavouriteFolderPicker(
+                folders = folders,
+                onCreate = { fullscreenCreateFavouriteFolder = true },
+                onSelect = { liveVm.saveToFavouriteFolder(channel, it); dismissFullscreenFavouriteFolder() },
+                onDismiss = dismissFullscreenFavouriteFolder,
+            )
+        }
+    }
 
     if (showExit) {
         ExitDialog(onConfirm = onExitApp, onDismiss = { showExit = false })
