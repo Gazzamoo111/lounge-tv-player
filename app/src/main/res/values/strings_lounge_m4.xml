@@ -47,4 +47,5 @@
     <string name="m4_carousel_count">%1$d / %2$d</string>
     <string name="m4_preview_blocked">Preview is paused to protect the account connection limit. Use Full screen to switch.</string>
     <string name="m4_preview_loading">Opening the selected preview…</string>
+    <string name="m4_search_scope">Search leagues, this roster and teams from followed leagues.</string>
 </resources>

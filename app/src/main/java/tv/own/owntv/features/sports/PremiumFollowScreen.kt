@@ -36,7 +36,7 @@ internal fun PremiumFollowScreen(onDone: () -> Unit, contentStart: Dp, modifier:
     key(pid) {
         PremiumFollowContent(config, vm::teamsForLeague, { vm.toggleTeam(it) }, { vm.toggleLeague(it) },
             { key, delta -> vm.moveFollowedTeam(key, delta) }, { key, delta -> vm.moveFollowedLeague(key, delta) },
-            onDone, contentStart, modifier)
+            onDone, contentStart, modifier, searchTeams = vm::searchTeams)
     }
 }
 
@@ -44,9 +44,9 @@ internal fun PremiumFollowScreen(onDone: () -> Unit, contentStart: Dp, modifier:
 internal fun PremiumFollowContent(config: SportsConfig, loadTeams: suspend (String) -> List<Team>,
     toggleTeam: (FollowedTeam) -> Unit, toggleLeague: (String) -> Unit,
     moveTeam: (String, Int) -> Unit, moveLeague: (String, Int) -> Unit,
-    onDone: () -> Unit, contentStart: Dp, modifier: Modifier = Modifier) {
+    onDone: () -> Unit, contentStart: Dp, modifier: Modifier = Modifier, searchTeams: suspend (String) -> List<FollowedTeam> = { emptyList() }) {
         var sport by remember { mutableStateOf(config.orderSports(SportsCatalog.sports).first()) }
-        var leagueKey by remember(sport) { mutableStateOf<String?>(null) }
+        var leagueKey by remember { mutableStateOf<String?>(null) }
         var query by remember { mutableStateOf("") }
         var teams by remember(sport, leagueKey) { mutableStateOf<List<Team>>(emptyList()) }
         var loading by remember { mutableStateOf(false) }
@@ -54,6 +54,15 @@ internal fun PremiumFollowContent(config: SportsConfig, loadTeams: suspend (Stri
         var retry by remember { mutableIntStateOf(0) }
         var arrange by remember { mutableStateOf(false) }
         var picked by remember { mutableStateOf<String?>(null) }
+        val searched by produceState(emptyList<FollowedTeam>(), query) {
+            value = emptyList()
+            if (query.trim().length >= 2) {
+                kotlinx.coroutines.delay(250)
+                try { value = searchTeams(query) }
+                catch (cancel: CancellationException) { throw cancel }
+                catch (_: Exception) { value = emptyList() }
+            }
+        }
         val done = remember { FocusRequester() }
         val arrangeFocus = remember { FocusRequester() }
         LaunchedEffect(Unit) { withFrameNanos { }; runCatching { done.requestFocus() } }
@@ -75,6 +84,12 @@ internal fun PremiumFollowContent(config: SportsConfig, loadTeams: suspend (Stri
             }
             Text(stringResource(R.string.m4_save_done), style = stageText(18, 500), color = LoungeSurface.Muted, modifier = Modifier.padding(top = 8.mpx))
             StageFieldRow(OwnTVIcon.SEARCH, stringResource(R.string.m4_search), query, { query = it }, modifier = Modifier.padding(vertical = 12.mpx))
+            if (query.isNotBlank()) Text(stringResource(R.string.m4_search_scope), style = stageText(17, 500), color = LoungeSurface.Muted)
+            if (searched.isNotEmpty()) LazyRow(horizontalArrangement = Arrangement.spacedBy(12.mpx)) {
+                items(searched, key = { it.key }) { team ->
+                    FollowChip(team.name, { toggleTeam(team) }, {})
+                }
+            }
             Text(stringResource(R.string.m4_following_count, config.teams.size + config.leagues.size), style = stageText(20, 800), color = LoungeSurface.Cyan)
             LazyRow(Modifier.padding(vertical = 12.mpx).focusRestorer().focusGroup(), horizontalArrangement = Arrangement.spacedBy(10.mpx)) {
                 items(config.leagues, key = { it }) { k ->
@@ -85,12 +100,12 @@ internal fun PremiumFollowContent(config: SportsConfig, loadTeams: suspend (Stri
             Text(stringResource(R.string.m4_following_help), style = stageText(18, 500), color = LoungeSurface.Muted)
             Row(Modifier.weight(1f).padding(top = 18.mpx), horizontalArrangement = Arrangement.spacedBy(24.mpx)) {
                 LazyColumn(Modifier.width(280.mpx).focusGroup(), verticalArrangement = Arrangement.spacedBy(12.mpx)) {
-                    items(config.orderSports(SportsCatalog.sports), key = { it.name }) { s -> LoungeAction(stringResource(R.string.m4_sport_shortcut, sportEmoji(s), sportLabel(s)), sport == s, Modifier.fillMaxWidth()) { sport = s } }
+                    items(config.orderSports(SportsCatalog.sports), key = { it.name }) { s -> LoungeAction(stringResource(R.string.m4_sport_shortcut, sportEmoji(s), sportLabel(s)), sport == s, Modifier.fillMaxWidth()) { sport = s; leagueKey = null } }
                 }
                 Column(Modifier.weight(1f)) {
-                    val leagues = SportsCatalog.leaguesOf(sport).filter { query.isBlank() || it.name.contains(query, true) || leagueKey == it.key }
+                    val leagues = if (query.isBlank()) SportsCatalog.leaguesOf(sport) else SportsCatalog.leagues.filter { it.name.contains(query, true) || leagueKey == it.key }
                     LazyRow(Modifier.focusRestorer().focusGroup(), horizontalArrangement = Arrangement.spacedBy(12.mpx)) {
-                        items(leagues, key = { it.key }) { l -> LoungeAction(l.name, leagueKey == l.key) { leagueKey = l.key; retry++ } }
+                        items(leagues, key = { it.key }) { l -> LoungeAction(l.name, leagueKey == l.key) { sport = l.sport; leagueKey = l.key; retry++ } }
                     }
                     val chosen = SportsCatalog.league(leagueKey ?: "")
                     if (chosen != null) {
