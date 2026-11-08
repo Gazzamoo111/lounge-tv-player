@@ -65,6 +65,11 @@ internal fun PremiumFollowContent(config: SportsConfig, loadTeams: suspend (Stri
         }
         val done = remember { FocusRequester() }
         val arrangeFocus = remember { FocusRequester() }
+        var restoreArrange by remember { mutableStateOf(false) }
+        LaunchedEffect(arrange) {
+            if (arrange) restoreArrange = true
+            else if (restoreArrange) { withFrameNanos { }; runCatching { arrangeFocus.requestFocus() }; restoreArrange = false }
+        }
         LaunchedEffect(Unit) { withFrameNanos { }; runCatching { done.requestFocus() } }
         LaunchedEffect(leagueKey, retry) {
             teams = emptyList(); failed = false
@@ -130,7 +135,7 @@ internal fun PremiumFollowContent(config: SportsConfig, loadTeams: suspend (Stri
             }
         }
         if (arrange) {
-            fun close() { arrange = false; runCatching { arrangeFocus.requestFocus() } }
+            fun close() { arrange = false }
             StagePopup(onDismiss = { close() }, title = stringResource(R.string.m4_arrange), width = 850.mpx,
                 buttons = {
                     StageButton(stringResource(R.string.m4_earlier), onClick = {

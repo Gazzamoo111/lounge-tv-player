@@ -25,7 +25,7 @@ internal object PremiumSportsPresentation {
     fun onDay(matches: List<Match>, date: LocalDate, sport: Sport?, leagues: Set<String>): List<Match> =
         matches.filter { Instant.ofEpochMilli(it.startMs).atZone(zone).toLocalDate() == date &&
             (sport == null || it.sport == sport) && (leagues.isEmpty() || it.feed in leagues) }
-            .sortedWith(compareBy<Match>({ !it.isLive }, { it.startMs }, { it.key }))
+            .sortedWith(compareBy<Match>({ when(it.state) { MatchState.IN -> 0; MatchState.PRE -> 1; MatchState.POST -> 2; else -> 3 } }, { it.startMs }, { it.key }))
     fun carouselIndex(current: Int, delta: Int, size: Int): Int = if (size == 0) 0 else (current + delta).mod(size)
     fun <T> move(items: List<T>, from: Int, delta: Int): List<T> {
         val to = from + delta

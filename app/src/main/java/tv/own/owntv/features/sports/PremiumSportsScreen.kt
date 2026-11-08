@@ -206,9 +206,19 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
                         }
                         if (dayEvents.isEmpty()) Text(stringResource(R.string.m4_no_events), style = stageText(25, 700), color = LoungeSurface.Muted, modifier = Modifier.padding(24.mpx))
                         LazyColumn(state = eventList, modifier = Modifier.padding(top = 16.mpx).focusGroup(), verticalArrangement = Arrangement.spacedBy(16.mpx), contentPadding = PaddingValues(5.mpx)) {
-                            items(dayEvents, key = { it.key }) { m -> PremiumEventCard(m, state.config.spoilerFree, false,
-                                Modifier.fillMaxWidth().height(162.mpx).focusRequester(focus(m.key)).onFocusChanged { if (it.isFocused) selectedKey = m.key },
-                                { selectedKey = m.key }, { onHold(m) }) }
+                            itemsIndexed(dayEvents, key = { _, m -> m.key }) { index, m ->
+                                Column(verticalArrangement = Arrangement.spacedBy(12.mpx)) {
+                                    if (index == 0 || dayEvents[index - 1].state != m.state) Text(stringResource(when(m.state) {
+                                        MatchState.IN -> R.string.sports_live_now
+                                        MatchState.PRE -> R.string.sports_starting_soon
+                                        MatchState.POST -> R.string.sports_tab_results
+                                        else -> R.string.sports_tab_fixtures
+                                    }), style = stageText(24, 800), color = Color.White)
+                                    PremiumEventCard(m, state.config.spoilerFree, false,
+                                        Modifier.fillMaxWidth().height(162.mpx).focusRequester(focus(m.key)).onFocusChanged { if (it.isFocused) selectedKey = m.key },
+                                        { selectedKey = m.key }, { onHold(m) })
+                                }
+                            }
                         }
                     }
                     Box(Modifier.weight(1f)) { detail(selected) }
@@ -270,12 +280,12 @@ internal fun PremiumEventCard(m: Match, spoilerFree: Boolean, featured: Boolean,
                     LoungeLogo(side.team.logoUrl, side.team.abbreviation.ifBlank { side.team.shortName }, Modifier.size(if (featured) 78.mpx else 48.mpx))
                     Column(Modifier.weight(1f)) {
                         Text(side.team.shortName, style = stageText(if (featured) 31 else 22, 800), color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                        if (!spoilerFree && m.state != MatchState.PRE && side.score != null) Text(side.score.text, style = stageText(if (featured) 35 else 24, 800), color = LoungeSurface.Cyan)
+                        if (!spoilerFree && m.state != MatchState.PRE) side.score?.let { score -> Text(score.text, style = stageText(if (featured) 35 else 24, 800), color = LoungeSurface.Cyan) }
                     }
                 }
             } else Text(m.title, style = stageText(if (featured) 34 else 25, 800), color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
             val local = Instant.ofEpochMilli(m.startMs).atZone(PremiumSportsPresentation.zone).format(DateTimeFormatter.ofPattern("EEE d MMM · h:mm a z"))
-            Text(listOfNotNull(if (m.isLive) m.clock?.display?.takeIf { it.isNotBlank() } ?: m.statusText else local, m.venue.takeIf { featured }).joinToString(stringResource(R.string.content_epg_bits_separator)),
+            Text(listOfNotNull(if (m.isLive) m.clock?.display?.takeIf { it.isNotBlank() } ?: m.statusText else if (m.state == MatchState.PRE) local else m.statusText, m.venue.takeIf { featured }).joinToString(stringResource(R.string.content_epg_bits_separator)),
                 style = stageText(if (featured) 20 else 17, 600), color = LoungeSurface.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }

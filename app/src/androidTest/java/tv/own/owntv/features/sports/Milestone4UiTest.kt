@@ -22,7 +22,8 @@ import tv.own.owntv.core.sports.*
 import tv.own.owntv.core.sports.model.*
 import tv.own.owntv.core.parser.XtEpgEntry
 import tv.own.owntv.core.theme.*
-import tv.own.owntv.player.PremiumLivePanel
+import tv.own.owntv.player.*
+import kotlinx.coroutines.flow.MutableStateFlow
 import tv.own.owntv.ui.theme.*
 import tv.own.owntv.ui.lounge.LoungeLogo
 import java.io.File
@@ -111,6 +112,71 @@ class Milestone4UiTest {
         assertEquals(0, toggles)
         compose.onNodeWithText("Pause").performClick(); compose.onNodeWithText("TV Guide").performClick(); compose.onNodeWithText("Playback controls").performClick()
         assertEquals(1, toggles); assertEquals(1, guide); assertEquals(1, tools)
+    }
+    private class QuietEngine : PlaybackEngine {
+        var commands = 0
+        override val isPlaying = MutableStateFlow(true)
+        override val buffering = MutableStateFlow(false)
+        override val error = MutableStateFlow<PlaybackFailure?>(null)
+        override val videoRes = MutableStateFlow<String?>(null)
+        override val volume = MutableStateFlow(100)
+        override val zoomMode = MutableStateFlow(ZoomMode.FIT)
+        override val audioCount = MutableStateFlow(0)
+        override val subCount = MutableStateFlow(0)
+        override val currentMeta = MutableStateFlow(MediaMeta(title = "TEST healthy session"))
+        override val isLiveContent = true
+        override fun togglePlayPause() { commands++ }
+        override fun setZoomMode(mode: ZoomMode) { commands++ }
+        override fun adjustVolume(delta: Int) { commands++ }
+        override fun toggleMute() { commands++ }
+        override fun retry() { commands++ }
+        override fun selectAudio(id: Int) { commands++ }
+        override fun selectSubtitle(id: Int) { commands++ }
+        override fun disableSubtitles() { commands++ }
+        override fun audioTracks() = emptyList<TrackOption>()
+        override fun textTracks() = emptyList<TrackOption>()
+    }
+    @Test fun actual_hud_tools_back_and_remount_issue_no_playback_commands() {
+        val engine = QuietEngine()
+        var attached by mutableStateOf(true)
+        compose.setContent { Theme {
+            if (attached) PlayerHud(engine, onBack = {}, premiumLivePanel = { chips, focus, more ->
+                PremiumLivePanel("TEST healthy session", null, null, null, null, chips, true, emptyList(), focus,
+                    engine::togglePlayPause, {}, more, {}, artwork = {})
+            })
+        } }
+        compose.onNodeWithText("Playback controls").performClick()
+        androidx.test.espresso.Espresso.pressBack()
+        compose.onNodeWithText("Playback controls").assertExists()
+        repeat(3) {
+            compose.runOnIdle { attached = false }; compose.waitForIdle()
+            compose.runOnIdle { attached = true }; compose.waitForIdle()
+        }
+        assertEquals(0, engine.commands)
+    }
+    @Test fun real_room_folder_membership_order_and_removal_survive_database_reopen() = runBlocking {
+        val c = InstrumentationRegistry.getInstrumentation().targetContext
+        c.deleteDatabase("m4-folder-persistence-test")
+        fun open() = androidx.room.Room.databaseBuilder(c, tv.own.owntv.core.database.OwnTVDatabase::class.java, "m4-folder-persistence-test").build()
+        val db = open()
+        db.profileDao().insert(tv.own.owntv.core.database.entity.ProfileEntity(700001L, "TEST profile A", 0))
+        db.profileDao().insert(tv.own.owntv.core.database.entity.ProfileEntity(700002L, "TEST profile B", 0))
+        val key = "custom:m4-preserved"
+        val dao = db.customCategoryDao()
+        dao.appendItem(700001L, MediaType.LIVE, key, 10)
+        dao.appendItem(700001L, MediaType.LIVE, key, 20)
+        dao.appendItem(700002L, MediaType.LIVE, key, 30)
+        assertFalse(dao.exists(700002L, MediaType.LIVE, key, 10))
+        dao.deleteItem(700001L, MediaType.LIVE, key, 10)
+        dao.appendItem(700001L, MediaType.LIVE, key, 40)
+        val rows = dao.getAllOnce().filter { it.profileId == 700001L }.sortedByDescending { it.position }
+        dao.replaceContext(700001L, MediaType.LIVE, key, rows.mapIndexed { index, r -> r.copy(id = 0, position = index) })
+        db.close()
+        val reopened = open()
+        val saved = reopened.customCategoryDao().getAllOnce().filter { it.profileId == 700001L }.sortedBy { it.position }
+        assertEquals(listOf(40L, 20L), saved.map { it.itemId })
+        assertFalse(reopened.customCategoryDao().exists(700001L, MediaType.LIVE, key, 10))
+        reopened.close()
     }
     @Test fun real_datastore_survives_reader_recreation_and_keeps_profiles_separate() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext

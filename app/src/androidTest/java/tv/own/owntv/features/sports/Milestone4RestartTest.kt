@@ -21,5 +21,10 @@ class Milestone4RestartTest {
         assertTrue(s.sportsConfig(700002L).first().teams.isEmpty())
         assertEquals(StartupMode.FAVORITES, s.startupMode(700001L).first())
         assertEquals(StartupMode.HOME, s.startupMode(700002L).first())
+        val db = androidx.room.Room.databaseBuilder(c, tv.own.owntv.core.database.OwnTVDatabase::class.java, "m4-folder-persistence-test").build()
+        val rows = db.customCategoryDao().getAllOnce().filter { it.profileId == 700001L }.sortedBy { it.position }
+        assertEquals(listOf(40L, 20L), rows.map { it.itemId })
+        assertFalse(db.customCategoryDao().exists(700002L, tv.own.owntv.core.model.MediaType.LIVE, "custom:m4-preserved", 20))
+        db.close()
     }
 }
