@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="lounge_v2_full_schedule">Full channel schedule</string>
+    <string name="lounge_v2_loading">Loading schedule…</string>
+    <string name="lounge_v2_empty">No programme information for this day</string>
+    <string name="lounge_v2_schedule_error">Schedule could not load. Choose the day again to retry.</string>
+    <string name="lounge_v2_previous_day">Previous day</string>
+    <string name="lounge_v2_next_day">Next day</string>
+    <string name="lounge_v2_artwork_credit">Programme artwork from TMDB</string>
+</resources>

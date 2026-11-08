@@ -60,6 +60,9 @@ android {
         versionCode = (suppliedVersionCode ?: localFallbackVersionCode.toString()).toInt()
         versionName = suppliedVersionName ?: "5.2.3.1-local"
 
+        // Experimental TV experience is off in every normal and production build.
+        buildConfigField("boolean", "LOUNGE_TV_2", "false")
+
         // Opt-in local diagnostic APKs keep the rolling playback trace enabled even when they are
         // release-signed (so they can update an installed production build without changing its data).
         buildConfigField(
@@ -221,7 +224,10 @@ android {
         debug {
             // Keep debug builds isolated from production (different signing keys and data).
             // Draft PR builds install alongside production and stable QA, never over either.
+            val loungeTv2 = System.getenv("LOUNGE_TV_2_QA") == "true"
+            buildConfigField("boolean", "LOUNGE_TV_2", loungeTv2.toString())
             applicationIdSuffix = when {
+                loungeTv2 -> ".v2qa"
                 System.getenv("RELIABILITY_AUDIT_QA") == "true" -> ".auditqa"
                 System.getenv("PLAYBACK_HOTFIX_QA") == "true" -> ".playbackqa"
                 System.getenv("ISOLATED_EVENT_QA") == "true" -> ".recoveryqa"

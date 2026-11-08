@@ -489,6 +489,7 @@ fun LiveScreen(
     val railCounts by (if (categoriesVisible) vm.railCounts else remember { kotlinx.coroutines.flow.MutableStateFlow(emptyMap<LiveKey, Int>()) })
         .collectAsStateWithLifecycle()
     val scheduleFocus = remember { FocusRequester() }
+    var scheduleChannel by remember { mutableStateOf<ChannelEntity?>(null) }
     var openProgramme by remember { mutableStateOf<Pair<ChannelEntity, tv.own.owntv.core.parser.XtEpgEntry>?>(null) }
     // Back closes the sheet: one level out.
     androidx.activity.compose.BackHandler(enabled = categoriesOpen) { categoriesOpen = false; focusCurrentRow() }
@@ -878,6 +879,7 @@ fun LiveScreen(
                     scheduleFocus = scheduleFocus,
                     onOpenProgramme = { p -> previewChannel?.let { openProgramme = it to p } },
                     onBackToList = { focusCurrentRow() },
+                    onFullSchedule = { scheduleChannel = previewChannel },
                     modifier = Modifier
                         .padding(start = screenW - margin - stageW, top = 120.mpx)
                         .width(stageW),
@@ -909,6 +911,18 @@ fun LiveScreen(
         }
     }
 
+    if (tv.own.owntv.BuildConfig.LOUNGE_TV_2) scheduleChannel?.let { ch ->
+        val epgVm: tv.own.owntv.features.epg.EpgViewModel = koinViewModel()
+        ChannelScheduleDialog(
+            channel = ch,
+            load = { from, to -> epgVm.channelSchedule(ch, from, to) },
+            loadDays = { epgVm.scheduleDays() },
+            menuOpen = openProgramme != null,
+            onProgramme = { p -> openProgramme = ch to tv.own.owntv.core.parser.XtEpgEntry(p.title, p.description, p.startMs, p.stopMs) },
+            onDismiss = { scheduleChannel = null; runCatching { scheduleFocus.requestFocus() } },
+        )
+    }
+
     // A next / later programme opened from the schedule under the stage (▶ Schedule): the TV Guide's
     // programme menu, acting through the guide's view model so both screens do the same thing.
     openProgramme?.let { (ch, xt) ->
@@ -936,7 +950,7 @@ fun LiveScreen(
                 autoMatch = false,
             ),
             leadMinutes = leadMinutes,
-            onDismiss = { openProgramme = null; runCatching { scheduleFocus.requestFocus() } },
+            onDismiss = { openProgramme = null; if (scheduleChannel == null) runCatching { scheduleFocus.requestFocus() } },
         )
     }
     catchupChannel?.let { ch ->

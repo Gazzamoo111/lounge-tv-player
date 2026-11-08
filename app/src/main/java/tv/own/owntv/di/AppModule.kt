@@ -60,6 +60,7 @@ val appModule = module {
     // asking the provider the same question.
     singleOf(::LiveEpgReader)
     singleOf(::GuideReader)
+    single { tv.own.owntv.features.live.ProgrammeArtworkResolver(get(), get(), get()) }
     singleOf(::SearchReader)
     singleOf(::HomeFeedReader)
     // Sports Hub: which match the playing channel came from. Lazy; nothing runs until it is asked.

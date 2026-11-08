@@ -332,6 +332,21 @@ class EpgViewModel(
     private fun shiftFor(channel: ChannelEntity): Int =
         tv.own.owntv.core.epg.EpgShift.minutesFor(custom.value, channel, epgOffset.value)
 
+    /** Full text for one channel/day only. Retains core's source priority and manual time shifts. */
+    suspend fun channelSchedule(channel: ChannelEntity, from: Long, to: Long): List<EpgProgrammeEntity> {
+        require(to > from && to - from <= 25L * 60 * 60 * 1000)
+        // Read the active profile directly: the first popup can open before custom's stateIn warms.
+        val pid = settings.activeProfileId.first()
+        if (pid < 0) return emptyList()
+        val cust = customize.observe(pid, MediaType.LIVE).first()
+        return guideReader.row(channel, cust, settings.epgOffsetMinutes.first(), from, to, withText = true)
+            .filter { it.stopMs > from && it.startMs < to && it.stopMs > it.startMs }
+            .distinctBy { Triple(it.startMs, it.stopMs, it.title) }
+            .sortedBy { it.startMs }
+    }
+
+    suspend fun scheduleDays(): Int = settings.guideDaysToKeep.first()
+
     /** Synchronous cache peek — lets a re-composed row render instantly without a loading flash. */
     fun cachedProgrammes(channel: ChannelEntity): List<EpgProgrammeEntity>? =
         cachedRow(cacheKey(channel, shiftFor(channel)))

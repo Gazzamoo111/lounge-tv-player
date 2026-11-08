@@ -2087,3 +2087,33 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	definite
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	likely
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	maybe
+1	technical	app/src/main/java/tv/own/owntv/features/live/ChannelScheduleDialog.kt	${p.startMs}|${p.stopMs}|${p.title}
+1	technical	app/src/main/java/tv/own/owntv/features/live/ChannelScheduleDialog.kt	EEEEMMMMd
+5	empty	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkMatch.kt	\0
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkMatch.kt	[^\\p{L}\\p{N}]+
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkMatch.kt	\\p{M}+
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkMatch.kt	\\s*\\(((?:19|20)\\d{2})\\)\\s*$
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkMatch.kt	\\s+S\\d{1,2}\\s*E\\d{1,3}.*$
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkMatch.kt	^(?:new|live|movie|film):\\s*
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkMatch.kt	film
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkMatch.kt	live
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkMatch.kt	movie
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkMatch.kt	news
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkMatch.kt	no information
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkMatch.kt	no programme information
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkMatch.kt	off air
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkMatch.kt	sport
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkMatch.kt	sports
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkMatch.kt	tba
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkMatch.kt	to be announced
+1	empty	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkResolver.kt	\0
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkResolver.kt	%02x
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkResolver.kt	SHA-256
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkResolver.kt	[a-f0-9]{64}
+2	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkResolver.kt	expires
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkResolver.kt	https://image.tmdb.org/
+2	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkResolver.kt	key
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkResolver.kt	lounge-programme-artwork-v1.json
+3	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkResolver.kt	poster
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkResolver.kt	w342
+1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkResolver.kt	|

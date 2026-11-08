@@ -42,6 +42,7 @@ jobs:
         env:
           QA_SIGNING_REQUIRED: 'false'
           PRODUCTION_SIGNING_REQUIRED: 'false'
+          LOUNGE_TV_2_QA: ${{ github.head_ref == 'feature/lounge-tv-2.0' || github.ref_name == 'feature/lounge-tv-2.0' }}
         run: |
           chmod +x ./gradlew
           ./gradlew :shared-core:core:testDebugUnitTest :shared-core:player-core:testDebugUnitTest :app:testStandardDebugUnitTest -Powntv.corePath="$GITHUB_WORKSPACE/shared-core" --stacktrace
