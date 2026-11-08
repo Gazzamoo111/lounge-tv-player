@@ -389,11 +389,15 @@ class SportsViewModel(
     }
 
     fun rejectFixtureChannel(match: Match, channel: ChannelEntity, onResult: (Boolean) -> Unit) = viewModelScope.launch {
-        onResult(candidateResolver.reject(match, channel))
+        val saved = candidateResolver.reject(match, channel)
+        if (saved) playback.refreshCorrections(match)
+        onResult(saved)
     }
 
     fun restoreFixtureChannels(match: Match, onResult: (Boolean) -> Unit) = viewModelScope.launch {
-        onResult(candidateResolver.restore(match))
+        val saved = candidateResolver.restore(match)
+        if (saved) playback.refreshCorrections(match)
+        onResult(saved)
     }
 
     /** Hold OK on a channel: "Always use for <competition>". */

@@ -16,4 +16,5 @@
     <string name="lounge_v2_sports_remember_channel">Use this channel for this competition</string>
     <string name="lounge_v2_sports_restore_feeds">Restore reported feeds</string>
     <string name="lounge_v2_sports_correction_error">Could not save this change. Please try again.</string>
+    <string name="lounge_v2_sports_saved_evidence">Your saved channel choice · content unverified</string>
 </resources>

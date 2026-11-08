@@ -131,7 +131,10 @@ fun SportsMatchScreen(
                     correctionError = false
                     vm.rejectFixtureChannel(m, option.channel) { saved ->
                         correctionError = !saved
-                        if (saved) { liveVm.stopPreview(); focused = null; correctionOption = null }
+                        if (saved) {
+                            if (liveVm.previewChannel.value?.id == option.channel.id) liveVm.stopPreview()
+                            focused = null; correctionOption = null
+                        }
                     }
                 }, modifier = Modifier.focusRequester(reportFocus),
             )
@@ -625,8 +628,10 @@ internal fun ChannelRow(o: WatchOption, m: Match, onClick: () -> Unit, onHold: (
                 ?.removePrefix(BACKEND_CONFIDENCE_PREFIX)
             val (color, icon, text) = when {
                 playing -> Triple(StageColors.Muted, null, stringResource(R.string.sports_playing_now))
+                tv.own.owntv.BuildConfig.LOUNGE_TV_2 && o.tier == WatchTier.REMEMBERED ->
+                    Triple(TierPick, OwnTVIcon.STAR, stringResource(R.string.lounge_v2_sports_saved_evidence))
                 tv.own.owntv.BuildConfig.LOUNGE_TV_2 && o.guideTitle?.startsWith(FIXTURE_EVIDENCE_PREFIX) == true -> {
-                    val evidence = o.guideTitle.removePrefix(FIXTURE_EVIDENCE_PREFIX)
+                    val evidence = o.guideTitle.orEmpty().removePrefix(FIXTURE_EVIDENCE_PREFIX)
                     val label = when (evidence) {
                         FixtureEvidence.Level.GUIDE.name -> R.string.lounge_v2_sports_epg_evidence
                         FixtureEvidence.Level.EVENT_NAME.name -> R.string.lounge_v2_sports_event_evidence
