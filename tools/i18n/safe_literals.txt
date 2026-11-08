@@ -2162,3 +2162,5 @@
 1	technical	app/src/main/java/tv/own/owntv/features/sports/PremiumSportsScreen.kt	EEE d MMM · h:mm a
 2	technical	app/src/main/java/tv/own/owntv/player/PremiumLivePanel.kt	h:mm a
 3	json	app/src/main/java/tv/own/owntv/features/sports/data/SportEvent.kt	color
+2	technical	app/src/main/java/tv/own/owntv/features/sports/PremiumFollowScreen.kt	league:$it
+2	technical	app/src/main/java/tv/own/owntv/features/sports/PremiumFollowScreen.kt	team:${it.key}

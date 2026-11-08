@@ -54,6 +54,7 @@ internal fun PremiumFollowContent(config: SportsConfig, loadTeams: suspend (Stri
         var retry by remember { mutableIntStateOf(0) }
         var arrange by remember { mutableStateOf(false) }
         var picked by remember { mutableStateOf<String?>(null) }
+        var pickedTeam by remember { mutableStateOf(false) }
         val searched by produceState(emptyList<FollowedTeam>(), query) {
             value = emptyList()
             if (query.trim().length >= 2) {
@@ -97,10 +98,10 @@ internal fun PremiumFollowContent(config: SportsConfig, loadTeams: suspend (Stri
             }
             Text(stringResource(R.string.m4_following_count, config.teams.size + config.leagues.size), style = stageText(20, 800), color = LoungeSurface.Cyan)
             LazyRow(Modifier.padding(vertical = 12.mpx).focusRestorer().focusGroup(), horizontalArrangement = Arrangement.spacedBy(10.mpx)) {
-                items(config.leagues, key = { it }) { k ->
+                items(config.leagues, key = { "league:$it" }) { k ->
                     FollowChip(SportsCatalog.league(k)?.name ?: k, { toggleLeague(k) }, { moveLeague(k, -1) })
                 }
-                items(config.teams, key = { it.key }) { t -> FollowChip(t.name, { toggleTeam(t) }, { moveTeam(t.key, -1) }) }
+                items(config.teams, key = { "team:${it.key}" }) { t -> FollowChip(t.name, { toggleTeam(t) }, { moveTeam(t.key, -1) }) }
             }
             Text(stringResource(R.string.m4_following_help), style = stageText(18, 500), color = LoungeSurface.Muted)
             Row(Modifier.weight(1f).padding(top = 18.mpx), horizontalArrangement = Arrangement.spacedBy(24.mpx)) {
@@ -139,16 +140,16 @@ internal fun PremiumFollowContent(config: SportsConfig, loadTeams: suspend (Stri
             StagePopup(onDismiss = { close() }, title = stringResource(R.string.m4_arrange), width = 850.mpx,
                 buttons = {
                     StageButton(stringResource(R.string.m4_earlier), onClick = {
-                        picked?.let { if (it in config.leagues) moveLeague(it, -1) else moveTeam(it, -1) }
+                        picked?.let { if (pickedTeam) moveTeam(it, -1) else moveLeague(it, -1) }
                     })
                     StageButton(stringResource(R.string.m4_later), onClick = {
-                        picked?.let { if (it in config.leagues) moveLeague(it, 1) else moveTeam(it, 1) }
+                        picked?.let { if (pickedTeam) moveTeam(it, 1) else moveLeague(it, 1) }
                     })
                     StageButton(stringResource(R.string.m4_done), onClick = { close() })
                 }) {
                 LazyColumn(Modifier.heightIn(max = 600.mpx)) {
-                    items(config.leagues, key = { it }) { k -> StagePopupOption(SportsCatalog.league(k)?.name ?: k, chosen = picked == k, onClick = { picked = k }) }
-                    items(config.teams, key = { it.key }) { t -> StagePopupOption(t.name, chosen = picked == t.key, onClick = { picked = t.key }) }
+                    items(config.leagues, key = { "league:$it" }) { k -> StagePopupOption(SportsCatalog.league(k)?.name ?: k, chosen = picked == k && !pickedTeam, onClick = { picked = k; pickedTeam = false }) }
+                    items(config.teams, key = { "team:${it.key}" }) { t -> StagePopupOption(t.name, chosen = picked == t.key && pickedTeam, onClick = { picked = t.key; pickedTeam = true }) }
                 }
             }
         }

@@ -135,6 +135,24 @@ class Milestone4UiTest {
         compose.onAllNodesWithText("TEST Team Blue").onFirst().performClick()
         compose.runOnIdle { assertTrue(c.teams.isEmpty()) }
     }
+    @Test fun team_and_league_shared_ids_render_and_reorder_independently() {
+        val shared = FollowedTeam(Sport.RUGBY_LEAGUE, "3", "TEST shared team ID")
+        val config = SportsConfig(leagues = listOf("rugby-league/3"), teams = listOf(shared,
+            FollowedTeam(Sport.RUGBY_LEAGUE, "4", "TEST other team")))
+        var teamMove: Pair<String, Int>? = null
+        compose.setContent { Theme {
+            PremiumFollowContent(config, { emptyList() }, {}, {},
+                { key, delta -> teamMove = key to delta },
+                { _, _ -> error("Team reorder must not alter a league sharing its ID") }, {}, 40.mpx)
+        } }
+        compose.onNodeWithText(shared.name).assertExists()
+        compose.onNodeWithText("Arrange").performClick()
+        compose.onAllNodesWithText(shared.name).onLast().performClick()
+        compose.onNodeWithText("Move later").performClick()
+        compose.runOnIdle { assertEquals(shared.key to 1, teamMove) }
+        androidx.test.espresso.Espresso.pressBack()
+        compose.onNodeWithText("Arrange").assertExists()
+    }
     @Test fun player_panel_displays_genuine_supplied_badges_and_only_explicit_actions_fire() {
         var toggles = 0; var guide = 0; var tools = 0
         compose.setContent { Theme {

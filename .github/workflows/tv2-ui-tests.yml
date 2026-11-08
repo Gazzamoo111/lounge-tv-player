@@ -56,7 +56,7 @@ jobs:
           adb install "$TARGET_APK"
           adb install "$TEST_APK"
           adb shell am instrument -w -r -e class tv.own.owntv.features.sports.Milestone4UiTest com.loungetv.player.v2qa.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/lounge-ui-results.txt
-          grep -Eq '^OK \(6 tests\)' /tmp/lounge-ui-results.txt
+          grep -Eq '^OK \(7 tests\)' /tmp/lounge-ui-results.txt
           ! grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|shortMsg=' /tmp/lounge-ui-results.txt
           adb shell am force-stop com.loungetv.player.v2qa
           adb shell am instrument -w -r -e class tv.own.owntv.features.sports.Milestone4RestartTest com.loungetv.player.v2qa.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/lounge-restart-results.txt
