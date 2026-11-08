@@ -46,3 +46,8 @@ internal fun LoungeLogo(url: String?, fallback: String, modifier: Modifier = Mod
 }
 
 internal fun Modifier.loungeBackdrop(): Modifier = background(Brush.verticalGradient(listOf(Color(0xFF152D46), LoungeSurface.Navy)))
+
+/** Source-provided colour only. No guessed team palette and no additional artwork request. */
+internal fun teamTint(team: tv.own.owntv.core.sports.model.Team?): Color? = team?.color?.let { hex ->
+    if (hex.length != 6) null else runCatching { Color(0xFF000000 or hex.toLong(16)) }.getOrNull()
+}

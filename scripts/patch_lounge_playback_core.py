@@ -262,6 +262,10 @@ def apply(root: Path, milestone3: bool = True) -> None:
         subprocess.run(["git", "-C", str(root), "apply", "--check", str(patch)], check=True)
         subprocess.run(["git", "-C", str(root), "apply", str(patch)], check=True)
         print("Applied milestone 3 continuity, cancellation and recovery improvements")
+        colours = Path(__file__).resolve().parent / "patches/sports-milestone4-colours.patch"
+        subprocess.run(["git", "-C", str(root), "apply", "--check", str(colours)], check=True)
+        subprocess.run(["git", "-C", str(root), "apply", str(colours)], check=True)
+        print("Preserved source team colours in fixture parsing and cache")
 
     print(f"Playback core patch applied to pinned commit {PIN}")
 

@@ -268,7 +268,7 @@ private fun SportsEventRail(title: String, matches: List<Match>, config: SportsC
 @Composable
 internal fun PremiumEventCard(m: Match, spoilerFree: Boolean, featured: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit, onHold: () -> Unit) {
     StageSurface(onClick, radius = 24.mpx, modifier = modifier.clip(RoundedCornerShape(24.mpx))
-        .background(Brush.horizontalGradient(listOf(Color(0xFF11385A), Color(0xFF18283D))))
+        .background(Brush.horizontalGradient(listOf(teamTint(m.home?.team)?.copy(alpha = 0.65f) ?: Color(0xFF11385A), teamTint(m.away?.team)?.copy(alpha = 0.65f) ?: Color(0xFF18283D))))
         .border(1.mpx, LoungeSurface.Line, RoundedCornerShape(24.mpx)), focusStyle = StageFocus.FX, onLongClick = onHold) { _ ->
         Column(Modifier.fillMaxSize().padding(if (featured) 26.mpx else 18.mpx), verticalArrangement = Arrangement.SpaceBetween) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {

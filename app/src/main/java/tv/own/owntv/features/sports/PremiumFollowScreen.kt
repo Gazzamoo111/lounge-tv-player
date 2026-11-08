@@ -123,7 +123,7 @@ internal fun PremiumFollowContent(config: SportsConfig, loadTeams: suspend (Stri
                             val followed = FollowedTeam(sport, t.id, t.name, t.abbreviation)
                             val on = config.teams.any { it.key == followed.key }
                             StageSurface(onClick = { toggleTeam(followed) }, radius = 22.mpx, focusStyle = StageFocus.FX,
-                                modifier = Modifier.fillMaxWidth().height(142.mpx).background(if (on) Color(0xFF13506A) else LoungeSurface.Panel, RoundedCornerShape(22.mpx))) { _ ->
+                                modifier = Modifier.fillMaxWidth().height(142.mpx).background(if (on) Color(0xFF13506A) else teamTint(t)?.copy(alpha = 0.35f) ?: LoungeSurface.Panel, RoundedCornerShape(22.mpx))) { _ ->
                                 Column(Modifier.padding(16.mpx), verticalArrangement = Arrangement.spacedBy(10.mpx)) {
                                     LoungeLogo(t.logoUrl, t.abbreviation.ifBlank { t.shortName }, Modifier.size(52.mpx))
                                     Text(t.shortName, style = stageText(21, 800), color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)

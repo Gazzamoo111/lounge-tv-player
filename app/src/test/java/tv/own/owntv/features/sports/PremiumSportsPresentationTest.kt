@@ -64,4 +64,15 @@ class PremiumSportsPresentationTest {
         assertEquals(listOf("soccer/eng.1", "basketball/nba"), one.leagues)
         assertEquals(SportsConfig(), SportsConfig.fromJson(null))
     }
+    @Test fun `supplemental fixture cache keeps source team colours and accepts older records`() {
+        val team = Team("1", "TEST team", color = "E31837")
+        val m = match("colour").copy(competitors = listOf(Competitor(team, true, null, null)))
+        val event = tv.own.owntv.features.sports.data.SportEvent.fromMatch(m, "test", now)
+        val json = event.toJson()
+        val reloaded = tv.own.owntv.features.sports.data.SportEvent.fromJson(json)!!.toMatch()!!
+        assertEquals(team.color, reloaded.competitors.single().team.color)
+        json.getJSONArray("competitors").getJSONObject(0).remove("color")
+        assertNull(tv.own.owntv.features.sports.data.SportEvent.fromJson(json)!!.toMatch()!!.competitors.single().team.color)
+    }
+
 }
