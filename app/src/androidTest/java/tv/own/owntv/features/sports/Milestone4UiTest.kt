@@ -45,7 +45,7 @@ class Milestone4UiTest {
             Competitor(Team("1", "TEST Blue", abbreviation = "BLU"), true, null, Score("1", 1)),
             Competitor(Team("2", "TEST Cyan", abbreviation = "CYN"), false, null, Score("0", 0))), venue = "TEST venue")
     @Composable private fun Theme(content: @Composable () -> Unit) {
-        OwnTVTheme(ThemeMode.DARK, AccentColor.BLUE, false, animationLevel = AnimationLevel.OFF, content = content)
+        OwnTVTheme(tv.own.owntv.core.theme.ThemeMode.DARK, tv.own.owntv.core.theme.AccentColor.BLUE, false, animationLevel = AnimationLevel.OFF, content = content)
     }
     private fun capture(name: String) {
         compose.waitForIdle()
@@ -190,6 +190,15 @@ class Milestone4UiTest {
         assertTrue(restarted.sportsConfig(b).first().teams.isEmpty())
         assertEquals(StartupMode.FAVORITES, restarted.startupMode(a).first())
         assertEquals(StartupMode.HOME, restarted.startupMode(b).first())
+        val originalProfile = settings.activeProfileId.first()
+        try {
+            settings.setActiveProfile(a)
+            assertEquals("test", restarted.activeSportsConfig.first().teams.single().id)
+            settings.setActiveProfile(b)
+            assertTrue(restarted.activeSportsConfig.first().teams.isEmpty())
+            settings.setActiveProfile(a)
+            assertEquals("test", restarted.activeSportsConfig.first().teams.single().id)
+        } finally { settings.setActiveProfile(originalProfile) }
         val store = CustomizationStore(context)
         val folder = store.createCustomCategory(a, MediaType.LIVE, "Favourites · TEST sport")
         store.renameCategory(a, MediaType.LIVE, folder.id, "TEST renamed")
