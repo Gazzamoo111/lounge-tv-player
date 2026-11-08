@@ -265,10 +265,11 @@ fun OwnTVShell(
     var fullscreenFavouriteChannel by remember { mutableStateOf<ChannelEntity?>(null) }
     var fullscreenCreateFavouriteFolder by remember { mutableStateOf(false) }
     var fullscreenFolderFocusVersion by remember { androidx.compose.runtime.mutableIntStateOf(0) }
-    val dismissFullscreenFavouriteFolder = {
+    val dismissFullscreenFavouriteFolder: () -> Unit = {
         fullscreenFavouriteChannel = null
         fullscreenCreateFavouriteFolder = false
         fullscreenFolderFocusVersion++
+        Unit
     }
     // "Previous" from the system media controls on a live channel goes back a channel.
     DisposableEffect(playbackSession, liveVm) {
