@@ -917,6 +917,7 @@ fun LiveScreen(
             channel = ch,
             load = { from, to -> epgVm.channelSchedule(ch, from, to) },
             loadDays = { epgVm.scheduleDays() },
+            loadDetails = { epgVm.programmeFull(it) },
             menuOpen = openProgramme != null,
             onProgramme = { p -> openProgramme = ch to tv.own.owntv.core.parser.XtEpgEntry(p.title, p.description, p.startMs, p.stopMs) },
             onDismiss = { scheduleChannel = null; runCatching { scheduleFocus.requestFocus() } },

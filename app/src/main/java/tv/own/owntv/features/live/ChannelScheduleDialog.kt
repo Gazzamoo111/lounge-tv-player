@@ -32,6 +32,7 @@ internal fun ChannelScheduleDialog(
     channel: ChannelEntity,
     load: suspend (Long, Long) -> List<EpgProgrammeEntity>,
     loadDays: suspend () -> Int,
+    loadDetails: suspend (Long) -> EpgProgrammeEntity?,
     menuOpen: Boolean,
     onProgramme: (EpgProgrammeEntity) -> Unit,
     onDismiss: () -> Unit,
@@ -48,6 +49,15 @@ internal fun ChannelScheduleDialog(
     val firstFocus = remember { FocusRequester() }
     val dayFocus = remember { FocusRequester() }
     val listState = rememberLazyListState()
+    val detailsReader = remember(channel.id) { ScheduleProgrammeDetails(loadDetails) }
+    val selectedRow = rows.getOrNull(selected)
+    val fullDetails by produceState(selectedRow, selectedRow?.id, selectedRow?.startMs, selectedRow?.stopMs) {
+        value = selectedRow
+        selectedRow?.let { value = detailsReader.afterFocus(it) }
+    }
+    val selectedDetails = selectedRow?.let { row ->
+        fullDetails?.takeIf { it.id == row.id && it.startMs == row.startMs && it.stopMs == row.stopMs }
+    } ?: selectedRow
     val date = today.plusDays(day.toLong())
     val from = date.atStartOfDay(zone).toInstant().toEpochMilli()
     val to = date.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli()
@@ -94,7 +104,7 @@ internal fun ChannelScheduleDialog(
                         itemsIndexed(rows, key = { _, p -> "${p.startMs}|${p.stopMs}|${p.title}" }) { i, p ->
                             StagePopupOption(title = p.title,
                                 subtitle = stringResource(R.string.content_live_time_range_plain, timeText(p.startMs), timeText(p.stopMs)),
-                                onClick = { onProgramme(p) },
+                                onClick = { onProgramme(selectedDetails?.takeIf { it.id == p.id && it.startMs == p.startMs } ?: p) },
                                 modifier = Modifier.then(if (i == selected) Modifier.focusRequester(firstFocus) else Modifier)
                                     .onFocusChanged { if (it.hasFocus) selected = i },
                             )
@@ -102,7 +112,7 @@ internal fun ChannelScheduleDialog(
                     }
                 }
             }
-            val p = rows.getOrNull(selected)
+            val p = selectedDetails
             Column(Modifier.width(300.mpx), verticalArrangement = Arrangement.spacedBy(12.mpx)) {
                 ProgrammeArtwork(p, channel.displayLogoUrl, Modifier.width(180.mpx).height(260.mpx))
                 Text(p?.title.orEmpty(), style = stageText(22, 700), maxLines = 2, overflow = TextOverflow.Ellipsis)

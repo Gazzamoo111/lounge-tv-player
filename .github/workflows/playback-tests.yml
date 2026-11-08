@@ -38,6 +38,27 @@ jobs:
           python3 scripts/generate_loungetv_brand_assets.py
           python3 scripts/check_branding.py
           PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/tests -p 'test_*.py'
+      - name: Checkout baseline core for controlled before comparison
+        uses: actions/checkout@v4
+        with:
+          repository: ahXN00/OwnTV_Core
+          ref: 1de78b1e2690c22b50c060e986bce221454bf880
+          path: baseline-core
+          persist-credentials: false
+      - name: Run identical controller scenarios against prior effective core
+        env:
+          LOUNGE_M3_BASELINE: 'true'
+        run: |
+          python3 scripts/patch_lounge_playback_core.py baseline-core --baseline
+          python3 - <<'PYBENCH'
+          from pathlib import Path
+          template = Path('scripts/benchmarks/LivePlaybackWorkBenchmarkTest.kt').read_text()
+          # The old interface has no MPV URL property; the fake still records exactly the same value.
+          template = template.replace('override var mpvUrl:', 'var mpvUrl:')
+          Path('baseline-core/player-core/src/test/java/tv/own/owntv/player/LivePlaybackWorkBenchmarkTest.kt').write_text(template)
+          PYBENCH
+          chmod +x baseline-core/gradlew
+          baseline-core/gradlew -p baseline-core :player-core:testDebugUnitTest --tests tv.own.owntv.player.LivePlaybackWorkBenchmarkTest --stacktrace
       - name: Core, playback and app unit tests without signing credentials
         env:
           QA_SIGNING_REQUIRED: 'false'
@@ -55,4 +76,5 @@ jobs:
             shared-core/core/build/test-results/**/*.xml
             shared-core/player-core/build/test-results/**/*.xml
             app/build/test-results/**/*.xml
+            baseline-core/player-core/build/test-results/**/*.xml
           if-no-files-found: warn

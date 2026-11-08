@@ -332,7 +332,7 @@ class EpgViewModel(
     private fun shiftFor(channel: ChannelEntity): Int =
         tv.own.owntv.core.epg.EpgShift.minutesFor(custom.value, channel, epgOffset.value)
 
-    /** Full text for one channel/day only. Retains core's source priority and manual time shifts. */
+    /** Lightweight schedule for one channel/day only. Retains core's source priority and manual time shifts. */
     suspend fun channelSchedule(channel: ChannelEntity, from: Long, to: Long): List<EpgProgrammeEntity> {
         require(to > from && to - from <= 25L * 60 * 60 * 1000)
         // Read the active profile directly: the first popup can open before custom's stateIn warms.
@@ -343,13 +343,7 @@ class EpgViewModel(
             .filter { it.stopMs > from && it.startMs < to && it.stopMs > it.startMs }
             .distinctBy { Triple(it.startMs, it.stopMs, it.title) }
             .sortedBy { it.startMs }
-        // Pinned core deliberately returns light rows. Fetch text only for this day's rows,
-        // in bounded batches rather than upgrading core or loading the entire guide.
-        val descriptions = withContext(Dispatchers.IO) {
-            rows.filter { it.id > 0 && it.description == null }.map { it.id }.chunked(400)
-                .flatMap { epgDao.programmeDescriptions(it) }.associate { it.id to it.description }
-        }
-        return rows.map { it.copy(description = it.description ?: descriptions[it.id]) }
+        return rows // Full text and year/episode metadata are read only for the settled selection.
     }
 
     suspend fun scheduleDays(): Int = settings.guideDaysToKeep.first()

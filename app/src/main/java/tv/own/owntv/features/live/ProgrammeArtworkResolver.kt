@@ -6,8 +6,6 @@ import java.io.File
 import java.security.MessageDigest
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import org.json.JSONArray
@@ -23,11 +21,8 @@ internal class ProgrammeArtworkResolver(
     private val provider: MetadataProvider,
     private val settings: SettingsRepository,
 ) {
-    private data class Entry(val poster: String?, val expires: Long)
-    private val mutex = Mutex()
     private val file = AtomicFile(File(context.cacheDir, "lounge-programme-artwork-v1.json"))
-    private val cache = LinkedHashMap<String, Entry>(256, 0.75f, true)
-    private var loaded = false
+    private val cache = ProgrammeArtworkCache(::readCache, ::writeCache)
 
     suspend fun resolve(title: String, year: Int? = null, type: MetadataType? = null): String? = withContext(Dispatchers.IO) {
         val query = ProgrammeArtworkMatch.query(title, year, type) ?: return@withContext null
@@ -37,10 +32,7 @@ internal class ProgrammeArtworkResolver(
         val rawKey = listOf(ProgrammeArtworkMatch.normalize(query.title), query.year, query.type,
             config.resolvedLanguage, config.customServerUrl, config.tmdbApiKey).joinToString("|")
         val key = MessageDigest.getInstance("SHA-256").digest(rawKey.toByteArray()).joinToString("") { "%02x".format(it) }
-        mutex.withLock {
-            if (!loaded) { readCache(); loaded = true }
-            val now = System.currentTimeMillis()
-            cache[key]?.takeIf { it.expires > now }?.let { return@withContext it.poster }
+        cache.resolve(key) fetch@ {
             // One selected programme, at most two searches. Timeout/transport failure is not a miss.
             val results = withTimeoutOrNull(8_000) {
                 try {
@@ -49,17 +41,14 @@ internal class ProgrammeArtworkResolver(
                     if (movies == null || shows == null) null else movies + shows
                 } catch (cancel: CancellationException) { throw cancel }
                 catch (_: Exception) { null }
-            } ?: return@withContext null
+            } ?: return@fetch ProgrammeArtworkCache.Fetch(completed = false, poster = null)
             val poster = ProgrammeArtworkMatch.select(query, results)?.posterPath?.let { MetadataImages.poster(it, "w342") }
-            cache[key] = Entry(poster, now + if (poster == null) 6 * 60 * 60_000L else 7 * 24 * 60 * 60_000L)
-            cache.entries.removeAll { it.value.expires <= now }
-            while (cache.size > 256) cache.remove(cache.keys.first())
-            writeCache()
-            poster
+            ProgrammeArtworkCache.Fetch(completed = true, poster = poster)
         }
     }
 
-    private fun readCache() {
+    private fun readCache(): List<ProgrammeArtworkCache.Entry> {
+        val entries = ArrayList<ProgrammeArtworkCache.Entry>()
         try {
             val rows = JSONArray(file.openRead().bufferedReader().use { it.readText() })
             for (i in 0 until minOf(rows.length(), 256)) {
@@ -67,17 +56,18 @@ internal class ProgrammeArtworkResolver(
                 val key = row.getString("key")
                 val poster = if (row.isNull("poster")) null else row.getString("poster")
                 if (key.matches(Regex("[a-f0-9]{64}")) && (poster == null || poster.startsWith("https://image.tmdb.org/"))) {
-                    cache[key] = Entry(poster, row.getLong("expires"))
+                    entries += ProgrammeArtworkCache.Entry(key, poster, row.getLong("expires"))
                 }
             }
-        } catch (_: Exception) { cache.clear() }
+        } catch (_: Exception) { entries.clear() }
+        return entries
     }
 
-    private fun writeCache() {
+    private fun writeCache(entries: List<ProgrammeArtworkCache.Entry>) {
         var stream: java.io.FileOutputStream? = null
         try {
             val rows = JSONArray()
-            cache.forEach { (key, entry) -> rows.put(JSONObject().put("key", key).put("poster", entry.poster ?: JSONObject.NULL).put("expires", entry.expires)) }
+            entries.forEach { entry -> rows.put(JSONObject().put("key", entry.key).put("poster", entry.poster ?: JSONObject.NULL).put("expires", entry.expires)) }
             stream = file.startWrite()
             stream.write(rows.toString().toByteArray())
             file.finishWrite(stream)

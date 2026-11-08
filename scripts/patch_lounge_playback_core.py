@@ -180,7 +180,7 @@ PATCHES = {
   ]
 }
 
-def apply(root: Path) -> None:
+def apply(root: Path, milestone3: bool = True) -> None:
     actual = subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"], text=True).strip()
     if actual != PIN:
         raise SystemExit(f"Core revision mismatch: expected {PIN}, got {actual}")
@@ -257,9 +257,15 @@ def apply(root: Path) -> None:
     manifest.write_text("\n".join(rows[:header_end] + body) + "\n", encoding="utf-8")
     print("Refreshed sports fixture regex safe literal")
 
+    if milestone3:
+        patch = Path(__file__).resolve().parent / "patches/playback-milestone3.patch"
+        subprocess.run(["git", "-C", str(root), "apply", "--check", str(patch)], check=True)
+        subprocess.run(["git", "-C", str(root), "apply", str(patch)], check=True)
+        print("Applied milestone 3 continuity, cancellation and recovery improvements")
+
     print(f"Playback core patch applied to pinned commit {PIN}")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        raise SystemExit("Usage: patch_lounge_playback_core.py path/to/OwnTV_Core")
-    apply(Path(sys.argv[1]).resolve())
+    if len(sys.argv) not in (2, 3) or (len(sys.argv) == 3 and sys.argv[2] != "--baseline"):
+        raise SystemExit("Usage: patch_lounge_playback_core.py path/to/OwnTV_Core [--baseline]")
+    apply(Path(sys.argv[1]).resolve(), milestone3=len(sys.argv) == 2)
