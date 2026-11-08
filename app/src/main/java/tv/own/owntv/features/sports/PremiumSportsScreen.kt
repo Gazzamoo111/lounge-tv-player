@@ -50,6 +50,10 @@ internal fun PremiumSportsScreen(vm: SportsViewModel, liveVm: LiveViewModel,
     val playback: SportsPlayback = koinInject()
     val session by playback.session.collectAsStateWithLifecycle()
     val playing by liveVm.previewChannel.collectAsStateWithLifecycle()
+    val previewMeta by liveVm.previewEngine.currentMeta.collectAsStateWithLifecycle()
+    val previewPlaying by liveVm.previewEngine.isPlaying.collectAsStateWithLifecycle()
+    val previewLoading by liveVm.previewEngine.buffering.collectAsStateWithLifecycle()
+    val previewBlocked by liveVm.previewBlockedSingleSession.collectAsStateWithLifecycle()
     var selected by remember(pid) { mutableStateOf<Match?>(null) }
     var options by remember(pid) { mutableStateOf<List<WatchOption>>(emptyList()) }
     var following by remember(pid) { mutableStateOf(false) }
@@ -70,7 +74,7 @@ internal fun PremiumSportsScreen(vm: SportsViewModel, liveVm: LiveViewModel,
             onFollow = { following = true }, onHold = { menuFor = it }, modifier = modifier,
             detail = { m ->
                 val valid = selected?.key == m?.key && selected?.startMs == m?.startMs
-                SportsPreviewPanel(m, if (valid) options else emptyList(), playing?.name,
+                SportsPreviewPanel(m, if (valid) options else emptyList(), previewMeta.title.takeIf { previewPlaying },
                     PremiumSportsPresentation.previewMatches(session, m, playing?.id),
                     onOpen = { m?.let(onOpenMatch) },
                     onPreview = { o -> if (active && m != null) {
@@ -79,6 +83,7 @@ internal fun PremiumSportsScreen(vm: SportsViewModel, liveVm: LiveViewModel,
                         liveVm.playPreview(o.channel)
                     } },
                     onFullScreen = { o -> if (m != null) { vm.playedFrom(m, options, o.channel); onPlayChannel(o.channel, options.map { it.channel }) } },
+                    notice = when { previewBlocked -> stringResource(R.string.m4_preview_blocked); previewLoading -> stringResource(R.string.m4_preview_loading); else -> null },
                     preview = { if (active && playing != null) ExoPreviewSurface(liveVm.previewEngine, Modifier.fillMaxSize()) })
             })
     }
@@ -278,11 +283,11 @@ internal fun PremiumEventCard(m: Match, spoilerFree: Boolean, featured: Boolean,
 
 @Composable
 private fun SportsPreviewPanel(match: Match?, options: List<WatchOption>, playingName: String?, matching: Boolean,
-    onOpen: () -> Unit, onPreview: (WatchOption) -> Unit, onFullScreen: (WatchOption) -> Unit, preview: @Composable () -> Unit) {
+    onOpen: () -> Unit, onPreview: (WatchOption) -> Unit, onFullScreen: (WatchOption) -> Unit, notice: String?, preview: @Composable () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(14.mpx)) {
         Box(Modifier.fillMaxWidth().aspectRatio(16f / 9).clip(RoundedCornerShape(24.mpx)).background(Color.Black), contentAlignment = Alignment.Center) {
             preview()
-            if (playingName == null) Text(stringResource(R.string.m4_preview_empty), style = stageText(21, 500), color = LoungeSurface.Muted, modifier = Modifier.padding(24.mpx))
+            if (playingName == null) Text(notice ?: stringResource(R.string.m4_preview_empty), style = stageText(21, 500), color = LoungeSurface.Muted, modifier = Modifier.padding(24.mpx))
         }
         if (playingName != null) Text(playingName, style = stageText(20, 800), color = Color.White)
         Text(stringResource(if (playingName == null) R.string.m4_preview_empty else if (matching) R.string.m4_preview_selected else R.string.m4_preview_unrelated), style = stageText(19, 500), color = LoungeSurface.Muted)
