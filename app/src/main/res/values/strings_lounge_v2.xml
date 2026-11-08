@@ -7,4 +7,8 @@
     <string name="lounge_v2_previous_day">Previous day</string>
     <string name="lounge_v2_next_day">Next day</string>
     <string name="lounge_v2_artwork_credit">Programme artwork from TMDB</string>
+    <string name="lounge_v2_sports_event_evidence">Event-name match · content unverified</string>
+    <string name="lounge_v2_sports_network_evidence">Broadcaster suggestion · content unverified</string>
+    <string name="lounge_v2_sports_unverified">Unverified suggestion</string>
+    <string name="lounge_v2_sports_epg_evidence">EPG match · content unverified</string>
 </resources>

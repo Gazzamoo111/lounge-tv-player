@@ -47,6 +47,7 @@ internal class BackendSportsCandidateProvider(
                     val row = rows.optJSONObject(index) ?: continue
                     val providerItemId = row.optLong("providerItemId", 0L).takeIf { it > 0L } ?: continue
                     val name = row.optString("name").takeIf(String::isNotBlank) ?: continue
+                    if (tv.own.owntv.BuildConfig.LOUNGE_TV_2 && isRetrospectiveSportsFeed(name)) continue
                     val confidence = row.optString("confidence").lowercase()
                     if (confidence !in setOf("definite", "likely", "maybe")) continue
                     val streamUrl = playbackEndpoint + "/sport/_/_/" + providerItemId + ".ts" +
@@ -74,6 +75,8 @@ internal class BackendSportsCandidateProvider(
                     )
                 }
             }
+        } catch (cancel: kotlinx.coroutines.CancellationException) {
+            throw cancel
         } catch (_: Exception) {
             emptyList()
         } finally {

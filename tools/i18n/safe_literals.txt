@@ -2117,3 +2117,6 @@
 3	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkResolver.kt	poster
 1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkResolver.kt	w342
 1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkResolver.kt	|
+1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsCandidateEvidence.kt	\\b(?:replay|replays|highlights|classic|classics)\\b
+1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsCandidateEvidence.kt	definite
+1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsCandidateEvidence.kt	likely

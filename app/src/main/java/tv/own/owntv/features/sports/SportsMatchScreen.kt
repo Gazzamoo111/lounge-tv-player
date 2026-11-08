@@ -586,6 +586,16 @@ internal fun ChannelRow(o: WatchOption, m: Match, onClick: () -> Unit, onHold: (
                 ?.removePrefix(BACKEND_CONFIDENCE_PREFIX)
             val (color, icon, text) = when {
                 playing -> Triple(StageColors.Muted, null, stringResource(R.string.sports_playing_now))
+                tv.own.owntv.BuildConfig.LOUNGE_TV_2 && backendConfidence != null -> {
+                    val label = when (backendCandidateEvidence(backendConfidence)) {
+                        SportsCandidateEvidence.EVENT_NAME -> R.string.lounge_v2_sports_event_evidence
+                        SportsCandidateEvidence.BROADCASTER -> R.string.lounge_v2_sports_network_evidence
+                        SportsCandidateEvidence.UNVERIFIED -> R.string.lounge_v2_sports_unverified
+                    }
+                    Triple(StageColors.Muted, OwnTVIcon.LIVE_TV, stringResource(label))
+                }
+                tv.own.owntv.BuildConfig.LOUNGE_TV_2 && o.tier == WatchTier.GUIDE ->
+                    Triple(TierGuide, OwnTVIcon.EPG, stringResource(R.string.lounge_v2_sports_epg_evidence))
                 backendConfidence == "definite" -> Triple(TierGuide, OwnTVIcon.LIVE_TV, stringResource(R.string.sport_backend_definite))
                 backendConfidence == "likely" -> Triple(TierEvent, OwnTVIcon.LIVE_TV, stringResource(R.string.sport_backend_likely))
                 backendConfidence == "maybe" -> Triple(StageColors.Muted, null, stringResource(R.string.sport_backend_maybe))

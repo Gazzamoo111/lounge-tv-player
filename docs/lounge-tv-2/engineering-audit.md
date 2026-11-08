@@ -5,7 +5,7 @@
 - Lounge TV main: b163e75e9a53a2e3bec2bbc39d5129bd2c6e1cc2.
 - Playback CI pins OwnTV_Core 1de78b1e2690c22b50c060e986bce221454bf880 and applies scripts/patch_lounge_playback_core.py. The Maven dependency alone is NOT the effective production/QA architecture.
 - NuvioPlusIPTV dev: b348ce79fc4b6a038a3fff2a7b8da25cae181b29. Inspection is of source, not feature descriptions.
-- Supabase read-only function inventory: lounge-core-xtream v50, lounge-core-live-xmltv v24, lounge-sports-candidates v9 and candidates-qa v17. No database, function, customer or gateway mutations made.
+- Supabase read-only function inventory: lounge-core-xtream v50, lounge-core-live-xmltv v24, lounge-sports-candidates v9 and candidates-qa v17. Read deployed lounge-sports-candidates v9 source as well as inventory. No database, function, customer or gateway mutations made.
 
 ## Findings and decisions
 
@@ -30,6 +30,12 @@ Lounge already has timeline EPG, provider fallback, preview, reminders/recording
 - Selected-programme poster on schedule and now-playing poster on the Live pane. Exact normalized title/original title, strict supplied year and content type. Remakes and movie/series ambiguity fall back to channel logo. No popularity tie-break or broad fuzzy identification.
 - Registered shared MetadataProvider; metadata-disabled setting respected. Background IO, 350 ms focus debounce, serial queue, 8-second lookup timeout, 256-entry disk cache. Positive cache seven days, confirmed misses six hours; transport failures are not negative-cached. Configuration digest includes metadata language/server. No key or credential is persisted in the cache.
 - Existing QA workflow validates APK identity and signature, runs app/core/player unit suites first, and uploads `lounge-tv-2-v2qa`. PR builds use the repository's existing ephemeral signer without production secrets. Stable signing remains the existing manual QA workflow path.
+
+## Sports evidence checkpoint
+
+Deployed `lounge-sports-candidates` v9 queries catalogue names, applies team/title token overlap and known broadcaster rules, and emits `definite/likely/maybe`. It does not inspect EPG programme text or video content. Therefore v2 QA displays event-name evidence, broadcaster suggestions or unverified suggestions explicitly; even local EPG matches say content is unverified. The existing playing indicator means a channel is playing, not that its content matches the event.
+
+QA rejects backend channel names explicitly advertising replays, highlights or classics. New evidence/replay unit cases cover unknown server confidence values and word boundaries. This is an accuracy safeguard, not the requested full multi-signal sports matcher. Existing full-inventory backend, curation, fixture discovery, user league/channel preferences and reminders are preserved. Backend transport cancellation now propagates instead of being swallowed.
 
 ## Licence review
 

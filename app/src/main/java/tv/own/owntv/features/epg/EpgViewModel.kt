@@ -339,10 +339,17 @@ class EpgViewModel(
         val pid = settings.activeProfileId.first()
         if (pid < 0) return emptyList()
         val cust = customize.observe(pid, MediaType.LIVE).first()
-        return guideReader.row(channel, cust, settings.epgOffsetMinutes.first(), from, to, withText = true)
+        val rows = guideReader.row(channel, cust, settings.epgOffsetMinutes.first(), from, to)
             .filter { it.stopMs > from && it.startMs < to && it.stopMs > it.startMs }
             .distinctBy { Triple(it.startMs, it.stopMs, it.title) }
             .sortedBy { it.startMs }
+        // Pinned core deliberately returns light rows. Fetch text only for this day's rows,
+        // in bounded batches rather than upgrading core or loading the entire guide.
+        val descriptions = withContext(Dispatchers.IO) {
+            rows.filter { it.id > 0 && it.description == null }.map { it.id }.chunked(400)
+                .flatMap { epgDao.programmeDescriptions(it) }.associate { it.id to it.description }
+        }
+        return rows.map { it.copy(description = it.description ?: descriptions[it.id]) }
     }
 
     suspend fun scheduleDays(): Int = settings.guideDaysToKeep.first()

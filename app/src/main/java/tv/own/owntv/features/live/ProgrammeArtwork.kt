@@ -1,6 +1,7 @@
 package tv.own.owntv.features.live
 
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -25,10 +26,11 @@ internal fun ProgrammeArtwork(programme: EpgProgrammeEntity?, channelLogo: Strin
         delay(350) // Held remote keys must not flood metadata requests.
         value = resolver.resolve(p.title, p.year, if (!p.episode.isNullOrBlank()) MetadataType.TV else null)
     }
-    if (poster != null) {
-        AsyncImage(model = poster, contentDescription = stringResource(R.string.lounge_v2_artwork_credit),
-            contentScale = ContentScale.Fit, modifier = modifier)
-    } else {
-        ChannelLogoTile(logoUrl = channelLogo, modifier = modifier) {}
+    Box(modifier) {
+        ChannelLogoTile(logoUrl = channelLogo, modifier = Modifier.fillMaxSize()) {}
+        if (poster != null) {
+            AsyncImage(model = poster, contentDescription = stringResource(R.string.lounge_v2_artwork_credit),
+                contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+        }
     }
 }
