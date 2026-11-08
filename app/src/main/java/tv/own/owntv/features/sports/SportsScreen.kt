@@ -65,7 +65,11 @@ fun SportsScreen(
             modifier = modifier,
         )
     } else if (current == null) {
-        SportLoungeScreen(
+        if (tv.own.owntv.BuildConfig.LOUNGE_TV_2) PremiumSportsScreen(
+            vm, liveVm, onOpenMatch = { open(it) }, onOpenLeague = { openLeague(it) },
+            onPlayChannel = onPlayChannel, onChildFocused = onChildFocused, onEntryHook = onEntryHook,
+            contentStart = contentStart, active = active, restoreKey = lastKey, modifier = modifier,
+        ) else SportLoungeScreen(
             vm = vm,
             onOpenMatch = open,
             onPlayChannel = onPlayChannel,
