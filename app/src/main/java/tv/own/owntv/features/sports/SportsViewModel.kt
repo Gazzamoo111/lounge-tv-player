@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 import tv.own.owntv.core.database.dao.SourceDao
 import tv.own.owntv.core.database.entity.ChannelEntity
@@ -68,7 +69,7 @@ sealed interface ChannelSearch {
     data class Closed(val window: WatchWindow) : ChannelSearch
     data object NotSearched : ChannelSearch
     data object Searching : ChannelSearch
-    data class Found(val options: List<WatchOption>) : ChannelSearch
+    data class Found(val options: List<WatchOption>, val profileId: Long? = null) : ChannelSearch
 }
 
 /** The match page: the match, its summary and table from the board, and "Watch live" once searched. */
@@ -82,6 +83,7 @@ data class MatchPageState(
     val filter: WatchFilter,
     val playlists: List<Pair<Long, String>>,
     val preferredLanguages: List<String>,
+    val hasRejectedFeeds: Boolean = false,
 ) {
     val hasPlaylist: Boolean get() = playlists.isNotEmpty()
 }
@@ -128,10 +130,12 @@ class SportsViewModel(
     sportsSource: SportsSource,
     private val context: Context,
     private val sourceDao: SourceDao,
+    private val candidateResolver: SportsCandidateResolver,
 ) : ViewModel() {
 
     private val config = settings.activeSportsConfig.distinctUntilChanged()
     private val backendSportsCandidates = BackendSportsCandidateProvider()
+    private val correctionRevision = candidateResolver.revision
 
     private val board = repository.observe(Demand.Hub)
 
@@ -274,8 +278,11 @@ class SportsViewModel(
                 delay(60_000L)
             }
         }.distinctUntilChanged()
-        val search = combine(config, hasPlaylist, findAsked, window) { c, has, asked, w -> listOf(c, has, asked, w) }.transformLatest { (cv, hv, av, w) ->
-            val c = cv as SportsConfig
+        val profileConfig = if (tv.own.owntv.BuildConfig.LOUNGE_TV_2)
+            combine(config, settings.activeProfileId) { c, pid -> c to pid }
+        else config.map { it to settings.activeProfileIdNow() }
+        val search = combine(profileConfig, hasPlaylist, findAsked, window) { c, has, asked, w -> listOf(c, has, asked, w) }.transformLatest { (cv, hv, av, w) ->
+            val (c, searchProfile) = cv as Pair<SportsConfig, Long>
             val has = hv as Boolean
             val asked = av as Boolean
             if (!has) return@transformLatest emit(ChannelSearch.NotSearched)
@@ -299,9 +306,20 @@ class SportsViewModel(
                 }
                 mergeBackendSportsOptions(backendJob.await(), localJob.await())
             }
-            emit(ChannelSearch.Found(merged))
+            if (settings.activeProfileIdNow() == searchProfile)
+                emit(ChannelSearch.Found(candidateResolver.inspect(m, merged), searchProfile))
         }.flowOn(Dispatchers.Default)
-        combine(boards, config, search, pageFilter, playlists) { b, c, s, f, lists ->
+        val correctedSearch = combine(search, correctionRevision, settings.activeProfileId) { s, _, pid ->
+            val rejected = if (tv.own.owntv.BuildConfig.LOUNGE_TV_2 && pid >= 0)
+                candidateResolver.rejected(pid, m) else emptySet()
+            val corrected = if (tv.own.owntv.BuildConfig.LOUNGE_TV_2 && s is ChannelSearch.Found && s.profileId != pid) ChannelSearch.NotSearched
+            else if (s is ChannelSearch.Found) s.copy(options = s.options.filterNot { option ->
+                candidateResolver.key(option.channel) in rejected
+            }) else s
+            corrected to rejected.isNotEmpty()
+        }.flowOn(Dispatchers.Default)
+        combine(boards, config, correctedSearch, pageFilter, playlists) { b, c, corrected, f, lists ->
+            val (s, hasRejected) = corrected
             val appLanguage = Locale.getDefault().language
             val filter = f ?: WatchFilter.from(c, appLanguage, lists.map { it.first })
             val preferred = c.preferredLanguages(appLanguage).toList()
@@ -316,6 +334,7 @@ class SportsViewModel(
                 filter = filter,
                 playlists = lists,
                 preferredLanguages = preferred,
+                hasRejectedFeeds = hasRejected,
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
@@ -367,6 +386,14 @@ class SportsViewModel(
                 sourceIds = filter.sourceIds,
             )
         }
+    }
+
+    fun rejectFixtureChannel(match: Match, channel: ChannelEntity, onResult: (Boolean) -> Unit) = viewModelScope.launch {
+        onResult(candidateResolver.reject(match, channel))
+    }
+
+    fun restoreFixtureChannels(match: Match, onResult: (Boolean) -> Unit) = viewModelScope.launch {
+        onResult(candidateResolver.restore(match))
     }
 
     /** Hold OK on a channel: "Always use for <competition>". */
@@ -427,7 +454,7 @@ class SportsViewModel(
     suspend fun channelsFound(match: Match): List<WatchOption> {
         val c = config.first()
         val options = watchReader.found(match) { SportsMemory.rememberedFor(c, it) } ?: return emptyList()
-        return WatchList.of(options, WatchFilter.from(c, Locale.getDefault().language, liveSources.value)).shown
+        return WatchList.of(candidateResolver.resolve(match, options), WatchFilter.from(c, Locale.getDefault().language, liveSources.value)).shown
     }
 
     companion object {

@@ -41,6 +41,7 @@ data class SportsSession(val match: Match, val options: List<WatchOption>)
 class SportsPlayback(
     private val settings: SettingsRepository,
     private val sourceDao: SourceDao,
+    private val candidateResolver: SportsCandidateResolver,
     private val repository: SportsRepository,
     private val watchReader: WatchReader,
 ) {
@@ -97,6 +98,6 @@ class SportsPlayback(
         val config = settings.activeSportsConfig.first()
         val options = watchReader.found(match) { SportsMemory.rememberedFor(config, it) } ?: return emptyList()
         val liveSources = activeProfileSources(settings, sourceDao).first().liveSourceIds
-        return WatchList.of(options, WatchFilter.from(config, Locale.getDefault().language, liveSources)).shown
+        return WatchList.of(candidateResolver.resolve(match, options), WatchFilter.from(config, Locale.getDefault().language, liveSources)).shown
     }
 }

@@ -11,4 +11,9 @@
     <string name="lounge_v2_sports_network_evidence">Broadcaster suggestion · content unverified</string>
     <string name="lounge_v2_sports_unverified">Unverified suggestion</string>
     <string name="lounge_v2_sports_epg_evidence">EPG match · content unverified</string>
+    <string name="lounge_v2_sports_correction_hint">A wrong-feed report hides this channel for this fixture and profile. You can restore it on the match page.</string>
+    <string name="lounge_v2_sports_report_wrong">Wrong event on this feed</string>
+    <string name="lounge_v2_sports_remember_channel">Use this channel for this competition</string>
+    <string name="lounge_v2_sports_restore_feeds">Restore reported feeds</string>
+    <string name="lounge_v2_sports_correction_error">Could not save this change. Please try again.</string>
 </resources>

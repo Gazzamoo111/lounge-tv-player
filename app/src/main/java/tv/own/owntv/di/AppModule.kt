@@ -64,6 +64,7 @@ val appModule = module {
     singleOf(::SearchReader)
     singleOf(::HomeFeedReader)
     // Sports Hub: which match the playing channel came from. Lazy; nothing runs until it is asked.
+    single { tv.own.owntv.features.sports.SportsCandidateResolver(get(), get(), get(), get()) }
     singleOf(::SportsPlayback)
     singleOf(::SharedPreferencesFixtureReminderPersistence)
     single<FixtureReminderPersistence> { get<SharedPreferencesFixtureReminderPersistence>() }

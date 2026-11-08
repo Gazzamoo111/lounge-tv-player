@@ -52,3 +52,16 @@ This is milestone 1 groundwork, not the complete 2.0 release. No replacement pla
 5. Validate Sky Sport RAW feeds and long-running playback against wrong-content/replay/loop incidents. A correct EPG label does not prove stream content.
 
 No physical Fire TV or emulator was accessible during this change. No playback, install, visual or performance acceptance can be claimed from source checks alone.
+
+
+## Sports matching checkpoint 2
+
+The QA application now reassesses merged backend/local suggestions against stored EPG programme titles, descriptions and fixture start times. It reads at most 512 candidate guide channels in chunks of 128 and fetches descriptions in batches of 400. Manual guide assignments and per-channel/global offsets are applied. No playback probes or extra provider streams are opened. Guide failure falls back to honest name-only suggestions; cancellation propagates.
+
+Exact full/short team phrases require word boundaries and distinct aliases. Both teams and a nearby overlapping schedule establish EPG evidence. Explicit wrong opponents, replay/highlight names and contradictory overlapping listings are excluded. Missing or distant EPG never establishes guide evidence. A following fixture does not veto the game at kickoff. Non-team events require an exact sufficiently distinctive event title. Broadcaster hints remain suggestions. None of these states claims actual video-content verification.
+
+Duplicate discoveries of one provider feed collapse into one choice, preferring its stored channel row so manual mappings remain effective. Existing hidden inventory remains searchable and the customer-facing catalogue is unchanged.
+
+Hold OK on a QA sports feed opens report/use-for-competition actions. Negative reports are saved for one profile, fixture key, kickoff time and provider feed identity. They expire, are capped at 64 fixtures and 64 feeds per fixture, and can be restored from the match page. Persistence failures roll back the in-memory edit and show an error. No raw credentials or stream URLs are stored. The same resolver protects match-page choices, reminders and player alternatives. Profile changes invalidate an in-flight candidate search.
+
+New tests cover evidence timing/contradictions, ambiguous aliases, EPG description matching, manual mapping/offsets, bounded guide queries, database failure/cancellation, feed deduplication, report persistence/profile isolation/expiry/restore and storage failures. Physical-device interaction and playback-content checks remain outstanding. EPG accuracy and full-team alias coverage are limitations; strict matching may leave more feeds unverified rather than guessing. This does not implement automatic cross-channel failover or claim faster playback.
