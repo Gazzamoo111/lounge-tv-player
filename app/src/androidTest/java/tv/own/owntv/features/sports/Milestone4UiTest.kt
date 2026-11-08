@@ -53,21 +53,25 @@ class Milestone4UiTest {
         // Write into the debuggable app's private files so CI can export renders via run-as
         // even on Android versions that restrict /sdcard/Android/data access.
         val dir = File(InstrumentationRegistry.getInstrumentation().targetContext.filesDir, "m4-screenshots").apply { mkdirs() }
-        File(dir, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        val output = File(dir, "$name.png")
+        output.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        android.util.Log.i("LoungeM4Screens", "Rendered ${output.absolutePath} (${output.length()} bytes)")
     }
     @Test fun sports_navigation_browses_without_starting_playback_and_renders_actual_screens() {
         val matches = listOf(event("live", now - 60_000, MatchState.IN), event("soon", now + 3600_000, MatchState.PRE))
         var opened = 0; var selections = 0
+        var focusEntry: (() -> Boolean)? = null
         compose.setContent { Theme {
-            PremiumSportsContent(SportsHubState(discovery = SportLoungeDiscoverySnapshot(matches = matches)), 40.mpx, null, null, {},
+            PremiumSportsContent(SportsHubState(discovery = SportLoungeDiscoverySnapshot(matches = matches)), 40.mpx, null,
+                { focusEntry = it }, {},
                 onSelect = { selections++ }, onOpenMatch = { opened++ }, onOpenLeague = {}, onFollow = {}, onHold = {},
                 detail = { androidx.tv.material3.Text("TEST preview: no provider connection") })
         } }
         compose.onNodeWithText("My Sports").assertExists()
         capture("01-my-sports-test-data")
-        // Inject D-pad navigation at the actual focused tab, not the unfocused root semantics node.
-        // Assert focus before and after the key so a missing focus owner remains a real failure.
-        compose.onNodeWithText("My Sports").performSemanticsAction(SemanticsActions.RequestFocus) { it() }
+        // Exercise the screen's real entry focus hook, just as the TV shell does.
+        // RequestFocus on a merged text semantics node does not necessarily target its StageSurface.
+        compose.runOnIdle { assertTrue("Sports should accept entry focus", focusEntry?.invoke() == true) }
         compose.onNodeWithText("My Sports").assertIsFocused()
         compose.onNodeWithText("My Sports").performKeyInput { pressKey(Key.DirectionRight) }
         compose.waitForIdle()
