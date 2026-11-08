@@ -646,7 +646,8 @@ class LiveViewModel(
             val owned = customize.observe(pid, MediaType.LIVE).first().customCategories
                 .any { it.id == targetId && tv.own.owntv.features.customize.FavouriteFolders.isFolder(it.name) }
             if (!owned) return@launch
-            customCategoryDao.appendItem(pid, MediaType.LIVE, targetId, channel.id)
+            if (!customCategoryDao.exists(pid, MediaType.LIVE, targetId, channel.id))
+                customCategoryDao.appendItem(pid, MediaType.LIVE, targetId, channel.id)
             favoriteDao.add(FavoriteEntity(profileId = pid, mediaType = MediaType.LIVE, itemId = channel.id))
         }
     }
@@ -660,7 +661,8 @@ class LiveViewModel(
             val existing = customize.observe(pid, MediaType.LIVE).first().customCategories
                 .firstOrNull { tv.own.owntv.features.customize.FavouriteFolders.sameFolder(it.name, canonical) }
             val id = existing?.id ?: customize.createCustomCategory(pid, MediaType.LIVE, canonical).id
-            customCategoryDao.appendItem(pid, MediaType.LIVE, id, channel.id)
+            if (!customCategoryDao.exists(pid, MediaType.LIVE, id, channel.id))
+                customCategoryDao.appendItem(pid, MediaType.LIVE, id, channel.id)
             favoriteDao.add(FavoriteEntity(profileId = pid, mediaType = MediaType.LIVE, itemId = channel.id))
         }
     }

@@ -13,8 +13,10 @@ internal object FavouriteFolders {
 
     fun canonicalName(input: String): String? {
         val compact = input.trim().replace(Regex("\\s+"), " ")
-        val title = (if (compact.startsWith(PREFIX, ignoreCase = true)) {
-            compact.drop(PREFIX.length)
+        // trim() removes the prefix's trailing space, so match its trimmed form too.
+        val marker = PREFIX.trimEnd()
+        val title = (if (compact.startsWith(marker, ignoreCase = true)) {
+            compact.drop(marker.length)
         } else compact).take(MAX_TITLE_LENGTH).trim()
         return title.takeIf { it.isNotEmpty() }?.let { PREFIX + it }
     }
