@@ -359,7 +359,7 @@
          lastPreview = channel to muted
          if (_liveOnExo.value) {
              if (current != null) return
-@@ -316,13 +358,16 @@
+@@ -316,14 +358,17 @@
          previewJob?.cancel()
          previewJob = scope.launch {
              val source = host.sourceOf(channel.sourceId)
@@ -372,11 +372,22 @@
                  }
                  val url = host.resolve(source!!, channel.streamUrl) ?: return@launch
 -                if (_liveOnExo.value) return@launch // promoted to full-screen while resolving
+-                if (blockedBySingleSession(url, channel)) return@launch
 +                currentCoroutineContext().ensureActive()
 +                if (generation != previewGeneration || _liveOnExo.value) return@launch
-                 if (blockedBySingleSession(url, channel)) return@launch
++                if (blockedBySingleSession(url, channel, source)) return@launch
                  if (!handoffPreviewSession(channel, source, url)) return@launch
                  exoStalkerCmd = channel.streamUrl
+                 setReconnect(channel, source)
+@@ -331,7 +376,7 @@
+                 return@launch
+             }
+             val url = exoUrlFor(channel, source)
+-            if (blockedBySingleSession(url, channel)) return@launch
++            if (blockedBySingleSession(url, channel, source)) return@launch
+             if (engines.exoUrl == url && !engines.exoFailed) {
+                 engines.exoSetMuted(muted) // already previewing it (a re-focus) — just re-apply the mute
+                 return@launch
 @@ -364,6 +409,9 @@
       * no ladder.
       */
@@ -555,6 +566,17 @@
  
      private fun isStillExo(channel: ChannelEntity): Boolean = _liveOnExo.value && isCurrent(channel)
  
+@@ -917,8 +986,8 @@
+     private fun singleSessionPanel(channel: ChannelEntity, source: SourceEntity?): Boolean =
+         source?.maxConnections == 1 || LiveStreamQuirks.isSingleSession(channel.streamUrl)
+ 
+-    private fun blockedBySingleSession(url: String, channel: ChannelEntity): Boolean {
+-        val blocked = (engines.mpvHasStream && LiveStreamQuirks.isSingleSession(url)) ||
++    private fun blockedBySingleSession(url: String, channel: ChannelEntity, source: SourceEntity?): Boolean {
++        val blocked = (engines.mpvHasStream && (source?.maxConnections == 1 || LiveStreamQuirks.isSingleSession(url))) ||
+             host.downloadHoldsOnlyStream(channel.sourceId)
+         _previewBlocked.value = blocked
+         return blocked
 --- a/player-core/src/main/java/tv/own/owntv/player/OwnTVPlayer.kt
 +++ b/player-core/src/main/java/tv/own/owntv/player/OwnTVPlayer.kt
 @@ -12,6 +12,7 @@
@@ -847,15 +869,20 @@
          }
          override fun mpvAbandon(reason: String) { log += "mpv-abandon" }
          override suspend fun awaitMpvOutcome(timeoutMs: Long): MpvOutcome? {
-@@ -89,6 +95,7 @@
+@@ -88,18 +94,20 @@
+     private class FakeHost(private val scope: TestScope) : LiveTuneController.Host {
          var preference = EnginePreference.EXO_FIRST
          var budgetSecs = 30
++        var sourceResult: SourceEntity? = null
          var sourceDelayMs = 0L
 +        var pinned: Boolean? = null
          val pins = mutableListOf<Boolean>()
          val events = mutableListOf<PlayerFailureReason>()
  
-@@ -98,8 +105,8 @@
+         override suspend fun sourceOf(sourceId: Long): SourceEntity? {
+             if (sourceDelayMs > 0) delay(sourceDelayMs)
+-            return null
++            return sourceResult
          }
          override fun needsResolve(source: SourceEntity?) = false
          override suspend fun resolve(source: SourceEntity, cmd: String): String? = null
@@ -866,7 +893,7 @@
          override suspend fun globalPreference() = preference
          override suspend fun globalBudgetSecs() = budgetSecs
          override fun meta(channel: ChannelEntity) = MediaMeta(title = channel.name)
-@@ -408,4 +415,87 @@
+@@ -408,4 +416,115 @@
          assertEquals(1, engines.log.count { it.startsWith("exo:") })
          assertEquals("exo-mute", engines.log.last())
      }
@@ -951,6 +978,34 @@
 +        c.tune(channel(109)); runCurrent()
 +        assertEquals(listOf(true), host.pins)
 +        assertEquals(1, engines.log.count { it.startsWith("mpv:") })
++    }
++
++    @Test fun `provider-declared single connection blocks preview before any refusal is learned`() = runTest {
++        LiveStreamQuirks.clearForTest()
++        val engines = FakeEngines().apply { mpvHasStream = true }
++        val host = FakeHost(this).apply {
++            sourceResult = SourceEntity(name = "one stream", type = tv.own.owntv.core.model.SourceType.XTREAM,
++                url = "http://tune-controller-test.invalid", maxConnections = 1)
++        }
++        val c = controller(engines, host)
++        c.preview(channel(110), true); runCurrent()
++        assertTrue(c.previewBlockedSingleSession.value)
++        assertTrue(engines.log.isEmpty())
++    }
++
++    @Test fun `successful automatic fallback stays on MPV when the same channel is selected again`() = runTest {
++        val engines = FakeEngines()
++        val host = FakeHost(this)
++        val c = controller(engines, host)
++        c.tune(channel(111)); runCurrent()
++        engines.exoWatch!!.complete("unsupported content")
++        advanceTimeBy(OwnTVPlayer.SURFACE_HANDOFF_MS + 1); runCurrent()
++        engines.mpvWatch!!.complete(MpvOutcome(true, null)); runCurrent()
++        c.tune(channel(111)); runCurrent()
++        assertFalse(c.liveOnExo.value)
++        assertEquals(1, engines.log.count { it.startsWith("exo:") })
++        assertEquals(1, engines.log.count { it.startsWith("mpv:") })
++        assertTrue(host.pins.isEmpty())
 +    }
 +
  }
