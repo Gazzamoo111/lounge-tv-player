@@ -45,21 +45,45 @@ jobs:
           adb shell input keyevent 82
       - name: Compose navigation, actions, real preference persistence and screenshots
         run: |
-          ./gradlew :app:connectedX86_64DebugAndroidTest -Powntv.corePath="$GITHUB_WORKSPACE/shared-core" -Pandroid.testInstrumentationRunnerArguments.class=tv.own.owntv.features.sports.Milestone4UiTest --stacktrace
+          set -euo pipefail
+          # UTP's connected test task uninstalls the target on completion, deleting both PNGs and
+          # preference fixtures. Build then run the SAME AndroidJUnitRunner directly so the real
+          # app data remains present for export and the mandatory second-process restart check.
+          ./gradlew :app:assembleX86_64Debug :app:assembleX86_64DebugAndroidTest -Powntv.corePath="$GITHUB_WORKSPACE/shared-core" --stacktrace
+          TARGET_APK=$(find app/build/outputs/apk/x86_64/debug -name '*.apk' -print -quit)
+          TEST_APK=$(find app/build/outputs/apk/androidTest/x86_64/debug -name '*.apk' -print -quit)
+          test -n "$TARGET_APK" && test -n "$TEST_APK"
+          adb install "$TARGET_APK"
+          adb install "$TEST_APK"
+          adb shell am instrument -w -r -e class tv.own.owntv.features.sports.Milestone4UiTest com.loungetv.player.v2qa.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/lounge-ui-results.txt
+          grep -Eq '^OK \(6 tests\)' /tmp/lounge-ui-results.txt
+          ! grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|shortMsg=' /tmp/lounge-ui-results.txt
           adb shell am force-stop com.loungetv.player.v2qa
-          adb shell am instrument -w -e class tv.own.owntv.features.sports.Milestone4RestartTest com.loungetv.player.v2qa.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/lounge-restart-results.txt
-          grep -q 'OK (1 test)' /tmp/lounge-restart-results.txt
+          adb shell am instrument -w -r -e class tv.own.owntv.features.sports.Milestone4RestartTest com.loungetv.player.v2qa.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/lounge-restart-results.txt
+          grep -Eq '^OK \(1 test\)' /tmp/lounge-restart-results.txt
+          ! grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|shortMsg=' /tmp/lounge-restart-results.txt
       - name: Collect actual emulator renders and logs
         if: always()
         run: |
+          set -euo pipefail
           mkdir -p m4-ui-results
-          # Test PNGs are saved in the debuggable target's internal files directory.
-          # Android 15 emulator scoped storage may not expose /sdcard/Android/data via adb pull.
-          adb exec-out run-as com.loungetv.player.v2qa tar -cf - -C files m4-screenshots | tar -xf - -C m4-ui-results/ || true
-          find m4-ui-results -name '*.png' -type f -print || true
           adb logcat -d > m4-ui-results/logcat.txt || true
           cp /tmp/lounge-emulator.log m4-ui-results/ || true
+          cp /tmp/lounge-ui-results.txt m4-ui-results/ || true
           cp /tmp/lounge-restart-results.txt m4-ui-results/ || true
+          # Keep the later fixes' internal-file export; the app now remains installed.
+          adb exec-out run-as com.loungetv.player.v2qa tar -cf - -C files m4-screenshots | tar -xf - -C m4-ui-results/
+          python3 - <<'PYRENDERS'
+          from pathlib import Path
+          from PIL import Image
+          root = Path('m4-ui-results/m4-screenshots')
+          for name in ('01-my-sports-test-data.png', '02-all-events-test-data.png', '03-follow-teams-test-data.png', '04-player-overlay-test-data.png'):
+              path = root / name
+              with Image.open(path) as image:
+                  assert image.format == 'PNG' and image.width > image.height, (name, image.size)
+                  image.verify()
+              print('Verified actual render:', path)
+          PYRENDERS
       - uses: actions/upload-artifact@v4
         if: always()
         with:

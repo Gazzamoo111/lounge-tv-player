@@ -17,6 +17,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInputModeManager
+import androidx.compose.ui.input.InputMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -121,14 +123,21 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
     val focusers = remember { HashMap<String, FocusRequester>() }
     fun focus(key: String) = focusers.getOrPut(key) { FocusRequester() }
     val entry = remember { FocusRequester() }
+    val inputMode = LocalInputModeManager.current
     val chooseFocus = remember { FocusRequester() }
+    val leagueEntry = remember { FocusRequester() }
     var restoreChoose by remember { mutableStateOf(false) }
     LaunchedEffect(choose) {
         if (choose) restoreChoose = true
         else if (restoreChoose) { withFrameNanos { }; runCatching { chooseFocus.requestFocus() }; restoreChoose = false }
     }
     DisposableEffect(onEntryHook) {
-        onEntryHook?.invoke { runCatching { entry.requestFocus() }.getOrDefault(false) }
+        // This is the shell's explicit remote-entry action. Standard clickable focus targets are
+        // SystemDefined: touch mode refuses focus even when the node is attached and visible.
+        onEntryHook?.invoke {
+            inputMode.requestInputMode(InputMode.Keyboard)
+            runCatching { entry.requestFocus() }.getOrDefault(false)
+        }
         onDispose { onEntryHook?.invoke(null) }
     }
     val eventList = rememberLazyListState()
@@ -142,17 +151,26 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
     BackHandler(enabled = choose) { choose = false }
     Column(modifier.fillMaxSize().loungeBackdrop().padding(start = contentStart, end = 48.mpx, top = 32.mpx, bottom = 24.mpx)
         .onFocusChanged { if (it.hasFocus) onChildFocused() }) {
-        LazyRow(Modifier.focusRestorer().focusGroup(), horizontalArrangement = Arrangement.spacedBy(12.mpx),
-            contentPadding = PaddingValues(6.mpx)) {
-            item { Text(stringResource(R.string.sports_title), style = stageText(43, 800), color = Color.White,
-                modifier = Modifier.padding(end = 16.mpx)) }
-            items(SportsDestination.entries) { tab -> LoungeAction(stringResource(when(tab) {
-                SportsDestination.MY_SPORTS -> R.string.m4_my_sports
-                SportsDestination.ALL_EVENTS -> R.string.m4_all_events
-                SportsDestination.TABLES -> R.string.m4_tables
-                SportsDestination.NETWORKS -> R.string.m4_networks
-            }), destination == tab, if (tab == SportsDestination.MY_SPORTS) Modifier.focusRequester(entry) else Modifier) { destination = tab } }
-            item { LoungeAction(stringResource(R.string.m4_follow), onClick = onFollow) }
+        // The entry target must outlive horizontal lazy composition. Keep My Sports attached
+        // while the remaining tabs can scroll at larger accessibility font/zoom settings.
+        Row(Modifier.focusRestorer().focusGroup().padding(6.mpx), horizontalArrangement = Arrangement.spacedBy(12.mpx),
+            verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.sports_title), style = stageText(43, 800), color = Color.White,
+                modifier = Modifier.padding(end = 16.mpx))
+            LoungeAction(stringResource(R.string.m4_my_sports), destination == SportsDestination.MY_SPORTS,
+                Modifier.focusRequester(entry)) { destination = SportsDestination.MY_SPORTS }
+            LazyRow(Modifier.weight(1f).focusRestorer().focusGroup(), horizontalArrangement = Arrangement.spacedBy(12.mpx),
+                contentPadding = PaddingValues(4.mpx)) {
+                items(SportsDestination.entries.filterNot { it == SportsDestination.MY_SPORTS }) { tab ->
+                    LoungeAction(stringResource(when(tab) {
+                        SportsDestination.MY_SPORTS -> R.string.m4_my_sports
+                        SportsDestination.ALL_EVENTS -> R.string.m4_all_events
+                        SportsDestination.TABLES -> R.string.m4_tables
+                        SportsDestination.NETWORKS -> R.string.m4_networks
+                    }), destination == tab) { destination = tab }
+                }
+                item { LoungeAction(stringResource(R.string.m4_follow), onClick = onFollow) }
+            }
         }
         LazyRow(Modifier.padding(vertical = 12.mpx).focusRestorer().focusGroup(), horizontalArrangement = Arrangement.spacedBy(10.mpx)) {
             item { LoungeAction(stringResource(R.string.content_epg_all), sport == null) { sportName = null } }
@@ -246,8 +264,9 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
     }
     if (choose) StagePopup(onDismiss = { choose = false }, title = stringResource(R.string.m4_choose_leagues), width = 800.mpx,
         buttons = { StageButton(stringResource(R.string.m4_done), onClick = { choose = false }) }) {
+        LaunchedEffect(Unit) { withFrameNanos { }; leagueEntry.requestFocus() }
         LazyColumn(Modifier.heightIn(max = 650.mpx), verticalArrangement = Arrangement.spacedBy(8.mpx)) {
-            item { StagePopupOption(stringResource(R.string.content_epg_all), chosen = leagueFilter.isEmpty(), onClick = { leagueFilter = emptySet() }) }
+            item { StagePopupOption(stringResource(R.string.content_epg_all), chosen = leagueFilter.isEmpty(), modifier = Modifier.focusRequester(leagueEntry), onClick = { leagueFilter = emptySet() }) }
             items(all.groupBy { it.feed }.entries.toList(), key = { it.key }) { (key, matches) ->
                 StagePopupOption(matches.first().leagueName, chosen = key in leagueFilter, onClick = { leagueFilter = if (key in leagueFilter) leagueFilter - key else leagueFilter + key })
             }
@@ -292,7 +311,7 @@ internal fun PremiumEventCard(m: Match, spoilerFree: Boolean, featured: Boolean,
 }
 
 @Composable
-private fun SportsPreviewPanel(match: Match?, options: List<WatchOption>, playingName: String?, matching: Boolean,
+internal fun SportsPreviewPanel(match: Match?, options: List<WatchOption>, playingName: String?, matching: Boolean,
     onOpen: () -> Unit, onPreview: (WatchOption) -> Unit, onFullScreen: (WatchOption) -> Unit, notice: String?, preview: @Composable () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(14.mpx)) {
         Box(Modifier.fillMaxWidth().aspectRatio(16f / 9).clip(RoundedCornerShape(24.mpx)).background(Color.Black), contentAlignment = Alignment.Center) {

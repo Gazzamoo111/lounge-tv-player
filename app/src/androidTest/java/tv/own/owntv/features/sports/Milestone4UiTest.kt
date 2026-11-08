@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.InputMode
+import androidx.compose.ui.input.InputModeManager
+import androidx.compose.ui.platform.LocalInputModeManager
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -61,29 +64,54 @@ class Milestone4UiTest {
         val matches = listOf(event("live", now - 60_000, MatchState.IN), event("soon", now + 3600_000, MatchState.PRE))
         var opened = 0; var selections = 0
         var focusEntry: (() -> Boolean)? = null
+        var inputMode: InputModeManager? = null
+        var selectedEvent: Match? = null
         compose.setContent { Theme {
+            inputMode = LocalInputModeManager.current
             PremiumSportsContent(SportsHubState(discovery = SportLoungeDiscoverySnapshot(matches = matches)), 40.mpx, null,
                 { focusEntry = it }, {},
-                onSelect = { selections++ }, onOpenMatch = { opened++ }, onOpenLeague = {}, onFollow = {}, onHold = {},
-                detail = { androidx.tv.material3.Text("TEST preview: no provider connection") })
+                onSelect = { selections++; selectedEvent = it }, onOpenMatch = { opened++ }, onOpenLeague = {}, onFollow = {}, onHold = {},
+                detail = { match -> SportsPreviewPanel(match, emptyList(), null, false,
+                    onOpen = { opened++ }, onPreview = { error("TEST must not tune a stream") },
+                    onFullScreen = { error("TEST must not tune a stream") },
+                    notice = "TEST preview: no provider connection", preview = {}) })
         } }
         compose.onNodeWithText("My Sports").assertExists()
-        capture("01-my-sports-test-data")
         // Exercise the screen's real entry focus hook, just as the TV shell does.
         // RequestFocus on a merged text semantics node does not necessarily target its StageSurface.
-        compose.runOnIdle { assertTrue("Sports should accept entry focus", focusEntry?.invoke() == true) }
+        compose.runOnIdle {
+            inputMode!!.requestInputMode(InputMode.Touch)
+            assertEquals(InputMode.Touch, inputMode!!.inputMode)
+            assertTrue("Sports should accept entry focus", focusEntry?.invoke() == true)
+            assertEquals(InputMode.Keyboard, inputMode!!.inputMode)
+        }
         compose.onNodeWithText("My Sports").assertIsFocused()
+        capture("01-my-sports-test-data")
         compose.onNodeWithText("My Sports").performKeyInput { pressKey(Key.DirectionRight) }
         compose.waitForIdle()
         compose.onNodeWithText("All Events").assertIsFocused()
+        compose.onNodeWithText("All Events").performKeyInput { pressKey(Key.DirectionLeft) }
+        compose.onNodeWithText("My Sports").assertIsFocused()
         compose.onNodeWithText("Next event").performClick()
         assertEquals(0, opened)
-        compose.onNodeWithText("All Events").performClick()
+        compose.onNodeWithText("My Sports").performKeyInput { pressKey(Key.DirectionRight) }
+        compose.onNodeWithText("All Events").assertIsFocused()
+        compose.onNodeWithText("All Events").performKeyInput { pressKey(Key.DirectionCenter) }
         compose.onNodeWithText("Choose Leagues").assertExists()
         capture("02-all-events-test-data")
         compose.onNodeWithText("Choose Leagues").performClick()
+        compose.onNode(hasText("All") and isFocused()).assertExists()
+        androidx.test.espresso.Espresso.pressBack()
+        compose.onNodeWithText("Choose Leagues").assertIsFocused()
+        compose.onNodeWithText("Choose Leagues").performClick()
         compose.onNodeWithText("Done").performClick()
-        compose.onNodeWithText("Choose Leagues").assertExists()
+        compose.onNodeWithText("Choose Leagues").assertIsFocused()
+        compose.onNodeWithText("Choose Leagues").performKeyInput { pressKey(Key.DirectionDown) }
+        compose.onNode(hasText("TEST competition") and isFocused()).assertExists()
+        compose.runOnIdle { assertEquals("live", selectedEvent?.id) }
+        compose.onNode(isFocused()).performKeyInput { pressKey(Key.DirectionDown) }
+        compose.onNode(hasText("TEST competition") and isFocused()).assertExists()
+        compose.runOnIdle { assertEquals("soon", selectedEvent?.id) }
         compose.onNodeWithText("Tables").performClick()
         compose.onNodeWithText("Choose a competition to view available standings.").assertExists()
         compose.onNodeWithText("League Networks").performClick()
