@@ -50,7 +50,9 @@ class Milestone4UiTest {
     private fun capture(name: String) {
         compose.waitForIdle()
         val bitmap = compose.onRoot().captureToImage().asAndroidBitmap()
-        val dir = File(InstrumentationRegistry.getInstrumentation().targetContext.getExternalFilesDir(null), "m4-screenshots").apply { mkdirs() }
+        // Write into the debuggable app's private files so CI can export renders via run-as
+        // even on Android versions that restrict /sdcard/Android/data access.
+        val dir = File(InstrumentationRegistry.getInstrumentation().targetContext.filesDir, "m4-screenshots").apply { mkdirs() }
         File(dir, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
     @Test fun sports_navigation_browses_without_starting_playback_and_renders_actual_screens() {
@@ -63,8 +65,12 @@ class Milestone4UiTest {
         } }
         compose.onNodeWithText("My Sports").assertExists()
         capture("01-my-sports-test-data")
+        // Inject D-pad navigation at the actual focused tab, not the unfocused root semantics node.
+        // Assert focus before and after the key so a missing focus owner remains a real failure.
         compose.onNodeWithText("My Sports").performSemanticsAction(SemanticsActions.RequestFocus) { it() }
-        compose.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
+        compose.onNodeWithText("My Sports").assertIsFocused()
+        compose.onNodeWithText("My Sports").performKeyInput { pressKey(Key.DirectionRight) }
+        compose.waitForIdle()
         compose.onNodeWithText("All Events").assertIsFocused()
         compose.onNodeWithText("Next event").performClick()
         assertEquals(0, opened)
