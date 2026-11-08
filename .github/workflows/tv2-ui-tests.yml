@@ -1,0 +1,67 @@
+name: Lounge TV 2 UI acceptance
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  compose-tv:
+    if: github.head_ref == 'feature/lounge-tv-2.0' || github.ref_name == 'feature/lounge-tv-2.0'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      LOUNGE_TV_2_QA: 'true'
+      QA_SIGNING_REQUIRED: 'false'
+      PRODUCTION_SIGNING_REQUIRED: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: ahXN00/OwnTV_Core
+          ref: 1de78b1e2690c22b50c060e986bce221454bf880
+          path: shared-core
+          persist-credentials: false
+      - name: Apply reviewed playback core
+        run: python3 scripts/patch_lounge_playback_core.py shared-core
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v4
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Prepare isolated emulator and rendered assets
+        run: |
+          python3 -m pip install --disable-pip-version-check Pillow
+          python3 scripts/generate_loungetv_brand_assets.py
+          sudo chmod 666 /dev/kvm
+          sdkmanager 'emulator' 'system-images;android-35;google_apis;x86_64'
+          echo no | avdmanager create avd --force --name lounge_m4 --package 'system-images;android-35;google_apis;x86_64'
+          "$ANDROID_HOME/emulator/emulator" -avd lounge_m4 -no-window -no-audio -no-boot-anim -no-snapshot -no-metrics -gpu swiftshader_indirect > /tmp/lounge-emulator.log 2>&1 &
+          adb wait-for-device
+          timeout 240 bash -c 'until [ "$(adb shell getprop sys.boot_completed | tr -d "\r")" = "1" ]; do sleep 2; done'
+          adb shell wm size 1920x1080
+          adb shell wm density 320
+          adb shell settings put system accelerometer_rotation 0
+          adb shell settings put system user_rotation 0
+          adb shell input keyevent 82
+      - name: Compose navigation, actions, real preference persistence and screenshots
+        run: |
+          ./gradlew :app:connectedX86_64DebugAndroidTest -Powntv.corePath="$GITHUB_WORKSPACE/shared-core" -Pandroid.testInstrumentationRunnerArguments.class=tv.own.owntv.features.sports.Milestone4UiTest --stacktrace
+          adb shell am force-stop com.loungetv.player.v2qa
+          adb shell am instrument -w -e class tv.own.owntv.features.sports.Milestone4RestartTest com.loungetv.player.v2qa.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/lounge-restart-results.txt
+          grep -q 'OK (1 test)' /tmp/lounge-restart-results.txt
+      - name: Collect actual emulator renders and logs
+        if: always()
+        run: |
+          mkdir -p m4-ui-results
+          adb pull /sdcard/Android/data/com.loungetv.player.v2qa/files/m4-screenshots m4-ui-results/ || true
+          adb logcat -d > m4-ui-results/logcat.txt || true
+          cp /tmp/lounge-emulator.log m4-ui-results/ || true
+          cp /tmp/lounge-restart-results.txt m4-ui-results/ || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lounge-tv-2-rendered-ui
+          path: |
+            m4-ui-results/
+            app/build/outputs/androidTest-results/connected/
+            app/build/reports/androidTests/connected/

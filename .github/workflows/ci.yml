@@ -18,8 +18,11 @@ env:
 jobs:
   tests:
     uses: ./.github/workflows/playback-tests.yml
+  ui:
+    uses: ./.github/workflows/tv2-ui-tests.yml
   test:
-    needs: tests
+    needs: [tests, ui]
+    if: ${{ !cancelled() && needs.tests.result == 'success' && (needs.ui.result == 'success' || needs.ui.result == 'skipped') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -76,6 +79,13 @@ jobs:
           [ "$qa_cert" != "$production_cert" ] || { echo "QA and production certificates must be different"; exit 1; }
           printf '%s' "$QA_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/loungetv-qa.keystore"
           echo "QA_KEYSTORE_FILE=$RUNNER_TEMP/loungetv-qa.keystore" >> "$GITHUB_ENV"
+      # Public debug signing identity, scoped by Actions cache to this PR. Never a production key.
+      - name: Preserve v2 QA debug identity for future checkpoints
+        if: env.LOUNGE_TV_2_QA == 'true' && github.event_name != 'workflow_dispatch'
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: lounge-tv-v2qa-debug-identity-v1
       - name: Compile QA APK
         env:
           QA_KEYSTORE_PASSWORD: ${{ secrets.QA_KEYSTORE_PASSWORD }}

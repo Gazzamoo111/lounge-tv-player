@@ -527,6 +527,8 @@ dependencies {
     // every JSONObject call into a silent null/0. Backup/restore is all JSON, so the unit tests need
     // the real implementation to mean anything.
     testImplementation(libs.org.json)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }

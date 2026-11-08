@@ -116,6 +116,12 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
     val focusers = remember { HashMap<String, FocusRequester>() }
     fun focus(key: String) = focusers.getOrPut(key) { FocusRequester() }
     val entry = remember { FocusRequester() }
+    val chooseFocus = remember { FocusRequester() }
+    var restoreChoose by remember { mutableStateOf(false) }
+    LaunchedEffect(choose) {
+        if (choose) restoreChoose = true
+        else if (restoreChoose) { withFrameNanos { }; runCatching { chooseFocus.requestFocus() }; restoreChoose = false }
+    }
     DisposableEffect(onEntryHook) {
         onEntryHook?.invoke { runCatching { entry.requestFocus() }.getOrDefault(false) }
         onDispose { onEntryHook?.invoke(null) }
@@ -191,7 +197,7 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
                     Column(Modifier.weight(1.2f)) {
                         Row(horizontalArrangement = Arrangement.spacedBy(18.mpx), verticalAlignment = Alignment.CenterVertically) {
                             Text(stringResource(R.string.m4_league_count, (if (leagueFilter.isEmpty()) all.map { it.feed }.toSet() else leagueFilter).size), style = stageText(21, 700), color = LoungeSurface.Muted)
-                            LoungeAction(stringResource(R.string.m4_choose_leagues)) { choose = true }
+                            LoungeAction(stringResource(R.string.m4_choose_leagues), modifier = Modifier.focusRequester(chooseFocus)) { choose = true }
                         }
                         if (dayEvents.isEmpty()) Text(stringResource(R.string.m4_no_events), style = stageText(25, 700), color = LoungeSurface.Muted, modifier = Modifier.padding(24.mpx))
                         LazyColumn(state = eventList, modifier = Modifier.padding(top = 16.mpx).focusGroup(), verticalArrangement = Arrangement.spacedBy(16.mpx), contentPadding = PaddingValues(5.mpx)) {

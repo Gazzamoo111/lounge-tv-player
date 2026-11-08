@@ -32,6 +32,9 @@ fun SportsScreen(
     vm: SportsViewModel = koinViewModel(),
     liveVm: LiveViewModel = koinViewModel(),
 ) {
+    val hubState = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
+    val profileSettings = koinInject<tv.own.owntv.core.settings.SettingsRepository>()
+    val hubProfile by profileSettings.activeProfileId.collectAsStateWithLifecycle(-1L)
     var match by remember { mutableStateOf<Match?>(null) }
     var filters by remember { mutableStateOf(false) }
     // The league page, over the hub or a match (Back returns to whichever it came from).
@@ -65,11 +68,13 @@ fun SportsScreen(
             modifier = modifier,
         )
     } else if (current == null) {
-        if (tv.own.owntv.BuildConfig.LOUNGE_TV_2) PremiumSportsScreen(
+        if (tv.own.owntv.BuildConfig.LOUNGE_TV_2) hubState.SaveableStateProvider(hubProfile) {
+            PremiumSportsScreen(
             vm, liveVm, onOpenMatch = { open(it) }, onOpenLeague = { openLeague(it) },
             onPlayChannel = onPlayChannel, onChildFocused = onChildFocused, onEntryHook = onEntryHook,
             contentStart = contentStart, active = active, restoreKey = lastKey, modifier = modifier,
-        ) else SportLoungeScreen(
+            )
+        } else SportLoungeScreen(
             vm = vm,
             onOpenMatch = open,
             onPlayChannel = onPlayChannel,
