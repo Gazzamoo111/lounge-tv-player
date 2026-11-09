@@ -289,22 +289,8 @@ class SportsViewModel(
             if (w != WatchWindow.Open) return@transformLatest emit(ChannelSearch.Closed(w as WatchWindow))
             if (!asked) return@transformLatest emit(ChannelSearch.NotSearched)
             emit(ChannelSearch.Searching)
-            val merged = coroutineScope {
-                val loungeSource = activeProfileSources(settings, sourceDao).first().sources.firstOrNull { source ->
-                    source.syncLive &&
-                        tv.own.owntv.features.setup.isLoungeXtream(source.type, source.url) &&
-                        !source.username.isNullOrBlank() &&
-                        !source.password.isNullOrBlank()
-                }
-                val backendJob = async(Dispatchers.IO) {
-                    loungeSource?.let { backendSportsCandidates.options(m, it) }.orEmpty()
-                }
-                val localJob = async(Dispatchers.Default) {
-                    watchReader.found(m) { SportsMemory.rememberedFor(c, it) }
-                        ?: watchReader.watchFor(listOf(m)) { SportsMemory.rememberedFor(c, it) }[m.key].orEmpty()
-                }
-                mergeBackendSportsOptions(backendJob.await(), localJob.await())
-            }
+            // The match page and Sport Lounge cards must discover the same sources.
+            val merged = discoverFixtureFeeds(m, c)
             if (settings.activeProfileIdNow() == searchProfile)
                 emit(ChannelSearch.Found(candidateResolver.inspect(m, merged), searchProfile))
         }.flowOn(Dispatchers.Default)
@@ -455,15 +441,40 @@ class SportsViewModel(
     }
 
     /**
-     * Explicit preview pick from Sports. Search this fixture only, using WatchReader's bounded,
-     * fingerprinted local EPG/catalogue cache. Never search or tune on mere card focus.
-     * Candidate filtering and rejected-feed corrections are shared with the match page.
+     * One bounded discovery route for the match page and explicit card playback.
+     * Backend suggestions are evidence-filtered by candidateResolver before tuning.
+     * No lookup occurs on focus, and profile changes invalidate in-flight results.
+     */
+    private suspend fun discoverFixtureFeeds(match: Match, config: SportsConfig): List<WatchOption> = coroutineScope {
+        val profile = settings.activeProfileIdNow()
+        val loungeSource = activeProfileSources(settings, sourceDao).first().sources.firstOrNull { source ->
+            source.syncLive &&
+                tv.own.owntv.features.setup.isLoungeXtream(source.type, source.url) &&
+                !source.username.isNullOrBlank() &&
+                !source.password.isNullOrBlank()
+        }
+        val backend = async(Dispatchers.IO) {
+            loungeSource?.let { backendSportsCandidates.options(match, it) }.orEmpty()
+        }
+        val local = async(Dispatchers.Default) {
+            watchReader.found(match) { SportsMemory.rememberedFor(config, it) }
+                ?: watchReader.watchFor(listOf(match)) { SportsMemory.rememberedFor(config, it) }[match.key].orEmpty()
+        }
+        val merged = mergeBackendSportsOptions(backend.await(), local.await())
+        if (settings.activeProfileIdNow() == profile) merged else emptyList()
+    }
+
+    /**
+     * Explicit action only: search backend and local guide, as Find channels does.
+     * Never launch a stream from card focus or falsely label a candidate as confirmed.
      */
     val candidateRevision = candidateResolver.revision
 
     suspend fun previewChoices(match: Match): List<WatchOption> {
+        val profile = settings.activeProfileIdNow()
         val c = config.first()
-        val found = watchReader.watchFor(listOf(match)) { SportsMemory.rememberedFor(c, it) }[match.key].orEmpty()
+        val found = discoverFixtureFeeds(match, c)
+        if (settings.activeProfileIdNow() != profile) return emptyList()
         return candidateResolver.prioritizeFixtureChoice(match, WatchList.of(candidateResolver.resolve(match, found),
             WatchFilter.from(c, Locale.getDefault().language, liveSources.value)).shown)
     }
