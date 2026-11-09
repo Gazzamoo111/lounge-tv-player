@@ -34,3 +34,9 @@ The ownership and unnecessary polling defects are verified engineering targets. 
 3. Visit Sport Lounge first, preview a feed, then play a movie. Confirm the old feed releases and movie playback survives opening/closing controls and subsequent navigation.
 4. Browse Movies and Series rapidly while posters resolve; compare focus response, category transition and poster quality. Check English artwork without changing synopsis language.
 5. Check Home live/upcoming fixtures, local times, carousel, reminder and event routing. Check Sport Lounge naming, My Sports, preview sound, feed picker, full-screen return, EPG, Recently Played and Sky Sport NZ RAW.
+
+## Native playback CI diagnosis (QA #614)
+
+QA #614 completed with 2,040 Kotlin tests, all six controlled comparison cases, ten existing Sports UI tests and the restart persistence test passing. The four-case Milestone 6 emulator group passed Home, D-pad navigation and ExoPlayer local playback, but failed its MPV-only local MP4 probe with `FileCorrupt`. The emulator logcat establishes the immediate cause: `File.toURI().toString()` supplied `file:/data/user/0/.../m6-local-av.mp4`, which libmpv interpreted as `/file:/data/user/0/.../m6-local-av.mp4` rather than the existing local file.
+
+The instrumentation probe now passes `media.absolutePath` to `OwnTVPlayer.play()` for **both** engines and asserts that the generated MP4 exists and is nonempty before playback. This is a **test-harness path fix only**, not a change to customer playback engines, buffers, audio offsets or codecs. The corrected test still requires a successful CI replay before declaring the signed APK ready. QA #615 did not schedule jobs (the run concluded with no jobs or artifacts), so it does not establish either success or failure of the probe. Physical Fire Stick lip-sync and network-stream buffering remain open acceptance checks.
