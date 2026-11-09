@@ -128,7 +128,10 @@ class Milestone6UiTest {
         val cpuStart = Process.getElapsedCpuTime()
         var bufferingTransitions = 0; var wasBuffering = false
         try {
-            compose.runOnIdle { player.play(media.toURI().toString(), title = "TEST local AV probe", isLive = false, vodEngineOverride = engine) }
+            // Both engines accept an absolute local filesystem path. Java File.toURI() yields file:/...,
+            // which libmpv treated as /file:/... and falsely reported as FileCorrupt on the emulator.
+            assertTrue("Synthetic MP4 must exist before native playback", media.isFile && media.length() > 0)
+            compose.runOnIdle { player.play(media.absolutePath, title = "TEST local AV probe", isLive = false, vodEngineOverride = engine) }
             compose.waitUntil(30000) { player.error.value != null || (player.isPlaying.value && player.position.value > 250 && player.videoSize.value != null) }
             assertNull("Native AV probe failed", player.error.value)
             assertEquals(engine == EnginePreference.EXO_ONLY, player.isExoActive)
