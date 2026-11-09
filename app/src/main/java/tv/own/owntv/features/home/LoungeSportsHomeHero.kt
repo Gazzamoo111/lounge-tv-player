@@ -20,9 +20,6 @@ import tv.own.owntv.core.sports.model.Match
 import tv.own.owntv.features.sports.PremiumEventCard
 import tv.own.owntv.ui.lounge.LoungeAction
 import tv.own.owntv.ui.theme.*
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 /** Sports-first Home carousel using the existing branded event card and real source identities. */
 @Composable
@@ -45,7 +42,7 @@ internal fun LoungeSportsHomeHero(matches: List<Match>, start: Dp, firstFocus: F
                 .then(if (firstFocus != null) Modifier.focusRequester(firstFocus) else Modifier),
             onClick = { onOpen(match) }, onHold = { onRemind(match) }, showTime = false, backgroundArtwork = R.drawable.lounge_option_c_sport_red_blue)
         Text((if (match.isLive) stringResource(R.string.player_live) else stringResource(R.string.m6_upcoming)) +
-            stringResource(R.string.content_epg_bits_separator) + Instant.ofEpochMilli(match.startMs).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("EEE d MMM · h:mm a z")),
+            stringResource(R.string.content_epg_bits_separator) + tv.own.owntv.features.sports.PremiumSportsPresentation.nzKickoffSummary(match.startMs),
             style = stageText(21, 600), color = Color.White)
         Row(horizontalArrangement = Arrangement.spacedBy(14.mpx)) {
             LoungeAction(stringResource(R.string.m4_previous)) { index = (index - 1).mod(matches.size) }
