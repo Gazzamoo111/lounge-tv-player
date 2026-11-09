@@ -83,15 +83,14 @@ class SportsPreviewPlaybackTest {
         controller.stop()
     }
     @Test fun `explicit audio cannot bypass an active single-connection MPV session`() = runTest {
-        LiveStreamQuirks.clearForTest()
-        try {
-            val engines = Engines().apply { mpvHasStream = true }
-            LiveStreamQuirks.rememberSessionLimit(channel(1).streamUrl)
-            val controller = LiveTuneController(backgroundScope, engines, Host(this))
-            controller.preview(channel(1), muted = false); runCurrent()
-            assertTrue(controller.previewBlockedSingleSession.value)
-            assertTrue(engines.opens.isEmpty())
-            controller.stop()
-        } finally { LiveStreamQuirks.clearForTest() }
+        val engines = Engines().apply { mpvHasStream = true }
+        // Isolated hostname: this test's learned limit cannot affect any other controller test.
+        val limited = channel(1).copy(streamUrl = "http://sports-single-session-test.invalid/live/1.ts")
+        LiveStreamQuirks.rememberSessionLimit(limited.streamUrl)
+        val controller = LiveTuneController(backgroundScope, engines, Host(this))
+        controller.preview(limited, muted = false); runCurrent()
+        assertTrue(controller.previewBlockedSingleSession.value)
+        assertTrue(engines.opens.isEmpty())
+        controller.stop()
     }
 }
