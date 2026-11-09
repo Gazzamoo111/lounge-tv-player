@@ -454,6 +454,18 @@ class SportsViewModel(
         return config.orderSports(SportsCatalog.sports.filter { s -> keys.any { SportsCatalog.league(it)?.sport == s } })
     }
 
+    /**
+     * Explicit preview pick from Sports. Search this fixture only, using WatchReader's bounded,
+     * fingerprinted local EPG/catalogue cache. Never search or tune on mere card focus.
+     * Candidate filtering and rejected-feed corrections are shared with the match page.
+     */
+    suspend fun previewChoices(match: Match): List<WatchOption> {
+        val c = config.first()
+        val found = watchReader.watchFor(listOf(match)) { SportsMemory.rememberedFor(c, it) }[match.key].orEmpty()
+        return WatchList.of(candidateResolver.resolve(match, found),
+            WatchFilter.from(c, Locale.getDefault().language, liveSources.value)).shown
+    }
+
     /** [match]'s channels if Find channels already ran for it (the hub's Remind me needs one); never searches. */
     suspend fun channelsFound(match: Match): List<WatchOption> {
         val c = config.first()

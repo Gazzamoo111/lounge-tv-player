@@ -28,6 +28,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.Text
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import tv.own.owntv.R
 import tv.own.owntv.core.database.entity.ChannelEntity
@@ -62,6 +63,25 @@ internal fun PremiumSportsScreen(vm: SportsViewModel, liveVm: LiveViewModel,
     var options by remember(pid) { mutableStateOf<List<WatchOption>>(emptyList()) }
     var following by remember(pid) { mutableStateOf(false) }
     var menuFor by remember(pid) { mutableStateOf<Match?>(null) }
+    var finding by remember(pid) { mutableStateOf(false) }
+    val findScope = rememberCoroutineScope()
+    var findJob by remember(pid) { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+    val pickPreview: (Match) -> Unit = { m ->
+        selected = m
+        findJob?.cancel()
+        finding = true
+        findJob = findScope.launch {
+            try {
+                val candidates = vm.previewChoices(m)
+                if (selected?.key == m.key && selected?.startMs == m.startMs) options = candidates
+            } catch (cancel: CancellationException) { throw cancel }
+            catch (_: Exception) {
+                if (selected?.key == m.key && selected?.startMs == m.startMs) options = emptyList()
+            } finally {
+                if (selected?.key == m.key && selected?.startMs == m.startMs) finding = false
+            }
+        }
+    }
     LaunchedEffect(pid, selected?.key, selected?.startMs, state.config) {
         options = emptyList()
         delay(200)
@@ -74,17 +94,18 @@ internal fun PremiumSportsScreen(vm: SportsViewModel, liveVm: LiveViewModel,
         if (following) {
             PremiumFollowScreen(onDone = { following = false }, contentStart = contentStart, modifier = modifier)
         } else PremiumSportsContent(state, contentStart, restoreKey, onEntryHook, onChildFocused,
-            onSelect = { selected = it }, onOpenMatch = onOpenMatch, onOpenLeague = onOpenLeague,
+            onSelect = { selected = it }, onOpenMatch = pickPreview, onOpenLeague = onOpenLeague,
             onFollow = { following = true }, onHold = { menuFor = it }, modifier = modifier,
             detail = { m, compact ->
                 val valid = selected?.key == m?.key && selected?.startMs == m?.startMs
                 SportsPreviewPanel(m, if (valid) options else emptyList(), previewMeta.title.takeIf { previewPlaying },
                     PremiumSportsPresentation.previewMatches(session, m, playing?.id),
                     onOpen = { m?.let(onOpenMatch) },
+                    onFind = { m?.let(pickPreview) }, finding = finding && valid,
                     onPreview = { o -> if (active && m != null) {
                         vm.playedFrom(m, options, o.channel)
                         liveVm.onChannelFocused(o.channel)
-                        liveVm.playPreview(o.channel)
+                        liveVm.playPreview(o.channel, withAudio = true)
                     } },
                     onFullScreen = { o -> if (m != null) { vm.playedFrom(m, options, o.channel); onPlayChannel(o.channel, options.map { it.channel }) } },
                     compact = compact,
@@ -318,7 +339,8 @@ internal fun PremiumEventCard(m: Match, spoilerFree: Boolean, featured: Boolean,
 @Composable
 internal fun SportsPreviewPanel(match: Match?, options: List<WatchOption>, playingName: String?, matching: Boolean,
     onOpen: () -> Unit, onPreview: (WatchOption) -> Unit, onFullScreen: (WatchOption) -> Unit, notice: String?,
-    compact: Boolean = false, preview: @Composable () -> Unit) {
+    compact: Boolean = false, preview: @Composable () -> Unit,
+    onFind: () -> Unit = {}, finding: Boolean = false) {
     Column(Modifier.fillMaxWidth().then(if (compact) Modifier else Modifier.fillMaxHeight()),
         verticalArrangement = Arrangement.spacedBy(14.mpx)) {
         // Keep the decoder's surface outside the scrollable feed details. D-pad navigation to a
@@ -335,13 +357,23 @@ internal fun SportsPreviewPanel(match: Match?, options: List<WatchOption>, playi
                 val option = options.firstOrNull()
                 if (!compact || option == null) LoungeAction(stringResource(R.string.m4_event_details), onClick = onOpen)
                 if (option == null) {
-                    if (!compact) Text(stringResource(R.string.m4_feed_none), style = stageText(19, 500), color = LoungeSurface.Muted)
+                    LoungeAction(stringResource(R.string.m4_pick_here), onClick = onFind)
+                    if (!compact) Text(stringResource(if (finding) R.string.m4_finding_for_preview else R.string.m4_feed_none),
+                        style = stageText(19, 500), color = LoungeSurface.Muted)
                 } else {
                     if (!compact) Text(option.channel.name, style = stageText(22, 800), color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(stringResource(when (option.tier) { WatchTier.GUIDE -> R.string.m4_feed_epg; WatchTier.REMEMBERED -> R.string.m4_feed_saved; else -> R.string.m4_feed_possible }), style = stageText(18, 500), color = LoungeSurface.Muted)
                     Row(horizontalArrangement = Arrangement.spacedBy(12.mpx)) {
                         LoungeAction(stringResource(R.string.m4_preview_feed)) { onPreview(option) }
                         LoungeAction(stringResource(R.string.m4_fullscreen)) { onFullScreen(option) }
+                    }
+                    // Keep alternatives here rather than requiring navigation through the old
+                    // Timeline → Find channels page. Every alternative is user-selected explicitly.
+                    if (options.size > 1) {
+                        Text(stringResource(R.string.m4_other_feeds), style = stageText(18, 700), color = LoungeSurface.Muted)
+                        options.drop(1).take(4).forEach { other ->
+                            LoungeAction(other.channel.name) { onPreview(other) }
+                        }
                     }
                 }
             }

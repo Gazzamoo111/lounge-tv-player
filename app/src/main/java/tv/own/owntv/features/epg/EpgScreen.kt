@@ -58,6 +58,8 @@ import org.koin.androidx.compose.koinViewModel
 import tv.own.owntv.R
 import tv.own.owntv.core.database.entity.ChannelEntity
 import tv.own.owntv.core.database.entity.EpgProgrammeEntity
+import tv.own.owntv.core.epg.displayLogoUrl
+import tv.own.owntv.features.live.ProgrammeArtwork
 import tv.own.owntv.core.live.LiveKey
 import tv.own.owntv.core.model.RecordingStatus
 import tv.own.owntv.core.settings.SettingsRepository
@@ -490,13 +492,17 @@ fun EpgScreen(
         Box(Modifier.weight(1f).fillMaxHeight()) {
             if (topChannel != null) {
                 val chName = ProviderTags.parse(topChannel.name).name
-                GuideProgrammeBlock(
-                    eyebrow = shown?.let { programmeEyebrow(it, chName, liveNow) },
-                    title = shown?.title ?: chName,
-                    details = if (shown == null) stringResource(R.string.content_epg_no_programme) else programmeDetailsLine(shown),
-                    synopsis = shown?.description,
-                    modifier = Modifier.padding(start = 46.mpx, top = 76.mpx).widthIn(max = 1080.mpx),
-                )
+                Row(Modifier.fillMaxSize().padding(start = 24.mpx), verticalAlignment = Alignment.CenterVertically) {
+                    ProgrammeArtwork(shown, topChannel.displayLogoUrl, Modifier.width(170.mpx).height(250.mpx),
+                        channelName = topChannel.name)
+                    GuideProgrammeBlock(
+                        eyebrow = shown?.let { programmeEyebrow(it, chName, liveNow) },
+                        title = shown?.title ?: chName,
+                        details = if (shown == null) stringResource(R.string.content_epg_no_programme) else programmeDetailsLine(shown),
+                        synopsis = shown?.description,
+                        modifier = Modifier.weight(1f).padding(start = 24.mpx).widthIn(max = 900.mpx),
+                    )
+                }
             }
             // The key hints at the bottom right of the top area, level with the video's bottom edge.
             Box(Modifier.align(Alignment.BottomEnd)) { GuideKeyHints(cellMode = inCellMode && gridHasFocus) }

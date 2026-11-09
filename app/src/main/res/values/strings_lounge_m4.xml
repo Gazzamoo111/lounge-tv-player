@@ -16,10 +16,13 @@
     <string name="m4_feed_saved">Previously selected competition feed · check this fixture</string>
     <string name="m4_feed_epg">EPG-supported candidate · video unverified</string>
     <string name="m4_feed_possible">Possible feed · video unverified</string>
-    <string name="m4_feed_none">No saved matching feeds. Open event details to find channels.</string>
+    <string name="m4_feed_none">Choose this option to find available feeds without leaving Sports. A channel is not proof of the correct video.</string>
     <string name="m4_preview_feed">Preview selected feed</string>
     <string name="m4_fullscreen">Full screen</string>
     <string name="m4_find_feeds">Review feeds</string>
+    <string name="m4_pick_here">Pick a game to watch here</string>
+    <string name="m4_finding_for_preview">Finding channels for this event…</string>
+    <string name="m4_other_feeds">Other available feeds · video not yet verified</string>
     <string name="m4_search">Search teams and leagues</string>
     <string name="m4_arrange">Arrange</string>
     <string name="m4_done">Done</string>

@@ -1292,11 +1292,12 @@ class LiveViewModel(
     val previewBlockedSingleSession: StateFlow<Boolean> = live.previewBlockedSingleSession
 
     /** In-pane preview playback (no history) — triggered by the UI after the focus settles. */
-    fun playPreview(channel: ChannelEntity) {
+    fun playPreview(channel: ChannelEntity, withAudio: Boolean = false) {
         if (!showInNzSelection(channel) || channel.categoryId != null && channel.categoryId in hiddenCategoryIds.value) return
         // Core keeps the preview off a promoted full-screen stream, re-mutes on a re-focus instead of
         // reloading, mints a Stalker link, and holds back on a one-session panel while mpv plays.
-        live.preview(loungeNzPlaybackChannel(channel), muted = !livePreviewAudio.value)
+        // Sports preview audio is enabled only after an explicit user choice, never on browse focus.
+        live.preview(loungeNzPlaybackChannel(channel), muted = !(withAudio || livePreviewAudio.value))
     }
 
     // --- Multiview: channels kept from the browse screen ------------------------------------------

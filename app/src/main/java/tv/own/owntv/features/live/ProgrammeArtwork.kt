@@ -18,13 +18,18 @@ import tv.own.owntv.ui.components.ChannelLogoTile
 import tv.own.owntv.ui.theme.mpx
 
 @Composable
-internal fun ProgrammeArtwork(programme: EpgProgrammeEntity?, channelLogo: String?, modifier: Modifier = Modifier) {
+internal fun ProgrammeArtwork(programme: EpgProgrammeEntity?, channelLogo: String?, modifier: Modifier = Modifier,
+    channelName: String? = null) {
     val resolver: ProgrammeArtworkResolver = koinInject()
-    val poster by produceState<String?>(null, programme?.title, programme?.year, programme?.episode) {
+    val channelTheme = ProgrammeArtworkMatch.channelThemeTitle(channelName)
+    val poster by produceState<String?>(null, programme?.title, programme?.year, programme?.episode, channelTheme) {
         value = null
-        val p = programme ?: return@produceState
         delay(350) // Held remote keys must not flood metadata requests.
-        value = resolver.resolve(p.title, p.year, if (!p.episode.isNullOrBlank()) MetadataType.TV else null)
+        val p = programme
+        if (p != null) value = resolver.resolve(p.title, p.year, if (!p.episode.isNullOrBlank()) MetadataType.TV else null)
+        // A continuous 24/7 feed often has a synthetic, repeated EPG label. When an actual
+        // programme cannot be identified, display only an exact channel-themed match.
+        if (value == null && channelTheme != null) value = resolver.resolve(channelTheme)
     }
     Box(modifier) {
         ChannelLogoTile(logoUrl = channelLogo, modifier = Modifier.fillMaxSize()) {}

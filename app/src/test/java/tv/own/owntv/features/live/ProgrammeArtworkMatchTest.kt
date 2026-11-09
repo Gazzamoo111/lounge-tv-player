@@ -44,6 +44,16 @@ class ProgrammeArtworkMatchTest {
     @Test fun `placeholder programmes do not consume metadata quota`() {
         for (title in listOf("News", "No programme information", "Off air", "TBA", "")) assertNull(ProgrammeArtworkMatch.query(title))
     }
+    @Test fun `synthetic 24-7 EPG titles expose exact title for artwork`() {
+        assertEquals("BACK TO THE FUTURE", ProgrammeArtworkMatch.query("24/7 • 24/7 BACK TO THE FUTURE")?.title)
+        assertEquals("CATDOG", ProgrammeArtworkMatch.query("24/7 · CATDOG")?.title)
+        assertNull(ProgrammeArtworkMatch.query("24/7 • 24/7"))
+    }
+    @Test fun `themed channel fallback never guesses a broadcast movie`() {
+        assertEquals("Back To The Future", ProgrammeArtworkMatch.channelThemeTitle("24/7 • Back To The Future"))
+        assertNull(ProgrammeArtworkMatch.channelThemeTitle("Sky Cinema Family"))
+        assertNull(ProgrammeArtworkMatch.channelThemeTitle("24/7"))
+    }
     @Test fun `duplicate search entries are not ambiguous`() {
         val q = ProgrammeArtworkMatch.query("Moana")!!
         val h = hit(1, "Moana")
