@@ -31,6 +31,14 @@ class PremiumSportsPresentationTest {
         assertEquals(listOf(lateUtc), PremiumSportsPresentation.onDay(listOf(lateUtc), LocalDate.parse("2026-11-09"), null, emptySet()))
         assertTrue(PremiumSportsPresentation.onDay(listOf(lateUtc), LocalDate.parse("2026-11-08"), null, emptySet()).isEmpty())
     }
+    @Test fun `NZ kickoff display ignores device US timezone and handles daylight saving`() {
+        val november = Instant.parse("2026-11-10T00:00:00Z").toEpochMilli()
+        val july = Instant.parse("2026-07-10T00:00:00Z").toEpochMilli()
+        assertEquals("1:00 PM NZ", PremiumSportsPresentation.nzKickoffTime(november))
+        assertEquals("12:00 PM NZ", PremiumSportsPresentation.nzKickoffTime(july))
+        assertEquals("Tue 10 Nov", PremiumSportsPresentation.nzKickoffDay(november))
+        assertEquals("Tue 10 Nov · 1:00 PM NZ", PremiumSportsPresentation.nzKickoffSummary(november))
+    }
     @Test fun `sport and league filters cannot leak excluded events`() {
         val m = match("one")
         assertTrue(PremiumSportsPresentation.onDay(listOf(m), LocalDate.parse("2026-11-08"), Sport.CRICKET, emptySet()).isEmpty())
