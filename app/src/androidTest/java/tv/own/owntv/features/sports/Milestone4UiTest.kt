@@ -124,6 +124,26 @@ class Milestone4UiTest {
         assertEquals(0, opened)
         assertTrue(selections > 0)
     }
+    @Test fun lower_row_focus_updates_active_fixture_without_discovery_until_OK() {
+        val matches = listOf(event("live", now - 60_000, MatchState.IN), event("soon", now + 3600_000, MatchState.PRE))
+        var requests = 0
+        var selectedEvent: Match? = null
+        var inputMode: InputModeManager? = null
+        compose.setContent { Theme {
+            inputMode = LocalInputModeManager.current
+            PremiumSportsContent(SportsHubState(discovery = SportLoungeDiscoverySnapshot(matches = matches)), 40.mpx, null,
+                null, {}, onSelect = { selectedEvent = it }, onOpenMatch = { requests++ }, onOpenLeague = {},
+                onFollow = {}, onHold = {}, detail = { _, _ -> })
+        } }
+        compose.runOnIdle { inputMode!!.requestInputMode(InputMode.Keyboard) }
+        // The last visible competition card belongs to the lower Live & Upcoming rail.
+        compose.onNodeWithText("Live & Upcoming").performScrollTo()
+        compose.onAllNodesWithText("TEST competition").onLast().performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.onAllNodesWithText("TEST competition").onLast().assertIsFocused()
+        compose.runOnIdle { assertEquals("soon", selectedEvent?.id); assertEquals(0, requests) }
+        compose.onNode(isFocused()).performKeyInput { pressKey(Key.DirectionCenter) }
+        compose.runOnIdle { assertEquals(1, requests); assertEquals("soon", selectedEvent?.id) }
+    }
     @Test fun team_following_changes_content_and_roster_is_rendered() {
         var c by mutableStateOf(SportsConfig())
         val firstSport = SportsCatalog.sports.first()

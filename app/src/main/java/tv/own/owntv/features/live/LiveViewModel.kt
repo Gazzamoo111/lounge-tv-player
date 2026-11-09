@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.withIndex
@@ -1132,15 +1133,18 @@ class LiveViewModel(
 
     val recentlyWatched: StateFlow<List<ChannelEntity>> = ctx
         .flatMapLatest { c ->
-            combine(channelDao.recentlyWatched(c.profileId, 20), custResolved) { list, cs ->
+            combine(channelDao.recentlyWatched(c.profileId, 20), categoryDao.observe(c.sourceIds, MediaType.LIVE),
+                customize.observe(c.profileId, MediaType.LIVE), profileDao.observeById(c.profileId)) { list, cats, cust, profile ->
+                val hidden = tv.own.owntv.core.content.AdultCategoryClassifier.hiddenCategoryIds(
+                    cats, cust.hiddenCategories, profile?.isKids == true)
                 if (settings.activeProfileIdNow() != c.profileId) emptyList()
                 else list.distinctBy { it.id }.filter {
                     it.sourceId in c.sourceIds &&
-                        CustomizeKeys.channel(it) !in cs.cust.hiddenItems &&
-                        (it.categoryId == null || it.categoryId !in cs.hiddenCats) &&
+                        CustomizeKeys.channel(it) !in cust.hiddenItems &&
+                        (it.categoryId == null || it.categoryId !in hidden) &&
                         showInNzSelection(it)
-                }.map { ch -> cs.cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
-            }
+                }.map { ch -> cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
+            }.onStart { emit(emptyList()) }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 

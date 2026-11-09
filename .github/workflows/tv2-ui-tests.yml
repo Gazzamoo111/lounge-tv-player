@@ -56,23 +56,24 @@ jobs:
           adb install "$TARGET_APK"
           adb install "$TEST_APK"
           adb shell am instrument -w -r -e class tv.own.owntv.features.sports.Milestone4UiTest com.loungetv.player.v2qa.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/lounge-ui-results.txt
-          grep -Eq '^OK \(9 tests\)' /tmp/lounge-ui-results.txt
+          grep -Eq '^OK \(10 tests\)' /tmp/lounge-ui-results.txt
           ! grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|shortMsg=' /tmp/lounge-ui-results.txt
           adb shell am force-stop com.loungetv.player.v2qa
           adb shell am instrument -w -r -e class tv.own.owntv.features.sports.Milestone4RestartTest com.loungetv.player.v2qa.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/lounge-restart-results.txt
           grep -Eq '^OK \(1 test\)' /tmp/lounge-restart-results.txt
           ! grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|shortMsg=' /tmp/lounge-restart-results.txt
       - name: Collect actual emulator renders and logs
-        if: always()
+        if: ${{ always() && !cancelled() }}
+        timeout-minutes: 2
         run: |
           set -euo pipefail
           mkdir -p m4-ui-results
-          adb logcat -d > m4-ui-results/logcat.txt || true
+          timeout 15 adb logcat -d > m4-ui-results/logcat.txt || true
           cp /tmp/lounge-emulator.log m4-ui-results/ || true
           cp /tmp/lounge-ui-results.txt m4-ui-results/ || true
           cp /tmp/lounge-restart-results.txt m4-ui-results/ || true
           # Keep the later fixes' internal-file export; the app now remains installed.
-          adb exec-out run-as com.loungetv.player.v2qa tar -cf - -C files m4-screenshots | tar -xf - -C m4-ui-results/
+          timeout 15 adb exec-out run-as com.loungetv.player.v2qa tar -cf - -C files m4-screenshots | tar -xf - -C m4-ui-results/
           python3 - <<'PYRENDERS'
           from pathlib import Path
           from PIL import Image

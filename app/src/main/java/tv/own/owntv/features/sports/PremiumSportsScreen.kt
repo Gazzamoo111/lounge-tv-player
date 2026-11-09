@@ -275,12 +275,12 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
                         Box(Modifier.weight(1f)) { detail(featured, true) }
                     }
                 }
-                item { SportsEventRail(stringResource(R.string.m4_live_upcoming), ranked.take(24), state.config, pickHome, onHold) }
+                item { SportsEventRail(stringResource(R.string.m4_live_upcoming), ranked.take(24), state.config, pickHome, onHold, onHighlight = { pickedHomeKey = it.key }) }
                 val mine = ranked.filter { PremiumSportsPresentation.follows(it, state.config) }
-                if (mine.isNotEmpty()) item { SportsEventRail(stringResource(R.string.m4_for_you), mine.take(24), state.config, pickHome, onHold) }
+                if (mine.isNotEmpty()) item { SportsEventRail(stringResource(R.string.m4_for_you), mine.take(24), state.config, pickHome, onHold, onHighlight = { pickedHomeKey = it.key }) }
                 state.config.leagues.forEach { league ->
                     val matches = ranked.filter { it.feed == league }
-                    if (matches.isNotEmpty()) item(key = league) { SportsEventRail(matches.first().leagueName, matches.take(12), state.config, pickHome, onHold) }
+                    if (matches.isNotEmpty()) item(key = league) { SportsEventRail(matches.first().leagueName, matches.take(12), state.config, pickHome, onHold, onHighlight = { pickedHomeKey = it.key }) }
                 }
             }
             SportsDestination.ALL_EVENTS -> {
@@ -349,11 +349,12 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
 }
 
 @Composable
-private fun SportsEventRail(title: String, matches: List<Match>, config: SportsConfig, onOpen: (Match) -> Unit, onHold: (Match) -> Unit) {
+private fun SportsEventRail(title: String, matches: List<Match>, config: SportsConfig, onOpen: (Match) -> Unit,
+    onHold: (Match) -> Unit, onHighlight: (Match) -> Unit) {
     Column {
         Text(title, style = stageText(28, 800), color = Color.White, modifier = Modifier.padding(bottom = 12.mpx))
         LazyRow(Modifier.focusRestorer().focusGroup(), horizontalArrangement = Arrangement.spacedBy(16.mpx), contentPadding = PaddingValues(5.mpx)) {
-            items(matches, key = { it.key }) { m -> PremiumEventCard(m, config.spoilerFree, false, Modifier.width(405.mpx).height(196.mpx), { onOpen(m) }, { onHold(m) }) }
+            items(matches, key = { it.key }) { m -> PremiumEventCard(m, config.spoilerFree, false, Modifier.width(405.mpx).height(196.mpx).onFocusChanged { if (it.isFocused) onHighlight(m) }, { onOpen(m) }, { onHold(m) }) }
         }
     }
 }
