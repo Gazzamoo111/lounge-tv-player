@@ -68,6 +68,8 @@ internal fun PremiumSportsScreen(vm: SportsViewModel, liveVm: LiveViewModel,
     var following by remember(pid) { mutableStateOf(false) }
     var menuFor by remember(pid) { mutableStateOf<Match?>(null) }
     var finding by remember(pid) { mutableStateOf(false) }
+    var searched by remember(pid) { mutableStateOf(false) }
+    var searchFailed by remember(pid) { mutableStateOf(false) }
     var chooseFeed by remember(pid) { mutableStateOf(false) }
     var request by remember(pid) { mutableIntStateOf(0) }
     var handledRequest by remember(pid) { mutableIntStateOf(0) }
@@ -100,6 +102,8 @@ internal fun PremiumSportsScreen(vm: SportsViewModel, liveVm: LiveViewModel,
         options = emptyList()
         chooseFeed = false
         finding = false
+        searched = false
+        searchFailed = false
         val explicit = request != handledRequest
         handledRequest = request
         val match = selected ?: return@LaunchedEffect
@@ -111,13 +115,14 @@ internal fun PremiumSportsScreen(vm: SportsViewModel, liveVm: LiveViewModel,
             kotlinx.coroutines.currentCoroutineContext().ensureActive()
             if (settings.activeProfileIdNow() != pid) return@LaunchedEffect
             options = found
+            searched = explicit
             if (explicit) {
                 val single = directSportsPreviewChoice(found)
                 if (single != null) startPreview(match, found, single)
                 else chooseFeed = found.isNotEmpty()
             }
         } catch (cancel: CancellationException) { throw cancel }
-        catch (_: Exception) { options = emptyList() }
+        catch (_: Exception) { options = emptyList(); searched = explicit; searchFailed = explicit }
         finally { finding = false }
     }
     key(pid) {
@@ -131,7 +136,7 @@ internal fun PremiumSportsScreen(vm: SportsViewModel, liveVm: LiveViewModel,
                 SportsPreviewPanel(m, if (valid) options else emptyList(), previewMeta.title.takeIf { previewPlaying },
                     PremiumSportsPresentation.previewMatches(session, m, playing?.id),
                     onOpen = { m?.let(onOpenMatch) },
-                    onFind = { m?.let(pickPreview) }, finding = finding && valid,
+                    onFind = { m?.let(pickPreview) }, finding = finding && valid, searched = searched && valid,
                     onPreview = { o -> if (m != null) {
                         if (options.size == 1 && directSportsPreviewChoice(options) != null) startPreview(m, options, o)
                         else chooseFeed = true
@@ -139,6 +144,9 @@ internal fun PremiumSportsScreen(vm: SportsViewModel, liveVm: LiveViewModel,
                     onFullScreen = { o -> if (active && m != null) { vm.playedFrom(m, options, o.channel); onPlayChannel(o.channel, options.map { it.channel }) } },
                     compact = compact,
                     notice = when {
+                        valid && finding -> stringResource(R.string.m4_finding_for_preview)
+                        valid && searchFailed -> stringResource(R.string.m6_feed_search_error)
+                        valid && searched && options.isEmpty() -> stringResource(R.string.m6_no_verified_feeds)
                         previewBlocked -> stringResource(R.string.m4_preview_blocked)
                         previewError != null -> {
                             val resources = LocalContext.current.resources
@@ -395,7 +403,7 @@ internal fun PremiumEventCard(m: Match, spoilerFree: Boolean, featured: Boolean,
 internal fun SportsPreviewPanel(match: Match?, options: List<WatchOption>, playingName: String?, matching: Boolean,
     onOpen: () -> Unit, onPreview: (WatchOption) -> Unit, onFullScreen: (WatchOption) -> Unit, notice: String?,
     compact: Boolean = false, preview: @Composable () -> Unit,
-    onFind: () -> Unit = {}, finding: Boolean = false, previewFocus: FocusRequester? = null) {
+    onFind: () -> Unit = {}, finding: Boolean = false, searched: Boolean = false, previewFocus: FocusRequester? = null) {
     Column(Modifier.fillMaxWidth().then(if (compact) Modifier else Modifier.fillMaxHeight()),
         verticalArrangement = Arrangement.spacedBy(14.mpx)) {
         // Keep the decoder's surface outside the scrollable feed details. D-pad navigation to a
@@ -412,7 +420,7 @@ internal fun SportsPreviewPanel(match: Match?, options: List<WatchOption>, playi
                 val option = options.firstOrNull()
                 if (!compact || option == null) LoungeAction(stringResource(R.string.m4_event_details), onClick = onOpen)
                 if (option == null) {
-                    LoungeAction(stringResource(if (finding) R.string.m4_finding_for_preview else R.string.m4_pick_here),
+                    LoungeAction(stringResource(when { finding -> R.string.m4_finding_for_preview; searched -> R.string.m6_retry_feeds; else -> R.string.m4_pick_here }),
                         modifier = if (previewFocus != null) Modifier.focusRequester(previewFocus) else Modifier,
                         onClick = { if (!finding) onFind() })
                     if (!compact) Text(stringResource(if (finding) R.string.m4_finding_for_preview else R.string.m4_feed_none),
