@@ -8,12 +8,22 @@ import tv.own.owntv.core.sports.model.Sport
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 internal enum class SportsDestination { MY_SPORTS, ALL_EVENTS, TABLES, NETWORKS }
 
 /** Ordering/filtering only actual board/discovery rows. No synthetic fixtures or scores. */
 internal object PremiumSportsPresentation {
     val zone: ZoneId = ZoneId.of("Pacific/Auckland")
+    private val localClock = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH)
+    private val localDate = DateTimeFormatter.ofPattern("EEE d MMM", Locale.ENGLISH)
+    private val localFull = DateTimeFormatter.ofPattern("EEE d MMM · h:mm a", Locale.ENGLISH)
+    /** Single explicit zone for all Sport Lounge and match-page kickoff displays, even on a Fire Stick set to US time. */
+    fun nzKickoffTime(startMs: Long): String = Instant.ofEpochMilli(startMs).atZone(zone).format(localClock) + " NZ"
+    fun nzKickoffDay(startMs: Long): String = Instant.ofEpochMilli(startMs).atZone(zone).format(localDate)
+    fun nzKickoffSummary(startMs: Long): String = Instant.ofEpochMilli(startMs).atZone(zone).format(localFull) + " NZ"
+
     fun follows(m: Match, c: SportsConfig): Boolean {
         val teams = c.teams.mapTo(HashSet()) { it.key }
         return m.feed in c.followedLeagues() || m.competitors.any { FollowedTeam(m.sport, it.team.id, it.team.name).key in teams }
