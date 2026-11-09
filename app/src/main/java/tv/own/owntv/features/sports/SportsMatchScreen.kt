@@ -447,7 +447,7 @@ private fun ScoreHeader(m: Match, summary: MatchSummary?, hidden: Boolean, onRev
                     if (m.isLive) LiveMark(stringResource(R.string.player_live) + stringResource(R.string.content_epg_bits_separator) + clockText(m))
                     else Text(
                         // Before kick-off ESPN's text is US-styled ("10/16 - 9:00 PM EDT"); the day in the user's own words instead.
-                        if (m.state == MatchState.PRE) PremiumSportsPresentation.nzKickoffDay(m.startMs, LocalConfiguration.current.locales[0]) ?: stringResource(R.string.content_epg_today) else m.statusText,
+                        if (m.state == MatchState.PRE) PremiumSportsPresentation.nzKickoffDay(m.startMs) ?: stringResource(R.string.content_epg_today) else m.statusText,
                         style = stageText(17, 700), color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis,
                     )
                 }
@@ -457,7 +457,7 @@ private fun ScoreHeader(m: Match, summary: MatchSummary?, hidden: Boolean, onRev
             val locale = LocalConfiguration.current.locales[0]
             val info = listOfNotNull(
                 // Before kick-off the big number already says the day and time.
-                ((PremiumSportsPresentation.nzKickoffDay(m.startMs, locale) ?: stringResource(R.string.content_epg_today)) + " " + PremiumSportsPresentation.nzKickoffTime(m.startMs)).takeIf { m.state != MatchState.PRE },
+                ((PremiumSportsPresentation.nzKickoffDay(m.startMs) ?: stringResource(R.string.content_epg_today)) + " " + PremiumSportsPresentation.nzKickoffTime(m.startMs)).takeIf { m.state != MatchState.PRE },
                 m.subtitle,
                 m.venue,
             ).joinToString(stringResource(R.string.content_epg_bits_separator))
@@ -694,7 +694,7 @@ private fun ClosedNote(window: tv.own.owntv.core.sports.WatchWindow) {
     val locale = LocalConfiguration.current.locales[0]
     val text = when (window) {
         is tv.own.owntv.core.sports.WatchWindow.TooEarly ->
-            stringResource(R.string.sports_find_channels_from, (PremiumSportsPresentation.nzKickoffDay(window.opensAt, locale) ?: stringResource(R.string.content_epg_today)) + " " + PremiumSportsPresentation.nzKickoffTime(window.opensAt))
+            stringResource(R.string.sports_find_channels_from, (PremiumSportsPresentation.nzKickoffDay(window.opensAt) ?: stringResource(R.string.content_epg_today)) + " " + PremiumSportsPresentation.nzKickoffTime(window.opensAt))
         else -> stringResource(R.string.sports_find_channels_ended)
     }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.mpx)) {
