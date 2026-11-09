@@ -266,6 +266,10 @@ def apply(root: Path, milestone3: bool = True) -> None:
         subprocess.run(["git", "-C", str(root), "apply", "--check", str(colours)], check=True)
         subprocess.run(["git", "-C", str(root), "apply", str(colours)], check=True)
         print("Preserved source team colours in fixture parsing and cache")
+        recovery = Path(__file__).resolve().parent / "patches/playback-milestone6.patch"
+        subprocess.run(["git", "-C", str(root), "apply", "--check", str(recovery)], check=True)
+        subprocess.run(["git", "-C", str(root), "apply", str(recovery)], check=True)
+        print("Applied isolated preview ownership and English poster policy")
 
     print(f"Playback core patch applied to pinned commit {PIN}")
 

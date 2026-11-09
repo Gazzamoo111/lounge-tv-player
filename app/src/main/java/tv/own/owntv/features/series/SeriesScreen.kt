@@ -393,7 +393,7 @@ private fun SeriesGrid(
             indices.map { if (grid) it - gridHeaderOffset else it - listHeaderOffset }
                 .filter { it >= 0 && it < series.itemCount }
                 .mapNotNull { series.peek(it) }
-                .filter { it.posterUrl.isNullOrBlank() }
+
         }.distinctUntilChanged().collect { vm.onPosterlessVisible(it) }
     }
 
@@ -605,7 +605,7 @@ private fun SeriesGrid(
         vm.onSeriesFocused(show)
         if (rememberSeries) perCategorySeriesIds[selectedKey] = show.id
     }
-    val posterOf: (tv.own.owntv.core.database.entity.SeriesEntity) -> String? = { it.posterUrl?.takeIf { u -> u.isNotBlank() } ?: cachedPosters[it.id] }
+    val posterOf: (tv.own.owntv.core.database.entity.SeriesEntity) -> String? = { tv.own.owntv.core.metadata.MetadataImages.poster(selectedSeriesMeta?.takeIf { meta -> meta.seriesId == it.id }?.cache?.posterPath) ?: cachedPosters[it.id] ?: it.posterUrl?.takeIf { u -> u.isNotBlank() } }
     val openHighlightedShow: (tv.own.owntv.core.database.entity.SeriesEntity) -> Unit = { show ->
         onOpenAt(series.itemSnapshotList.indexOfFirst { it?.id == show.id })
         vm.openSeries(show)
@@ -1383,7 +1383,7 @@ private fun buildSeriesDetails(
 ): tv.own.owntv.features.shell.components.MediaDetailsUi {
     val providerPoster = s.posterUrl?.takeIf { it.isNotBlank() }
     val tmdbPoster = tv.own.owntv.core.metadata.MetadataImages.poster(meta?.posterPath)
-    val poster = if (tmdbWins) tmdbPoster ?: providerPoster else providerPoster ?: tmdbPoster
+    val poster = tmdbPoster ?: providerPoster
     val backdrop = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath)
         ?: s.backdropUrl?.takeIf { it.isNotBlank() }
     val plot = if (tmdbWins) meta?.overview ?: s.plot else s.plot?.takeIf { it.isNotBlank() } ?: meta?.overview
@@ -2126,7 +2126,7 @@ internal fun seriesTitleInfo(
         logoUrl = tv.own.owntv.core.metadata.MetadataImages.logo(meta?.logoPath),
         backdropUrl = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath, size = "w1280")
             ?: series.backdropUrl?.takeIf { it.isNotBlank() },
-        posterUrl = if (tmdbWins) tmdbPoster ?: providerPoster else providerPoster ?: tmdbPoster,
+        posterUrl = tmdbPoster ?: providerPoster,
         year = if (tmdbWins) meta?.year ?: series.year else series.year ?: meta?.year,
         genres = jsonStringList(meta?.genresJson),
         runtimeSecs = null,

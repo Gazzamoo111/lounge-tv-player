@@ -1,0 +1,11 @@
+<resources>
+    <string name="sports_title">Sport Lounge</string>
+    <string name="m6_sports_hero">Featured live sport</string>
+    <string name="m6_upcoming">UPCOMING</string>
+    <string name="m6_watch_event">View event &amp; feeds</string>
+    <string name="m6_remind">Set reminder</string>
+    <string name="sports_remember_filters_description">Saved to Settings → Sport Lounge for this profile</string>
+    <string name="sports_change_leagues_hint">Add or remove leagues in Settings → Sport Lounge</string>
+    <string name="sports_show_in_menu">Show Sport Lounge in the menu</string>
+    <string name="sports_empty_choose_in">Choose them in Settings → App → Sport Lounge → Sports and leagues.</string>
+</resources>

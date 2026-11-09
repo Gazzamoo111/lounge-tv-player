@@ -176,7 +176,7 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
     var choose by remember { mutableStateOf(false) }
     var heroIndex by rememberSaveable { mutableIntStateOf(0) }
     // A row-selected fixture becomes the current Sports hero, even if it lies outside the top 12.
-    var pickedHomeKey by rememberSaveable { mutableStateOf<String?>(null) }
+    var pickedHomeKey by rememberSaveable { mutableStateOf(restoreKey) }
     var selectedKey by rememberSaveable { mutableStateOf(restoreKey) }
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) { while (true) { delay(30_000); now = System.currentTimeMillis() } }
@@ -360,7 +360,7 @@ private fun SportsEventRail(title: String, matches: List<Match>, config: SportsC
 }
 
 @Composable
-internal fun PremiumEventCard(m: Match, spoilerFree: Boolean, featured: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit, onHold: () -> Unit) {
+internal fun PremiumEventCard(m: Match, spoilerFree: Boolean, featured: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit, onHold: () -> Unit, showTime: Boolean = true) {
     StageSurface(onClick, radius = 24.mpx, modifier = modifier.clip(RoundedCornerShape(24.mpx))
         .background(Brush.horizontalGradient(listOf(teamTint(m.home?.team)?.copy(alpha = 0.65f) ?: Color(0xFF11385A), teamTint(m.away?.team)?.copy(alpha = 0.65f) ?: Color(0xFF18283D))))
         .border(1.mpx, LoungeSurface.Line, RoundedCornerShape(24.mpx)), focusStyle = StageFocus.FX, onLongClick = onHold) { focused ->
@@ -380,7 +380,7 @@ internal fun PremiumEventCard(m: Match, spoilerFree: Boolean, featured: Boolean,
             } else Text(m.title, style = stageText(if (featured) 34 else 25, 800), color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
             val local = Instant.ofEpochMilli(m.startMs).atZone(PremiumSportsPresentation.zone).format(DateTimeFormatter.ofPattern("EEE d MMM · h:mm a")) +
                 stringResource(R.string.content_epg_bits_separator) + stringResource(R.string.m4_nz_time)
-            Text(listOfNotNull(if (m.isLive) m.clock?.display?.takeIf { it.isNotBlank() } ?: m.statusText else if (m.state == MatchState.PRE) local else m.statusText, m.venue.takeIf { featured }).joinToString(stringResource(R.string.content_epg_bits_separator)),
+            Text(listOfNotNull(if (m.isLive) m.clock?.display?.takeIf { it.isNotBlank() } ?: m.statusText else if (m.state == MatchState.PRE && showTime) local else m.statusText, m.venue.takeIf { featured }).joinToString(stringResource(R.string.content_epg_bits_separator)),
                 style = stageText(if (featured) 20 else 17, 600), color = LoungeSurface.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         if (focused) Box(Modifier.matchParentSize().border(2.mpx, LoungeSurface.Cyan, RoundedCornerShape(24.mpx)))

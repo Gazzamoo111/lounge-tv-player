@@ -137,7 +137,9 @@ class SportsViewModel(
     private val backendSportsCandidates = BackendSportsCandidateProvider()
     private val correctionRevision = candidateResolver.revision
 
-    private val board = repository.observe(Demand.Hub)
+    private val foreground = kotlinx.coroutines.flow.MutableStateFlow(false)
+    fun setForeground(active: Boolean) { foreground.value = active }
+    private val board = foreground.whileForeground({ repository.board.value }) { repository.observe(Demand.Hub) }
 
     /** The profile's live playlists (id → name), for the filter panel's Playlist choice. */
     private val playlists = activeProfileSources(settings, sourceDao)
@@ -152,13 +154,17 @@ class SportsViewModel(
     /** The hub's ⟳ (and Settings → Sports → Refresh sports data now): the whole board built again. */
     fun rebuild() = repository.rebuild()
 
-    private val onNow = combine(board, hasPlaylist) { b, has -> has to b.matches.filter { it.isLive }.map { it.key } }
+    private val onNow = foreground.flatMapLatest { active ->
+      if (!active) flowOf(emptyMap()) else
+      combine(board, hasPlaylist) { b, has -> has to b.matches.filter { it.isLive }.map { it.key } }
         .distinctUntilChanged()
         .flatMapLatest { (has, _) ->
             if (!has) flowOf(emptyMap()) else onChannels.observe { repository.board.value.matches.filter { it.isLive } }
         }
         .flowOn(Dispatchers.Default)
         .onStart { emit(emptyMap()) }
+
+    }
 
     private val reminderKeys = settings.activeProfileId.flatMapLatest { pid ->
         if (pid < 0) flowOf(emptySet()) else fixtureReminders.observe(pid).map { list -> list.map { it.fixtureId }.toSet() }
@@ -173,12 +179,14 @@ class SportsViewModel(
     )
     // Discovery belongs to EVERY customer, not just a zero-follow profile.
     // Show cached fixtures immediately while the seven-day schedule refreshes.
-    private val discoveryState = flow {
+    private val discoveryState = foreground.flatMapLatest { active ->
+      if (!active) flowOf(discovery.cached() to false) else flow {
         emit(discovery.cached() to true)
         while (true) {
             emit(discovery.load() to false)
             delay(DISCOVERY_REFRESH_MS)
         }
+      }
     }.flowOn(Dispatchers.IO)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SportLoungeDiscoverySnapshot() to false)
 
@@ -220,26 +228,17 @@ class SportsViewModel(
         delay(HOME_ROW_DELAY_MS)
         emitAll(
             // In the user's order (Settings → Sports and leagues), live first within it, then by kick-off.
-            combine(repository.observe(Demand.HomeRow), config) { b, c ->
+            combine(foreground.flatMapLatest { if (it) repository.observe(Demand.HomeRow) else flowOf(repository.board.value) }, config) { b, c ->
                 SportsHomeRow.items(b, c, c.leagues.toSet(), System.currentTimeMillis())
                     .sortedWith(compareBy<Match>({ c.rankOf(it.sport, it.feed).first }, { c.rankOf(it.sport, it.feed).second }, { !it.isLive }, { it.startMs }))
             },
         )
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    /** Small Home-only fixture rail; does not alter the existing personalised Sports row. */
-    val featuredHomeEvents: StateFlow<List<Match>> = flow {
-        delay(HOME_ROW_DELAY_MS)
-        emitAll(combine(repository.observe(Demand.Hub), config) { board, preference ->
-            val now = System.currentTimeMillis()
-            val followed = preference.leagues.toSet()
-            board.matches.asSequence()
-                .filter { it.isLive || (it.startMs in now..(now + 90 * 60_000L)) }
-                .distinctBy { it.key }
-                .sortedWith(compareBy<Match>({ !it.isLive }, { it.feed !in followed }, { it.startMs }))
-                .take(10)
-                .toList()
-        })
+    /** Same cached, seven-day fixture pool as Sport Lounge; never starts a stream. */
+    val featuredHomeEvents: StateFlow<List<Match>> = combine(board, discoveryState, config) { board, discovery, preference ->
+        tv.own.owntv.features.home.HomeSportsSelection.ranked(board.matches + discovery.first.matches,
+            preference, System.currentTimeMillis())
     }.flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 

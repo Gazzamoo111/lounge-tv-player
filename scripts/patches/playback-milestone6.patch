@@ -1,0 +1,224 @@
+--- a/player-core/src/main/java/tv/own/owntv/player/LiveTuneController.kt
++++ b/player-core/src/main/java/tv/own/owntv/player/LiveTuneController.kt
+@@ -454,6 +454,14 @@
+         stopExo()
+     }
+ 
++    /** A browsing pane must never stop a film owned by OwnTVPlayer on the shared mpv engine. */
++    fun stopBrowsingPreview() {
++        val ownsMpv = current != null && sessionUrl != null && engines.mpvUrl == sessionUrl
++        cancelTune()
++        releaseForArchive()
++        if (ownsMpv) engines.mpvStop()
++    }
++
+     /** Stop everything: both engines, every watcher. */
+     fun stop() {
+         cancelTune()
+--- a/core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt
++++ b/core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt
+@@ -1,6 +1,8 @@
+ package tv.own.owntv.core.metadata
+ 
+ import android.util.Log
++import kotlinx.coroutines.Dispatchers
++import kotlinx.coroutines.withContext
+ import org.json.JSONObject
+ import tv.own.owntv.core.CoreBuildInfo
+ import tv.own.owntv.core.network.HttpClient
+@@ -105,7 +107,7 @@
+      */
+     private fun Endpoint.imageLangParam(): String {
+         val base = language.substringBefore('-').takeIf { it.isNotBlank() && it != "en" }
+-        return "&include_image_language=" + (if (base != null) "$base,en,null" else "en,null")
++        return "&include_image_language=en,null"
+     }
+ 
+     /**
+@@ -171,7 +173,7 @@
+             ep.apiKey?.takeIf { it.isNotBlank() }?.let { append("&api_key=").append(enc(it)) }
+         }
+         val json = fetch(ep, url, "movie details id=$tmdbId") ?: return null
+-        return runCatching { parseMovieDetails(json, ep.language.substringBefore('-')) }.getOrNull()
++        return withContext(Dispatchers.Default) { runCatching { parseMovieDetails(json, ep.language.substringBefore('-')) }.getOrNull() }
+     }
+ 
+     override suspend fun tvDetails(tmdbId: Int): MovieDetails? {
+@@ -186,7 +188,7 @@
+             ep.apiKey?.takeIf { it.isNotBlank() }?.let { append("&api_key=").append(enc(it)) }
+         }
+         val json = fetch(ep, url, "tv details id=$tmdbId") ?: return null
+-        return runCatching { parseTvDetails(json, ep.language.substringBefore('-')) }.getOrNull()
++        return withContext(Dispatchers.Default) { runCatching { parseTvDetails(json, ep.language.substringBefore('-')) }.getOrNull() }
+     }
+ 
+     override suspend fun tvSeasonBundle(tvId: Int, seasons: List<Int>): List<SeasonEpisode>? {
+@@ -246,7 +248,8 @@
+             title = o.optString("name").ifBlank { "?" },
+             year = o.optString("first_air_date").take(4).toIntOrNull(),
+             overview = o.optString("overview").takeIf { it.isNotBlank() },
+-            posterPath = o.optString("poster_path").takeIf { it.isNotBlank() && it != "null" },
++            posterPath = EnglishPoster.select(o.optJSONObject("images")?.optJSONArray("posters"),
++                o.optString("poster_path").takeIf { it.isNotBlank() && it != "null" }),
+             backdropPath = o.optString("backdrop_path").takeIf { it.isNotBlank() && it != "null" },
+             rating = o.optDouble("vote_average", 0.0).takeIf { it > 0.0 },
+             genres = genres,
+@@ -273,7 +276,8 @@
+             title = o.optString("title").ifBlank { "?" },
+             year = o.optString("release_date").take(4).toIntOrNull(),
+             overview = o.optString("overview").takeIf { it.isNotBlank() },
+-            posterPath = o.optString("poster_path").takeIf { it.isNotBlank() && it != "null" },
++            posterPath = EnglishPoster.select(o.optJSONObject("images")?.optJSONArray("posters"),
++                o.optString("poster_path").takeIf { it.isNotBlank() && it != "null" }),
+             backdropPath = o.optString("backdrop_path").takeIf { it.isNotBlank() && it != "null" },
+             rating = o.optDouble("vote_average", 0.0).takeIf { it > 0.0 },
+             genres = genres,
+@@ -369,7 +373,8 @@
+                 originalTitle = original.takeIf { it.isNotBlank() && it != "null" },
+                 year = date.take(4).toIntOrNull(),
+                 overview = o.optString("overview").takeIf { it.isNotBlank() },
+-                posterPath = o.optString("poster_path").takeIf { it.isNotBlank() && it != "null" },
++                posterPath = EnglishPoster.select(o.optJSONObject("images")?.optJSONArray("posters"),
++                o.optString("poster_path").takeIf { it.isNotBlank() && it != "null" }),
+                 popularity = o.optDouble("popularity", 0.0),
+             )
+         }
+--- a/core/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt
++++ b/core/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt
+@@ -724,13 +724,13 @@
+          * before this change stays readable for the default-language user.
+          */
+         fun cacheKey(tmdbId: Int, lang: String = ""): String =
+-            if (lang.isBlank()) "$TYPE_MOVIE:$tmdbId" else "$TYPE_MOVIE:$lang:$tmdbId"
++            "$TYPE_MOVIE:art-en-v1:$lang:$tmdbId"
+ 
+         fun seriesLocalKey(series: tv.own.owntv.core.database.entity.SeriesEntity): String =
+             "$TYPE_TV:${series.sourceId}:${series.remoteId ?: series.name}"
+ 
+         fun tvCacheKey(tmdbId: Int, lang: String = ""): String =
+-            if (lang.isBlank()) "$TYPE_TV:$tmdbId" else "$TYPE_TV:$lang:$tmdbId"
++            "$TYPE_TV:art-en-v1:$lang:$tmdbId"
+ 
+         fun episodeCacheKey(tvId: Int, season: Int, episode: Int, lang: String = ""): String =
+             if (lang.isBlank()) "$TYPE_TV:$tvId:s${season}e$episode"
+--- /dev/null
++++ b/core/src/main/java/tv/own/owntv/core/metadata/EnglishPoster.kt
+@@ -0,0 +1,19 @@
++package tv.own.owntv.core.metadata
++
++import org.json.JSONArray
++
++/** Image-only policy. Entries all belong to the already resolved TMDB identity. */
++internal object EnglishPoster {
++    fun select(images: JSONArray?, fallback: String?): String? {
++        if (images == null) return fallback
++        data class Image(val path: String, val rank: Int, val width: Int)
++        val candidates = (0 until images.length()).mapNotNull { index ->
++            val image = images.optJSONObject(index) ?: return@mapNotNull null
++            val path = image.optString("file_path").takeIf { it.startsWith("/") } ?: return@mapNotNull null
++            val language = image.optString("iso_639_1").takeUnless { it.isBlank() || it == "null" }
++            val rank = when (language) { "en" -> 0; null -> 1; else -> return@mapNotNull null }
++            Image(path, rank, image.optInt("width", 0))
++        }
++        return candidates.minWithOrNull(compareBy<Image> { it.rank }.thenByDescending { it.width })?.path ?: fallback
++    }
++}
+--- a/tools/i18n/safe_literals.txt
++++ b/tools/i18n/safe_literals.txt
+@@ -2057,10 +2057,8 @@
+ 1	locale	core/src/main/java/tv/own/owntv/core/metadata/MetadataProvider.kt	$lang-${l.country}
+ 5	empty	core/src/main/java/tv/own/owntv/core/metadata/MetadataProvider.kt	\0
+ 1	locale	core/src/main/java/tv/own/owntv/core/metadata/MetadataProvider.kt	auto
+-1	protocol	core/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	$TYPE_MOVIE:$tmdbId
+ 1	protocol	core/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	$TYPE_MOVIE:${movie.sourceId}:${movie.remoteId ?: movie.name}
+ 1	json	core/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	$TYPE_TV:$lang:$tvId:s$season:fetched
+-1	protocol	core/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	$TYPE_TV:$tmdbId
+ 1	json	core/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	$TYPE_TV:$tvId:s$season:fetched
+ 1	protocol	core/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	$TYPE_TV:$tvId:s${season}e$episode
+ 1	protocol	core/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	$TYPE_TV:${series.sourceId}:${series.remoteId ?: series.name}
+@@ -2094,11 +2092,10 @@
+ 1	technical	core/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	imax|extended|uncut|remastered|vip|
+ 1	technical	core/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	multi[- ]?sub|multisub|dual[- ]?audio|remux|web[- ]?dl|webrip|bluray|bdrip|dvdrip|hdrip|
+ 1	technical	core/src/main/java/tv/own/owntv/core/metadata/TitleNormalizer.kt	vostfr|vost|vf|subbed|dubbed|dublado|legendado|castellano|truefrench|hdlight|
+-2	uri	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	$base,en,null
++1	uri	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	$base,en,null
+ 4	protocol	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	&api_key=
+ 1	protocol	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	&first_air_date_year=$year
+ 1	protocol	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	&include_adult=
+-1	protocol	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	&include_image_language=
+ 1	uri	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	&include_video_language=
+ 2	protocol	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	&language=
+ 1	protocol	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	&year=$year
+@@ -2128,7 +2125,7 @@
+ 1	json	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	cast
+ 1	json	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	credits
+ 4	locale	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	en
+-2	uri	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	en,null
++1	uri	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	en,null
+ 1	json	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	episode_number
+ 1	json	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	episodes
+ 2	json	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	external_ids
+@@ -2140,7 +2137,7 @@
+ 1	url	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	https://owntv-tmdb-meta.xiannero.workers.dev
+ 1	url	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	https://tmdb.owntv.me
+ 3	json	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	id
+-1	json	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	images
++4	json	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	images
+ 3	json	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	imdb_id
+ 2	json	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	iso_639_1
+ 1	json	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	key
+@@ -6485,3 +6482,13 @@
+ 1	log	player-core/src/main/java/tv/own/owntv/player/ZapTiming.kt	(zap key press to first frame ${it}ms)
+ 1	json	core/src/main/java/tv/own/owntv/core/sports/EspnParser.kt	color
+ 2	json	core/src/main/java/tv/own/owntv/core/sports/SportsCacheJson.kt	bc
++1	technical	core/src/main/java/tv/own/owntv/core/metadata/EnglishPoster.kt	/
++1	technical	core/src/main/java/tv/own/owntv/core/metadata/EnglishPoster.kt	en
++1	technical	core/src/main/java/tv/own/owntv/core/metadata/EnglishPoster.kt	file_path
++1	technical	core/src/main/java/tv/own/owntv/core/metadata/EnglishPoster.kt	iso_639_1
++1	technical	core/src/main/java/tv/own/owntv/core/metadata/EnglishPoster.kt	null
++1	technical	core/src/main/java/tv/own/owntv/core/metadata/EnglishPoster.kt	width
++1	technical	core/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	$TYPE_MOVIE:art-en-v1:$lang:$tmdbId
++1	technical	core/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	$TYPE_TV:art-en-v1:$lang:$tmdbId
++1	technical	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	&include_image_language=en,null
++3	json	core/src/main/java/tv/own/owntv/core/metadata/TmdbProvider.kt	posters
+--- /dev/null
++++ b/core/src/test/java/tv/own/owntv/core/metadata/EnglishPosterTest.kt
+@@ -0,0 +1,27 @@
++package tv.own.owntv.core.metadata
++
++import org.json.JSONArray
++import org.json.JSONObject
++import org.junit.Assert.*
++import org.junit.Test
++
++class EnglishPosterTest {
++    private fun art(path: String, language: String?, width: Int) = JSONObject().put("file_path", path)
++        .put("iso_639_1", language ?: JSONObject.NULL).put("width", width)
++    @Test fun `English beats foreign and textless artwork then highest resolution wins`() {
++        val images = JSONArray().put(art("/fr.jpg", "fr", 3000)).put(art("/neutral.jpg", null, 2000))
++            .put(art("/en-low.jpg", "en", 500)).put(art("/en-high.jpg", "en", 2000))
++        assertEquals("/en-high.jpg", EnglishPoster.select(images, "/original.jpg"))
++        assertEquals("/neutral.jpg", EnglishPoster.select(JSONArray().put(art("/fr.jpg", "fr", 3000)).put(art("/neutral.jpg", null, 2000)), "/original.jpg"))
++    }
++    @Test fun `correct foreign original remains fallback when no English or textless alternative exists`() {
++        assertEquals("/original.jpg", EnglishPoster.select(JSONArray().put(art("/fr.jpg", "fr", 1000)), "/original.jpg"))
++        assertNull(EnglishPoster.select(null, null))
++        assertEquals("/original.jpg", EnglishPoster.select(JSONArray(), "/original.jpg"))
++    }
++    @Test fun `new artwork policy cannot read an old language poster cache and language remains isolated`() {
++        assertNotEquals("movie:10", MetadataRepository.cacheKey(10))
++        assertNotEquals(MetadataRepository.cacheKey(10, "en"), MetadataRepository.cacheKey(10, "fr"))
++        assertNotEquals(MetadataRepository.cacheKey(10), MetadataRepository.tvCacheKey(10))
++    }
++}
+--- a/tools/i18n/hardcoded_baseline.txt
++++ b/tools/i18n/hardcoded_baseline.txt
+@@ -159,8 +159,6 @@
+ 1	core/src/main/java/tv/own/owntv/core/metadata/MetadataImages.kt	${TmdbProvider.IMAGE_BASE}/$size${it.ensureLeadingSlash()}
+ 1	core/src/main/java/tv/own/owntv/core/metadata/MetadataImages.kt	w185
+ 6	core/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	\0
+-1	core/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	$TYPE_MOVIE:$lang:$tmdbId
+-1	core/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	$TYPE_TV:$lang:$tmdbId
+ 1	core/src/main/java/tv/own/owntv/core/metadata/MetadataRepository.kt	$TYPE_TV:$lang:$tvId:s${season}e$episode
+ 1	core/src/main/java/tv/own/owntv/core/metadata/OwnTVClientId.kt	\0
+ 1	core/src/main/java/tv/own/owntv/core/metadata/OwnTVClientId.kt	%02x

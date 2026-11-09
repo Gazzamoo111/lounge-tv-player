@@ -262,6 +262,12 @@ fun OwnTVShell(
     // up/down (CH+/CH-). Guide tunes start through LiveViewModel too (they set zapSource = LIVE_TV), so
     // there is exactly ONE zap path: liveVm's. The Guide keeps its own EpgViewModel only for the grid.
     val liveVm = org.koin.androidx.compose.koinViewModel<LiveViewModel>()
+    val sportsWorkVm = org.koin.androidx.compose.koinViewModel<tv.own.owntv.features.sports.SportsViewModel>()
+    LaunchedEffect(selectedSection, playerMode) {
+        sportsWorkVm.setForeground(playerMode == PlayerMode.NONE &&
+            (selectedSection == MainSection.HOME || selectedSection == MainSection.SPORTS))
+    }
+
     var fullscreenFavouriteChannel by remember { mutableStateOf<ChannelEntity?>(null) }
     var fullscreenCreateFavouriteFolder by remember { mutableStateOf(false) }
     var fullscreenFolderFocusVersion by remember { androidx.compose.runtime.mutableIntStateOf(0) }

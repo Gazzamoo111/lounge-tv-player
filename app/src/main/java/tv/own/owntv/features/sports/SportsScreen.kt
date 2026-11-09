@@ -50,7 +50,7 @@ fun SportsScreen(
         playback.pendingMatch.value?.let { (m, ch) ->
             playback.pendingMatch.value = null
             returnTo = ch
-            open(m)
+            if (tv.own.owntv.BuildConfig.LOUNGE_TV_2 && ch == null) lastKey = m.key else open(m)
         } ?: playback.returnToMatch?.let { m ->
             playback.returnToMatch = null
             open(m)

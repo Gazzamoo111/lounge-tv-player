@@ -93,4 +93,20 @@ class SportsPreviewPlaybackTest {
         assertTrue(engines.opens.isEmpty())
         controller.stop()
     }
+    @Test fun `leaving a browse preview cannot stop a VOD session on shared MPV`() = runTest {
+        val engines = Engines().apply { mpvHasStream = true; mpvUrl = "http://vod-owner-test.invalid/movie.mp4" }
+        val controller = LiveTuneController(backgroundScope, engines, Host(this))
+        controller.stopBrowsingPreview(); runCurrent()
+        assertTrue(engines.mpvHasStream)
+        assertEquals("http://vod-owner-test.invalid/movie.mp4", engines.mpvUrl)
+        controller.stop()
+    }
+    @Test fun `leaving a browse preview still releases MPV when the Live controller owns it`() = runTest {
+        val engines = Engines()
+        val controller = LiveTuneController(backgroundScope, engines, Host(this).apply { preference = EnginePreference.MPV_FIRST })
+        controller.tune(channel(88)); runCurrent(); assertTrue(engines.mpvHasStream)
+        controller.stopBrowsingPreview(); runCurrent(); assertFalse(engines.mpvHasStream)
+        controller.stop()
+    }
+
 }

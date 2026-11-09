@@ -32,6 +32,9 @@ jobs:
         run: |
           python3 -m pip install --disable-pip-version-check Pillow
           python3 scripts/generate_loungetv_brand_assets.py
+          command -v ffmpeg >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y ffmpeg)
+          mkdir -p app/src/androidTest/assets
+          ffmpeg -hide_banner -loglevel error -f lavfi -i 'testsrc2=size=640x360:rate=30' -f lavfi -i 'sine=frequency=440:sample_rate=48000' -t 30 -c:v libx264 -preset ultrafast -pix_fmt yuv420p -c:a aac -movflags +faststart -y app/src/androidTest/assets/m6-local-av.mp4
           sudo chmod 666 /dev/kvm
           sdkmanager 'emulator' 'system-images;android-35;google_apis;x86_64'
           echo no | avdmanager create avd --force --name lounge_m4 --package 'system-images;android-35;google_apis;x86_64'
@@ -58,6 +61,9 @@ jobs:
           adb shell am instrument -w -r -e class tv.own.owntv.features.sports.Milestone4UiTest com.loungetv.player.v2qa.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/lounge-ui-results.txt
           grep -Eq '^OK \(10 tests\)' /tmp/lounge-ui-results.txt
           ! grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|shortMsg=' /tmp/lounge-ui-results.txt
+          adb shell am instrument -w -r -e class tv.own.owntv.features.sports.Milestone6UiTest com.loungetv.player.v2qa.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/lounge-m6-results.txt
+          grep -Eq '^OK \(4 tests\)' /tmp/lounge-m6-results.txt
+          ! grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|shortMsg=' /tmp/lounge-m6-results.txt
           adb shell am force-stop com.loungetv.player.v2qa
           adb shell am instrument -w -r -e class tv.own.owntv.features.sports.Milestone4RestartTest com.loungetv.player.v2qa.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/lounge-restart-results.txt
           grep -Eq '^OK \(1 test\)' /tmp/lounge-restart-results.txt
@@ -72,8 +78,10 @@ jobs:
           cp /tmp/lounge-emulator.log m4-ui-results/ || true
           cp /tmp/lounge-ui-results.txt m4-ui-results/ || true
           cp /tmp/lounge-restart-results.txt m4-ui-results/ || true
+          cp /tmp/lounge-m6-results.txt m4-ui-results/ || true
           # Keep the later fixes' internal-file export; the app now remains installed.
           timeout 15 adb exec-out run-as com.loungetv.player.v2qa tar -cf - -C files m4-screenshots | tar -xf - -C m4-ui-results/
+          timeout 15 adb exec-out run-as com.loungetv.player.v2qa tar -cf - -C files m6-results | tar -xf - -C m4-ui-results/
           python3 - <<'PYRENDERS'
           from pathlib import Path
           from PIL import Image

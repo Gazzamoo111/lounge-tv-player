@@ -16,7 +16,7 @@
     <string name="m4_feed_saved">Previously selected competition feed · check this fixture</string>
     <string name="m4_feed_epg">EPG-supported candidate · video unverified</string>
     <string name="m4_feed_possible">Possible feed · video unverified</string>
-    <string name="m4_feed_none">Choose this option to find available feeds without leaving Sports. A channel is not proof of the correct video.</string>
+    <string name="m4_feed_none">Choose this option to find available feeds without leaving Sport Lounge. A channel is not proof of the correct video.</string>
     <string name="m4_preview_feed">Watch in Preview</string>
     <string name="m4_choose_feed">Choose a feed</string>
     <string name="m4_feed_event">Event-specific channel · video unverified</string>

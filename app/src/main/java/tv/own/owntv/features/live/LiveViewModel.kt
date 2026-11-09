@@ -2295,7 +2295,7 @@ class LiveViewModel(
     }
 
     fun stopPreview() {
-        live.stop() // both engines, every watcher and the give-up alarm, and the reconnect link
+        live.stopBrowsingPreview() // release only sessions owned by the Live controller
         _previewChannel.value = null
     }
 

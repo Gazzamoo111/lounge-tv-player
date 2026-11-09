@@ -12,6 +12,7 @@ import androidx.paging.PagingSource
 import androidx.paging.cachedIn
 import androidx.paging.filter
 import androidx.paging.map
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
@@ -349,20 +350,29 @@ class SeriesViewModel(
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     /** TMDB details already resolved this session, by title id: shown without the focus debounce. */
     private val resolvedMeta = java.util.concurrent.ConcurrentHashMap<Long, tv.own.owntv.core.database.entity.MetadataCacheEntity>()
+    private var resolvedMetaContext: Any? = null
 
     val selectedSeriesMeta: StateFlow<SeriesMeta?> = combine(_selectedSeries, _seriesMetaTick) { s, tick -> s to tick }
         .distinctUntilChanged { a, b -> a.first?.id == b.first?.id && a.second == b.second }
         // See MetadataRepository.FOCUS_DEBOUNCE_MS — 700 ms so scrolling past cards costs nothing.
         // A title resolved once this session shows at once; only an unseen one waits the focus debounce
         // (FOCUS_DEBOUNCE_MS: scrolling past cards must cost nothing), then reads the DB cache or TMDB.
-        .transformLatest { (s, _) ->
+        .combine(settings.metadataConfigFlow) { selection, config -> selection to config }
+        .combine(settings.activeProfileId) { (selection, config), profile -> Triple(selection, config, profile) }
+        .transformLatest { (selection, config, profile) ->
+            val s = selection.first
+            val context = profile to config
+            if (resolvedMetaContext != context) { resolvedMeta.clear(); resolvedMetaContext = context }
             if (s == null) { emit(null); return@transformLatest }
             resolvedMeta[s.id]?.let { emit(SeriesMeta(s.id, it)); return@transformLatest }
             delay(tv.own.owntv.core.metadata.MetadataRepository.FOCUS_DEBOUNCE_MS)
-            val cache = runCatching { metadata.resolveSeries(s) }.getOrNull()
+            val cache = runCatching { withContext(kotlinx.coroutines.Dispatchers.IO) { metadata.resolveSeries(s) } }.getOrNull()
             if (cache != null) {
                 if (resolvedMeta.size > 500) resolvedMeta.clear()
                 resolvedMeta[s.id] = cache
+                tv.own.owntv.core.metadata.MetadataImages.poster(cache.posterPath)?.let { url ->
+                    _cachedPosters.value = _cachedPosters.value + (s.id to url)
+                }
             }
             emit(SeriesMeta(s.id, cache))
         }
@@ -487,17 +497,25 @@ class SeriesViewModel(
         // fast scroll issues one query when it settles, and re-run on the refresh tick so a
         // "Refetch TMDB details" re-reads the entry it dropped.
         viewModelScope.launch {
-            combine(_posterProbe, _seriesMetaTick) { probe, _ -> probe }
-                .debounce(250)
-                .collectLatest { probe ->
-                    val wanted = probe.filterNot { it.id in _cachedPosters.value }
-                    if (wanted.isEmpty()) return@collectLatest
-                    val found = runCatching { metadata.cachedSeriesPosters(wanted) }.getOrDefault(emptyMap())
-                    if (found.isEmpty()) return@collectLatest
-                    // Bounded: a long browse of a huge catalog would otherwise grow this forever.
-                    val base = if (_cachedPosters.value.size > 500) emptyMap() else _cachedPosters.value
-                    _cachedPosters.value = base + found
+            var signature: Any? = null
+            val checked = mutableSetOf<Long>()
+            combine(_posterProbe, _seriesMetaTick, settings.metadataConfigFlow, settings.activeProfileId) { probe, refresh, config, profile ->
+                probe to Triple(profile, config, refresh)
+            }.debounce(250).collectLatest { (probe, current) ->
+                if (signature != current) {
+                    signature = current
+                    checked.clear()
+                    _cachedPosters.value = emptyMap()
+                    resolvedMeta.clear()
                 }
+                val wanted = probe.distinctBy { it.id }.take(48).filterNot { it.id in checked }
+                if (wanted.isEmpty()) return@collectLatest
+                val found = withContext(kotlinx.coroutines.Dispatchers.IO) { metadata.cachedSeriesPosters(wanted) }
+                if (settings.activeProfileIdNow() != current.first) return@collectLatest
+                if (checked.size + wanted.size > 500) { checked.clear(); _cachedPosters.value = emptyMap() }
+                checked.addAll(wanted.map { it.id })
+                _cachedPosters.value = _cachedPosters.value + found
+            }
         }
         // In-season advance (auto-next / HUD prev-next) happens inside the player — re-point the
         // subtitle context at the NEW episode, else a subtitle search or replay
