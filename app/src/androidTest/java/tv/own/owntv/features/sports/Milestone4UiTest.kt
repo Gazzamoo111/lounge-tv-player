@@ -61,6 +61,12 @@ class Milestone4UiTest {
         output.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
         android.util.Log.i("LoungeM4Screens", "Rendered ${output.absolutePath} (${output.length()} bytes)")
     }
+    private fun remoteBack() {
+        // Fire remotes send KEYCODE_BACK to the currently focused WINDOW. Espresso's root picker
+        // can instead wait on the unfocused host Activity behind an Android dialog.
+        InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK)
+        compose.waitForIdle()
+    }
     @Test fun sports_navigation_browses_without_starting_playback_and_renders_actual_screens() {
         val matches = listOf(event("live", now - 60_000, MatchState.IN), event("soon", now + 3600_000, MatchState.PRE))
         var opened = 0; var selections = 0; var previewPicks = 0
@@ -105,7 +111,7 @@ class Milestone4UiTest {
         compose.onNodeWithText("Choose Leagues").assertExists()
         compose.onNodeWithText("Choose Leagues").performClick()
         compose.onNode(hasText("All") and isFocused()).assertExists()
-        androidx.test.espresso.Espresso.pressBack()
+        remoteBack()
         compose.onNodeWithText("Choose Leagues").assertIsFocused()
         compose.onNodeWithText("Choose Leagues").performClick()
         compose.onNodeWithText("Done").performClick()
@@ -175,7 +181,7 @@ class Milestone4UiTest {
         compose.onAllNodesWithText(shared.name).onLast().performClick()
         compose.onNodeWithText("Move later").performClick()
         compose.runOnIdle { assertEquals(shared.key to 1, teamMove) }
-        androidx.test.espresso.Espresso.pressBack()
+        remoteBack()
         compose.onNodeWithText("Arrange").assertExists()
     }
     @Test fun player_panel_displays_genuine_supplied_badges_and_only_explicit_actions_fire() {
@@ -225,7 +231,7 @@ class Milestone4UiTest {
         compose.onNodeWithText("TEST possible feed").assertIsFocused()
         assertEquals(0, picks)
         capture("05-sports-feed-picker-test-data")
-        androidx.test.espresso.Espresso.pressBack()
+        remoteBack()
         compose.onNodeWithText("TEST open feeds").assertIsFocused()
         assertEquals(0, picks)
         compose.onNodeWithText("TEST open feeds").performClick()
@@ -309,7 +315,7 @@ class Milestone4UiTest {
             })
         } }
         compose.onNodeWithText("Playback controls").performClick()
-        androidx.test.espresso.Espresso.pressBack()
+        remoteBack()
         compose.onNodeWithText("Playback controls").assertExists()
         repeat(3) {
             compose.runOnIdle { attached = false }; compose.waitForIdle()
