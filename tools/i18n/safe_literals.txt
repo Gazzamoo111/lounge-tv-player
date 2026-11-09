@@ -2064,9 +2064,9 @@
 1	url	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-xtream
 1	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	sport
 1	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	league
-1	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	title
-1	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	home
-1	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	away
+2	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	title
+2	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	home
+2	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	away
 1	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	broadcasters
 1	technical	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	|
 1	technical	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	&
@@ -2081,7 +2081,7 @@
 1	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	confidence
 2	protocol	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	definite
 2	protocol	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	likely
-1	protocol	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	maybe
+2	protocol	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	maybe
 1	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	/sport/_/_/
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	.ts
 1	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	?username=
@@ -2158,7 +2158,6 @@
 2	protocol	app/src/main/java/tv/own/owntv/features/sports/PremiumFollowScreen.kt	\0
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/PremiumSportsPresentation.kt	Pacific/Auckland
 1	technical	app/src/main/java/tv/own/owntv/features/sports/PremiumSportsScreen.kt	EEE d MMM
-1	technical	app/src/main/java/tv/own/owntv/features/sports/PremiumSportsScreen.kt	EEE d MMM · h:mm a
 2	technical	app/src/main/java/tv/own/owntv/player/PremiumLivePanel.kt	h:mm a
 3	json	app/src/main/java/tv/own/owntv/features/sports/data/SportEvent.kt	color
 2	technical	app/src/main/java/tv/own/owntv/features/sports/PremiumFollowScreen.kt	league:$it
@@ -2181,4 +2180,19 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/home/HomeSportsSelection.kt	super-rugby
 1	protocol	app/src/main/java/tv/own/owntv/features/home/HomeSportsSelection.kt	uefa.champions
 1	protocol	app/src/main/java/tv/own/owntv/features/home/HomeSportsSelection.kt	ufc
-1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeSportsHomeHero.kt	EEE d MMM · h:mm a z
+
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	2
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	12
+1	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	contractVersion
+1	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	eventId
+1	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	sportId
+1	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	competitionId
+1	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	scheduledStartUtc
+1	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	status
+1	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	limit
+1	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	displayName
+1	url	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-sports-candidates-qa
+1	technical	app/src/main/java/tv/own/owntv/features/sports/PremiumSportsPresentation.kt	EEE d MMM
+1	technical	app/src/main/java/tv/own/owntv/features/sports/PremiumSportsPresentation.kt	EEE d MMM · h:mm a
+1	technical	app/src/main/java/tv/own/owntv/features/sports/PremiumSportsPresentation.kt	h:mm a
+2	locale	app/src/main/java/tv/own/owntv/features/sports/PremiumSportsPresentation.kt	NZ
