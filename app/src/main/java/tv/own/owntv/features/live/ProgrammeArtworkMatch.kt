@@ -29,22 +29,31 @@ internal object ProgrammeArtworkMatch {
 
     /** Channel-themed poster when a 24/7 channel's EPG doesn't identify a real current film.
      * This is never evidence of the exact content being broadcast. */
-    fun channelThemeTitle(channelName: String?): String? {
+    fun channelThemeTitle(channelName: String?, synthetic247Programme: Boolean = false): String? {
         val title = channelName?.trim() ?: return null
-        if (!loopPrefix.containsMatchIn(title)) return null
+        if (!synthetic247Programme && !loopPrefix.containsMatchIn(title)) return null
         val cleaned = title.replace(loopPrefix, "").trim()
         val normalized = normalize(cleaned)
         if (normalized.length < 3 || normalized in generic) return null
         return cleaned
     }
 
+    /** Accept a missing English article only when a single real metadata identity survives.
+     * Never use popularity to guess between films, seasons, remakes or same-title results. */
+    private fun withoutArticles(text: String): String = normalize(text)
+        .split(" ").filterNot { it == "the" || it == "a" || it == "an" }.joinToString(" ")
+
     fun select(query: Query, candidates: List<MetadataSearchResult>): MetadataSearchResult? {
         val key = normalize(query.title)
-        val matches = candidates.filter {
-            (query.type == null || it.type == query.type) &&
-                (query.year == null || query.year == it.year) &&
-                (normalize(it.title) == key || it.originalTitle?.let(::normalize) == key)
+        val relaxedKey = withoutArticles(query.title)
+        val allowed = candidates.filter {
+            (query.type == null || it.type == query.type) && (query.year == null || query.year == it.year)
         }.distinctBy { it.type to it.tmdbId }
+        // An exact title takes precedence; only try article-insensitive identity when none exists.
+        val exact = allowed.filter { normalize(it.title) == key || it.originalTitle?.let(::normalize) == key }
+        val matches = if (exact.isNotEmpty()) exact else allowed.filter {
+            withoutArticles(it.title) == relaxedKey || it.originalTitle?.let(::withoutArticles) == relaxedKey
+        }
         // Popularity cannot identify which remake or same-named series the EPG means.
         return matches.singleOrNull()?.takeIf { !it.posterPath.isNullOrBlank() }
     }

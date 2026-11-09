@@ -21,7 +21,8 @@ import tv.own.owntv.ui.theme.mpx
 internal fun ProgrammeArtwork(programme: EpgProgrammeEntity?, channelLogo: String?, modifier: Modifier = Modifier,
     channelName: String? = null) {
     val resolver: ProgrammeArtworkResolver = koinInject()
-    val channelTheme = ProgrammeArtworkMatch.channelThemeTitle(channelName)
+    val channelTheme = ProgrammeArtworkMatch.channelThemeTitle(channelName,
+        synthetic247Programme = programme?.title?.trim()?.startsWith("24/7", ignoreCase = true) == true)
     val poster by produceState<String?>(null, programme?.title, programme?.year, programme?.episode, channelTheme) {
         value = null
         delay(350) // Held remote keys must not flood metadata requests.
