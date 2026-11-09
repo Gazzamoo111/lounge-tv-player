@@ -133,13 +133,19 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
     var leagueFilter by remember { mutableStateOf<Set<String>>(emptySet()) }
     var choose by remember { mutableStateOf(false) }
     var heroIndex by rememberSaveable { mutableIntStateOf(0) }
+    // A row-selected fixture becomes the current Sports hero, even if it lies outside the top 12.
+    var pickedHomeKey by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedKey by rememberSaveable { mutableStateOf(restoreKey) }
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) { while (true) { delay(30_000); now = System.currentTimeMillis() } }
     val all = remember(state.board.matches, state.discovery.matches) { SportLoungeRules.dedupe(state.board.matches + state.discovery.matches) }
     val ranked = remember(all, state.config, now, sport) { PremiumSportsPresentation.ranked(all, state.config, now).filter { sport == null || it.sport == sport } }
     val heroes = ranked.take(12)
-    val featured = heroes.getOrNull(heroIndex.mod(heroes.size.coerceAtLeast(1)))
+    val featured = ranked.firstOrNull { it.key == pickedHomeKey } ?: heroes.getOrNull(heroIndex.mod(heroes.size.coerceAtLeast(1)))
+    val pickHome: (Match) -> Unit = { m ->
+        pickedHomeKey = m.key
+        onOpenMatch(m)
+    }
     val date = Instant.ofEpochMilli(now).atZone(PremiumSportsPresentation.zone).toLocalDate().plusDays(day.toLong())
     val dayEvents = remember(all, date, sport, leagueFilter) { PremiumSportsPresentation.onDay(all, date, sport, leagueFilter) }
     val selected = if (destination == SportsDestination.MY_SPORTS) featured else dayEvents.firstOrNull { it.key == selectedKey } ?: dayEvents.firstOrNull()
@@ -210,27 +216,29 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
                             if (featured != null) PremiumEventCard(featured, state.config.spoilerFree, true,
                                 Modifier.fillMaxWidth().height(300.mpx).onPreviewKeyEvent { e ->
                                     if (e.type != KeyEventType.KeyDown || heroes.size < 2) false else when(e.key) {
-                                        Key.DirectionLeft -> { heroIndex = PremiumSportsPresentation.carouselIndex(heroIndex, -1, heroes.size); true }
-                                        Key.DirectionRight -> { heroIndex = PremiumSportsPresentation.carouselIndex(heroIndex, 1, heroes.size); true }
+                                        Key.DirectionLeft -> { pickedHomeKey = null; heroIndex = PremiumSportsPresentation.carouselIndex(heroIndex, -1, heroes.size); true }
+                                        Key.DirectionRight -> { pickedHomeKey = null; heroIndex = PremiumSportsPresentation.carouselIndex(heroIndex, 1, heroes.size); true }
                                         else -> false
                                     }
-                                }, { onOpenMatch(featured) }, { onHold(featured) })
+                                }, { pickHome(featured) }, { onHold(featured) })
                             else Text(stringResource(R.string.m4_no_events), style = stageText(28, 700), color = LoungeSurface.Muted)
                             if (heroes.size > 1) Row(Modifier.padding(top = 10.mpx), horizontalArrangement = Arrangement.spacedBy(12.mpx)) {
-                                LoungeAction(stringResource(R.string.m4_previous)) { heroIndex = PremiumSportsPresentation.carouselIndex(heroIndex, -1, heroes.size) }
-                                Text(stringResource(R.string.m4_carousel_count, heroIndex.mod(heroes.size) + 1, heroes.size), style = stageText(19, 700), color = LoungeSurface.Muted)
-                                LoungeAction(stringResource(R.string.m4_next)) { heroIndex = PremiumSportsPresentation.carouselIndex(heroIndex, 1, heroes.size) }
+                                LoungeAction(stringResource(R.string.m4_previous)) { pickedHomeKey = null; heroIndex = PremiumSportsPresentation.carouselIndex(heroIndex, -1, heroes.size) }
+                                Text(stringResource(R.string.m4_carousel_count,
+                                    heroes.indexOfFirst { it.key == featured?.key }.takeIf { it >= 0 }?.plus(1) ?: 1, heroes.size),
+                                    style = stageText(19, 700), color = LoungeSurface.Muted)
+                                LoungeAction(stringResource(R.string.m4_next)) { pickedHomeKey = null; heroIndex = PremiumSportsPresentation.carouselIndex(heroIndex, 1, heroes.size) }
                             }
                         }
                         Box(Modifier.weight(1f)) { detail(featured, true) }
                     }
                 }
-                item { SportsEventRail(stringResource(R.string.m4_live_upcoming), ranked.take(24), state.config, onOpenMatch, onHold) }
+                item { SportsEventRail(stringResource(R.string.m4_live_upcoming), ranked.take(24), state.config, pickHome, onHold) }
                 val mine = ranked.filter { PremiumSportsPresentation.follows(it, state.config) }
-                if (mine.isNotEmpty()) item { SportsEventRail(stringResource(R.string.m4_for_you), mine.take(24), state.config, onOpenMatch, onHold) }
+                if (mine.isNotEmpty()) item { SportsEventRail(stringResource(R.string.m4_for_you), mine.take(24), state.config, pickHome, onHold) }
                 state.config.leagues.forEach { league ->
                     val matches = ranked.filter { it.feed == league }
-                    if (matches.isNotEmpty()) item(key = league) { SportsEventRail(matches.first().leagueName, matches.take(12), state.config, onOpenMatch, onHold) }
+                    if (matches.isNotEmpty()) item(key = league) { SportsEventRail(matches.first().leagueName, matches.take(12), state.config, pickHome, onHold) }
                 }
             }
             SportsDestination.ALL_EVENTS -> {
@@ -258,7 +266,7 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
                                     }), style = stageText(24, 800), color = Color.White)
                                     PremiumEventCard(m, state.config.spoilerFree, false,
                                         Modifier.fillMaxWidth().height(162.mpx).focusRequester(focus(m.key)).onFocusChanged { if (it.isFocused) selectedKey = m.key },
-                                        { selectedKey = m.key }, { onHold(m) })
+                                        { selectedKey = m.key; onOpenMatch(m) }, { onHold(m) })
                                 }
                             }
                         }

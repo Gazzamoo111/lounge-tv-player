@@ -62,7 +62,7 @@ class Milestone4UiTest {
     }
     @Test fun sports_navigation_browses_without_starting_playback_and_renders_actual_screens() {
         val matches = listOf(event("live", now - 60_000, MatchState.IN), event("soon", now + 3600_000, MatchState.PRE))
-        var opened = 0; var selections = 0
+        var opened = 0; var selections = 0; var previewPicks = 0
         var focusEntry: (() -> Boolean)? = null
         var inputMode: InputModeManager? = null
         var selectedEvent: Match? = null
@@ -72,7 +72,8 @@ class Milestone4UiTest {
                 { focusEntry = it }, {},
                 onSelect = { selections++; selectedEvent = it }, onOpenMatch = { opened++ }, onOpenLeague = {}, onFollow = {}, onHold = {},
                 detail = { match, compact -> SportsPreviewPanel(match, emptyList(), null, false,
-                    onOpen = { opened++ }, onPreview = { error("TEST must not tune a stream") },
+                    onOpen = { opened++ }, onFind = { previewPicks++ },
+                    onPreview = { error("TEST must not tune a stream") },
                     onFullScreen = { error("TEST must not tune a stream") },
                     notice = "TEST preview: no provider connection", compact = compact, preview = {}) })
         } }
@@ -87,6 +88,9 @@ class Milestone4UiTest {
         }
         compose.onNodeWithText("My Sports").assertIsFocused()
         capture("01-my-sports-test-data")
+        compose.onNodeWithText("Pick a game to watch here").performClick()
+        assertEquals(1, previewPicks)
+        assertEquals(0, opened)
         compose.onNodeWithText("My Sports").performKeyInput { pressKey(Key.DirectionRight) }
         compose.waitForIdle()
         compose.onNodeWithText("All Events").assertIsFocused()
