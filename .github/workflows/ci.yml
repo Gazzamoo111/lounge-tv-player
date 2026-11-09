@@ -122,6 +122,12 @@ jobs:
               esac
             fi
             "$APKSIGNER" verify --print-certs "$QA_APK"
+            if [ "$LOUNGE_TV_2_QA" = "true" ]; then
+              python3 scripts/verify_update_compatibility.py "$QA_APK" \
+                --expected-package com.loungetv.player.v2qa \
+                --expected-cert-sha256 4c398a1c5614b1975ba5c64bb756125e7c39abf6b0193b3e30e0b14ad1c3949b \
+                --expected-version-code "$VERSION_CODE"
+            fi
           else
             EXPECTED_PACKAGE=com.loungetv.player.qa
             if [ "$LOUNGE_TV_2_QA" = "true" ]; then EXPECTED_PACKAGE=com.loungetv.player.v2qa; fi

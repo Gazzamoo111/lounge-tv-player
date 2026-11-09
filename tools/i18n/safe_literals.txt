@@ -2169,3 +2169,4 @@
 1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkMatch.kt	an
 1	technical	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkMatch.kt	the
 1	file-path	app/src/main/java/tv/own/owntv/features/live/ProgrammeArtworkResolver.kt	lounge-programme-artwork-v2.json
+3	json	app/src/main/java/tv/own/owntv/features/sports/FixtureCorrections.kt	selected

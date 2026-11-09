@@ -440,6 +440,7 @@ class SportsViewModel(
     fun playedFrom(match: Match, channels: List<WatchOption>, playing: ChannelEntity? = null) {
         playback.lastPlayedChannelId = playing?.id
         playback.start(match, channels)
+        if (playing != null) viewModelScope.launch { candidateResolver.remember(match, playing) }
         recordPlay(match)
     }
 
@@ -464,15 +465,16 @@ class SportsViewModel(
     suspend fun previewChoices(match: Match): List<WatchOption> {
         val c = config.first()
         val found = watchReader.watchFor(listOf(match)) { SportsMemory.rememberedFor(c, it) }[match.key].orEmpty()
-        return WatchList.of(candidateResolver.resolve(match, found),
-            WatchFilter.from(c, Locale.getDefault().language, liveSources.value)).shown
+        return candidateResolver.prioritizeFixtureChoice(match, WatchList.of(candidateResolver.resolve(match, found),
+            WatchFilter.from(c, Locale.getDefault().language, liveSources.value)).shown)
     }
 
     /** [match]'s channels if Find channels already ran for it (the hub's Remind me needs one); never searches. */
     suspend fun channelsFound(match: Match): List<WatchOption> {
         val c = config.first()
         val options = watchReader.found(match) { SportsMemory.rememberedFor(c, it) } ?: return emptyList()
-        return WatchList.of(candidateResolver.resolve(match, options), WatchFilter.from(c, Locale.getDefault().language, liveSources.value)).shown
+        return candidateResolver.prioritizeFixtureChoice(match,
+            WatchList.of(candidateResolver.resolve(match, options), WatchFilter.from(c, Locale.getDefault().language, liveSources.value)).shown)
     }
 
     companion object {

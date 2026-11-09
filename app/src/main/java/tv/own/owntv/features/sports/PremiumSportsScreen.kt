@@ -72,6 +72,15 @@ internal fun PremiumSportsScreen(vm: SportsViewModel, liveVm: LiveViewModel,
     var request by remember(pid) { mutableIntStateOf(0) }
     var handledRequest by remember(pid) { mutableIntStateOf(0) }
     val previewFocus = remember(pid) { FocusRequester() }
+    var restorePreview by remember(pid) { mutableStateOf(false) }
+    LaunchedEffect(active) {
+        if (!active) restorePreview = true
+        else if (restorePreview) {
+            withFrameNanos { }
+            runCatching { previewFocus.requestFocus() }
+            restorePreview = false
+        }
+    }
     val currentActive by rememberUpdatedState(active)
     val previewScope = rememberCoroutineScope()
     val startPreview: (Match, List<WatchOption>, WatchOption) -> Unit = { match, feeds, option ->
@@ -127,7 +136,7 @@ internal fun PremiumSportsScreen(vm: SportsViewModel, liveVm: LiveViewModel,
                         if (options.size == 1 && directSportsPreviewChoice(options) != null) startPreview(m, options, o)
                         else chooseFeed = true
                     } }, previewFocus = previewFocus,
-                    onFullScreen = { o -> if (m != null) { vm.playedFrom(m, options, o.channel); onPlayChannel(o.channel, options.map { it.channel }) } },
+                    onFullScreen = { o -> if (active && m != null) { vm.playedFrom(m, options, o.channel); onPlayChannel(o.channel, options.map { it.channel }) } },
                     compact = compact,
                     notice = when {
                         previewBlocked -> stringResource(R.string.m4_preview_blocked)
@@ -405,7 +414,7 @@ internal fun SportsPreviewPanel(match: Match?, options: List<WatchOption>, playi
                         style = stageText(19, 500), color = LoungeSurface.Muted)
                 } else {
                     if (!compact) Text(option.channel.name, style = stageText(22, 800), color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(stringResource(when (option.tier) { WatchTier.GUIDE -> R.string.m4_feed_epg; WatchTier.REMEMBERED -> R.string.m4_feed_saved; else -> R.string.m4_feed_possible }), style = stageText(18, 500), color = LoungeSurface.Muted)
+                    Text(stringResource(when (option.tier) { WatchTier.GUIDE -> R.string.m4_feed_epg; WatchTier.EVENT -> R.string.m4_feed_event; WatchTier.REMEMBERED -> R.string.m4_feed_saved; else -> R.string.m4_feed_possible }), style = stageText(18, 500), color = LoungeSurface.Muted)
                     Row(horizontalArrangement = Arrangement.spacedBy(12.mpx)) {
                         LoungeAction(stringResource(R.string.m4_preview_feed),
                             modifier = if (previewFocus != null) Modifier.focusRequester(previewFocus) else Modifier) { onPreview(option) }

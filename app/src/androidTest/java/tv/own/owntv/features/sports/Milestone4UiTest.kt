@@ -214,6 +214,48 @@ class Milestone4UiTest {
         assertEquals(42L, picked)
         compose.onNodeWithText("TEST open feeds").assertIsFocused()
     }
+
+    @Test fun guide_artwork_cancels_obsolete_requests_and_labels_channel_identity() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val poster = File(context.cacheDir, "test-channel-artwork.png")
+        val bitmap = Bitmap.createBitmap(342, 513, Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(bitmap)
+        canvas.drawColor(android.graphics.Color.rgb(13, 45, 72))
+        val paint = android.graphics.Paint().apply { color = android.graphics.Color.CYAN; textSize = 25f }
+        canvas.drawText("TEST CHANNEL ART", 20f, 245f, paint)
+        canvas.drawText("Not now-playing proof", 20f, 290f, paint)
+        poster.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        bitmap.recycle()
+        val started = java.util.concurrent.atomic.AtomicBoolean(false)
+        val cancelled = java.util.concurrent.atomic.AtomicBoolean(false)
+        val requests = java.util.concurrent.atomic.AtomicInteger(0)
+        var title by mutableStateOf("TEST obsolete programme")
+        val lookup: suspend (String, Int?, tv.own.owntv.core.metadata.MetadataType?) -> String? = { query, _, _ ->
+            requests.incrementAndGet()
+            if (query == "TEST obsolete programme") {
+                started.set(true)
+                try { kotlinx.coroutines.awaitCancellation() } finally { cancelled.set(true) }
+            } else poster.toURI().toString()
+        }
+        compose.setContent { Theme {
+            Row(Modifier.fillMaxSize().background(Color(0xFF09203B)).padding(50.mpx),
+                horizontalArrangement = Arrangement.spacedBy(24.mpx)) {
+                val programme = tv.own.owntv.core.database.entity.EpgProgrammeEntity(
+                    sourceId = 1, epgChannelId = "test", title = title, startMs = now, stopMs = now + 60000)
+                tv.own.owntv.features.live.ProgrammeArtwork(programme, null,
+                    Modifier.width(170.mpx).height(250.mpx), channelName = "24/7 • Back to the Future", loadArtwork = lookup)
+                tv.own.owntv.features.epg.GuideProgrammeBlock("TEST guide header", "Back to the Future",
+                    "TEST 24/7 channel identity", "The schedule does not identify the current film or sequel.", Modifier.weight(1f))
+            }
+        } }
+        compose.waitUntil(5_000) { started.get() }
+        compose.runOnIdle { title = "24/7 • 24/7 BACK TO THE FUTURE" }
+        compose.waitUntil(5_000) { cancelled.get() }
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("Channel artwork").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Channel artwork").assertExists()
+        assertEquals(2, requests.get())
+        capture("06-guide-channel-artwork-test-data")
+    }
     private class QuietEngine : PlaybackEngine {
         var commands = 0
         override val isPlaying = MutableStateFlow(true)

@@ -27,8 +27,10 @@ import tv.own.owntv.ui.theme.mpx
 
 @Composable
 internal fun ProgrammeArtwork(programme: EpgProgrammeEntity?, channelLogo: String?, modifier: Modifier = Modifier,
-    channelName: String? = null) {
-    val resolver: ProgrammeArtworkResolver = koinInject()
+    channelName: String? = null,
+    loadArtwork: (suspend (String, Int?, MetadataType?) -> String?)? = null) {
+    val resolver: ProgrammeArtworkResolver? = if (loadArtwork == null) koinInject() else null
+    val lookup = loadArtwork ?: resolver!!::resolve
     val channelTheme = ProgrammeArtworkMatch.channelThemeTitle(channelName,
         synthetic247Programme = ProgrammeArtworkMatch.isSynthetic(programme?.title))
     val artwork by produceState<Pair<String?, Boolean>>(null to false, programme?.title, programme?.year, programme?.episode, channelTheme) {
@@ -36,11 +38,11 @@ internal fun ProgrammeArtwork(programme: EpgProgrammeEntity?, channelLogo: Strin
         delay(350) // Held remote keys must not flood metadata requests.
         val p = programme
         if (p != null && !ProgrammeArtworkMatch.isSynthetic(p.title)) {
-            value = resolver.resolve(p.title, p.year, if (!p.episode.isNullOrBlank()) MetadataType.TV else null) to false
+            value = lookup(p.title, p.year, if (!p.episode.isNullOrBlank()) MetadataType.TV else null) to false
         }
         // A continuous 24/7 feed often has a synthetic, repeated EPG label. When an actual
         // programme cannot be identified, display only an exact channel-themed match.
-        if (value.first == null && channelTheme != null) value = resolver.resolve(channelTheme) to true
+        if (value.first == null && channelTheme != null) value = lookup(channelTheme, null, null) to true
     }
     Box(modifier.clip(RoundedCornerShape(12.mpx))) {
         ChannelLogoTile(logoUrl = channelLogo, modifier = Modifier.fillMaxSize()) {}

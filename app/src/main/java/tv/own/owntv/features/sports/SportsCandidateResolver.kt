@@ -41,9 +41,27 @@ class SportsCandidateResolver(
         if (BuildConfig.LOUNGE_TV_2 && profile >= 0) corrections.rejected(profile, match.key, match.startMs) else emptySet()
 
     suspend fun resolve(match: Match, options: List<WatchOption>): List<WatchOption> {
+        val pid = settings.activeProfileIdNow()
         val assessed = inspect(match, options)
-        val rejected = withContext(Dispatchers.IO) { rejected(settings.activeProfileIdNow(), match) }
-        return assessed.filterNot { key(it.channel) in rejected }
+        val (rejected, selected) = withContext(Dispatchers.IO) {
+            rejected(pid, match) to corrections.selected(pid, match.key, match.startMs)
+        }
+        if (settings.activeProfileIdNow() != pid) return emptyList()
+        return assessed.filterNot { key(it.channel) in rejected }.sortedBy { key(it.channel) != selected }
+    }
+
+    suspend fun prioritizeFixtureChoice(match: Match, options: List<WatchOption>): List<WatchOption> {
+        if (!BuildConfig.LOUNGE_TV_2) return options
+        val pid = settings.activeProfileIdNow()
+        val selected = withContext(Dispatchers.IO) { corrections.selected(pid, match.key, match.startMs) }
+        if (settings.activeProfileIdNow() != pid) return emptyList()
+        return options.sortedBy { key(it.channel) != selected }
+    }
+
+    suspend fun remember(match: Match, channel: ChannelEntity) {
+        val pid = settings.activeProfileIdNow()
+        if (!BuildConfig.LOUNGE_TV_2 || pid < 0) return
+        withContext(Dispatchers.IO) { corrections.remember(pid, match.key, match.startMs, key(channel)) }
     }
 
     suspend fun reject(match: Match, channel: ChannelEntity): Boolean {

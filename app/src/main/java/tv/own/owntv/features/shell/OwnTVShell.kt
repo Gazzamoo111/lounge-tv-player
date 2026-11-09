@@ -569,10 +569,15 @@ fun OwnTVShell(
         browsedIntoCategory = false
         showHistoryList = false
         liveVm.hideCategoryBrowser()
-        liveVm.onFullscreenExited() // no longer full-screen on ExoPlayer → let the preview re-take the engine
+        val sportsPreview = liveVm.previewChannel.value?.takeIf { channel ->
+            tv.own.owntv.BuildConfig.LOUNGE_TV_2 && selectedSection == MainSection.SPORTS &&
+                sportsMatchRequests.session.value?.options?.any { it.channel.id == channel.id } == true
+        }
+        liveVm.onFullscreenExited(keepPreview = sportsPreview != null)
         player.stop()
         subtitleController.clear() // leaving the player drops the OpenSubtitles item context
-        if (selectedSection != MainSection.LIVE_TV) liveVm.clearLiveOnExo()
+        if (sportsPreview != null) liveVm.playPreview(sportsPreview, withAudio = true)
+        else if (selectedSection != MainSection.LIVE_TV) liveVm.clearLiveOnExo()
         restoreFocus = true
         focusRail()
         Unit

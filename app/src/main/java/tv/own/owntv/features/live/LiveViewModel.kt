@@ -1558,7 +1558,7 @@ class LiveViewModel(
     /** Back out of full-screen to the Live screen: we're no longer full-screen on ExoPlayer, so the preview
      *  pane may re-take the engine (and re-apply the preview mute) on the next focus. Keeps the stream
      *  playing (no stop) — just clears the flag so [playPreview] works again. */
-    fun onFullscreenExited() {
+    fun onFullscreenExited(keepPreview: Boolean = false) {
         live.detach() // the stream stays; its watchers and the give-up alarm stand down
         // Leaving full-screen ends the rewind: the archive stream is torn down with the player, and the
         // 1 Hz "behind live" ticker would otherwise keep running against nothing for the rest of the session.
@@ -1567,7 +1567,7 @@ class LiveViewModel(
         // focus and re-applies the preview mute — so we can leave it running here. But when live preview
         // is OFF, nothing ever re-takes it, and the engine would keep decoding the (unmuted) channel's
         // audio in the background after exit. Stop it so leaving fullscreen actually silences the stream.
-        if (!livePreviewEnabled.value) live.stopExo()
+        if (!livePreviewEnabled.value && !keepPreview) live.stopExo()
     }
 
     fun clearLiveOnExo() {

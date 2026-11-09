@@ -73,4 +73,26 @@ class FixtureCorrectionsTest {
         assertTrue(corrections.rejected(1, "event0", start).isEmpty())
         assertEquals(setOf(feed), corrections.rejected(1, "event64", start))
     }
+    @Test fun `fixture feed selection survives restart but cannot cross profiles or dates`() {
+        val store = Store()
+        val choices = FixtureCorrections(store) { start }
+        assertTrue(choices.remember(1, "event", start, feed))
+        val restarted = FixtureCorrections(store) { start }
+        assertEquals(feed, restarted.selected(1, "event", start))
+        assertNull(restarted.selected(2, "event", start))
+        assertNull(restarted.selected(1, "event", start + 1))
+        restarted.reject(1, "event", start, feed)
+        assertNull(restarted.selected(1, "event", start))
+        assertFalse(restarted.remember(1, "event", start, feed))
+        assertEquals(setOf(feed), restarted.rejected(1, "event", start))
+    }
+    @Test fun `failed feed selection retains the earlier choice and never erases reports`() {
+        val store = Store()
+        val choices = FixtureCorrections(store) { start }
+        choices.remember(1, "event", start, feed)
+        store.fail = true
+        assertFalse(choices.remember(1, "event", start, "other"))
+        assertEquals(feed, choices.selected(1, "event", start))
+    }
+
 }
