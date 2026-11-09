@@ -25,27 +25,6 @@ internal class FixtureCorrections(
     private val entries = LinkedHashMap<String, Entry>()
     private var loaded = false
 
-    @Synchronized fun selected(profile: Long, fixture: String, startMs: Long): String? {
-        load()
-        return entries[key(profile, fixture, startMs)]?.takeIf { it.expires > clock() }?.selected
-    }
-
-    @Synchronized fun remember(profile: Long, fixture: String, startMs: Long, channelKey: String): Boolean {
-        require(profile >= 0)
-        load()
-        val before = LinkedHashMap(entries)
-        val now = clock()
-        entries.entries.removeAll { it.value.expires <= now }
-        val key = key(profile, fixture, startMs)
-        val previous = entries[key]
-        if (channelKey in previous?.channels.orEmpty()) return false
-        entries.remove(key)
-        entries[key] = Entry(maxOf(startMs + 36 * 60 * 60_000L, now + 6 * 60 * 60_000L),
-            previous?.channels.orEmpty(), channelKey)
-        while (entries.size > 64) entries.remove(entries.keys.first())
-        return saveOrRollback(before)
-    }
-
     @Synchronized fun rejected(profile: Long, fixture: String, startMs: Long): Set<String> {
         load()
         return entries[key(profile, fixture, startMs)]?.takeIf { it.expires > clock() }?.channels.orEmpty()
