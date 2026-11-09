@@ -53,7 +53,7 @@ class ProgrammeArtworkMatchTest {
         val q = ProgrammeArtworkMatch.query("24/7 • 24/7 BACK TO FUTURE")!!
         assertEquals(5, ProgrammeArtworkMatch.select(q, listOf(hit(5, "Back to the Future", 1985)))?.tmdbId)
         assertNull(ProgrammeArtworkMatch.select(q,
-            listOf(hit(5, "Back to the Future", 1985), hit(6, "Back to Future", 1990))))
+            listOf(hit(5, "Back to the Future", 1985), hit(6, "Back to a Future", 1990))))
     }
     @Test fun `themed channel fallback never guesses a broadcast movie`() {
         assertEquals("Back To The Future", ProgrammeArtworkMatch.channelThemeTitle("24/7 • Back To The Future"))
