@@ -8,4 +8,7 @@
     <string name="sports_change_leagues_hint">Add or remove leagues in Settings → Sport Lounge</string>
     <string name="sports_show_in_menu">Show Sport Lounge in the menu</string>
     <string name="sports_empty_choose_in">Choose them in Settings → App → Sport Lounge → Sports and leagues.</string>
+    <string name="m6_no_verified_feeds">No verified feed found for this fixture. Open Event details &amp; feeds to review broadcasters, or retry. No channel was started.</string>
+    <string name="m6_feed_search_error">Channel search could not complete. Retry, or open Event details &amp; feeds.</string>
+    <string name="m6_retry_feeds">Retry finding feeds</string>
 </resources>
