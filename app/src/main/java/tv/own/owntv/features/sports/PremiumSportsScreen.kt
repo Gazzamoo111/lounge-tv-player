@@ -390,8 +390,7 @@ internal fun PremiumEventCard(m: Match, spoilerFree: Boolean, featured: Boolean,
                     }
                 }
             } else Text(m.title, style = stageText(if (featured) 34 else 25, 800), color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            val local = Instant.ofEpochMilli(m.startMs).atZone(PremiumSportsPresentation.zone).format(DateTimeFormatter.ofPattern("EEE d MMM · h:mm a")) +
-                stringResource(R.string.content_epg_bits_separator) + stringResource(R.string.m4_nz_time)
+            val local = PremiumSportsPresentation.nzKickoffSummary(m.startMs)
             Text(listOfNotNull(if (m.isLive) m.clock?.display?.takeIf { it.isNotBlank() } ?: m.statusText else if (m.state == MatchState.PRE && showTime) local else m.statusText, m.venue.takeIf { featured }).joinToString(stringResource(R.string.content_epg_bits_separator)),
                 style = stageText(if (featured) 20 else 17, 600), color = LoungeSurface.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
