@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-09T09:46:52.579565+00:00",
+  "generatedAt": "2026-11-09T23:26:05.743764+00:00",
   "eligible": 811,
   "blockedConflictingIds": [
     "DiscoveryTurbo.uk",
@@ -10,7 +10,7 @@
       "source": "talk-us",
       "region": "us",
       "channels": 738,
-      "matched": 172
+      "matched": 173
     },
     {
       "source": "talk-uk",
@@ -34,10 +34,10 @@
   "modifiedTargets": 49,
   "newlyCurrentTargets": 0,
   "addedProgrammes": 3395,
-  "preservedProgrammes": 72577,
-  "inputProgrammes": 74015,
-  "prunedExpiredProgrammes": 1438,
-  "guideProgrammes": 75972,
+  "preservedProgrammes": 65815,
+  "inputProgrammes": 68120,
+  "prunedExpiredProgrammes": 2305,
+  "guideProgrammes": 69210,
   "repaired": [
     {
       "epgId": "live:jewelry-television",
