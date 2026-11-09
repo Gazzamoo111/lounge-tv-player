@@ -44,7 +44,7 @@ import java.io.File
 class Milestone6UiTest {
     @get:Rule val compose = createComposeRule()
     @Composable private fun Theme(content: @Composable () -> Unit) {
-        OwnTVTheme(ThemeMode.DARK, AccentColor.BLUE, false, animationLevel = AnimationLevel.OFF, content = content)
+        OwnTVTheme(tv.own.owntv.core.theme.ThemeMode.DARK, tv.own.owntv.core.theme.AccentColor.BLUE, false, animationLevel = AnimationLevel.OFF, content = content)
     }
     private fun output(name: String, json: JSONObject) {
         val dir = File(InstrumentationRegistry.getInstrumentation().targetContext.filesDir, "m6-results").apply { mkdirs() }

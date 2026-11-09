@@ -368,6 +368,7 @@ class MovieViewModel(
             if (resolvedMetaContext != context) { resolvedMeta.clear(); resolvedMetaContext = context }
             if (m == null) { emit(null); return@transformLatest }
             resolvedMeta[m.id]?.let { emit(MovieMeta(m.id, it)); return@transformLatest }
+            emit(MovieMeta(m.id, null))
             delay(tv.own.owntv.core.metadata.MetadataRepository.FOCUS_DEBOUNCE_MS)
             val cache = runCatching { withContext(kotlinx.coroutines.Dispatchers.IO) { metadata.resolveMovie(m) } }.getOrNull()
             if (cache != null) {

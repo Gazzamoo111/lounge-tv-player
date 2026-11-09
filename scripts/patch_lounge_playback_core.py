@@ -180,7 +180,7 @@ PATCHES = {
   ]
 }
 
-def apply(root: Path, milestone3: bool = True) -> None:
+def apply(root: Path, milestone3: bool = True, milestone6: bool = True) -> None:
     actual = subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"], text=True).strip()
     if actual != PIN:
         raise SystemExit(f"Core revision mismatch: expected {PIN}, got {actual}")
@@ -266,14 +266,19 @@ def apply(root: Path, milestone3: bool = True) -> None:
         subprocess.run(["git", "-C", str(root), "apply", "--check", str(colours)], check=True)
         subprocess.run(["git", "-C", str(root), "apply", str(colours)], check=True)
         print("Preserved source team colours in fixture parsing and cache")
-        recovery = Path(__file__).resolve().parent / "patches/playback-milestone6.patch"
-        subprocess.run(["git", "-C", str(root), "apply", "--check", str(recovery)], check=True)
-        subprocess.run(["git", "-C", str(root), "apply", str(recovery)], check=True)
-        print("Applied isolated preview ownership and English poster policy")
+        if milestone6:
+            recovery = Path(__file__).resolve().parent / "patches/playback-milestone6.patch"
+            subprocess.run(["git", "-C", str(root), "apply", "--check", str(recovery)], check=True)
+            subprocess.run(["git", "-C", str(root), "apply", str(recovery)], check=True)
+            print("Applied isolated preview ownership and English poster policy")
+            benchmark = Path(__file__).resolve().parent / "benchmarks/Milestone6OwnershipComparisonTest.kt"
+            target = root / "player-core/src/test/java/tv/own/owntv/player/Milestone6OwnershipComparisonTest.kt"
+            target.write_text(benchmark.read_text(), encoding="utf-8")
+
 
     print(f"Playback core patch applied to pinned commit {PIN}")
 
 if __name__ == "__main__":
-    if len(sys.argv) not in (2, 3) or (len(sys.argv) == 3 and sys.argv[2] != "--baseline"):
-        raise SystemExit("Usage: patch_lounge_playback_core.py path/to/OwnTV_Core [--baseline]")
-    apply(Path(sys.argv[1]).resolve(), milestone3=len(sys.argv) == 2)
+    if len(sys.argv) not in (2, 3) or (len(sys.argv) == 3 and sys.argv[2] not in ("--baseline", "--milestone5")):
+        raise SystemExit("Usage: patch_lounge_playback_core.py path/to/OwnTV_Core [--baseline|--milestone5]")
+    apply(Path(sys.argv[1]).resolve(), milestone3=len(sys.argv) == 2 or sys.argv[2] == "--milestone5", milestone6=len(sys.argv) == 2)

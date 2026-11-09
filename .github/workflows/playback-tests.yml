@@ -59,6 +59,34 @@ jobs:
           PYBENCH
           chmod +x baseline-core/gradlew
           baseline-core/gradlew -p baseline-core :player-core:testDebugUnitTest --tests tv.own.owntv.player.LivePlaybackWorkBenchmarkTest --stacktrace
+      - name: Checkout QA 610 effective core for targeted ownership comparison
+        uses: actions/checkout@v4
+        with:
+          repository: ahXN00/OwnTV_Core
+          ref: 1de78b1e2690c22b50c060e986bce221454bf880
+          path: qa610-core
+          persist-credentials: false
+      - name: Replay shared-session ownership against QA 610 and verify unchanged VOD configuration
+        env:
+          LOUNGE_M6_BASELINE: 'true'
+        run: |
+          python3 scripts/patch_lounge_playback_core.py qa610-core --milestone5
+          cp scripts/benchmarks/Milestone6OwnershipComparisonTest.kt qa610-core/player-core/src/test/java/tv/own/owntv/player/
+          chmod +x qa610-core/gradlew
+          qa610-core/gradlew -p qa610-core :player-core:testDebugUnitTest --tests tv.own.owntv.player.Milestone6OwnershipComparisonTest --stacktrace
+          python3 - <<'PYVOD'
+          import hashlib, json
+          from pathlib import Path
+          rows = []
+          for name in ('OwnTVPlayer.kt', 'SmartBuffer.kt', 'MpvLiveBuffer.kt', 'ExoSubtitleEngine.kt', 'AudioOutputPolicy.kt', 'FilmWatchdog.kt'):
+              path = Path('player-core/src/main/java/tv/own/owntv/player') / name
+              old = (Path('qa610-core') / path).read_bytes()
+              new = (Path('shared-core') / path).read_bytes()
+              assert old == new, 'Unreviewed VOD/decoder/audio change: ' + name
+              rows.append(dict(file=name, unchanged=True, sha256=hashlib.sha256(new).hexdigest()))
+          Path('m6-vod-configuration-invariants.json').write_text(json.dumps(rows, indent=2))
+          print(json.dumps(rows, indent=2))
+          PYVOD
       - name: Core, playback and app unit tests without signing credentials
         env:
           QA_SIGNING_REQUIRED: 'false'
@@ -77,4 +105,6 @@ jobs:
             shared-core/player-core/build/test-results/**/*.xml
             app/build/test-results/**/*.xml
             baseline-core/player-core/build/test-results/**/*.xml
+            qa610-core/player-core/build/test-results/**/*.xml
+            m6-vod-configuration-invariants.json
           if-no-files-found: warn

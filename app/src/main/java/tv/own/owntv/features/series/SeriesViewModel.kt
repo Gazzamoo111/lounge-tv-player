@@ -365,6 +365,7 @@ class SeriesViewModel(
             if (resolvedMetaContext != context) { resolvedMeta.clear(); resolvedMetaContext = context }
             if (s == null) { emit(null); return@transformLatest }
             resolvedMeta[s.id]?.let { emit(SeriesMeta(s.id, it)); return@transformLatest }
+            emit(SeriesMeta(s.id, null))
             delay(tv.own.owntv.core.metadata.MetadataRepository.FOCUS_DEBOUNCE_MS)
             val cache = runCatching { withContext(kotlinx.coroutines.Dispatchers.IO) { metadata.resolveSeries(s) } }.getOrNull()
             if (cache != null) {

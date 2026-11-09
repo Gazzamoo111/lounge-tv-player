@@ -360,10 +360,14 @@ private fun SportsEventRail(title: String, matches: List<Match>, config: SportsC
 }
 
 @Composable
-internal fun PremiumEventCard(m: Match, spoilerFree: Boolean, featured: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit, onHold: () -> Unit, showTime: Boolean = true) {
+internal fun PremiumEventCard(m: Match, spoilerFree: Boolean, featured: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit, onHold: () -> Unit, showTime: Boolean = true, backgroundArtwork: Int? = null) {
     StageSurface(onClick, radius = 24.mpx, modifier = modifier.clip(RoundedCornerShape(24.mpx))
         .background(Brush.horizontalGradient(listOf(teamTint(m.home?.team)?.copy(alpha = 0.65f) ?: Color(0xFF11385A), teamTint(m.away?.team)?.copy(alpha = 0.65f) ?: Color(0xFF18283D))))
         .border(1.mpx, LoungeSurface.Line, RoundedCornerShape(24.mpx)), focusStyle = StageFocus.FX, onLongClick = onHold) { focused ->
+        if (backgroundArtwork != null) androidx.compose.foundation.Image(
+            painter = androidx.compose.ui.res.painterResource(backgroundArtwork), contentDescription = null,
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            modifier = Modifier.matchParentSize(), alpha = 0.28f)
         Column(Modifier.fillMaxSize().padding(if (featured) 26.mpx else 18.mpx), verticalArrangement = Arrangement.SpaceBetween) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(m.leagueName, style = stageText(if (featured) 23 else 18, 700), color = LoungeSurface.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))

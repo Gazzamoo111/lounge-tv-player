@@ -38,10 +38,12 @@ internal fun LoungeSportsHomeHero(matches: List<Match>, start: Dp, firstFocus: F
     Column(Modifier.fillMaxWidth().padding(start = start, end = 48.mpx)
         .onFocusChanged { focused = it.hasFocus; if (it.hasFocus) onFocus() }, verticalArrangement = Arrangement.spacedBy(16.mpx)) {
         Text(stringResource(R.string.m6_sports_hero), style = stageText(26, 700), color = Color.White)
+        Text(match.title, style = stageText(31, 800), color = Color.White, maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
         PremiumEventCard(match, spoilerFree = false, featured = true,
             modifier = Modifier.fillMaxWidth().height(330.mpx)
                 .then(if (firstFocus != null) Modifier.focusRequester(firstFocus) else Modifier),
-            onClick = { onOpen(match) }, onHold = { onRemind(match) }, showTime = false)
+            onClick = { onOpen(match) }, onHold = { onRemind(match) }, showTime = false, backgroundArtwork = R.drawable.lounge_option_c_sport_red_blue)
         Text((if (match.isLive) stringResource(R.string.player_live) else stringResource(R.string.m6_upcoming)) +
             stringResource(R.string.content_epg_bits_separator) + Instant.ofEpochMilli(match.startMs).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("EEE d MMM · h:mm a z")),
             style = stageText(21, 600), color = Color.White)
