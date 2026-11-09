@@ -459,6 +459,8 @@ class SportsViewModel(
      * fingerprinted local EPG/catalogue cache. Never search or tune on mere card focus.
      * Candidate filtering and rejected-feed corrections are shared with the match page.
      */
+    val candidateRevision = candidateResolver.revision
+
     suspend fun previewChoices(match: Match): List<WatchOption> {
         val c = config.first()
         val found = watchReader.watchFor(listOf(match)) { SportsMemory.rememberedFor(c, it) }[match.key].orEmpty()

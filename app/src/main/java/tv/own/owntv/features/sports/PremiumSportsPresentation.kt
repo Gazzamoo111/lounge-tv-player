@@ -37,3 +37,9 @@ internal object PremiumSportsPresentation {
         selected != null && session?.match?.key == selected.key && session.match.startMs == selected.startMs &&
             session.options.any { it.channel.id == playingId }
 }
+
+/** A single fixture-specific candidate can start on the explicit Watch in Preview action. */
+internal fun directSportsPreviewChoice(options: List<tv.own.owntv.core.sports.WatchOption>): tv.own.owntv.core.sports.WatchOption? =
+    options.singleOrNull()?.takeIf {
+        it.tier == tv.own.owntv.core.sports.WatchTier.GUIDE || it.tier == tv.own.owntv.core.sports.WatchTier.EVENT
+    }

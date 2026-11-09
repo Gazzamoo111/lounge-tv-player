@@ -1748,18 +1748,28 @@ fun OwnTVShell(
                             val playingNow by engine.isPlaying.collectAsStateWithLifecycle()
                             val recent by liveVm.recentlyWatched.collectAsStateWithLifecycle()
                             val current = epg?.now
+                            var recentProgrammes by remember { mutableStateOf<Map<Long, tv.own.owntv.core.parser.XtEpgEntry>>(emptyMap()) }
+                            LaunchedEffect(recent) {
+                                recentProgrammes = emptyMap()
+                                while (true) {
+                                    recentProgrammes = liveVm.nowPlayingFor(recent.take(12))
+                                    kotlinx.coroutines.delay(60_000)
+                                }
+                            }
                             tv.own.owntv.player.PremiumLivePanel(
                                 title = meta.title.orEmpty(), number = meta.subtitle, logo = meta.logoUrl,
                                 current = current, next = epg?.next, technical = chips, isPlaying = playingNow,
-                                recent = recent.filter { it.id != previewChannel?.id }, playFocus = playFocus,
+                                recent = recent, playFocus = playFocus,
+                                currentChannelId = previewChannel?.id, programmes = recentProgrammes,
                                 onToggle = engine::togglePlayPause,
                                 onGuide = { exitPlayer(); onSelectSection(MainSection.EPG) },
                                 onMore = more,
                                 onRecent = { ch -> scope.launch { liveVm.ensurePlayingByIdAsync(ch.id, recent) } },
                                 artwork = {
                                     val programme = current?.let { tv.own.owntv.core.database.entity.EpgProgrammeEntity(
-                                        0, previewChannel?.sourceId ?: 0, "", it.startMs, it.stopMs, it.title, description = it.description) }
-                                    tv.own.owntv.features.live.ProgrammeArtwork(programme, meta.logoUrl, Modifier.fillMaxSize())
+                                        0, previewChannel?.sourceId ?: 0, "", it.startMs, it.stopMs, it.title, description = it.description,
+                                        year = epg?.nowDetails?.year, episode = epg?.nowDetails?.episode) }
+                                    tv.own.owntv.features.live.ProgrammeArtwork(programme, meta.logoUrl, Modifier.fillMaxSize(), channelName = previewChannel?.name)
                                 },
                             )
                         }

@@ -1131,14 +1131,16 @@ class LiveViewModel(
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
 
     val recentlyWatched: StateFlow<List<ChannelEntity>> = ctx
-        .flatMapLatest { channelDao.recentlyWatched(it.profileId, 20) }
-        .combine(custResolved) { list, cs ->
-            list.filter {
-                CustomizeKeys.channel(it) !in cs.cust.hiddenItems &&
-                    (it.categoryId == null || it.categoryId !in cs.hiddenCats) &&
-                    showInNzSelection(it)
+        .flatMapLatest { c ->
+            combine(channelDao.recentlyWatched(c.profileId, 20), custResolved) { list, cs ->
+                if (settings.activeProfileIdNow() != c.profileId) emptyList()
+                else list.distinctBy { it.id }.filter {
+                    it.sourceId in c.sourceIds &&
+                        CustomizeKeys.channel(it) !in cs.cust.hiddenItems &&
+                        (it.categoryId == null || it.categoryId !in cs.hiddenCats) &&
+                        showInNzSelection(it)
+                }.map { ch -> cs.cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
             }
-                .map { ch -> cs.cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 

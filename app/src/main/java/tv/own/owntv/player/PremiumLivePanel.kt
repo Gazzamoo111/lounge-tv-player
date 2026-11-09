@@ -35,7 +35,8 @@ import java.time.format.DateTimeFormatter
 internal fun PremiumLivePanel(title: String, number: String?, logo: String?, current: XtEpgEntry?, next: XtEpgEntry?,
     technical: List<String>, isPlaying: Boolean, recent: List<ChannelEntity>, playFocus: FocusRequester,
     onToggle: () -> Unit, onGuide: () -> Unit, onMore: () -> Unit, onRecent: (ChannelEntity) -> Unit,
-    artwork: @Composable () -> Unit, modifier: Modifier = Modifier) {
+    artwork: @Composable () -> Unit, modifier: Modifier = Modifier,
+    currentChannelId: Long? = null, programmes: Map<Long, XtEpgEntry> = emptyMap()) {
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) { while (true) { delay(10_000); now = System.currentTimeMillis() } }
     Column(modifier.fillMaxWidth().background(Color(0xE9081628), RoundedCornerShape(30.mpx))
@@ -73,9 +74,11 @@ internal fun PremiumLivePanel(title: String, number: String?, logo: String?, cur
         if (recent.isNotEmpty()) {
             Text(stringResource(R.string.m4_recent), style = stageText(18, 700), color = LoungeSurface.Muted)
             LazyRow(Modifier.focusRestorer().focusGroup(), horizontalArrangement = Arrangement.spacedBy(12.mpx), contentPadding = PaddingValues(4.mpx)) {
-                items(recent.take(12), key = { it.id }) { channel ->
-                    StageSurface(onClick = { onRecent(channel) }, radius = 18.mpx, focusStyle = StageFocus.FX,
-                        modifier = Modifier.width(200.mpx).height(96.mpx)
+                items(recent.distinctBy { it.id }.take(12), key = { it.id }) { channel ->
+                    val watching = channel.id == currentChannelId
+                    val programme = programmes[channel.id]?.takeIf { it.startMs <= now && now < it.stopMs }
+                    StageSurface(onClick = { if (!watching) onRecent(channel) }, radius = 18.mpx, focusStyle = StageFocus.FX,
+                        modifier = Modifier.width(230.mpx).height(116.mpx)
                             .background(LoungeSurface.Panel, RoundedCornerShape(18.mpx))
                             .border(1.mpx, LoungeSurface.Line, RoundedCornerShape(18.mpx))) { focused ->
                         Column(Modifier.fillMaxSize().padding(horizontal = 14.mpx, vertical = 10.mpx),
@@ -85,9 +88,16 @@ internal fun PremiumLivePanel(title: String, number: String?, logo: String?, cur
                                     Text(it.toString(), style = stageText(16, 700), color = if (focused) LoungeSurface.Cyan else LoungeSurface.Muted)
                                 }
                                 LoungeLogo(channel.displayLogoUrl, channel.name, Modifier.size(30.mpx))
+                                if (watching) Text(stringResource(R.string.m4_current_channel), style = stageText(14, 700), color = LoungeSurface.Cyan)
                             }
                             Text(channel.name, style = stageText(18, 700), color = Color.White,
                                 maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            programme?.let {
+                                val progress = ((now - it.startMs).toFloat() / (it.stopMs - it.startMs)).coerceIn(0f, 1f)
+                                Box(Modifier.fillMaxWidth().height(3.mpx).background(LoungeSurface.Line)) {
+                                    Box(Modifier.fillMaxWidth(progress).height(3.mpx).background(LoungeSurface.Cyan))
+                                }
+                            }
                         }
                     }
                 }

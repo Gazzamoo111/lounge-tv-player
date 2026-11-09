@@ -75,4 +75,16 @@ class PremiumSportsPresentationTest {
         assertNull(tv.own.owntv.features.sports.data.SportEvent.fromJson(json)!!.toMatch()!!.competitors.single().team.color)
     }
 
+    @Test fun `direct preview requires exactly one fixture-specific candidate`() {
+        val channel = tv.own.owntv.core.database.entity.ChannelEntity(id = 1, sourceId = 1, name = "Channel", streamUrl = "https://example.invalid/live")
+        val guide = WatchOption(channel, WatchTier.GUIDE)
+        val event = WatchOption(channel, WatchTier.EVENT)
+        assertEquals(guide, directSportsPreviewChoice(listOf(guide)))
+        assertEquals(event, directSportsPreviewChoice(listOf(event)))
+        assertNull(directSportsPreviewChoice(emptyList()))
+        assertNull(directSportsPreviewChoice(listOf(guide, event.copy(channel = channel.copy(id = 2)))))
+        assertNull(directSportsPreviewChoice(listOf(guide.copy(tier = WatchTier.REMEMBERED))))
+        assertNull(directSportsPreviewChoice(listOf(guide.copy(tier = WatchTier.LIKELY))))
+    }
+
 }

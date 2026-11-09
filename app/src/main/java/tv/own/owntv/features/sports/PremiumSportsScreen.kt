@@ -29,6 +29,8 @@ import androidx.tv.material3.Text
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.ensureActive
+import tv.own.owntv.player.describe
 import org.koin.compose.koinInject
 import tv.own.owntv.R
 import tv.own.owntv.core.database.entity.ChannelEntity
@@ -59,36 +61,55 @@ internal fun PremiumSportsScreen(vm: SportsViewModel, liveVm: LiveViewModel,
     val previewPlaying by liveVm.previewEngine.isPlaying.collectAsStateWithLifecycle()
     val previewLoading by liveVm.previewEngine.buffering.collectAsStateWithLifecycle()
     val previewBlocked by liveVm.previewBlockedSingleSession.collectAsStateWithLifecycle()
+    val previewError by liveVm.previewEngine.error.collectAsStateWithLifecycle()
+    val corrections by vm.candidateRevision.collectAsStateWithLifecycle()
     var selected by remember(pid) { mutableStateOf<Match?>(null) }
     var options by remember(pid) { mutableStateOf<List<WatchOption>>(emptyList()) }
     var following by remember(pid) { mutableStateOf(false) }
     var menuFor by remember(pid) { mutableStateOf<Match?>(null) }
     var finding by remember(pid) { mutableStateOf(false) }
-    val findScope = rememberCoroutineScope()
-    var findJob by remember(pid) { mutableStateOf<kotlinx.coroutines.Job?>(null) }
-    val pickPreview: (Match) -> Unit = { m ->
-        selected = m
-        findJob?.cancel()
-        finding = true
-        findJob = findScope.launch {
-            try {
-                val candidates = vm.previewChoices(m)
-                if (selected?.key == m.key && selected?.startMs == m.startMs) options = candidates
-            } catch (cancel: CancellationException) { throw cancel }
-            catch (_: Exception) {
-                if (selected?.key == m.key && selected?.startMs == m.startMs) options = emptyList()
-            } finally {
-                if (selected?.key == m.key && selected?.startMs == m.startMs) finding = false
+    var chooseFeed by remember(pid) { mutableStateOf(false) }
+    var request by remember(pid) { mutableIntStateOf(0) }
+    var handledRequest by remember(pid) { mutableIntStateOf(0) }
+    val previewFocus = remember(pid) { FocusRequester() }
+    val currentActive by rememberUpdatedState(active)
+    val previewScope = rememberCoroutineScope()
+    val startPreview: (Match, List<WatchOption>, WatchOption) -> Unit = { match, feeds, option ->
+        previewScope.launch {
+            if (currentActive && settings.activeProfileIdNow() == pid && selected?.key == match.key && selected?.startMs == match.startMs) {
+                vm.playedFrom(match, feeds, option.channel)
+                liveVm.onChannelFocused(option.channel)
+                liveVm.playPreview(option.channel, withAudio = true)
             }
         }
     }
-    LaunchedEffect(pid, selected?.key, selected?.startMs, state.config) {
+    val pickPreview: (Match) -> Unit = { match ->
+        selected = match
+        request++ // Only an explicit action can discover feeds or start a stream.
+    }
+    LaunchedEffect(pid, active, selected?.key, selected?.startMs, state.config, corrections, request) {
         options = emptyList()
-        delay(200)
-        val m = selected ?: return@LaunchedEffect
-        try { options = vm.channelsFound(m) }
-        catch (cancel: CancellationException) { throw cancel }
+        chooseFeed = false
+        finding = false
+        val explicit = request != handledRequest
+        handledRequest = request
+        val match = selected ?: return@LaunchedEffect
+        if (!active || pid < 0) return@LaunchedEffect
+        finding = explicit
+        try {
+            if (!explicit) delay(200)
+            val found = if (explicit) vm.previewChoices(match) else vm.channelsFound(match)
+            kotlinx.coroutines.currentCoroutineContext().ensureActive()
+            if (settings.activeProfileIdNow() != pid) return@LaunchedEffect
+            options = found
+            if (explicit) {
+                val single = directSportsPreviewChoice(found)
+                if (single != null) startPreview(match, found, single)
+                else chooseFeed = found.isNotEmpty()
+            }
+        } catch (cancel: CancellationException) { throw cancel }
         catch (_: Exception) { options = emptyList() }
+        finally { finding = false }
     }
     key(pid) {
         if (following) {
@@ -102,17 +123,29 @@ internal fun PremiumSportsScreen(vm: SportsViewModel, liveVm: LiveViewModel,
                     PremiumSportsPresentation.previewMatches(session, m, playing?.id),
                     onOpen = { m?.let(onOpenMatch) },
                     onFind = { m?.let(pickPreview) }, finding = finding && valid,
-                    onPreview = { o -> if (active && m != null) {
-                        vm.playedFrom(m, options, o.channel)
-                        liveVm.onChannelFocused(o.channel)
-                        liveVm.playPreview(o.channel, withAudio = true)
-                    } },
+                    onPreview = { o -> if (m != null) {
+                        if (options.size == 1 && directSportsPreviewChoice(options) != null) startPreview(m, options, o)
+                        else chooseFeed = true
+                    } }, previewFocus = previewFocus,
                     onFullScreen = { o -> if (m != null) { vm.playedFrom(m, options, o.channel); onPlayChannel(o.channel, options.map { it.channel }) } },
                     compact = compact,
-                    notice = when { previewBlocked -> stringResource(R.string.m4_preview_blocked); previewLoading -> stringResource(R.string.m4_preview_loading); else -> null },
+                    notice = when {
+                        previewBlocked -> stringResource(R.string.m4_preview_blocked)
+                        previewError != null -> {
+                            val resources = LocalContext.current.resources
+                            previewError!!.describe { id, args -> resources.getString(id, *args.toTypedArray()) }
+                        }
+                        previewLoading -> stringResource(R.string.m4_preview_loading)
+                        else -> null
+                    },
                     preview = { if (active && playing != null) ExoPreviewSurface(liveVm.previewEngine, Modifier.fillMaxSize()) })
             })
     }
+    if (chooseFeed && selected != null) SportsFeedPicker(options,
+        onPick = { option ->
+            selected?.let { startPreview(it, options, option) }
+            chooseFeed = false
+        }, onDismiss = { chooseFeed = false }, restoreFocus = previewFocus)
     val held = menuFor
     if (held != null) FollowRemindMenu(held, state.config, emptyList(), System.currentTimeMillis(),
         onFollow = vm::toggleTeam, onRemind = { vm.remind(held, emptyList()) },
@@ -348,14 +381,14 @@ internal fun PremiumEventCard(m: Match, spoilerFree: Boolean, featured: Boolean,
 internal fun SportsPreviewPanel(match: Match?, options: List<WatchOption>, playingName: String?, matching: Boolean,
     onOpen: () -> Unit, onPreview: (WatchOption) -> Unit, onFullScreen: (WatchOption) -> Unit, notice: String?,
     compact: Boolean = false, preview: @Composable () -> Unit,
-    onFind: () -> Unit = {}, finding: Boolean = false) {
+    onFind: () -> Unit = {}, finding: Boolean = false, previewFocus: FocusRequester? = null) {
     Column(Modifier.fillMaxWidth().then(if (compact) Modifier else Modifier.fillMaxHeight()),
         verticalArrangement = Arrangement.spacedBy(14.mpx)) {
         // Keep the decoder's surface outside the scrollable feed details. D-pad navigation to a
         // lower action never scrolls away the preview or replaces its playback owner.
         Box(Modifier.fillMaxWidth().aspectRatio(16f / 9).clip(RoundedCornerShape(24.mpx)).background(Color.Black), contentAlignment = Alignment.Center) {
             preview()
-            if (playingName == null) Text(notice ?: stringResource(R.string.m4_preview_empty), style = stageText(21, 500), color = LoungeSurface.Muted, modifier = Modifier.padding(24.mpx))
+            if (notice != null || playingName == null) Text(notice ?: stringResource(R.string.m4_preview_empty), style = stageText(21, 500), color = LoungeSurface.Muted, modifier = Modifier.padding(24.mpx))
         }
         Column(Modifier.fillMaxWidth().then(if (compact) Modifier else Modifier.weight(1f).verticalScroll(rememberScrollState())),
             verticalArrangement = Arrangement.spacedBy(14.mpx)) {
@@ -365,24 +398,49 @@ internal fun SportsPreviewPanel(match: Match?, options: List<WatchOption>, playi
                 val option = options.firstOrNull()
                 if (!compact || option == null) LoungeAction(stringResource(R.string.m4_event_details), onClick = onOpen)
                 if (option == null) {
-                    LoungeAction(stringResource(R.string.m4_pick_here), onClick = onFind)
+                    LoungeAction(stringResource(if (finding) R.string.m4_finding_for_preview else R.string.m4_pick_here),
+                        modifier = if (previewFocus != null) Modifier.focusRequester(previewFocus) else Modifier,
+                        onClick = { if (!finding) onFind() })
                     if (!compact) Text(stringResource(if (finding) R.string.m4_finding_for_preview else R.string.m4_feed_none),
                         style = stageText(19, 500), color = LoungeSurface.Muted)
                 } else {
                     if (!compact) Text(option.channel.name, style = stageText(22, 800), color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(stringResource(when (option.tier) { WatchTier.GUIDE -> R.string.m4_feed_epg; WatchTier.REMEMBERED -> R.string.m4_feed_saved; else -> R.string.m4_feed_possible }), style = stageText(18, 500), color = LoungeSurface.Muted)
                     Row(horizontalArrangement = Arrangement.spacedBy(12.mpx)) {
-                        LoungeAction(stringResource(R.string.m4_preview_feed)) { onPreview(option) }
+                        LoungeAction(stringResource(R.string.m4_preview_feed),
+                            modifier = if (previewFocus != null) Modifier.focusRequester(previewFocus) else Modifier) { onPreview(option) }
                         LoungeAction(stringResource(R.string.m4_fullscreen)) { onFullScreen(option) }
                     }
-                    // Keep alternatives here rather than requiring navigation through the old
-                    // Timeline → Find channels page. Every alternative is user-selected explicitly.
-                    if (options.size > 1) {
-                        Text(stringResource(R.string.m4_other_feeds), style = stageText(18, 700), color = LoungeSurface.Muted)
-                        options.drop(1).take(4).forEach { other ->
-                            LoungeAction(other.channel.name) { onPreview(other) }
-                        }
-                    }
+
+                }
+            }
+        }
+    }
+}
+
+/** Explicit choice, including low-evidence candidates. No stream opens from dialog focus. */
+@Composable
+internal fun SportsFeedPicker(options: List<WatchOption>, onPick: (WatchOption) -> Unit,
+    onDismiss: () -> Unit, restoreFocus: FocusRequester) {
+    val entry = remember { FocusRequester() }
+    val inputMode = LocalInputModeManager.current
+    DisposableEffect(Unit) { onDispose { runCatching { restoreFocus.requestFocus() } } }
+    StagePopup(onDismiss = onDismiss, title = stringResource(R.string.m4_choose_feed), width = 800.mpx,
+        buttons = { StageButton(stringResource(R.string.m4_done), onClick = onDismiss) }) {
+        LaunchedEffect(Unit) { withFrameNanos { }; inputMode.requestInputMode(InputMode.Keyboard); entry.requestFocus() }
+        LazyColumn(Modifier.heightIn(max = 600.mpx), verticalArrangement = Arrangement.spacedBy(10.mpx)) {
+            itemsIndexed(options, key = { _, option -> option.channel.id }) { index, option ->
+                Column {
+                    StagePopupOption(option.channel.name, chosen = false,
+                        modifier = if (index == 0) Modifier.focusRequester(entry) else Modifier,
+                        onClick = { onPick(option) })
+                    Text(stringResource(when (option.tier) {
+                        WatchTier.GUIDE -> R.string.m4_feed_epg
+                        WatchTier.EVENT -> R.string.m4_feed_event
+                        WatchTier.REMEMBERED -> R.string.m4_feed_saved
+                        else -> R.string.m4_feed_possible
+                    }), style = stageText(18, 500), color = LoungeSurface.Muted,
+                        modifier = Modifier.padding(horizontal = 18.mpx, vertical = 6.mpx))
                 }
             }
         }

@@ -322,7 +322,7 @@ internal fun LiveStagePane(
                                 year = nowNext.nowDetails?.year, episode = nowNext.nowDetails?.episode,
                             )
                         }
-                        ProgrammeArtwork(programme, channel?.displayLogoUrl, Modifier.width(76.mpx).height(112.mpx))
+                        ProgrammeArtwork(programme, channel?.displayLogoUrl, Modifier.width(76.mpx).height(112.mpx), channelName = channel?.name)
                     }
                     Text(now.title, style = stageText(42, 800, (-0.5).mpxSp), color = StageColors.Text, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                 }

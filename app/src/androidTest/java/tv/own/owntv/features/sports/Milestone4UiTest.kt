@@ -13,6 +13,7 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -88,7 +89,7 @@ class Milestone4UiTest {
         }
         compose.onNodeWithText("My Sports").assertIsFocused()
         capture("01-my-sports-test-data")
-        compose.onNodeWithText("Pick a game to watch here").performClick()
+        compose.onNodeWithText("Watch in Preview").performClick()
         assertEquals(1, previewPicks)
         assertEquals(0, opened)
         compose.onNodeWithText("My Sports").performKeyInput { pressKey(Key.DirectionRight) }
@@ -164,19 +165,54 @@ class Milestone4UiTest {
                 PremiumLivePanel("TEST channel", "7", null, XtEpgEntry("TEST programme", "Renderer validation. No stream is playing.", now-60_000, now+600_000),
                     XtEpgEntry("TEST next programme", null, now+600_000, now+1200_000), listOf("TEST supplied codec"), true,
                     listOf(tv.own.owntv.core.database.entity.ChannelEntity(id = 42, sourceId = 1, name = "TEST Recent Channel",
-                        streamUrl = "https://example.invalid/test", number = 42)), remember { FocusRequester() },
+                        streamUrl = "https://example.invalid/test", number = 42),
+                        tv.own.owntv.core.database.entity.ChannelEntity(id = 43, sourceId = 1, name = "TEST Current Channel",
+                        streamUrl = "https://example.invalid/current", number = 43)), remember { FocusRequester() },
                     { toggles++ }, { guide++ }, { tools++ }, { recentTaps++ }, artwork = { LoungeLogo(null, "TV", Modifier.fillMaxSize()) },
-                    modifier = Modifier.align(androidx.compose.ui.Alignment.BottomCenter).padding(30.mpx))
+                    modifier = Modifier.align(androidx.compose.ui.Alignment.BottomCenter).padding(30.mpx),
+                    currentChannelId = 43, programmes = mapOf(42L to XtEpgEntry("TEST current show", null, now - 60000, now + 60000)))
             }
         } }
         compose.onNodeWithText("TEST supplied codec").assertExists()
         compose.onNodeWithText("Recently Played").assertExists()
         compose.onNodeWithText("TEST Recent Channel").performClick()
         assertEquals(1, recentTaps)
+        compose.onNodeWithText("Watching").assertExists()
+        compose.onNodeWithText("TEST Current Channel").performClick()
+        assertEquals(1, recentTaps)
         capture("04-player-overlay-test-data")
         assertEquals(0, toggles)
         compose.onNodeWithText("Pause").performClick(); compose.onNodeWithText("TV Guide").performClick(); compose.onNodeWithText("Playback controls").performClick()
         assertEquals(1, toggles); assertEquals(1, guide); assertEquals(1, tools)
+    }
+
+    @Test fun feed_picker_uses_remote_focus_and_never_plays_on_browse_or_back() {
+        val channel = tv.own.owntv.core.database.entity.ChannelEntity(id = 42, sourceId = 1, name = "TEST EPG-supported feed",
+            streamUrl = "https://example.invalid/test")
+        val feeds = listOf(WatchOption(channel, WatchTier.GUIDE),
+            WatchOption(channel.copy(id = 43, name = "TEST possible feed"), WatchTier.LIKELY))
+        var open by mutableStateOf(false)
+        var picks = 0
+        var picked: Long? = null
+        compose.setContent { Theme {
+            val focus = remember { FocusRequester() }
+            tv.own.owntv.ui.lounge.LoungeAction("TEST open feeds", modifier = Modifier.focusRequester(focus)) { open = true }
+            if (open) SportsFeedPicker(feeds, { picks++; picked = it.channel.id; open = false }, { open = false }, focus)
+        } }
+        compose.onNodeWithText("TEST open feeds").performClick()
+        compose.onNodeWithText("TEST EPG-supported feed").assertIsFocused()
+        compose.onNodeWithText("TEST EPG-supported feed").performKeyInput { pressKey(Key.DirectionDown) }
+        compose.onNodeWithText("TEST possible feed").assertIsFocused()
+        assertEquals(0, picks)
+        capture("05-sports-feed-picker-test-data")
+        androidx.test.espresso.Espresso.pressBack()
+        compose.onNodeWithText("TEST open feeds").assertIsFocused()
+        assertEquals(0, picks)
+        compose.onNodeWithText("TEST open feeds").performClick()
+        compose.onNodeWithText("TEST EPG-supported feed").performKeyInput { pressKey(Key.DirectionCenter) }
+        assertEquals(1, picks)
+        assertEquals(42L, picked)
+        compose.onNodeWithText("TEST open feeds").assertIsFocused()
     }
     private class QuietEngine : PlaybackEngine {
         var commands = 0

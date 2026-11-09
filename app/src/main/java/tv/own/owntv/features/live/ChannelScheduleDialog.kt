@@ -114,7 +114,7 @@ internal fun ChannelScheduleDialog(
             }
             val p = selectedDetails
             Column(Modifier.width(300.mpx), verticalArrangement = Arrangement.spacedBy(12.mpx)) {
-                ProgrammeArtwork(p, channel.displayLogoUrl, Modifier.width(180.mpx).height(260.mpx))
+                ProgrammeArtwork(p, channel.displayLogoUrl, Modifier.width(180.mpx).height(260.mpx), channelName = channel.name)
                 Text(p?.title.orEmpty(), style = stageText(22, 700), maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(p?.description.orEmpty(), style = stageText(17, 400), color = StageColors.Muted, maxLines = 6, overflow = TextOverflow.Ellipsis)
             }

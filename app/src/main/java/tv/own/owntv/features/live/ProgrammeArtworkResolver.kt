@@ -21,7 +21,7 @@ internal class ProgrammeArtworkResolver(
     private val provider: MetadataProvider,
     private val settings: SettingsRepository,
 ) {
-    private val file = AtomicFile(File(context.cacheDir, "lounge-programme-artwork-v1.json"))
+    private val file = AtomicFile(File(context.cacheDir, "lounge-programme-artwork-v2.json"))
     private val cache = ProgrammeArtworkCache(::readCache, ::writeCache)
 
     suspend fun resolve(title: String, year: Int? = null, type: MetadataType? = null): String? = withContext(Dispatchers.IO) {
