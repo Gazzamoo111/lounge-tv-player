@@ -46,7 +46,8 @@ jobs:
           adb shell settings put system accelerometer_rotation 0
           adb shell settings put system user_rotation 0
           adb shell input keyevent 82
-      - name: Compose navigation, actions, real preference persistence and screenshots
+      - name: Build and install instrumentation APKs
+        id: install
         run: |
           set -euo pipefail
           # UTP's connected test task uninstalls the target on completion, deleting both PNGs and
@@ -58,12 +59,24 @@ jobs:
           test -n "$TARGET_APK" && test -n "$TEST_APK"
           adb install "$TARGET_APK"
           adb install "$TEST_APK"
+      - name: Existing Sports navigation and preference regression
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: |
+          set -euo pipefail
           adb shell am instrument -w -r -e class tv.own.owntv.features.sports.Milestone4UiTest com.loungetv.player.v2qa.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/lounge-ui-results.txt
           grep -Eq '^OK \(10 tests\)' /tmp/lounge-ui-results.txt
           ! grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|shortMsg=' /tmp/lounge-ui-results.txt
+      - name: Recovery Home navigation and native VOD probes
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: |
+          set -euo pipefail
           adb shell am instrument -w -r -e class tv.own.owntv.features.sports.Milestone6UiTest com.loungetv.player.v2qa.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/lounge-m6-results.txt
           grep -Eq '^OK \(4 tests\)' /tmp/lounge-m6-results.txt
           ! grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|shortMsg=' /tmp/lounge-m6-results.txt
+      - name: Second-process preference persistence
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: |
+          set -euo pipefail
           adb shell am force-stop com.loungetv.player.v2qa
           adb shell am instrument -w -r -e class tv.own.owntv.features.sports.Milestone4RestartTest com.loungetv.player.v2qa.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/lounge-restart-results.txt
           grep -Eq '^OK \(1 test\)' /tmp/lounge-restart-results.txt
@@ -80,8 +93,12 @@ jobs:
           cp /tmp/lounge-restart-results.txt m4-ui-results/ || true
           cp /tmp/lounge-m6-results.txt m4-ui-results/ || true
           # Keep the later fixes' internal-file export; the app now remains installed.
-          timeout 15 adb exec-out run-as com.loungetv.player.v2qa tar -cf - -C files m4-screenshots | tar -xf - -C m4-ui-results/
-          timeout 15 adb exec-out run-as com.loungetv.player.v2qa tar -cf - -C files m6-results | tar -xf - -C m4-ui-results/
+          # Preserve partial diagnostics even if a test failed before creating its output directory.
+          for directory in m4-screenshots m6-results; do
+            if adb shell run-as com.loungetv.player.v2qa test -d "files/$directory"; then
+              timeout 15 adb exec-out run-as com.loungetv.player.v2qa tar -cf - -C files "$directory" | tar -xf - -C m4-ui-results/
+            fi
+          done
           python3 - <<'PYRENDERS'
           from pathlib import Path
           from PIL import Image

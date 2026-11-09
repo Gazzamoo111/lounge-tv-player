@@ -308,18 +308,26 @@ class Milestone4UiTest {
     @Test fun actual_hud_tools_back_and_remount_issue_no_playback_commands() {
         val engine = QuietEngine()
         var attached by mutableStateOf(true)
+        // Keep this interaction test inside the HUD's auto-hide interval. Advance frames explicitly
+        // so wall-clock instrumentation and Compose's virtual auto-hide timer cannot race Back.
+        compose.mainClock.autoAdvance = false
         compose.setContent { Theme {
             if (attached) PlayerHud(engine, onBack = {}, premiumLivePanel = { chips, focus, more ->
                 PremiumLivePanel("TEST healthy session", null, null, null, null, chips, true, emptyList(), focus,
                     engine::togglePlayPause, {}, more, {}, artwork = {})
             })
         } }
+        compose.mainClock.advanceTimeBy(64)
         compose.onNodeWithText("Playback controls").performClick()
+        compose.mainClock.advanceTimeBy(64)
+        compose.onNodeWithText("Playback controls").assertDoesNotExist()
         remoteBack()
+        compose.mainClock.advanceTimeBy(64)
         compose.onNodeWithText("Playback controls").assertExists()
         repeat(3) {
-            compose.runOnIdle { attached = false }; compose.waitForIdle()
-            compose.runOnIdle { attached = true }; compose.waitForIdle()
+            compose.runOnIdle { attached = false }; compose.mainClock.advanceTimeBy(64); compose.waitForIdle()
+            compose.runOnIdle { attached = true }; compose.mainClock.advanceTimeBy(64); compose.waitForIdle()
+            compose.onNodeWithText("Playback controls").assertExists()
         }
         assertEquals(0, engine.commands)
     }
