@@ -34,7 +34,7 @@
     <string name="m4_no_networks">No broadcaster information is available for these events.</string>
     <string name="m4_networks_help">Broadcasters listed by the fixture source. Availability on your subscription is checked per event.</string>
     <string name="m4_no_table">Choose a competition to view available standings.</string>
-    <string name="m4_recent">Recent channels</string>
+    <string name="m4_recent">Recently Played</string>
     <string name="m4_guide">TV Guide</string>
     <string name="m4_up_next">Up next</string>
     <string name="m4_no_programme">Programme information unavailable</string>

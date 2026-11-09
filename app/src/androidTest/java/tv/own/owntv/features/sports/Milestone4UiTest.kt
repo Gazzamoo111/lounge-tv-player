@@ -158,16 +158,21 @@ class Milestone4UiTest {
         compose.onNodeWithText("Arrange").assertExists()
     }
     @Test fun player_panel_displays_genuine_supplied_badges_and_only_explicit_actions_fire() {
-        var toggles = 0; var guide = 0; var tools = 0
+        var toggles = 0; var guide = 0; var tools = 0; var recentTaps = 0
         compose.setContent { Theme {
             Box(Modifier.fillMaxSize().background(Color(0xFF09203B))) {
                 PremiumLivePanel("TEST channel", "7", null, XtEpgEntry("TEST programme", "Renderer validation. No stream is playing.", now-60_000, now+600_000),
-                    XtEpgEntry("TEST next programme", null, now+600_000, now+1200_000), listOf("TEST supplied codec"), true, emptyList(), remember { FocusRequester() },
-                    { toggles++ }, { guide++ }, { tools++ }, {}, artwork = { LoungeLogo(null, "TV", Modifier.fillMaxSize()) },
+                    XtEpgEntry("TEST next programme", null, now+600_000, now+1200_000), listOf("TEST supplied codec"), true,
+                    listOf(tv.own.owntv.core.database.entity.ChannelEntity(id = 42, sourceId = 1, name = "TEST Recent Channel",
+                        streamUrl = "https://example.invalid/test", number = 42)), remember { FocusRequester() },
+                    { toggles++ }, { guide++ }, { tools++ }, { recentTaps++ }, artwork = { LoungeLogo(null, "TV", Modifier.fillMaxSize()) },
                     modifier = Modifier.align(androidx.compose.ui.Alignment.BottomCenter).padding(30.mpx))
             }
         } }
         compose.onNodeWithText("TEST supplied codec").assertExists()
+        compose.onNodeWithText("Recently Played").assertExists()
+        compose.onNodeWithText("TEST Recent Channel").performClick()
+        assertEquals(1, recentTaps)
         capture("04-player-overlay-test-data")
         assertEquals(0, toggles)
         compose.onNodeWithText("Pause").performClick(); compose.onNodeWithText("TV Guide").performClick(); compose.onNodeWithText("Playback controls").performClick()

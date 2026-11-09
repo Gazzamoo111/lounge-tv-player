@@ -23,6 +23,8 @@ import tv.own.owntv.core.epg.displayLogoUrl
 import tv.own.owntv.core.parser.XtEpgEntry
 import tv.own.owntv.ui.lounge.*
 import tv.own.owntv.ui.stage.StageTag
+import tv.own.owntv.ui.stage.StageSurface
+import tv.own.owntv.ui.stage.StageFocus
 import tv.own.owntv.ui.theme.*
 import java.time.Instant
 import java.time.ZoneId
@@ -72,7 +74,22 @@ internal fun PremiumLivePanel(title: String, number: String?, logo: String?, cur
             Text(stringResource(R.string.m4_recent), style = stageText(18, 700), color = LoungeSurface.Muted)
             LazyRow(Modifier.focusRestorer().focusGroup(), horizontalArrangement = Arrangement.spacedBy(12.mpx), contentPadding = PaddingValues(4.mpx)) {
                 items(recent.take(12), key = { it.id }) { channel ->
-                    LoungeAction(channel.name) { onRecent(channel) }
+                    StageSurface(onClick = { onRecent(channel) }, radius = 18.mpx, focusStyle = StageFocus.FX,
+                        modifier = Modifier.width(200.mpx).height(96.mpx)
+                            .background(LoungeSurface.Panel, RoundedCornerShape(18.mpx))
+                            .border(1.mpx, LoungeSurface.Line, RoundedCornerShape(18.mpx))) { focused ->
+                        Column(Modifier.fillMaxSize().padding(horizontal = 14.mpx, vertical = 10.mpx),
+                            verticalArrangement = Arrangement.spacedBy(6.mpx)) {
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.mpx)) {
+                                channel.number?.let {
+                                    Text(it.toString(), style = stageText(16, 700), color = if (focused) LoungeSurface.Cyan else LoungeSurface.Muted)
+                                }
+                                LoungeLogo(channel.displayLogoUrl, channel.name, Modifier.size(30.mpx))
+                            }
+                            Text(channel.name, style = stageText(18, 700), color = Color.White,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
                 }
             }
         }
