@@ -50,7 +50,12 @@ fun SportsScreen(
         playback.pendingMatch.value?.let { (m, ch) ->
             playback.pendingMatch.value = null
             returnTo = ch
-            if (tv.own.owntv.BuildConfig.LOUNGE_TV_2 && ch == null) lastKey = m.key else open(m)
+            if (tv.own.owntv.BuildConfig.LOUNGE_TV_2 && ch == null) {
+                // Home event action is explicit: go directly to this fixture's Watch live page.
+                // Open resets findAsked, so trigger the bounded search only after opening.
+                open(m)
+                vm.findChannels()
+            } else open(m)
         } ?: playback.returnToMatch?.let { m ->
             playback.returnToMatch = null
             open(m)
