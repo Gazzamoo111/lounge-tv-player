@@ -1,0 +1,9 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {selectSports,localDate,dedupe} from '../src/sports.js';
+const now=Date.parse('2026-10-28T11:30:00Z'); // 29 October 00:30 in Auckland.
+const event=(key,sport,state,startMs=now)=>({key,sport,state,startMs,title:key,competitors:[]});
+test('NZ local day rather than UTC determines Today',()=>{assert.equal(localDate(now,'Pacific/Auckland'),'2026-10-29');const rows=[event('nz','rugby','PRE',Date.parse('2026-10-28T12:00:00Z')),event('yesterday','rugby','POST',Date.parse('2026-10-28T09:00:00Z'))];assert.deepEqual(selectSports(rows,{now,filter:'TODAY'}).matches.map(m=>m.key),['nz']);});
+test('live is separate from today and upcoming; seven local date window',()=>{const rows=[event('live','rugby','IN',now-1000),event('soon','rugby','PRE',now+1000),event('late','rugby','PRE',now+8*86400000)];const r=selectSports(rows,{now});assert.deepEqual(r.counts,{LIVE_NOW:1,TODAY:1,UPCOMING:1});assert.equal(r.matches[0].key,'live');});
+test('NFL and association football remain distinct',()=>{const rows=[event('nfl','football','IN'),event('soccer','soccer','IN')];assert.equal(selectSports(rows,{now,category:'NFL'}).matches[0].key,'nfl');assert.equal(selectSports(rows,{now,category:'FOOTBALL'}).matches[0].key,'soccer');});
+test('latest lifecycle and richest duplicate wins',()=>{const a=event('same','rugby','IN'),b={...a,state:'POST'},c={...b,events:[{}]};assert.deepEqual(dedupe([c,a,b]),[c]);});
+test('my teams, extra categories and NZ/AU priority',()=>{const rugby=event('nz','rugby','IN'),tennis={...event('tennis','tennis','IN'),competitors:[{team:{id:'x'}}]};const all=selectSports([tennis,rugby],{now});assert.equal(all.matches[0].key,'nz');assert(all.categories.includes('TENNIS'));assert.deepEqual(selectSports([tennis,rugby],{now,myTeamsOnly:true,followedTeams:['tennis/x']}).matches,[tennis]);});
