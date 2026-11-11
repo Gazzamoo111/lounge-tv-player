@@ -360,16 +360,19 @@ class Milestone4UiTest {
             })
         } }
         compose.mainClock.advanceTimeBy(64)
-        compose.onNodeWithText("Playback controls").performClick()
+        compose.onNodeWithTag("live-synopsis-browser").assertExists()
+        // The compact Live synopsis deliberately has no Playback controls button. DOWN is the
+        // remote contract for opening the existing full HUD tools without issuing playback commands.
+        compose.onNodeWithTag("live-synopsis-browser").performKeyInput { pressKey(Key.DirectionDown) }
         compose.mainClock.advanceTimeBy(64)
-        compose.onNodeWithText("Playback controls").assertDoesNotExist()
+        compose.onNodeWithTag("live-synopsis-browser").assertDoesNotExist()
         remoteBack()
         compose.mainClock.advanceTimeBy(64)
-        compose.onNodeWithText("Playback controls").assertExists()
+        compose.onNodeWithTag("live-synopsis-browser").assertExists()
         repeat(3) {
             compose.runOnIdle { attached = false }; compose.mainClock.advanceTimeBy(64); compose.waitForIdle()
             compose.runOnIdle { attached = true }; compose.mainClock.advanceTimeBy(64); compose.waitForIdle()
-            compose.onNodeWithText("Playback controls").assertExists()
+            compose.onNodeWithTag("live-synopsis-browser").assertExists()
         }
         assertEquals(0, engine.commands)
     }
