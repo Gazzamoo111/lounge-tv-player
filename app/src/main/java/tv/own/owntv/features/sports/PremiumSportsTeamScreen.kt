@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -32,6 +33,7 @@ import tv.own.owntv.core.sports.MatchNotifications
 import tv.own.owntv.core.sports.model.Match
 import tv.own.owntv.core.sports.model.MatchState
 import tv.own.owntv.ui.components.OwnTVIcon
+import tv.own.owntv.ui.stage.StageButton
 import tv.own.owntv.ui.stage.StageKeyHints
 import tv.own.owntv.ui.stage.StageRow
 import tv.own.owntv.ui.stage.StageTab
@@ -93,11 +95,13 @@ internal fun PremiumSportsTeamScreen(
                     modifier = Modifier.padding(top = 6.mpx),
                 )
             }
-            SportsChip(
-                stringResource(if (following) R.string.sports_following else R.string.sports_follow),
-                on = following,
+            StageButton(
+                text = stringResource(if (following) R.string.sports_following else R.string.sports_follow),
+                onClick = { vm.toggleTeam(followedTeam) },
                 icon = OwnTVIcon.STAR,
-            ) { vm.toggleTeam(followedTeam) }
+                iconFilled = following,
+                tinted = following,
+            )
         }
 
         Row(
