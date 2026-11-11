@@ -1,10 +1,10 @@
 {
-  "generatedAtUtc": "2026-11-10T19:48:19.296117+00:00",
-  "requiredThroughUtc": "2026-11-17T19:48:19.296117+00:00",
+  "generatedAtUtc": "2026-11-11T06:33:49.974565+00:00",
+  "requiredThroughUtc": "2026-11-18T06:33:49.974565+00:00",
   "sourceErrors": {},
   "auChannels": 38,
   "auChannelsWithSevenDaySource": 11,
-  "auProgrammesAdded": 193,
+  "auProgrammesAdded": 176,
   "auMatches": {
     "BEIN SPORTS 1": "no-seven-day-source",
     "BEIN SPORTS 3": "no-seven-day-source",
@@ -24,24 +24,24 @@
       "source": "xmltv-net",
       "sourceId": "403769auepg.com.au",
       "match": "official-rename-reviewed-id",
-      "added": 25,
-      "latest": "2026-11-17T20:00:00+00:00"
+      "added": 21,
+      "latest": "2026-11-18T07:00:00+00:00"
     },
     "10 Shake": "no-seven-day-source",
     "7flix": {
       "source": "xmltv-net",
       "sourceId": "431541auepg.com.au",
       "match": "unique-name",
-      "added": 15,
-      "latest": "2026-11-17T20:03:00+00:00"
+      "added": 16,
+      "latest": "2026-11-18T07:30:45+00:00"
     },
     "7mate": "no-seven-day-source",
     "7two": {
       "source": "xmltv-net",
       "sourceId": "410798auepg.com.au",
       "match": "unique-name",
-      "added": 16,
-      "latest": "2026-11-17T20:32:05+00:00"
+      "added": 13,
+      "latest": "2026-11-18T07:30:55+00:00"
     },
     "9Gem": "no-seven-day-source",
     "9Go!": "no-seven-day-source",
@@ -49,23 +49,23 @@
       "source": "xmltv-net",
       "sourceId": "431510auepg.com.au",
       "match": "unique-name",
-      "added": 16,
-      "latest": "2026-11-17T20:00:00+00:00"
+      "added": 12,
+      "latest": "2026-11-18T07:00:00+00:00"
     },
     "9Rush": "no-seven-day-source",
     "ABC": {
       "source": "xmltv-net",
       "sourceId": "431733auepg.com.au",
       "match": "official-rename-reviewed-id",
-      "added": 18,
-      "latest": "2026-11-17T22:00:00+00:00"
+      "added": 11,
+      "latest": "2026-11-18T07:30:00+00:00"
     },
     "ABC Comedy": {
       "source": "xmltv-net",
       "sourceId": "411316auepg.com.au",
       "match": "official-rename-reviewed-id",
-      "added": 26,
-      "latest": "2026-11-17T19:55:00+00:00"
+      "added": 30,
+      "latest": "2026-11-18T06:40:00+00:00"
     },
     "ABC Kids": "no-seven-day-source",
     "ABC ME": "no-seven-day-source",
@@ -73,8 +73,8 @@
       "source": "xmltv-net",
       "sourceId": "391135auepg.com.au",
       "match": "official-rename-reviewed-id",
-      "added": 22,
-      "latest": "2026-11-17T22:00:00+00:00"
+      "added": 7,
+      "latest": "2026-11-18T07:00:00+00:00"
     },
     "Channel 9": "no-seven-day-source",
     "Red Bull TV": "no-seven-day-source",
@@ -82,29 +82,29 @@
       "source": "xmltv-net",
       "sourceId": "251831auepg.com.au",
       "match": "official-rename-reviewed-id",
-      "added": 17,
-      "latest": "2026-11-17T20:00:00+00:00"
+      "added": 19,
+      "latest": "2026-11-18T07:00:00+00:00"
     },
     "SBS Food": {
       "source": "xmltv-net",
       "sourceId": "431491auepg.com.au",
       "match": "official-rename-reviewed-id",
-      "added": 23,
-      "latest": "2026-11-17T20:00:00+00:00"
+      "added": 22,
+      "latest": "2026-11-18T07:00:00+00:00"
     },
     "SBS Viceland": {
       "source": "xmltv-net",
       "sourceId": "431775auepg.com.au",
       "match": "official-rename-reviewed-id",
-      "added": 9,
-      "latest": "2026-11-17T19:50:00+00:00"
+      "added": 19,
+      "latest": "2026-11-18T06:50:00+00:00"
     },
     "SBS World Movies": {
       "source": "xmltv-net",
       "sourceId": "432033auepg.com.au",
       "match": "official-rename-reviewed-id",
       "added": 6,
-      "latest": "2026-11-17T20:20:00+00:00"
+      "latest": "2026-11-18T07:20:00+00:00"
     },
     "Seven": "no-seven-day-source",
     "SKY NEWS": "no-seven-day-source",
@@ -116,20 +116,20 @@
       {
         "feed": "primary",
         "sourceId": "beINSPORTS1.au",
-        "programmes": 75,
-        "first": "2026-11-10T17:00:00+00:00",
+        "programmes": 68,
+        "first": "2026-11-11T05:30:00+00:00",
         "last": "2026-11-17T00:00:00+00:00",
-        "daysAhead": 6.17
+        "daysAhead": 5.73
       }
     ],
     "BEIN SPORTS 3": [
       {
         "feed": "primary",
         "sourceId": "beINSPORTS3.au",
-        "programmes": 132,
-        "first": "2026-11-10T19:00:00+00:00",
+        "programmes": 125,
+        "first": "2026-11-11T06:30:00+00:00",
         "last": "2026-11-17T00:50:00+00:00",
-        "daysAhead": 6.21
+        "daysAhead": 5.76
       }
     ],
     "ESPN Australia": [],
@@ -148,50 +148,50 @@
       {
         "feed": "sydney",
         "sourceId": "mjh-7mate-syd",
-        "programmes": 166,
-        "first": "2026-11-10T19:00:00+00:00",
-        "last": "2026-11-17T00:01:50+00:00",
-        "daysAhead": 6.18
+        "programmes": 183,
+        "first": "2026-11-11T06:06:20+00:00",
+        "last": "2026-11-18T00:02:00+00:00",
+        "daysAhead": 6.73
       }
     ],
     "9Gem": [
       {
         "feed": "sydney",
         "sourceId": "mjh-gem-nsw",
-        "programmes": 158,
-        "first": "2026-11-10T19:00:00+00:00",
-        "last": "2026-11-17T00:30:00+00:00",
-        "daysAhead": 6.2
+        "programmes": 166,
+        "first": "2026-11-11T06:32:00+00:00",
+        "last": "2026-11-18T00:30:00+00:00",
+        "daysAhead": 6.75
       }
     ],
     "9Go!": [
       {
         "feed": "sydney",
         "sourceId": "mjh-go-nsw",
-        "programmes": 199,
-        "first": "2026-11-10T19:28:00+00:00",
-        "last": "2026-11-17T00:30:00+00:00",
-        "daysAhead": 6.2
+        "programmes": 218,
+        "first": "2026-11-11T06:02:00+00:00",
+        "last": "2026-11-18T00:30:00+00:00",
+        "daysAhead": 6.75
       }
     ],
     "9Rush": [
       {
         "feed": "sydney",
         "sourceId": "mjh-rush-nsw",
-        "programmes": 174,
-        "first": "2026-11-10T19:00:00+00:00",
-        "last": "2026-11-17T01:00:00+00:00",
-        "daysAhead": 6.22
+        "programmes": 190,
+        "first": "2026-11-11T06:33:00+00:00",
+        "last": "2026-11-18T01:00:00+00:00",
+        "daysAhead": 6.77
       }
     ],
     "ABC Kids": [
       {
         "feed": "sydney",
         "sourceId": "mjh-abc-kids",
-        "programmes": 512,
-        "first": "2026-11-10T19:40:00+00:00",
-        "last": "2026-11-17T00:05:00+00:00",
-        "daysAhead": 6.18
+        "programmes": 535,
+        "first": "2026-11-11T06:25:00+00:00",
+        "last": "2026-11-18T00:05:00+00:00",
+        "daysAhead": 6.73
       }
     ],
     "ABC ME": [],
@@ -199,19 +199,19 @@
       {
         "feed": "sydney",
         "sourceId": "mjh-channel-9-nsw",
-        "programmes": 162,
-        "first": "2026-11-10T18:29:00+00:00",
-        "last": "2026-11-17T00:30:00+00:00",
-        "daysAhead": 6.2
+        "programmes": 179,
+        "first": "2026-11-11T05:57:00+00:00",
+        "last": "2026-11-18T00:30:00+00:00",
+        "daysAhead": 6.75
       }
     ],
     "Red Bull TV": [
       {
         "feed": "sydney",
         "sourceId": "mjh-redbull-tv",
-        "programmes": 40,
-        "first": "2026-11-10T19:19:46+00:00",
-        "last": "2026-11-11T16:24:22+00:00",
+        "programmes": 37,
+        "first": "2026-11-11T06:31:01+00:00",
+        "last": "2026-11-12T03:16:09+00:00",
         "daysAhead": 0.86
       }
     ],
@@ -219,10 +219,10 @@
       {
         "feed": "sydney",
         "sourceId": "mjh-seven-syd",
-        "programmes": 127,
-        "first": "2026-11-10T18:30:00+00:00",
-        "last": "2026-11-17T01:00:00+00:00",
-        "daysAhead": 6.22
+        "programmes": 142,
+        "first": "2026-11-11T05:58:45+00:00",
+        "last": "2026-11-18T01:00:00+00:00",
+        "daysAhead": 6.77
       }
     ],
     "SKY NEWS": [],
@@ -916,10 +916,10 @@
     "live:oneplay-zig-sharko",
     "live:the-teenage-witch"
   ],
-  "untouchedExistingProgrammeEntries": 81964,
-  "existingProgrammeEntries": 81964,
-  "totalProgrammeEntries": 82829,
+  "untouchedExistingProgrammeEntries": 77083,
+  "existingProgrammeEntries": 77083,
+  "totalProgrammeEntries": 77931,
   "shortFilesUpdated": 683,
   "sourceCoverageClaim": "seven-day-only for accepted AU sources; other regions unchanged",
-  "previousGuideGitSha": "256b7317589c14b32d96c388fe3ada210d643331"
+  "previousGuideGitSha": "b3633864d9d72a0e822c98e383ee44067d20b849"
 }
