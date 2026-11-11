@@ -257,24 +257,10 @@ def apply(root: Path, milestone3: bool = True, milestone6: bool = True) -> None:
     manifest.write_text("\n".join(rows[:header_end] + body) + "\n", encoding="utf-8")
     print("Refreshed sports fixture regex safe literal")
 
-    if milestone3:
-        patch = Path(__file__).resolve().parent / "patches/playback-milestone3.patch"
-        subprocess.run(["git", "-C", str(root), "apply", "--check", str(patch)], check=True)
-        subprocess.run(["git", "-C", str(root), "apply", str(patch)], check=True)
-        print("Applied milestone 3 continuity, cancellation and recovery improvements")
-        colours = Path(__file__).resolve().parent / "patches/sports-milestone4-colours.patch"
-        subprocess.run(["git", "-C", str(root), "apply", "--check", str(colours)], check=True)
-        subprocess.run(["git", "-C", str(root), "apply", str(colours)], check=True)
-        print("Preserved source team colours in fixture parsing and cache")
-        if milestone6:
-            recovery = Path(__file__).resolve().parent / "patches/playback-milestone6.patch"
-            subprocess.run(["git", "-C", str(root), "apply", "--check", str(recovery)], check=True)
-            subprocess.run(["git", "-C", str(root), "apply", str(recovery)], check=True)
-            print("Applied isolated preview ownership and English poster policy")
-            benchmark = Path(__file__).resolve().parent / "benchmarks/Milestone6OwnershipComparisonTest.kt"
-            target = root / "player-core/src/test/java/tv/own/owntv/player/Milestone6OwnershipComparisonTest.kt"
-            target.write_text(benchmark.read_text(), encoding="utf-8")
-
+    # Milestone 3/4/6 patches were authored against Core 1.0.69. They are intentionally
+    # not applied to the 1.0.71 candidate until their remaining Lounge-only behaviour is
+    # rebased and proven against the upstream implementation by the regression workflow.
+    print("Deferred legacy milestone overlays while validating Core 1.0.71 upstream behaviour")
 
     print(f"Playback core patch applied to pinned commit {PIN}")
 
