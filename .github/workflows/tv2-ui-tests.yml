@@ -64,7 +64,7 @@ jobs:
         run: |
           set -euo pipefail
           adb shell am instrument -w -r -e class tv.own.owntv.features.sports.Milestone4UiTest com.loungetv.player.v2qa.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/lounge-ui-results.txt
-          grep -Eq '^OK \(10 tests\)' /tmp/lounge-ui-results.txt
+          grep -Eq '^OK \(11 tests\)' /tmp/lounge-ui-results.txt
           ! grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|shortMsg=' /tmp/lounge-ui-results.txt
       - name: Recovery Home navigation and native VOD probes
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
