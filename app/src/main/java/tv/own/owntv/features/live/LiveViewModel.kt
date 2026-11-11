@@ -288,7 +288,7 @@ class LiveViewModel(
     }
 
     private val livePreviewAudio: StateFlow<Boolean> = settings.livePreviewAudio
-        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
     /** Settings → "Channel numbers": shows the provider number in the lists and the player, and enables
      *  typing one to tune. Off hides every number without touching the stored data. Eager so a playback
@@ -711,6 +711,9 @@ class LiveViewModel(
             }
         }
         .combine(loungeCuration) { hidden, plan -> hidden + plan.hiddenIds }
+        .combine(categoryNamesById) { hidden, names ->
+            hidden + names.filterValues(LoungeCustomerCatalogue::internalOnly).keys
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
 
     /** Customizations + resolved hidden-category ids, bundled so the list pipeline takes one flow. */
@@ -767,7 +770,7 @@ class LiveViewModel(
                 }.mapTo(hashSetOf()) { it.id }
                 val allowedFolders = (normalFolders + missingSky).filterNot { entry ->
                     entry.categoryId?.let(byId::get)?.let { category ->
-                        isUnwantedNzRailCategory(category.name) ||
+                        LoungeCustomerCatalogue.internalOnly(category.name) || isUnwantedNzRailCategory(category.name) ||
                             (entry.categoryId in nzIds && isUnwantedNzFreeviewRailCategory(category.name))
                     } == true
                 }
@@ -792,6 +795,9 @@ class LiveViewModel(
                             else if (it.value.key in orderIndex) orderIndex.getValue(it.value.key)
                             else it.value.categoryId?.let(categoriesById::get)?.name
                                 ?.let(::loungeLiveSectionOf)?.ordinal ?: Int.MAX_VALUE },
+                        { if (it.value.key in orderIndex) -1 else LoungeEditorialOrder.categoryPriority(
+                            it.value.categoryId?.let(categoriesById::get)?.name?.let(::loungeLiveSectionOf),
+                            it.value.categoryId?.let(categoriesById::get)?.name ?: it.value.displayName) },
                         { it.index },
                     ),
                 ).map { it.value }
@@ -2307,6 +2313,10 @@ class LiveViewModel(
      * guide simply has no entry here, and the row shows no second line. Returns only channels that
      * actually have something airing right now.
      */
+    /** Information-only reads: never changes preview, playback, or CH+/CH- context. */
+    suspend fun browseProgramme(channel: ChannelEntity): tv.own.owntv.core.live.EpgNowNext? =
+        withContext(Dispatchers.IO) { epgReader.nowNext(channel, custom.value, epgOffset.value) }
+
     suspend fun nowPlayingFor(channels: List<ChannelEntity>): Map<Long, tv.own.owntv.core.parser.XtEpgEntry> =
         epgReader.nowProgrammesFor(channels, custom.value, epgOffset.value)
 

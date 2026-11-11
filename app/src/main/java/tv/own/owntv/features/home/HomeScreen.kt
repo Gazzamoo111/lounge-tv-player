@@ -189,6 +189,12 @@ fun HomeScreen(
     val featuredSports by sportsVm.featuredHomeEvents.collectAsStateWithLifecycle()
     var sportsNow by remember { mutableStateOf(System.currentTimeMillis()) }
     LaunchedEffect(previewEnabled) {
+        if (previewEnabled) while (true) {
+            vm.refreshDiscoveryIfExpired()
+            delay(60_000)
+        }
+    }
+    LaunchedEffect(previewEnabled) {
         while (previewEnabled) { delay(30_000); sportsNow = System.currentTimeMillis() }
     }
     val sportsPreferences by sportsVm.sportsConfig.collectAsStateWithLifecycle()

@@ -36,7 +36,9 @@ internal fun PremiumLivePanel(title: String, number: String?, logo: String?, cur
     technical: List<String>, isPlaying: Boolean, recent: List<ChannelEntity>, playFocus: FocusRequester,
     onToggle: () -> Unit, onGuide: () -> Unit, onMore: () -> Unit, onRecent: (ChannelEntity) -> Unit,
     artwork: @Composable () -> Unit, modifier: Modifier = Modifier,
-    currentChannelId: Long? = null, programmes: Map<Long, XtEpgEntry> = emptyMap()) {
+    currentChannelId: Long? = null, programmes: Map<Long, XtEpgEntry> = emptyMap(),
+    surfChannels: List<ChannelEntity> = emptyList(), onBrowse: (ChannelEntity) -> Unit = {},
+    browsedChannel: ChannelEntity? = null, onTuneBrowsed: (ChannelEntity) -> Unit = {}) {
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) { while (true) { delay(10_000); now = System.currentTimeMillis() } }
     Column(modifier.fillMaxWidth().background(Color(0xE9081628), RoundedCornerShape(30.mpx))
@@ -51,6 +53,11 @@ internal fun PremiumLivePanel(title: String, number: String?, logo: String?, cur
                 }
                 Text(current?.title ?: stringResource(R.string.m4_no_programme), style = stageText(33, 800), color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (technical.isNotEmpty()) Text(technical.joinToString(stringResource(R.string.content_epg_bits_separator)), style = stageText(17, 700), color = LoungeSurface.Cyan, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                current?.let {
+                    Text(tv.own.owntv.features.sports.PremiumSportsPresentation.nzKickoffTime(it.startMs) + " – " +
+                        tv.own.owntv.features.sports.PremiumSportsPresentation.nzKickoffTime(it.stopMs),
+                        style = stageText(18, 500), color = LoungeSurface.Muted)
+                }
                 current?.description?.takeIf { it.isNotBlank() }?.let { Text(it, style = stageText(20, 400), color = LoungeSurface.Muted, maxLines = 2, overflow = TextOverflow.Ellipsis) }
                 current?.takeIf { it.stopMs > it.startMs }?.let { programme ->
                     val progress = ((now - programme.startMs).toFloat() / (programme.stopMs - programme.startMs)).coerceIn(0f, 1f)
@@ -60,10 +67,23 @@ internal fun PremiumLivePanel(title: String, number: String?, logo: String?, cur
                 }
             }
             Column(Modifier.width(270.mpx), verticalArrangement = Arrangement.spacedBy(12.mpx)) {
-                Text(Instant.ofEpochMilli(now).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("h:mm a")), style = stageText(32, 800), color = Color.White)
+                Text(Instant.ofEpochMilli(now).atZone(ZoneId.of("Pacific/Auckland")).format(DateTimeFormatter.ofPattern("h:mm a")), style = stageText(32, 800), color = Color.White)
                 next?.let { Text(stringResource(R.string.m4_up_next), style = stageText(17, 700), color = LoungeSurface.Muted)
                     Text(it.title, style = stageText(21, 700), color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                    Text(Instant.ofEpochMilli(it.startMs).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("h:mm a")), style = stageText(18, 500), color = LoungeSurface.Muted) }
+                    Text(Instant.ofEpochMilli(it.startMs).atZone(ZoneId.of("Pacific/Auckland")).format(DateTimeFormatter.ofPattern("h:mm a")), style = stageText(18, 500), color = LoungeSurface.Muted) }
+            }
+        }
+        if (surfChannels.size > 1) Row(horizontalArrangement = Arrangement.spacedBy(12.mpx)) {
+            val anchor = browsedChannel?.id ?: currentChannelId
+            val index = surfChannels.indexOfFirst { it.id == anchor }.coerceAtLeast(0)
+            LoungeAction(stringResource(R.string.m4_previous)) {
+                onBrowse(surfChannels[(index - 1).mod(surfChannels.size)])
+            }
+            LoungeAction(stringResource(R.string.lounge_surf_watch)) {
+                browsedChannel?.let(onTuneBrowsed)
+            }
+            LoungeAction(stringResource(R.string.m4_next)) {
+                onBrowse(surfChannels[(index + 1).mod(surfChannels.size)])
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.mpx)) {

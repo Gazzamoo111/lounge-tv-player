@@ -30,6 +30,9 @@ class PlaybackCorePatcherTests(unittest.TestCase):
                 earlier_afters.append(_)
             path.write_text("\n\n".join(snippets) + "\n", encoding="utf-8")
 
+        settings = root / "core/src/main/java/tv/own/owntv/core/settings/SettingsRepository.kt"
+        settings.parent.mkdir(parents=True, exist_ok=True)
+        settings.write_text("it[Keys.LIVE_PREVIEW_AUDIO] ?: false")
         live = "player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt"
         matcher = "core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt"
         manifest = root / "tools/i18n/safe_literals.txt"
@@ -49,7 +52,7 @@ class PlaybackCorePatcherTests(unittest.TestCase):
             self.make_pinned_core_fixture(root)
             with patch.object(patcher.subprocess, "check_output", return_value=patcher.PIN), patch.object(patcher.subprocess, "run") as git_apply:
                 patcher.apply(root)
-                self.assertEqual(8, git_apply.call_count)
+                self.assertEqual(10, git_apply.call_count)
                 self.assertIn("--check", git_apply.call_args_list[0].args[0])
                 self.assertTrue(git_apply.call_args_list[0].kwargs["check"])
 

@@ -271,6 +271,16 @@ def apply(root: Path, milestone3: bool = True, milestone6: bool = True) -> None:
             subprocess.run(["git", "-C", str(root), "apply", "--check", str(recovery)], check=True)
             subprocess.run(["git", "-C", str(root), "apply", str(recovery)], check=True)
             print("Applied isolated preview ownership and English poster policy")
+            guide_patch = Path(__file__).resolve().parent / "patches/guide-interrupted-download.patch"
+            subprocess.run(["git", "-C", str(root), "apply", "--check", str(guide_patch)], check=True)
+            subprocess.run(["git", "-C", str(root), "apply", str(guide_patch)], check=True)
+            settings_path = root / "core/src/main/java/tv/own/owntv/core/settings/SettingsRepository.kt"
+            settings_text = settings_path.read_text()
+            old_default = "it[Keys.LIVE_PREVIEW_AUDIO] ?: false"
+            if settings_text.count(old_default) != 1:
+                raise SystemExit("Unexpected preview audio default")
+            settings_path.write_text(settings_text.replace(old_default, "it[Keys.LIVE_PREVIEW_AUDIO] ?: true"))
+            print("Ported OwnTV 991118af interrupted XMLTV handling and audible preview default")
             benchmark = Path(__file__).resolve().parent / "benchmarks/Milestone6OwnershipComparisonTest.kt"
             target = root / "player-core/src/test/java/tv/own/owntv/player/Milestone6OwnershipComparisonTest.kt"
             target.write_text(benchmark.read_text(), encoding="utf-8")

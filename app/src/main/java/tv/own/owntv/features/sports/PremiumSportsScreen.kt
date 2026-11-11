@@ -90,7 +90,9 @@ internal fun PremiumSportsScreen(vm: SportsViewModel, liveVm: LiveViewModel,
             if (currentActive && settings.activeProfileIdNow() == pid && selected?.key == match.key && selected?.startMs == match.startMs) {
                 vm.playedFrom(match, feeds, option.channel)
                 liveVm.onChannelFocused(option.channel)
-                liveVm.playPreview(option.channel, withAudio = true)
+                liveVm.playPreview(option.channel)
+                withFrameNanos { }
+                runCatching { previewFocus.requestFocus() }
             }
         }
     }
@@ -131,6 +133,7 @@ internal fun PremiumSportsScreen(vm: SportsViewModel, liveVm: LiveViewModel,
         } else PremiumSportsContent(state, contentStart, restoreKey, onEntryHook, onChildFocused,
             onSelect = { selected = it }, onOpenMatch = pickPreview, onOpenLeague = onOpenLeague,
             onFollow = { following = true }, onHold = { menuFor = it }, modifier = modifier,
+            previewFocus = previewFocus, active = active,
             detail = { m, compact ->
                 val valid = selected?.key == m?.key && selected?.startMs == m?.startMs
                 SportsPreviewPanel(m, if (valid) options else emptyList(), previewMeta.title.takeIf { previewPlaying },
@@ -175,6 +178,7 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
     onEntryHook: (((() -> Boolean)?) -> Unit)?, onChildFocused: () -> Unit,
     onSelect: (Match?) -> Unit, onOpenMatch: (Match) -> Unit, onOpenLeague: (String) -> Unit,
     onFollow: () -> Unit, onHold: (Match) -> Unit, modifier: Modifier = Modifier,
+    previewFocus: FocusRequester? = null, active: Boolean = true,
     detail: @Composable (Match?, Boolean) -> Unit) {
     var destination by rememberSaveable { mutableStateOf(SportsDestination.MY_SPORTS) }
     var sportName by rememberSaveable { mutableStateOf<String?>(null) }
@@ -192,9 +196,30 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
     val ranked = remember(all, state.config, now, sport) { PremiumSportsPresentation.ranked(all, state.config, now).filter { sport == null || it.sport == sport } }
     val heroes = ranked.take(12)
     val featured = ranked.firstOrNull { it.key == pickedHomeKey } ?: heroes.getOrNull(heroIndex.mod(heroes.size.coerceAtLeast(1)))
+    val homeList = rememberLazyListState()
+    val navigationScope = rememberCoroutineScope()
+    var lastInteraction by remember { mutableLongStateOf(android.os.SystemClock.elapsedRealtime()) }
+    var previewHasFocus by remember { mutableStateOf(false) }
     val pickHome: (Match) -> Unit = { m ->
         pickedHomeKey = m.key
-        onOpenMatch(m)
+        lastInteraction = android.os.SystemClock.elapsedRealtime()
+        navigationScope.launch {
+            homeList.scrollToItem(0)
+            withFrameNanos { }
+            previewFocus?.let { runCatching { it.requestFocus() } }
+            onOpenMatch(m)
+        }
+    }
+    LaunchedEffect(active, destination, heroes.map { it.key }, previewHasFocus) {
+        if (active && destination == SportsDestination.MY_SPORTS) while (true) {
+            delay(1_000)
+            if (SportsCarouselPolicy.canRotate(android.os.SystemClock.elapsedRealtime(), lastInteraction,
+                    heroes.size, previewHasFocus)) {
+                pickedHomeKey = null
+                heroIndex = PremiumSportsPresentation.carouselIndex(heroIndex, 1, heroes.size)
+                lastInteraction = android.os.SystemClock.elapsedRealtime()
+            }
+        }
     }
     val date = Instant.ofEpochMilli(now).atZone(PremiumSportsPresentation.zone).toLocalDate().plusDays(day.toLong())
     val dayEvents = remember(all, date, sport, leagueFilter) { PremiumSportsPresentation.onDay(all, date, sport, leagueFilter) }
@@ -229,7 +254,10 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
         }
     }
     BackHandler(enabled = choose) { choose = false }
-    Column(modifier.fillMaxSize().loungeBackdrop().padding(start = contentStart, end = 48.mpx, top = 32.mpx, bottom = 24.mpx)
+    Column(modifier.onPreviewKeyEvent { e ->
+        if (e.type == KeyEventType.KeyDown) lastInteraction = android.os.SystemClock.elapsedRealtime()
+        false
+    }.fillMaxSize().loungeBackdrop().padding(start = contentStart, end = 48.mpx, top = 32.mpx, bottom = 24.mpx)
         .onFocusChanged { if (it.hasFocus) onChildFocused() }) {
         // The entry target must outlive horizontal lazy composition. Keep My Sports attached
         // while the remaining tabs can scroll at larger accessibility font/zoom settings.
@@ -259,17 +287,13 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
             }
         }
         when (destination) {
-            SportsDestination.MY_SPORTS -> LazyColumn(Modifier.weight(1f).focusGroup(), verticalArrangement = Arrangement.spacedBy(18.mpx), contentPadding = PaddingValues(bottom = 12.mpx)) {
+            SportsDestination.MY_SPORTS -> LazyColumn(state = homeList, modifier = Modifier.weight(1f).focusGroup(), verticalArrangement = Arrangement.spacedBy(18.mpx), contentPadding = PaddingValues(bottom = 12.mpx)) {
                 item {
                     Row(horizontalArrangement = Arrangement.spacedBy(22.mpx), modifier = Modifier.fillMaxWidth()) {
                         Column(Modifier.weight(1.75f)) {
                             if (featured != null) PremiumEventCard(featured, state.config.spoilerFree, true,
-                                Modifier.fillMaxWidth().height(300.mpx).onPreviewKeyEvent { e ->
-                                    if (e.type != KeyEventType.KeyDown || heroes.size < 2) false else when(e.key) {
-                                        Key.DirectionLeft -> { pickedHomeKey = null; heroIndex = PremiumSportsPresentation.carouselIndex(heroIndex, -1, heroes.size); true }
-                                        Key.DirectionRight -> { pickedHomeKey = null; heroIndex = PremiumSportsPresentation.carouselIndex(heroIndex, 1, heroes.size); true }
-                                        else -> false
-                                    }
+                                Modifier.fillMaxWidth().height(300.mpx).focusProperties {
+                                    previewFocus?.let { right = it }
                                 }, { pickHome(featured) }, { onHold(featured) })
                             else Text(stringResource(R.string.m4_no_events), style = stageText(28, 700), color = LoungeSurface.Muted)
                             if (heroes.size > 1) Row(Modifier.padding(top = 10.mpx), horizontalArrangement = Arrangement.spacedBy(12.mpx)) {
@@ -280,7 +304,7 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
                                 LoungeAction(stringResource(R.string.m4_next)) { pickedHomeKey = null; heroIndex = PremiumSportsPresentation.carouselIndex(heroIndex, 1, heroes.size) }
                             }
                         }
-                        Box(Modifier.weight(1f)) { detail(featured, true) }
+                        Box(Modifier.weight(1f).onFocusChanged { previewHasFocus = it.hasFocus }) { detail(featured, true) }
                     }
                 }
                 item { SportsEventRail(stringResource(R.string.m4_live_upcoming), ranked.take(24), state.config, pickHome, onHold, onHighlight = { pickedHomeKey = it.key }) }
@@ -315,8 +339,8 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
                                         else -> R.string.sports_tab_fixtures
                                     }), style = stageText(24, 800), color = Color.White)
                                     PremiumEventCard(m, state.config.spoilerFree, false,
-                                        Modifier.fillMaxWidth().height(162.mpx).focusRequester(focus(m.key)).onFocusChanged { if (it.isFocused) selectedKey = m.key },
-                                        { selectedKey = m.key; onOpenMatch(m) }, { onHold(m) })
+                                        Modifier.fillMaxWidth().height(162.mpx).focusRequester(focus(m.key)).focusProperties { previewFocus?.let { right = it } }.onFocusChanged { if (it.isFocused) selectedKey = m.key },
+                                        { selectedKey = m.key; onOpenMatch(m); previewFocus?.let { runCatching { it.requestFocus() } } }, { onHold(m) })
                                 }
                             }
                         }
@@ -407,7 +431,17 @@ internal fun SportsPreviewPanel(match: Match?, options: List<WatchOption>, playi
         verticalArrangement = Arrangement.spacedBy(14.mpx)) {
         // Keep the decoder's surface outside the scrollable feed details. D-pad navigation to a
         // lower action never scrolls away the preview or replaces its playback owner.
-        Box(Modifier.fillMaxWidth().aspectRatio(16f / 9).clip(RoundedCornerShape(24.mpx)).background(Color.Black), contentAlignment = Alignment.Center) {
+        StageSurface(onClick = {
+            val option = options.firstOrNull()
+            when {
+                option == null -> if (!finding) onFind()
+                matching -> onFullScreen(option)
+                else -> onPreview(option)
+            }
+        }, radius = 24.mpx, focusStyle = StageFocus.FX,
+            modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9)
+                .then(if (previewFocus != null) Modifier.focusRequester(previewFocus) else Modifier)
+                .clip(RoundedCornerShape(24.mpx)).background(Color.Black)) { _ ->
             preview()
             if (notice != null || playingName == null) Text(notice ?: stringResource(R.string.m4_preview_empty), style = stageText(21, 500), color = LoungeSurface.Muted, modifier = Modifier.padding(24.mpx))
         }
@@ -420,7 +454,7 @@ internal fun SportsPreviewPanel(match: Match?, options: List<WatchOption>, playi
                 if (!compact || option == null) LoungeAction(stringResource(R.string.m4_event_details), onClick = onOpen)
                 if (option == null) {
                     LoungeAction(stringResource(when { finding -> R.string.m4_finding_for_preview; searched -> R.string.m6_retry_feeds; else -> R.string.m4_pick_here }),
-                        modifier = if (previewFocus != null) Modifier.focusRequester(previewFocus) else Modifier,
+                        modifier = Modifier,
                         onClick = { if (!finding) onFind() })
                     if (!compact) Text(stringResource(if (finding) R.string.m4_finding_for_preview else R.string.m4_feed_none),
                         style = stageText(19, 500), color = LoungeSurface.Muted)
@@ -429,7 +463,7 @@ internal fun SportsPreviewPanel(match: Match?, options: List<WatchOption>, playi
                     Text(stringResource(when (option.tier) { WatchTier.GUIDE -> R.string.m4_feed_epg; WatchTier.EVENT -> R.string.m4_feed_event; WatchTier.REMEMBERED -> R.string.m4_feed_saved; else -> R.string.m4_feed_possible }), style = stageText(18, 500), color = LoungeSurface.Muted)
                     Row(horizontalArrangement = Arrangement.spacedBy(12.mpx)) {
                         LoungeAction(stringResource(R.string.m4_preview_feed),
-                            modifier = if (previewFocus != null) Modifier.focusRequester(previewFocus) else Modifier) { onPreview(option) }
+                            modifier = Modifier) { onPreview(option) }
                         LoungeAction(stringResource(R.string.m4_fullscreen)) { onFullScreen(option) }
                     }
 

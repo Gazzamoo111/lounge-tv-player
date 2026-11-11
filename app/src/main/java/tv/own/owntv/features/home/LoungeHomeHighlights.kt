@@ -39,7 +39,7 @@ internal class LoungeHomeHighlightsReader(
     private val customizations: CustomizationStore,
     private val context: Context,
 ) {
-    suspend fun load(profileId: Long): LoungeHomeHighlights {
+    suspend fun load(profileId: Long, nowMs: Long = System.currentTimeMillis()): LoungeHomeHighlights {
         val movieIds = activeSourceIds(settings, sources, profileId, MediaType.MOVIE).toList()
         val seriesIds = activeSourceIds(settings, sources, profileId, MediaType.SERIES).toList()
         val kids = profiles.getById(profileId)?.isKids == true
@@ -51,7 +51,7 @@ internal class LoungeHomeHighlightsReader(
         // films were obscure titles on BEST. Only pick recognisable editorially curated titles,
         // and only when an exact playable match exists in the customer's own playlist.
         val moviePicks = pickFamous(
-            movieIds, context.resources.getStringArray(R.array.lounge_popular_movies).toList(),
+            movieIds, HomeDiscoveryRotation.rotate(context.resources.getStringArray(R.array.lounge_popular_movies).toList(), profileId, nowMs),
             query = { title -> movies.searchListFts(phrase(title), movieIds, 15) },
             key = { item: MovieEntity -> titleKey(item.canonicalTitle.ifBlank { item.name }) },
             valid = { item: MovieEntity ->
@@ -61,7 +61,7 @@ internal class LoungeHomeHighlightsReader(
             quality = { item: MovieEntity -> item.qualityRank },
         )
         val seriesPicks = pickFamous(
-            seriesIds, context.resources.getStringArray(R.array.lounge_popular_series).toList(),
+            seriesIds, HomeDiscoveryRotation.rotate(context.resources.getStringArray(R.array.lounge_popular_series).toList(), profileId, nowMs),
             query = { title -> series.searchListFts(phrase(title), seriesIds, 15) },
             key = { item: SeriesEntity -> titleKey(item.canonicalTitle.ifBlank { item.name }) },
             valid = { item: SeriesEntity ->

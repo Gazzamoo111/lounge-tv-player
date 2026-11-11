@@ -119,6 +119,22 @@ class LiveZapListTest {
     }
 
     @Test
+    fun `browsing categories leaves channel up and down with the playing list until OK`() {
+        val chosen = listOf(channel(50), channel(51))
+        val h = Harness(category = chosen)
+        h.zap.armFromBrowse(list, title = null, key = null, categoryId = 10)
+        h.playing = 2
+        h.zap.armForCategory(11) {}
+        h.await("browse category") { h.zap.channels.value == chosen }
+        assertEquals(3L, h.zap.next(1)?.id)
+        assertEquals(1L, h.zap.next(-1)?.id)
+        h.zap.armFromBrowse(chosen, title = null, key = null, categoryId = 11)
+        h.playing = 50
+        assertEquals(51L, h.zap.next(1)?.id)
+        h.stop()
+    }
+
+    @Test
     fun `an empty category leaves the browser open`() {
         val h = Harness(category = emptyList())
         var closed = false

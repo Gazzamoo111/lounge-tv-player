@@ -1,0 +1,23 @@
+package tv.own.owntv.features.live
+
+import java.util.Locale
+
+/** Explicit children followed by the caller's existing sort. User moves always win. */
+internal object LoungeEditorialOrder {
+    fun icon(section: LoungeLiveSection): tv.own.owntv.ui.components.OwnTVIcon = when (section) {
+        LoungeLiveSection.NEW_ZEALAND -> tv.own.owntv.ui.components.OwnTVIcon.NZ_FERN
+        LoungeLiveSection.AUSTRALIA -> tv.own.owntv.ui.components.OwnTVIcon.AU_ROO
+        LoungeLiveSection.SPORTS, LoungeLiveSection.PPV -> tv.own.owntv.ui.components.OwnTVIcon.SPORTS
+        LoungeLiveSection.MOVIES -> tv.own.owntv.ui.components.OwnTVIcon.MOVIES
+        LoungeLiveSection.KIDS -> tv.own.owntv.ui.components.OwnTVIcon.PERSON
+        LoungeLiveSection.DOCUMENTARIES -> tv.own.owntv.ui.components.OwnTVIcon.LANGUAGE
+        LoungeLiveSection.SEASONAL -> tv.own.owntv.ui.components.OwnTVIcon.CLOCK
+        else -> tv.own.owntv.ui.components.OwnTVIcon.LIVE_TV
+    }
+    val preferredChildren = mapOf(LoungeLiveSection.SPORTS to listOf("US Sports", "UK Sports"))
+    fun categoryPriority(section: LoungeLiveSection?, label: String): Int {
+        val names = preferredChildren[section].orEmpty()
+        return names.indexOfFirst { it.equals(loungeLiveFolderTitle(label), ignoreCase = true) }
+            .takeIf { it >= 0 } ?: names.size
+    }
+}

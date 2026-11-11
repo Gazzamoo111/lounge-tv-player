@@ -717,7 +717,7 @@ internal fun LiveCategories(
                                 onClick = {
                                     expandedSection = if (isOpen) null else section
                                 },
-                                icon = if (isOpen) OwnTVIcon.CHEVRON_DOWN else OwnTVIcon.CHEVRON,
+                                icon = LoungeEditorialOrder.icon(section),
                                 count = liveSectionFolderCount(sections, section).toString(),
                                 selected = isOpen,
                                 modifier = Modifier

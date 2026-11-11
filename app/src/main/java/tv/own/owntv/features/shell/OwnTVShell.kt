@@ -1395,7 +1395,7 @@ fun OwnTVShell(
                 }
             }
           }
-            tv.own.owntv.features.shell.components.StageStatusCluster(
+            if (selectedSection != MainSection.SPORTS) tv.own.owntv.features.shell.components.StageStatusCluster(
                 continuePill = continueTarget?.let { target ->
                     val live = target.kind == tv.own.owntv.features.home.ContinueKind.LIVE
                     tv.own.owntv.features.shell.components.ContinuePill(
@@ -1758,7 +1758,18 @@ fun OwnTVShell(
                             val epg by liveVm.nowNext.collectAsStateWithLifecycle()
                             val playingNow by engine.isPlaying.collectAsStateWithLifecycle()
                             val recent by liveVm.recentlyWatched.collectAsStateWithLifecycle()
-                            val current = epg?.now
+                            var browsed by remember(previewChannel?.id) { mutableStateOf<ChannelEntity?>(null) }
+                            var browseGuide by remember(previewChannel?.id) { mutableStateOf<tv.own.owntv.core.live.EpgNowNext?>(null) }
+                            LaunchedEffect(browsed?.id) {
+                                browseGuide = null
+                                val channel = browsed ?: return@LaunchedEffect
+                                while (true) {
+                                    browseGuide = liveVm.browseProgramme(channel)
+                                    kotlinx.coroutines.delay(30_000)
+                                }
+                            }
+                            val displayedGuide = if (browsed == null) epg else browseGuide
+                            val current = displayedGuide?.now
                             var recentProgrammes by remember { mutableStateOf<Map<Long, tv.own.owntv.core.parser.XtEpgEntry>>(emptyMap()) }
                             LaunchedEffect(recent) {
                                 recentProgrammes = emptyMap()
@@ -1768,10 +1779,15 @@ fun OwnTVShell(
                                 }
                             }
                             tv.own.owntv.player.PremiumLivePanel(
-                                title = meta.title.orEmpty(), number = meta.subtitle, logo = meta.logoUrl,
-                                current = current, next = epg?.next, technical = chips, isPlaying = playingNow,
+                                title = browsed?.name ?: meta.title.orEmpty(),
+                                number = browsed?.number?.toString() ?: meta.subtitle,
+                                logo = browsed?.displayLogoUrl ?: meta.logoUrl,
+                                current = current, next = displayedGuide?.next, technical = chips, isPlaying = playingNow,
                                 recent = recent, playFocus = playFocus,
                                 currentChannelId = previewChannel?.id, programmes = recentProgrammes,
+                                surfChannels = zapChannels, browsedChannel = browsed,
+                                onBrowse = { browsed = it },
+                                onTuneBrowsed = { ch -> scope.launch { liveVm.ensurePlayingByIdAsync(ch.id, zapChannels) } },
                                 onToggle = engine::togglePlayPause,
                                 onGuide = { exitPlayer(); onSelectSection(MainSection.EPG) },
                                 onMore = more,

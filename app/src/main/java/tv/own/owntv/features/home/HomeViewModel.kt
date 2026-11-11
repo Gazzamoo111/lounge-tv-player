@@ -396,6 +396,11 @@ class HomeViewModel(
      * gate has confirmed the active id against Room's profile list. Everyone else passes nothing and
      * gets the lookup.
      */
+    private var discoveryLoadedAt: Long? = null
+    fun refreshDiscoveryIfExpired() {
+        if (HomeDiscoveryRotation.expired(discoveryLoadedAt, System.currentTimeMillis())) refresh()
+    }
+
     fun refresh(profileId: Long? = null) {
         reloadRequests.tryEmit(profileId?.takeIf { it >= 0 })
     }
@@ -407,9 +412,11 @@ class HomeViewModel(
      */
     private suspend fun loadHomeData(profileId: Long) {
         val previous = _uiState.value
+        val now = System.currentTimeMillis()
         val data = feed.load(profileId)
+        discoveryLoadedAt = now
         _uiState.value = HomeUiState(
-            trendingItems = data.trendingItems,
+            trendingItems = HomeDiscoveryRotation.rotate(data.trendingItems, profileId, now),
             activeTrendingIndex = previous.activeTrendingIndex
                 .coerceIn(0, (data.trendingItems.size - 1).coerceAtLeast(0)),
             trendingPreferredLanguage = data.trendingPreferredLanguage,
@@ -439,7 +446,7 @@ class HomeViewModel(
                 val selection = LoungeHomeHighlightsReader(
                     movieDao, seriesDao, channelDao, categoryDao,
                     profileDao, sourceDao, settings, customizations, context,
-                ).load(profileId)
+                ).load(profileId, now)
                 if (currentProfileId() == profileId) {
                     _uiState.value = _uiState.value.copy(
                         featuredMovies = selection.movies,

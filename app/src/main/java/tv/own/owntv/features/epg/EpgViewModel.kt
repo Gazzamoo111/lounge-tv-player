@@ -979,7 +979,7 @@ class EpgViewModel(
             name = cat.name, count = null, synced = true,
         )
     })
-    val hiddenCatIds = manualHidden + reviewedPlan.hiddenIds
+    val hiddenCatIds = manualHidden + reviewedPlan.hiddenIds + categories.filter { tv.own.owntv.features.live.LoungeCustomerCatalogue.internalOnly(it.name) }.map { it.id }
     val hiddenDuplicateIds = if (reviewedPlan.sourceIds.isEmpty()) emptySet() else
         withContext(Dispatchers.IO) {
             LoungeLiveDuplicates.choose(
