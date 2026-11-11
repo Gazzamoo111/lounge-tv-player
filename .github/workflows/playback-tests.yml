@@ -59,6 +59,9 @@ jobs:
           PYBENCH
           chmod +x baseline-core/gradlew
           baseline-core/gradlew -p baseline-core :player-core:testDebugUnitTest --tests tv.own.owntv.player.LivePlaybackWorkBenchmarkTest --stacktrace
+          cp scripts/benchmarks/LivePlaybackWorkBenchmarkTest.kt shared-core/player-core/src/test/java/tv/own/owntv/player/
+          chmod +x shared-core/gradlew
+          LOUNGE_M3_BASELINE=false shared-core/gradlew -p shared-core :player-core:testDebugUnitTest --tests tv.own.owntv.player.LivePlaybackWorkBenchmarkTest --stacktrace
       - name: Checkout QA 610 effective core for targeted ownership comparison
         uses: actions/checkout@v4
         with:
@@ -66,7 +69,7 @@ jobs:
           ref: 1de78b1e2690c22b50c060e986bce221454bf880
           path: qa610-core
           persist-credentials: false
-      - name: Replay shared-session ownership against QA 610 and verify unchanged VOD configuration
+      - name: Replay shared-session ownership and verify protected playback invariants
         env:
           LOUNGE_M6_BASELINE: 'true'
         run: |
@@ -74,16 +77,27 @@ jobs:
           cp scripts/benchmarks/Milestone6OwnershipComparisonTest.kt qa610-core/player-core/src/test/java/tv/own/owntv/player/
           chmod +x qa610-core/gradlew
           qa610-core/gradlew -p qa610-core :player-core:testDebugUnitTest --tests tv.own.owntv.player.Milestone6OwnershipComparisonTest --stacktrace
+          cp scripts/benchmarks/Milestone6OwnershipComparisonTest.kt shared-core/player-core/src/test/java/tv/own/owntv/player/
+          chmod +x shared-core/gradlew
+          LOUNGE_M6_BASELINE=false shared-core/gradlew -p shared-core :player-core:testDebugUnitTest --tests tv.own.owntv.player.Milestone6OwnershipComparisonTest --stacktrace
           python3 - <<'PYVOD'
           import hashlib, json
           from pathlib import Path
           rows = []
-          for name in ('OwnTVPlayer.kt', 'SmartBuffer.kt', 'MpvLiveBuffer.kt', 'ExoSubtitleEngine.kt', 'AudioOutputPolicy.kt', 'FilmWatchdog.kt'):
-              path = Path('player-core/src/main/java/tv/own/owntv/player') / name
+          base = Path('player-core/src/main/java/tv/own/owntv/player')
+          for name in ('SmartBuffer.kt', 'MpvLiveBuffer.kt', 'AudioOutputPolicy.kt', 'FilmWatchdog.kt'):
+              path = base / name
               old = (Path('qa610-core') / path).read_bytes()
               new = (Path('shared-core') / path).read_bytes()
-              assert old == new, 'Unreviewed VOD/decoder/audio change: ' + name
+              assert old == new, 'Protected playback configuration changed: ' + name
               rows.append(dict(file=name, unchanged=True, sha256=hashlib.sha256(new).hexdigest()))
+          exo = (Path('shared-core') / base / 'ExoSubtitleEngine.kt').read_text()
+          assert 'pixelRatio: Float' in exo and 'videoSize.pixelWidthHeightRatio' in exo, 'Expected reviewed v5.2.2 pixel-aspect propagation'
+          rows.append(dict(file='ExoSubtitleEngine.kt', reviewed_upstream='pixel-aspect propagation', sha256=hashlib.sha256(exo.encode()).hexdigest()))
+          player = (Path('shared-core') / base / 'OwnTVPlayer.kt').read_text()
+          for required in ('recoveryResolveJob', 'resolvePlaybackRecoveryUrl(provider)', 'autoFrameRateFilms', 'autoFrameRateLive', 'titleLogoUrl'):
+              assert required in player, 'Expected reviewed OwnTVPlayer behavior missing: ' + required
+          rows.append(dict(file='OwnTVPlayer.kt', reviewed_upstream=True, lounge_recovery_guard=True, sha256=hashlib.sha256(player.encode()).hexdigest()))
           Path('m6-vod-configuration-invariants.json').write_text(json.dumps(rows, indent=2))
           print(json.dumps(rows, indent=2))
           PYVOD
