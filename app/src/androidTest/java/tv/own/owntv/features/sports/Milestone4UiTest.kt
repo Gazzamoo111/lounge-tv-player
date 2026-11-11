@@ -116,10 +116,17 @@ class Milestone4UiTest {
         compose.onNodeWithText("Done").performClick()
         compose.onNodeWithText("Choose Leagues").assertIsFocused()
         compose.onNodeWithText("Choose Leagues").performKeyInput { pressKey(Key.DirectionDown) }
+        compose.waitUntil(2_000) {
+            compose.onAllNodes(hasText("TEST competition") and isFocused()).fetchSemanticsNodes().size == 1
+        }
         compose.onNode(hasText("TEST competition") and isFocused()).assertExists()
         compose.runOnIdle { assertEquals("live", selectedEvent?.id) }
         capture("02-all-events-test-data")
         compose.onNode(isFocused()).performKeyInput { pressKey(Key.DirectionDown) }
+        compose.waitUntil(2_000) {
+            compose.onAllNodes(hasText("TEST competition") and isFocused()).fetchSemanticsNodes().size == 1 &&
+                selectedEvent?.id == "soon"
+        }
         compose.onNode(hasText("TEST competition") and isFocused()).assertExists()
         compose.runOnIdle { assertEquals("soon", selectedEvent?.id) }
         compose.onNodeWithText("Tables").performClick()
