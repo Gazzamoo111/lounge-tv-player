@@ -40,6 +40,8 @@ class LiveZapList(
 ) {
 
     private var list: List<ChannelEntity> = emptyList()
+    private val _playbackChannels = MutableStateFlow<List<ChannelEntity>>(emptyList())
+    val playbackChannels: StateFlow<List<ChannelEntity>> = _playbackChannels.asStateFlow()
 
     private val _canZap = MutableStateFlow(false)
     val canZap: StateFlow<Boolean> = _canZap.asStateFlow()
@@ -167,6 +169,7 @@ class LiveZapList(
     /** Publish a list without touching the context around it — the guarded rebuild's landing point. */
     private fun replace(loaded: List<ChannelEntity>) {
         list = loaded
+        _playbackChannels.value = loaded
         _channels.value = loaded
         _canZap.value = loaded.size > 1
     }

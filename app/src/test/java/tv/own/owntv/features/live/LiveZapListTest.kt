@@ -126,6 +126,7 @@ class LiveZapListTest {
         h.playing = 2
         h.zap.armForCategory(11) {}
         h.await("browse category") { h.zap.channels.value == chosen }
+        assertEquals(list, h.zap.playbackChannels.value)
         assertEquals(3L, h.zap.next(1)?.id)
         assertEquals(1L, h.zap.next(-1)?.id)
         h.zap.armFromBrowse(chosen, title = null, key = null, categoryId = 11)

@@ -379,6 +379,7 @@ fun OwnTVShell(
     // what says "now": the grid opens with them already in it, and the selection is spent.
     val multiviewSelection by liveVm.multiviewSelection.collectAsStateWithLifecycle()
     val zapChannels by liveVm.zapChannels.collectAsStateWithLifecycle()
+    val playbackZapChannels by liveVm.playbackZapChannels.collectAsStateWithLifecycle()
     val zapListTitle by liveVm.zapListTitle.collectAsStateWithLifecycle()
     val zapListKey by liveVm.zapListKey.collectAsStateWithLifecycle()
     // Favorites and History have no provider name to show — their labels are UI strings, so the overlay
@@ -1785,9 +1786,9 @@ fun OwnTVShell(
                                 current = current, next = displayedGuide?.next, technical = chips, isPlaying = playingNow,
                                 recent = recent, playFocus = playFocus,
                                 currentChannelId = previewChannel?.id, programmes = recentProgrammes,
-                                surfChannels = zapChannels, browsedChannel = browsed,
+                                surfChannels = playbackZapChannels, browsedChannel = browsed,
                                 onBrowse = { browsed = it },
-                                onTuneBrowsed = { ch -> scope.launch { liveVm.ensurePlayingByIdAsync(ch.id, zapChannels) } },
+                                onTuneBrowsed = { ch -> scope.launch { liveVm.ensurePlayingByIdAsync(ch.id, playbackZapChannels) } },
                                 onToggle = engine::togglePlayPause,
                                 onGuide = { exitPlayer(); onSelectSection(MainSection.EPG) },
                                 onMore = more,

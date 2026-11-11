@@ -1002,7 +1002,9 @@ class EpgViewModel(
         // Heavy work — filter hidden, apply renames + manual EPG matches, sort, category-filter — runs off
         // the main thread (#3/#5) so a 50k-channel playlist never freezes the UI building the guide list.
         val channels = withContext(Dispatchers.Default) {
+            val internalCatIds = categories.filter { tv.own.owntv.features.live.LoungeCustomerCatalogue.internalOnly(it.name) }.mapTo(hashSetOf()) { it.id }
             val auto = rawChannels
+                .filterNot { it.categoryId in internalCatIds }
                 .filter { ch ->
                     !shouldHideBestNzChannel(
                         providerTypes[ch.sourceId],

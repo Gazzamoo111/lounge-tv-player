@@ -830,6 +830,10 @@ class LiveViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), defaultRail)
 
+    /** System PPV policy applies even to saved favourites/history/custom lists; sports uses its own resolver. */
+    private fun customerChannelVisible(channel: ChannelEntity): Boolean =
+        !LoungeCustomerCatalogue.internalOnly(channel.categoryId?.let { categoryNamesById.value[it] })
+
     val channels: Flow<PagingData<ChannelEntity>> = combine(
         _selected,
         ctx,
@@ -868,6 +872,7 @@ class LiveViewModel(
                 // Keep only BEST NZ Sky Sport RAW and HD in the browsable lists.
                 // Do not delete provider data, favourites or independent M3U feeds.
                 customized
+                    .filter(::customerChannelVisible)
                     .filter(::showInNzSelection)
                     .filter { ch ->
                         // User's hand-picked favourites, watch history and custom
@@ -1146,6 +1151,7 @@ class LiveViewModel(
                 if (settings.activeProfileIdNow() != c.profileId) emptyList()
                 else list.distinctBy { it.id }.filter {
                     it.sourceId in c.sourceIds &&
+                        !LoungeCustomerCatalogue.internalOnly(cats.firstOrNull { cat -> cat.id == it.categoryId }?.name) &&
                         CustomizeKeys.channel(it) !in cust.hiddenItems &&
                         (it.categoryId == null || it.categoryId !in hidden) &&
                         showInNzSelection(it)
@@ -1423,6 +1429,7 @@ class LiveViewModel(
     )
     val canZap: StateFlow<Boolean> = zapList.canZap
     val zapChannels: StateFlow<List<ChannelEntity>> = zapList.channels
+    val playbackZapChannels: StateFlow<List<ChannelEntity>> = zapList.playbackChannels
     val zapListTitle: StateFlow<String?> = zapList.title
     val zapListKey: StateFlow<LiveKey?> = zapList.key
 
@@ -1489,7 +1496,7 @@ class LiveViewModel(
         return withContext(Dispatchers.IO) {
             customCategoryDao.snapshotChannels(c.profileId, key.id, c.sourceIds.ifEmpty { listOf(-1L) }, ZAP_LIST_LIMIT)
         }
-            .filter { isChannelVisible(it, cs.cust, cs.hiddenCats, key) && showInNzSelection(it) }
+            .filter { customerChannelVisible(it) && isChannelVisible(it, cs.cust, cs.hiddenCats, key) && showInNzSelection(it) }
             .map { ch -> cs.cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
     }
 
@@ -1500,6 +1507,7 @@ class LiveViewModel(
         val channels = (if (LoungeEditorialOrder.channelsEnabled(categoryNamesById.value[categoryId]))
             channelDao.snapshotByCategoryEditorial(categoryId, pid, ctxKey, sortMode.value == SettingsRepository.SortMode.ALPHA, System.currentTimeMillis(), ZAP_LIST_LIMIT)
         else channelDao.snapshotByCategoryManual(categoryId, pid, ctxKey, ZAP_LIST_LIMIT))
+            .filter(::customerChannelVisible)
             .filter(::showInNzSelection)
         // The in-player category list must match Live TV's NZ Freeview order.
         return if (categoryId in nzFreeviewFolderIds.value) LoungeNzOrder.firstFive(channels)
@@ -1535,7 +1543,7 @@ class LiveViewModel(
         val cust = custom.value
         val hiddenCats = hiddenCategoryIds.value
         return channelDao.recentlyWatchedWithTimestamp(pid, limit).first()
-            .filter { (ch) -> CustomizeKeys.channel(ch) !in cust.hiddenItems && (ch.categoryId == null || ch.categoryId !in hiddenCats) && showInNzSelection(ch) }
+            .filter { (ch) -> customerChannelVisible(ch) && CustomizeKeys.channel(ch) !in cust.hiddenItems && (ch.categoryId == null || ch.categoryId !in hiddenCats) && showInNzSelection(ch) }
             .map { e -> cust.itemNames[CustomizeKeys.channel(e.channel)]?.let { e.copy(channel = e.channel.copy(name = it)) } ?: e }
     }
 

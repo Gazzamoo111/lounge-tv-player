@@ -1,0 +1,21 @@
+--- a/index.ts
++++ b/index.ts
+@@ -36,17 +36,17 @@
+   if(!Number.isFinite(providerItemId)||providerItemId<=0) return false;
+   const rows=await sql`
+     select 1
+     from lounge_sync.best_inventory_items
+     where kind='live' and is_present=true
+       and provider_item_id=${providerItemId}
+       and (
+         category_id=any(${Array.from(SPORT_BACKEND_CATEGORY_IDS)}::text[])
+-        or name ~* '(sport|nba|nfl|nhl|mlb|ncaa|rugby|league|cricket|football|soccer|ufc|boxing|ppv|dazn|espn|sky sport|stan sport|premier sport|bein|tnt sport|fox sport)'
++        or name ~* '(sport|nba|nfl|nhl|mlb|ncaa|rugby|league|cricket|football|soccer|ufc|boxing|ppv|dazn|espn|sky sport|stan sport|premier sport|bein|tnt sport|fox sport|tennis)'
+       )
+     limit 1
+   `;
+   return rows.length===1;
+ }
+ async function bestBase(){ return BEST_BASE; }
+ function credentials(url:URL,pathParts:string[]){
+   const u=url.searchParams.get("username")||pathParts[1]||"";
