@@ -26,8 +26,8 @@ import tv.own.owntv.R
 import tv.own.owntv.core.database.entity.ChannelEntity
 import tv.own.owntv.core.parser.XtEpgEntry
 import tv.own.owntv.ui.lounge.LoungeLogo
+import tv.own.owntv.ui.lounge.LoungeSurface
 import tv.own.owntv.ui.stage.StageTag
-import tv.own.owntv.ui.theme.LoungeSurface
 import tv.own.owntv.ui.theme.mpx
 import tv.own.owntv.ui.theme.stageText
 import java.time.Instant
