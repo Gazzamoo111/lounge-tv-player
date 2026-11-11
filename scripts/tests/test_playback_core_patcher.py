@@ -50,7 +50,9 @@ class PlaybackCorePatcherTests(unittest.TestCase):
             self.make_pinned_core_fixture(root)
             with patch.object(patcher.subprocess, "check_output", return_value=patcher.PIN), patch.object(patcher.subprocess, "run") as git_apply:
                 patcher.apply(root)
-                git_apply.assert_not_called()
+                self.assertEqual(2, git_apply.call_count)
+                self.assertIn("--check", git_apply.call_args_list[0].args[0])
+                self.assertTrue(git_apply.call_args_list[0].kwargs["check"])
 
             for relative, changes in patcher.PATCHES.items():
                 text = (root / relative).read_text(encoding="utf-8")
