@@ -10,6 +10,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -38,13 +39,17 @@ import tv.own.owntv.core.sports.GuideSportItem
 import tv.own.owntv.core.sports.MatchNotifications
 import tv.own.owntv.core.sports.SportOnChannels
 import tv.own.owntv.core.sports.SportsAlertsSetup
+import tv.own.owntv.core.sports.CalendarMonth
 import tv.own.owntv.core.sports.SportsBoard
+import tv.own.owntv.core.sports.SportsCalendar
 import tv.own.owntv.core.sports.SportsCatalog
 import tv.own.owntv.core.sports.SportsHomeRow
 import tv.own.owntv.core.sports.SportsConfig
 import tv.own.owntv.core.sports.SportsMemory
 import tv.own.owntv.core.sports.SportsRepository
 import tv.own.owntv.core.sports.SportsSource
+import tv.own.owntv.core.sports.SportsTeams
+import tv.own.owntv.core.sports.TeamSchedule
 import tv.own.owntv.core.sports.WatchFilter
 import tv.own.owntv.core.sports.WatchList
 import tv.own.owntv.core.sports.WatchOption
@@ -54,7 +59,10 @@ import tv.own.owntv.core.sports.model.League
 import tv.own.owntv.core.sports.model.Match
 import tv.own.owntv.core.sports.model.MatchSummary
 import tv.own.owntv.core.sports.model.StandingsTable
+import tv.own.owntv.core.sports.model.Team
 import tv.own.owntv.core.sports.model.Sport
+import java.time.LocalDate
+import java.time.YearMonth
 import java.util.Locale
 import java.io.File
 import tv.own.owntv.features.sports.data.FileSportEventCache
@@ -96,6 +104,25 @@ data class LeaguePageState(
     val config: SportsConfig,
 )
 
+/** A team page is always scoped to a real Core league. [from] restores the match row that opened it. */
+data class TeamRef(val league: League, val team: Team, val from: String? = null)
+
+data class TeamPageState(val schedule: TeamSchedule?, val board: SportsBoard)
+
+private val NO_TEAM_PAGE = setOf(Sport.TENNIS, Sport.GOLF, Sport.RACING, Sport.MMA, Sport.CRICKET)
+
+internal fun hasTeamPages(sport: Sport): Boolean = sport !in NO_TEAM_PAGE
+
+internal fun teamRefOf(league: League, team: Team): TeamRef? =
+    if (!hasTeamPages(league.sport) || team.isAthlete || team.id.isBlank()) null else TeamRef(league, team)
+
+internal fun teamRefOf(match: Match, team: Team): TeamRef? {
+    val league = SportsCatalog.league(League.keyOf(match.sport, match.leagueSlug))
+        ?: SportsCatalog.league(match.feed)
+        ?: return null
+    return teamRefOf(league, team)
+}
+
 /**
  * Everything the hub draws. No channels: those are found per match, on the
  * match page ([SportsViewModel.matchPage]). [rebuilding] is true while the board is being rebuilt.
@@ -127,6 +154,8 @@ class SportsViewModel(
     private val reminders: ReminderManager,
     private val playback: SportsPlayback,
     private val fixtureReminders: FixtureReminderScheduler,
+    private val calendar: SportsCalendar,
+    private val teams: SportsTeams,
     sportsSource: SportsSource,
     private val context: Context,
     private val sourceDao: SourceDao,
@@ -215,6 +244,19 @@ class SportsViewModel(
 
     /** The profile's sports settings alone — no scores are asked for by reading it. */
     val sportsConfig: StateFlow<SportsConfig> = config.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SportsConfig())
+
+    private data class MonthAsk(val leagues: Set<String>, val month: YearMonth, val focus: LocalDate?)
+    private val monthAsk = MutableStateFlow<MonthAsk?>(null)
+
+    /** Core 1.0.71 month data only. Opening a fixture still goes through Lounge's evidence-gated match page. */
+    fun showMonth(leagues: Set<String>, month: YearMonth, focus: LocalDate?) {
+        monthAsk.value = MonthAsk(leagues, month, focus)
+    }
+
+    val calendarMonth: StateFlow<CalendarMonth?> = monthAsk.flatMapLatest { ask ->
+        if (ask == null) flowOf(null)
+        else combine(calendar.month(ask.leagues, ask.month, ask.focus), repository.observe(Demand.Calendar)) { month, _ -> month }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     // --- The Home row --------------------------------------------------------------------------------
 
@@ -338,6 +380,24 @@ class SportsViewModel(
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun openLeague(key: String?) { openLeague.value = key }
+
+    fun teamPage(ref: TeamRef): Flow<TeamPageState> = combine(
+        repository.observe(Demand.TeamPage(ref.league.key)),
+        flow {
+            emit(null)
+            emit(teams.schedule(ref.league, ref.team.id, repository.board.value))
+        },
+    ) { board, schedule -> TeamPageState(schedule, board) }.flowOn(Dispatchers.Default)
+
+    suspend fun teamRefFor(team: FollowedTeam): TeamRef? {
+        val current = config.first()
+        val board = repository.board.value
+        val leagues = current.followedLeagues().mapNotNull(SportsCatalog::league).filter { it.sport == team.sport }
+        val league = leagues.firstOrNull { candidate ->
+            board.standings[candidate.key]?.groups?.any { group -> group.rows.any { it.team.id == team.id } } == true
+        } ?: leagues.firstOrNull() ?: SportsCatalog.leaguesOf(team.sport).firstOrNull() ?: return null
+        return teamRefOf(league, Team(team.id, team.name, abbreviation = team.abbreviation))
+    }
 
     fun open(match: Match?) {
         pageFilter.value = null
