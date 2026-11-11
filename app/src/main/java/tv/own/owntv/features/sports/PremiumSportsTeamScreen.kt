@@ -123,12 +123,7 @@ internal fun PremiumSportsTeamScreen(
         val schedule = state?.schedule
         val matches = if (results) schedule?.results.orEmpty() else schedule?.fixtures.orEmpty()
         when {
-            schedule == null -> Text(
-                "Loading schedule…",
-                style = stageText(19, 500),
-                color = StageColors.Muted,
-                modifier = Modifier.padding(top = 28.mpx, start = 16.mpx),
-            )
+            schedule == null -> Unit
             matches.isEmpty() -> Text(
                 stringResource(R.string.sports_empty_unreachable),
                 style = stageText(19, 500),
@@ -178,7 +173,7 @@ private fun TeamFixtureRow(match: Match, spoilerFree: Boolean, onClick: () -> Un
             )
             Text(
                 when {
-                    match.isLive -> match.statusText.ifBlank { "LIVE" }
+                    match.isLive -> match.statusText
                     else -> PremiumSportsPresentation.nzKickoffSummary(match.startMs)
                 },
                 style = stageText(17, 500),
