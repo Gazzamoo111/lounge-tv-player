@@ -96,7 +96,7 @@ internal fun PremiumSportsTeamScreen(
                 )
             }
             StageButton(
-                text = stringResource(if (following) R.string.sports_following else R.string.sports_follow),
+                text = stringResource(if (following) R.string.m4_team_following else R.string.m4_team_follow),
                 onClick = { vm.toggleTeam(followedTeam) },
                 icon = OwnTVIcon.STAR,
                 iconFilled = following,
@@ -109,14 +109,14 @@ internal fun PremiumSportsTeamScreen(
             horizontalArrangement = Arrangement.spacedBy(8.mpx),
         ) {
             StageTab(
-                label = stringResource(R.string.sports_tab_fixtures),
+                label = stringResource(R.string.m4_team_fixtures),
                 count = "",
                 selected = !results,
                 onClick = { results = false },
                 modifier = if (!results) Modifier.focusRequester(tabFocus) else Modifier,
             )
             StageTab(
-                label = stringResource(R.string.sports_tab_results),
+                label = stringResource(R.string.m4_team_results),
                 count = "",
                 selected = results,
                 onClick = { results = true },
@@ -129,7 +129,7 @@ internal fun PremiumSportsTeamScreen(
         when {
             schedule == null -> Unit
             matches.isEmpty() -> Text(
-                stringResource(R.string.sports_empty_unreachable),
+                stringResource(R.string.m4_team_schedule_empty),
                 style = stageText(19, 500),
                 color = StageColors.Muted,
                 modifier = Modifier.padding(top = 28.mpx, start = 16.mpx),
@@ -146,7 +146,7 @@ internal fun PremiumSportsTeamScreen(
         }
 
         StageKeyHints(
-            listOf(stringResource(R.string.common_back) to stringResource(R.string.common_back)),
+            listOf(stringResource(R.string.m4_back) to stringResource(R.string.m4_back)),
             Modifier.align(Alignment.End).padding(bottom = 22.mpx),
             textSize = 18,
         )
