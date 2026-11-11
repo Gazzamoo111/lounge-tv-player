@@ -11,7 +11,7 @@ concurrency:
   group: lounge-tv-qa-${{ github.ref }}
   cancel-in-progress: true
 env:
-  LOUNGE_TV_2_QA: ${{ github.head_ref == 'feature/lounge-tv-2.0' || github.ref_name == 'feature/lounge-tv-2.0' }}
+  LOUNGE_TV_2_QA: ${{ startsWith(github.head_ref, 'feature/lounge-tv-2.0') || startsWith(github.ref_name, 'feature/lounge-tv-2.0') }}
   ISOLATED_EVENT_QA: ${{ github.event_name != 'workflow_dispatch' }}
   RELIABILITY_AUDIT_QA: ${{ github.event_name != 'workflow_dispatch' }}
   LOUNGE_CORE_QA: ${{ startsWith(github.head_ref, 'core-qa/') || startsWith(github.ref_name, 'core-qa/') }}
