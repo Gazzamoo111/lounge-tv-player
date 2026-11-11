@@ -198,6 +198,9 @@ class SportsViewModel(
     private val reminderKeys = settings.activeProfileId.flatMapLatest { pid ->
         if (pid < 0) flowOf(emptySet()) else fixtureReminders.observe(pid).map { list -> list.map { it.fixtureId }.toSet() }
     }
+    val reminderSet: StateFlow<Set<String>> = reminderKeys.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet(),
+    )
 
     private val discovery = SportLoungeDiscovery(
         sportsSource,
