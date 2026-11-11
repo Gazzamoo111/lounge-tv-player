@@ -151,6 +151,25 @@ private fun programmeAt(progs: List<EpgProgrammeEntity>?, time: Long): EpgProgra
 /** Across a gap the cursor moves by half an hour, rather than leaping hours to the next programme. */
 private const val GAP_STEP_MS = 30L * 60 * 1000
 
+internal const val NO_CURSOR = -1L
+
+internal data class GuideRowFocusArgs(val selectedRow: Boolean, val cursorTime: Long, val cellMode: Boolean)
+
+internal fun guideRowFocusArgs(
+    index: Int,
+    focusedRow: Int,
+    cursorTime: Long,
+    inCellMode: Boolean,
+    gridHasFocus: Boolean,
+): GuideRowFocusArgs {
+    val sel = index == focusedRow
+    return GuideRowFocusArgs(
+        selectedRow = gridHasFocus && sel,
+        cursorTime = if (sel) cursorTime else NO_CURSOR,
+        cellMode = sel && inCellMode,
+    )
+}
+
 /** Where ◀ ([dir] -1) or ▶ (+1) takes the cursor: programme by programme, half an hour at a time across gaps. */
 private fun cursorStep(progs: List<EpgProgrammeEntity>, cursor: Long, dir: Int, windowStart: Long, windowEnd: Long): Long {
     val cur = programmeAt(progs, cursor)
@@ -603,6 +622,7 @@ fun EpgScreen(
                             contentPadding = PaddingValues(bottom = 24.mpx),
                         ) {
                             itemsIndexed(state.channels, key = { _, ch -> ch.id }) { index, channel ->
+                                val focus = guideRowFocusArgs(index, focusedRow, cursorTime, inCellMode, gridHasFocus)
                                 GuideRow(
                                     vm = vm,
                                     channel = channel,
@@ -615,9 +635,9 @@ fun EpgScreen(
                                     now = liveNow,
                                     scrollPx = scrollPx,
                                     focusRequester = rowFocus(index),
-                                    selectedRow = gridHasFocus && index == focusedRow,
-                                    cursorTime = cursorTime,
-                                    cellMode = inCellMode,
+                                    selectedRow = focus.selectedRow,
+                                    cursorTime = focus.cursorTime,
+                                    cellMode = focus.cellMode,
                                     onEnterCell = {
                                         cursorTime = System.currentTimeMillis()
                                         inCellMode = true
