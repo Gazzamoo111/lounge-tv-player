@@ -322,11 +322,17 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
                         LoungeAction(d.format(DateTimeFormatter.ofPattern("EEE d MMM")), day == offset) { day = offset }
                     }
                 }
+                val firstEventFocus = dayEvents.firstOrNull()?.let { focus(it.key) }
                 Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(26.mpx)) {
                     Column(Modifier.weight(1.2f)) {
                         Row(horizontalArrangement = Arrangement.spacedBy(18.mpx), verticalAlignment = Alignment.CenterVertically) {
                             Text(stringResource(R.string.m4_league_count, (if (leagueFilter.isEmpty()) all.map { it.feed }.toSet() else leagueFilter).size), style = stageText(21, 700), color = LoungeSurface.Muted)
-                            LoungeAction(stringResource(R.string.m4_choose_leagues), modifier = Modifier.focusRequester(chooseFocus)) { choose = true }
+                            LoungeAction(
+                                stringResource(R.string.m4_choose_leagues),
+                                modifier = Modifier.focusRequester(chooseFocus).focusProperties {
+                                    firstEventFocus?.let { down = it }
+                                },
+                            ) { choose = true }
                         }
                         if (dayEvents.isEmpty()) Text(stringResource(R.string.m4_no_events), style = stageText(25, 700), color = LoungeSurface.Muted, modifier = Modifier.padding(24.mpx))
                         LazyColumn(state = eventList, modifier = Modifier.padding(top = 16.mpx).focusGroup(), verticalArrangement = Arrangement.spacedBy(16.mpx), contentPadding = PaddingValues(5.mpx)) {
