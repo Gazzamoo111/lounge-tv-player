@@ -66,6 +66,7 @@ internal fun PremiumSportsScreen(vm: SportsViewModel, liveVm: LiveViewModel,
     var selected by remember(pid) { mutableStateOf<Match?>(null) }
     var options by remember(pid) { mutableStateOf<List<WatchOption>>(emptyList()) }
     var following by remember(pid) { mutableStateOf(false) }
+    var calendarOpen by remember(pid) { mutableStateOf(false) }
     var menuFor by remember(pid) { mutableStateOf<Match?>(null) }
     var finding by remember(pid) { mutableStateOf(false) }
     var searched by remember(pid) { mutableStateOf(false) }
@@ -128,9 +129,18 @@ internal fun PremiumSportsScreen(vm: SportsViewModel, liveVm: LiveViewModel,
     key(pid) {
         if (following) {
             PremiumFollowScreen(onDone = { following = false }, contentStart = contentStart, modifier = modifier)
+        } else if (calendarOpen) {
+            PremiumSportsCalendarScreen(
+                vm = vm,
+                onOpenMatch = onOpenMatch,
+                onBack = { calendarOpen = false },
+                active = active,
+                contentStart = contentStart,
+                modifier = modifier,
+            )
         } else PremiumSportsContent(state, contentStart, restoreKey, onEntryHook, onChildFocused,
             onSelect = { selected = it }, onOpenMatch = pickPreview, onOpenLeague = onOpenLeague,
-            onFollow = { following = true }, onHold = { menuFor = it }, modifier = modifier,
+            onFollow = { following = true }, onHold = { menuFor = it }, onCalendar = { calendarOpen = true }, modifier = modifier,
             detail = { m, compact ->
                 val valid = selected?.key == m?.key && selected?.startMs == m?.startMs
                 SportsPreviewPanel(m, if (valid) options else emptyList(), previewMeta.title.takeIf { previewPlaying },
@@ -174,7 +184,7 @@ internal fun PremiumSportsScreen(vm: SportsViewModel, liveVm: LiveViewModel,
 internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, restoreKey: String?,
     onEntryHook: (((() -> Boolean)?) -> Unit)?, onChildFocused: () -> Unit,
     onSelect: (Match?) -> Unit, onOpenMatch: (Match) -> Unit, onOpenLeague: (String) -> Unit,
-    onFollow: () -> Unit, onHold: (Match) -> Unit, modifier: Modifier = Modifier,
+    onFollow: () -> Unit, onHold: (Match) -> Unit, onCalendar: () -> Unit = {}, modifier: Modifier = Modifier,
     detail: @Composable (Match?, Boolean) -> Unit) {
     var destination by rememberSaveable { mutableStateOf(SportsDestination.MY_SPORTS) }
     var sportName by rememberSaveable { mutableStateOf<String?>(null) }
@@ -249,6 +259,7 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
                         SportsDestination.NETWORKS -> R.string.m4_networks
                     }), destination == tab) { destination = tab }
                 }
+                item { LoungeAction(stringResource(R.string.m4_calendar), onClick = onCalendar) }
                 item { LoungeAction(stringResource(R.string.m4_follow), onClick = onFollow) }
             }
         }
