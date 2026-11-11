@@ -274,6 +274,9 @@ def apply(root: Path, milestone3: bool = True, milestone6: bool = True) -> None:
             editorial_patch = Path(__file__).resolve().parent / "patches/channel-editorial-order.patch"
             subprocess.run(["git", "-C", str(root), "apply", "--check", str(editorial_patch)], check=True)
             subprocess.run(["git", "-C", str(root), "apply", str(editorial_patch)], check=True)
+            sports_patch = Path(__file__).resolve().parent / "patches/sports-competition-phrases.patch"
+            subprocess.run(["git", "-C", str(root), "apply", "--check", str(sports_patch)], check=True)
+            subprocess.run(["git", "-C", str(root), "apply", str(sports_patch)], check=True)
             guide_patch = Path(__file__).resolve().parent / "patches/guide-interrupted-download.patch"
             subprocess.run(["git", "-C", str(root), "apply", "--check", str(guide_patch)], check=True)
             subprocess.run(["git", "-C", str(root), "apply", str(guide_patch)], check=True)

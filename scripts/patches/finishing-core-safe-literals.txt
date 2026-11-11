@@ -3,3 +3,74 @@
 1	sql	core/src/main/java/tv/own/owntv/core/database/dao/ChannelDao.kt	, CASE WHEN :alpha THEN c.name END, c.sortOrder, c.name, c.id LIMIT :limit
 1	sql	core/src/main/java/tv/own/owntv/core/database/dao/ChannelEditorialSql.kt	CASE WHEN UPPER(c.name) LIKE '% BACKUP%' OR UPPER(c.name) LIKE '%(BK)%' THEN 4 WHEN UPPER(TRIM(c.name)) IN ('DISNEY+ CLASSIC','DISNEY+PIXAR','PIXAR CHANNEL') THEN 0 WHEN c.name LIKE '24/7%' OR c.name LIKE '24-7%' THEN 3 WHEN EXISTS(SELECT 1 FROM epg_programmes e WHERE e.epgChannelId=LOWER(TRIM(c.epgChannelId)) AND e.startMs<=:nowMs AND e.stopMs>:nowMs) THEN 1 ELSE 2 END
 2	sql	core/src/main/java/tv/own/owntv/core/database/dao/ChannelDao.kt	SELECT c.* FROM channels c LEFT JOIN content_order o ON o.itemId=c.id AND o.profileId=:profileId AND o.mediaType='LIVE' AND o.contextKey=:contextKey WHERE c.categoryId=:categoryId ORDER BY (o.position IS NULL), o.position,
+1	regex	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	\\p{M}+
+1	regex	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	[^\\p{L}\\p{N}]+
+1	regex	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	\\p{N}+
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	sport
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	sports
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	hd
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	fhd
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	uhd
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	sd
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	hdr
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	4k
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	8k
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	plus
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	extra
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	live
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	event
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	events
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	ppv
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	tv
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	channel
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	raw
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	backup
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	alt
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	ß
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	ss
+1	empty	core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt	\0
+1	json	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	f1
+1	technical	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	F1
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Indian Premier League
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Caribbean Premier League
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Bangladesh Premier League
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Lanka Premier League
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Premier League Darts
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Premier League 2
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Premier League Cup
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Premier League International Cup
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Basketball Champions League
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	EHF Champions League
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	CEV Champions League
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Volleyball Champions League
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	World Cup of Darts
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Cricket World Cup
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	T20 World Cup
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	ICC World Cup
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Rugby League World Cup
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Ski World Cup
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	FIS World Cup
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Biathlon World Cup
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Frauen-Bundesliga
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Handball-Bundesliga
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Basketball Bundesliga
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Volleyball Bundesliga
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Bundesliga Handball
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Serie A Femminile
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Serie A Women
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Brasileirão Série B
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Serie B Femminile
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Vrouwen Eredivisie
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Eredivisie Vrouwen
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Liga Portugal 2
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	NBA G League
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	NBA Summer League
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	MLS Next Pro
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	F1 Academy
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	PGA Tour Champions
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Women's Six Nations
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	U20 Six Nations
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Six Nations U20
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Copa del Rey de Baloncesto
+1	protocol	core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt	Formula One
+1	technical	core/src/main/java/tv/own/owntv/core/sports/WatchReader.kt	\0

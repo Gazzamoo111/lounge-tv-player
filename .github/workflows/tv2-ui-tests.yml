@@ -78,7 +78,7 @@ jobs:
         run: |
           set -euo pipefail
           adb shell am instrument -w -r -e class tv.own.owntv.features.sports.FinishingPassUiTest com.loungetv.player.v2qa.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/lounge-finishing-results.txt
-          grep -Eq '^OK \(2 tests\)' /tmp/lounge-finishing-results.txt
+          grep -Eq '^OK \(3 tests\)' /tmp/lounge-finishing-results.txt
           ! grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|shortMsg=' /tmp/lounge-finishing-results.txt
       - name: Second-process preference persistence
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
