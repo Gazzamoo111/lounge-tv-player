@@ -96,6 +96,7 @@ fun SportsMatchScreen(
     onPlayChannel: (ChannelEntity, List<ChannelEntity>) -> Unit,
     onOpenFilters: () -> Unit,
     onOpenLeague: (Match) -> Unit,
+    onOpenTeam: (TeamRef) -> Unit,
     onAddPlaylist: () -> Unit,
     onBack: () -> Unit,
     contentStart: Dp,
@@ -194,7 +195,12 @@ fun SportsMatchScreen(
                 }
             LazyColumn(Modifier.fillMaxWidth().weight(1f).padding(bottom = 84.mpx).focusGroup(), contentPadding = PaddingValues(bottom = 24.mpx)) {
                 item {
-                    ScoreHeader(m, state.summary, hidden = state.config.spoilerFree && !revealed, onReveal = { revealed = true })
+                    ScoreHeader(
+                        m, state.summary,
+                        hidden = state.config.spoilerFree && !revealed,
+                        onReveal = { revealed = true },
+                        onOpenTeam = onOpenTeam,
+                    )
                 }
                 item {
                     Row(
@@ -414,7 +420,13 @@ internal fun languageName(code: String): String {
  * under it. Spoiler-free: the score is a dash until OK on the header.
  */
 @Composable
-private fun ScoreHeader(m: Match, summary: MatchSummary?, hidden: Boolean, onReveal: () -> Unit) {
+private fun ScoreHeader(
+    m: Match,
+    summary: MatchSummary?,
+    hidden: Boolean,
+    onReveal: () -> Unit,
+    onOpenTeam: (TeamRef) -> Unit,
+) {
     val r = 24.mpx
     StageSurface(
         onClick = onReveal,
@@ -431,7 +443,7 @@ private fun ScoreHeader(m: Match, summary: MatchSummary?, hidden: Boolean, onRev
             val home = m.home
             val away = m.away
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Side(home?.team, Modifier.weight(1f))
+                Side(m, home?.team, enabled = !hidden, onOpenTeam, Modifier.weight(1f))
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     val score = when {
                         m.competitors.size < 2 -> m.title
@@ -451,7 +463,7 @@ private fun ScoreHeader(m: Match, summary: MatchSummary?, hidden: Boolean, onRev
                         style = stageText(17, 700), color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis,
                     )
                 }
-                Side(away?.team, Modifier.weight(1f))
+                Side(m, away?.team, enabled = !hidden, onOpenTeam, Modifier.weight(1f))
             }
             // Kick-off, round, venue (ESPN's), in the box rather than the crumb.
             val locale = LocalConfiguration.current.locales[0]
@@ -475,11 +487,36 @@ private fun ScoreHeader(m: Match, summary: MatchSummary?, hidden: Boolean, onRev
 }
 
 @Composable
-private fun Side(team: tv.own.owntv.core.sports.model.Team?, modifier: Modifier) {
-    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.mpx)) {
-        if (team != null) {
-            Crest(team, 93)
-            Text(team.name, style = stageText(22.5f, 700), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+private fun Side(
+    match: Match,
+    team: tv.own.owntv.core.sports.model.Team?,
+    enabled: Boolean,
+    onOpenTeam: (TeamRef) -> Unit,
+    modifier: Modifier,
+) {
+    val ref = team?.let { teamRefOf(match, it) }
+    StageSurface(
+        onClick = { ref?.let(onOpenTeam) },
+        radius = 18.mpx,
+        enabled = enabled && ref != null,
+        contentAlignment = Alignment.Center,
+        modifier = modifier,
+    ) { focused ->
+        Column(
+            Modifier.padding(vertical = 9.mpx),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(10.mpx),
+        ) {
+            if (team != null) {
+                Crest(team, 93)
+                Text(
+                    team.name,
+                    style = stageText(22.5f, 700),
+                    color = if (focused) stageAccent.onAccent else StageColors.Text,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }
