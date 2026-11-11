@@ -257,10 +257,14 @@ def apply(root: Path, milestone3: bool = True, milestone6: bool = True) -> None:
     manifest.write_text("\n".join(rows[:header_end] + body) + "\n", encoding="utf-8")
     print("Refreshed sports fixture regex safe literal")
 
-    # Milestone 3/4/6 patches were authored against Core 1.0.69. They are intentionally
-    # not applied to the 1.0.71 candidate until their remaining Lounge-only behaviour is
-    # rebased and proven against the upstream implementation by the regression workflow.
-    print("Deferred legacy milestone overlays while validating Core 1.0.71 upstream behaviour")
+    m3_player = Path(__file__).resolve().parent / "patches/playback-m3-owntvplayer-1071.patch"
+    subprocess.run(["git", "-C", str(root), "apply", "--check", str(m3_player)], check=True)
+    subprocess.run(["git", "-C", str(root), "apply", str(m3_player)], check=True)
+    print("Rebased Lounge recovery URL cancellation onto Core 1.0.71")
+
+    # The rest of Milestone 3/4/6 was authored against Core 1.0.69. It remains deferred until
+    # a controlled comparison proves an upstream regression or a Lounge-only feature requires it.
+    print("Deferred unproven legacy milestone overlays while validating Core 1.0.71 upstream behaviour")
 
     print(f"Playback core patch applied to pinned commit {PIN}")
 
