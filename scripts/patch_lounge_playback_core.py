@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Patch the exact GPLv3 OwnTV Core 1.0.69 source for every Lounge TV build.
+"""Patch the exact GPLv3 OwnTV Core 1.0.71 source for every Lounge TV build.
 
 Do not silently apply these edits to a moving upstream branch. CI, isolated QA and
 signed release builds all invoke this same fail-closed patcher against the pinned commit.
@@ -8,7 +8,7 @@ import subprocess
 from pathlib import Path
 import sys
 
-PIN = "1de78b1e2690c22b50c060e986bce221454bf880"
+PIN = "0b60ef6d25e03a24193f1a5680cb239816fd8625"
 PATCHES = {
   "core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt": [
     [
