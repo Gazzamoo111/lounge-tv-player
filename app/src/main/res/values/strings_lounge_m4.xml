@@ -56,4 +56,9 @@
     <string name="m4_preview_loading">Opening the selected preview…</string>
     <string name="m4_search_scope">Search leagues, this roster and teams from followed leagues.</string>
     <string name="m4_nz_time">NZ time</string>
+    <string name="m4_calendar">Calendar</string>
+    <string name="m4_previous_month">Previous month</string>
+    <string name="m4_next_month">Next month</string>
+    <string name="m4_calendar_empty">No fixtures are available for this month.</string>
+    <string name="m4_calendar_follow_first">Follow at least one league to build your sports calendar.</string>
 </resources>
