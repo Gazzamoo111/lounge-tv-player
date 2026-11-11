@@ -450,7 +450,7 @@ internal fun liveCategoryEntries(railItems: List<LiveRailItem>, railCounts: Map<
                 tv.own.owntv.core.live.LiveKey.History -> OwnTVIcon.HISTORY
                 tv.own.owntv.core.live.LiveKey.Catchup -> OwnTVIcon.REWIND
                 tv.own.owntv.core.live.LiveKey.All -> OwnTVIcon.LIVE_TV
-                else -> null
+                else -> LoungeEditorialOrder.categoryIcon(item.section, parsed?.name ?: label)
             },
             count = railCounts[item.key],
             mark = null,

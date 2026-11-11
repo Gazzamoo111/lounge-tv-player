@@ -35,19 +35,25 @@ class FinishingPassUiTest {
         val channels = (1L..3L).map { ChannelEntity(id = it, sourceId = 1, name = "TEST $it", streamUrl = "http://test/$it") }
         var tuned = 1L
         var browsed: ChannelEntity? = null
+        var closed = 0
         compose.setContent {
             var highlighted by remember { mutableStateOf<ChannelEntity?>(null) }
+            val focus = remember { FocusRequester() }
             OwnTVTheme(ThemeMode.DARK, AccentColor.BLUE, false, animationLevel = AnimationLevel.OFF) {
-                PremiumLivePanel("TEST info", null, null, null, null, emptyList(), true, emptyList(), FocusRequester(),
-                    {}, {}, {}, {}, artwork = {}, currentChannelId = 1, surfChannels = channels,
+                PremiumLivePanel("TEST info", null, null, null, null, emptyList(), focus,
+                    currentChannelId = 1, surfChannels = channels,
                     browsedChannel = highlighted, onBrowse = { highlighted = it; browsed = it },
-                    onTuneBrowsed = { tuned = it.id })
+                    onTuneBrowsed = { tuned = it.id }, onGuide = {}, onMore = {}, onToggle = {},
+                    onClose = { closed++ })
             }
         }
-        compose.onNodeWithText(androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext.getString(tv.own.owntv.R.string.m4_next)).performClick()
+        compose.onNodeWithTag("live-synopsis-browser").performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.onNodeWithTag("live-synopsis-browser").performKeyInput { pressKey(Key.DirectionRight) }
         compose.runOnIdle { assertEquals(2L, browsed?.id); assertEquals(1L, tuned) }
-        compose.onNodeWithText("Watch highlighted channel").performClick()
+        compose.onNodeWithTag("live-synopsis-browser").performKeyInput { pressKey(Key.DirectionCenter) }
         compose.runOnIdle { assertEquals(2L, tuned) }
+        compose.onNodeWithTag("live-synopsis-browser").performKeyInput { pressKey(Key.Back) }
+        compose.runOnIdle { assertEquals(1, closed) }
     }
     @Test fun horizontalRemoteNavigationReachesPreviewWithoutChangingEvent() {
         val now = System.currentTimeMillis()

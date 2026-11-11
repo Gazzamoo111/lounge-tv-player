@@ -36,6 +36,8 @@
     <string name="lounge_epg_guide_description">Additional programme listings from Lounge TV</string>
     <string name="lounge_epg_primary_description">Programme listings from your TV account</string>
     <string name="sport_lounge_remove_reminder">Remove reminder</string>
-    <string name="lounge_surf_watch">Watch highlighted channel</string>
     <string name="lounge_programme_time_range">%1$s – %2$s</string>
+    <string name="lounge_surf_position">◀  %1$d/%2$d  ▶</string>
+    <string name="lounge_surf_confirm_hint">OK · Watch highlighted channel</string>
+    <string name="lounge_surf_actions_hint">▲ TV Guide   ▼ Playback controls</string>
 </resources>

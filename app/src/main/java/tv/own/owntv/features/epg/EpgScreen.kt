@@ -349,6 +349,27 @@ fun EpgScreen(
             }
         }
     }
+    // Opening or returning to the Guide should land on the channel that still owns playback.
+    // This moves focus only; it never changes the preview/player owner while the user browses rows.
+    var initialPlayingRowApplied by remember(liveMode, categoryKey) { mutableStateOf(false) }
+    LaunchedEffect(
+        liveMode,
+        categoryKey,
+        restoreFocus,
+        state.loading,
+        state.channels,
+        previewChannel?.id,
+    ) {
+        if (initialPlayingRowApplied || restoreFocus || state.loading || state.channels.isEmpty()) {
+            return@LaunchedEffect
+        }
+        val idx = GuideChannelOrdering.initialRow(state.channels, previewChannel?.id)
+        focusedRow = idx
+        if (idx > 0) runCatching { rowListState.scrollToItem(idx) }
+        delay(80)
+        focusGrid(idx)
+        initialPlayingRowApplied = true
+    }
     // The cursor stays in view: scroll only when it reaches an edge, by one slot of room.
     LaunchedEffect(cursorTime, timelinePx) {
         if (!gridHasFocus || timelinePx <= 0 || cursorTime <= 0L) return@LaunchedEffect

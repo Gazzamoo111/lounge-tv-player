@@ -1753,12 +1753,10 @@ fun OwnTVShell(
                     } else null,
                     // Guide card for the playing channel (nowNext follows previewChannel = what's playing).
                     premiumLivePanel = if (tv.own.owntv.BuildConfig.LOUNGE_TV_2 && isLiveChannel && !timeshifted) {
-                        { chips, playFocus, more ->
+                        { chips, browserFocus, more, close ->
                             val engine = if (liveOnExo) liveVm.previewEngine else mpvEngine
                             val meta by engine.currentMeta.collectAsStateWithLifecycle()
                             val epg by liveVm.nowNext.collectAsStateWithLifecycle()
-                            val playingNow by engine.isPlaying.collectAsStateWithLifecycle()
-                            val recent by liveVm.recentlyWatched.collectAsStateWithLifecycle()
                             var browsed by remember(previewChannel?.id) { mutableStateOf<ChannelEntity?>(null) }
                             var browseGuide by remember(previewChannel?.id) { mutableStateOf<tv.own.owntv.core.live.EpgNowNext?>(null) }
                             LaunchedEffect(browsed?.id) {
@@ -1770,35 +1768,25 @@ fun OwnTVShell(
                                 }
                             }
                             val displayedGuide = if (browsed == null) epg else browseGuide
-                            val current = displayedGuide?.now
-                            var recentProgrammes by remember { mutableStateOf<Map<Long, tv.own.owntv.core.parser.XtEpgEntry>>(emptyMap()) }
-                            LaunchedEffect(recent) {
-                                recentProgrammes = emptyMap()
-                                while (true) {
-                                    recentProgrammes = liveVm.nowPlayingFor(recent.take(12))
-                                    kotlinx.coroutines.delay(60_000)
-                                }
-                            }
                             tv.own.owntv.player.PremiumLivePanel(
                                 title = browsed?.name ?: meta.title.orEmpty(),
                                 number = if (browsed == null) meta.subtitle else browsed?.number?.toString(),
                                 logo = if (browsed == null) meta.logoUrl else browsed?.displayLogoUrl,
-                                current = current, next = displayedGuide?.next, technical = chips, isPlaying = playingNow,
-                                recent = recent, playFocus = playFocus,
-                                currentChannelId = previewChannel?.id, programmes = recentProgrammes,
-                                surfChannels = playbackZapChannels, browsedChannel = browsed,
+                                current = displayedGuide?.now,
+                                next = displayedGuide?.next,
+                                technical = chips,
+                                browserFocus = browserFocus,
+                                currentChannelId = previewChannel?.id,
+                                surfChannels = playbackZapChannels,
+                                browsedChannel = browsed,
                                 onBrowse = { browsed = it },
-                                onTuneBrowsed = { ch -> scope.launch { liveVm.ensurePlayingByIdAsync(ch.id, playbackZapChannels) } },
+                                onTuneBrowsed = { ch ->
+                                    scope.launch { liveVm.ensurePlayingByIdAsync(ch.id, playbackZapChannels) }
+                                },
                                 onToggle = engine::togglePlayPause,
                                 onGuide = { exitPlayer(); onSelectSection(MainSection.EPG) },
                                 onMore = more,
-                                onRecent = { ch -> scope.launch { liveVm.ensurePlayingByIdAsync(ch.id, recent) } },
-                                artwork = {
-                                    val programme = current?.let { tv.own.owntv.core.database.entity.EpgProgrammeEntity(
-                                        0, previewChannel?.sourceId ?: 0, "", it.startMs, it.stopMs, it.title, description = it.description,
-                                        year = epg?.nowDetails?.year, episode = epg?.nowDetails?.episode) }
-                                    tv.own.owntv.features.live.ProgrammeArtwork(programme, meta.logoUrl, Modifier.fillMaxSize(), channelName = previewChannel?.name)
-                                },
+                                onClose = close,
                             )
                         }
                     } else null,

@@ -208,7 +208,7 @@ fun PlayerHud(
     // (the EPG data lives in LiveViewModel, not the player). Rendered on the right edge whenever the
     // controls are visible, like the top-bar channel card; informational only, never focusable.
     liveEpgCard: (@Composable () -> Unit)? = null,
-    premiumLivePanel: (@Composable (List<String>, FocusRequester, () -> Unit) -> Unit)? = null,
+    premiumLivePanel: (@Composable (List<String>, FocusRequester, () -> Unit, () -> Unit) -> Unit)? = null,
     // Now/next lines for the channel-change banner (the playing channel's guide). Null = name only.
     zapGuide: (@Composable () -> Unit)? = null,
     // The archive's own wall-clock instant while catch-up/rewind is playing; null means the picture is
@@ -672,7 +672,12 @@ fun PlayerHud(
         if (controlsVisible) {
             if (isLive && error == null && premiumLivePanel != null && !premiumTools) {
                 Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 28.dp, vertical = 20.dp)) {
-                    premiumLivePanel(listOfNotNull(engineChip) + streamChips.ifEmpty { listOfNotNull(videoRes) }, playFocus) { premiumTools = true }
+                    premiumLivePanel(
+                        listOfNotNull(engineChip) + streamChips.ifEmpty { listOfNotNull(videoRes) },
+                        playFocus,
+                        { premiumTools = true },
+                        { controlsVisible = false },
+                    )
                 }
             } else {
             // Scrims: a FLAT semi-transparent panel behind the controls, feathered to transparent only at

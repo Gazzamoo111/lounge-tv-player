@@ -29,7 +29,6 @@ import tv.own.owntv.core.theme.*
 import tv.own.owntv.player.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import tv.own.owntv.ui.theme.*
-import tv.own.owntv.ui.lounge.LoungeLogo
 import java.io.File
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.first
@@ -185,31 +184,32 @@ class Milestone4UiTest {
         compose.onNodeWithText("Arrange").assertExists()
     }
     @Test fun player_panel_displays_genuine_supplied_badges_and_only_explicit_actions_fire() {
-        var toggles = 0; var guide = 0; var tools = 0; var recentTaps = 0
+        var toggles = 0; var guide = 0; var tools = 0; var tunes = 0
         compose.setContent { Theme {
+            val focus = remember { FocusRequester() }
             Box(Modifier.fillMaxSize().background(Color(0xFF09203B))) {
                 PremiumLivePanel("TEST channel", "7", null, XtEpgEntry("TEST programme", "Renderer validation. No stream is playing.", now-60_000, now+600_000),
-                    XtEpgEntry("TEST next programme", null, now+600_000, now+1200_000), listOf("TEST supplied codec"), true,
-                    listOf(tv.own.owntv.core.database.entity.ChannelEntity(id = 42, sourceId = 1, name = "TEST Recent Channel",
+                    XtEpgEntry("TEST next programme", null, now+600_000, now+1200_000), listOf("TEST supplied codec"), focus,
+                    surfChannels = listOf(tv.own.owntv.core.database.entity.ChannelEntity(id = 42, sourceId = 1, name = "TEST Adjacent Channel",
                         streamUrl = "https://example.invalid/test", number = 42),
                         tv.own.owntv.core.database.entity.ChannelEntity(id = 43, sourceId = 1, name = "TEST Current Channel",
-                        streamUrl = "https://example.invalid/current", number = 43)), remember { FocusRequester() },
-                    { toggles++ }, { guide++ }, { tools++ }, { recentTaps++ }, artwork = { LoungeLogo(null, "TV", Modifier.fillMaxSize()) },
+                        streamUrl = "https://example.invalid/current", number = 43)),
+                    onToggle = { toggles++ }, onGuide = { guide++ }, onMore = { tools++ }, onClose = {},
+                    onTuneBrowsed = { tunes++ },
                     modifier = Modifier.align(androidx.compose.ui.Alignment.BottomCenter).padding(30.mpx),
-                    currentChannelId = 43, programmes = mapOf(42L to XtEpgEntry("TEST current show", null, now - 60000, now + 60000)))
+                    currentChannelId = 43)
             }
         } }
         compose.onNodeWithText("TEST supplied codec").assertExists()
-        compose.onNodeWithText("Recently Played").assertExists()
-        compose.onNodeWithText("TEST Recent Channel").performClick()
-        assertEquals(1, recentTaps)
-        compose.onNodeWithText("Watching").assertExists()
-        compose.onNodeWithText("TEST Current Channel").performClick()
-        assertEquals(1, recentTaps)
+        compose.onNodeWithText("TEST programme").assertExists()
+        compose.onNodeWithText("TEST next programme").assertExists()
+        compose.onNodeWithTag("live-synopsis-browser").performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.onNodeWithTag("live-synopsis-browser").performKeyInput { pressKey(Key.DirectionRight) }
+        assertEquals(0, tunes)
         capture("04-player-overlay-test-data")
         assertEquals(0, toggles)
-        compose.onNodeWithText("Pause").performClick(); compose.onNodeWithText("TV Guide").performClick(); compose.onNodeWithText("Playback controls").performClick()
-        assertEquals(1, toggles); assertEquals(1, guide); assertEquals(1, tools)
+        compose.onNodeWithTag("live-synopsis-browser").performKeyInput { pressKey(Key.MediaPlayPause); pressKey(Key.DirectionUp); pressKey(Key.DirectionDown) }
+        assertEquals(1, toggles); assertEquals(1, guide); assertEquals(1, tools); assertEquals(0, tunes)
     }
 
     @Test fun feed_picker_uses_remote_focus_and_never_plays_on_browse_or_back() {
@@ -305,6 +305,48 @@ class Milestone4UiTest {
         override fun audioTracks() = emptyList<TrackOption>()
         override fun textTracks() = emptyList<TrackOption>()
     }
+    @Test fun hidden_live_hud_keeps_channel_list_on_left_and_history_on_right() {
+        val engine = QuietEngine()
+        var channelListOpens = 0
+        var historyOpens = 0
+        compose.setContent { Theme {
+            PlayerHud(
+                engine,
+                onBack = {},
+                onOpenChannelList = { channelListOpens++ },
+                onOpenHistoryList = { historyOpens++ },
+                premiumLivePanel = { chips, focus, more, close ->
+                    PremiumLivePanel(
+                        "TEST channel",
+                        "7",
+                        null,
+                        null,
+                        null,
+                        chips,
+                        focus,
+                        onToggle = engine::togglePlayPause,
+                        onGuide = {},
+                        onMore = more,
+                        onClose = close,
+                    )
+                },
+            )
+        } }
+        remoteBack()
+        compose.onNodeWithTag("live-synopsis-browser").assertDoesNotExist()
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionLeft) }
+        compose.runOnIdle {
+            assertEquals(1, channelListOpens)
+            assertEquals(0, historyOpens)
+        }
+        compose.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
+        compose.runOnIdle {
+            assertEquals(1, channelListOpens)
+            assertEquals(1, historyOpens)
+        }
+        assertEquals(0, engine.commands)
+    }
+
     @Test fun actual_hud_tools_back_and_remount_issue_no_playback_commands() {
         val engine = QuietEngine()
         var attached by mutableStateOf(true)
@@ -312,9 +354,9 @@ class Milestone4UiTest {
         // so wall-clock instrumentation and Compose's virtual auto-hide timer cannot race Back.
         compose.mainClock.autoAdvance = false
         compose.setContent { Theme {
-            if (attached) PlayerHud(engine, onBack = {}, premiumLivePanel = { chips, focus, more ->
-                PremiumLivePanel("TEST healthy session", null, null, null, null, chips, true, emptyList(), focus,
-                    engine::togglePlayPause, {}, more, {}, artwork = {})
+            if (attached) PlayerHud(engine, onBack = {}, premiumLivePanel = { chips, focus, more, close ->
+                PremiumLivePanel("TEST healthy session", null, null, null, null, chips, focus,
+                    onToggle = engine::togglePlayPause, onGuide = {}, onMore = more, onClose = close)
             })
         } }
         compose.mainClock.advanceTimeBy(64)

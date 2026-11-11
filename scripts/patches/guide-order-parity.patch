@@ -1,0 +1,37 @@
+--- a/core/src/main/java/tv/own/owntv/core/database/dao/ChannelDao.kt
++++ b/core/src/main/java/tv/own/owntv/core/database/dao/ChannelDao.kt
+@@ -304,3 +304,14 @@
+     suspend fun snapshotByCategoryManual(categoryId: Long, profileId: Long, contextKey: String, limit: Int): List<ChannelEntity>
+-
++
++    /** Bounded A-Z twin of pagingByCategoryManualAlpha for Guide/Live ordering parity. */
++    @Query(
++        "SELECT c.* FROM channels c " +
++            "LEFT JOIN content_order o ON o.itemId = c.id AND o.profileId = :profileId AND o.mediaType = 'LIVE' AND o.contextKey = :contextKey " +
++            "WHERE c.categoryId = :categoryId " +
++            "ORDER BY (CASE WHEN o.position IS NULL THEN 1 ELSE 0 END), o.position, c.name LIMIT :limit",
++    )
++    suspend fun snapshotByCategoryManualAlpha(
++        categoryId: Long, profileId: Long, contextKey: String, limit: Int,
++    ): List<ChannelEntity>
++
+     /** Bounded snapshot across all of a profile's playlists, in provider order — the in-player zap /
+--- a/core/src/main/java/tv/own/owntv/core/database/dao/CustomCategoryDao.kt
++++ b/core/src/main/java/tv/own/owntv/core/database/dao/CustomCategoryDao.kt
+@@ -259,3 +259,15 @@
+     suspend fun snapshotChannels(profileId: Long, contextKey: String, sourceIds: List<Long>, limit: Int): List<ChannelEntity>
+-
++
++    /** Bounded A-Z twin of pagingChannelsAlpha for Guide/Live ordering parity. */
++    @Query(
++        "SELECT c.* FROM channels c " +
++            "INNER JOIN custom_category_members m ON m.itemId = c.id AND m.profileId = :profileId AND m.mediaType = 'LIVE' AND m.contextKey = :contextKey " +
++            "LEFT JOIN content_order o ON o.itemId = c.id AND o.profileId = :profileId AND o.mediaType = 'LIVE' AND o.contextKey = :contextKey " +
++            "WHERE c.sourceId IN (:sourceIds) " +
++            "ORDER BY (CASE WHEN o.position IS NULL THEN 1 ELSE 0 END), o.position, c.name LIMIT :limit",
++    )
++    suspend fun snapshotChannelsAlpha(
++        profileId: Long, contextKey: String, sourceIds: List<Long>, limit: Int,
++    ): List<ChannelEntity>
++
+     @Query(
