@@ -147,7 +147,7 @@
      val sports: List<Sport> get() = Sport.entries.filter { s -> leagues.any { it.sport == s } }
 --- /dev/null
 +++ b/core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt
-@@ -0,0 +1,89 @@
+@@ -0,0 +1,92 @@
 +package tv.own.owntv.core.sports
 +
 +import java.text.Normalizer
@@ -212,10 +212,13 @@
 +        }
 +    }
 +
++    // The catalogue is immutable: normalise its phrases once, not for every fixture in a board.
++    private val knownPhrases by lazy { SportsCatalog.allCompetitionNames.map(::words).distinct() }
++
 +    /** The key of a competition known by [names] (several spellings of one competition). */
 +    fun keyOf(names: List<String>): Key {
 +        val phrases = names.map(::words).filter { it.isNotEmpty() }.distinct()
-+        val others = SportsCatalog.allCompetitionNames.map(::words).filter { it !in phrases }.distinct()
++        val others = knownPhrases.filter { it !in phrases }
 +        return Key(phrases, phrases.associateWith { p -> others.filter { it.size > p.size && occurrences(it, p).isNotEmpty() } })
 +    }
 +

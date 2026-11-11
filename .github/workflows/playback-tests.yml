@@ -32,6 +32,9 @@ jobs:
         with:
           packages: 'platform-tools'
       - uses: gradle/actions/setup-gradle@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Branding and Python guardrails
         run: |
           python3 -m pip install --disable-pip-version-check Pillow
@@ -40,7 +43,7 @@ jobs:
           PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/tests -p 'test_*.py'
       - name: Backend contracts and shared EPG regression
         run: |
-          python3 -m pip install --disable-pip-version-check lxml==5.4.0
+          python3 -m pip install --disable-pip-version-check --only-binary=:all: lxml==5.4.0
           node --test services/sport-lounge/test/*.mjs qa/gateway/*.test.mjs
           PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s qa/shared-epg -p 'test_*.py'
       - name: Checkout baseline core for controlled before comparison

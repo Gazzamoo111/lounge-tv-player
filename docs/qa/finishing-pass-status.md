@@ -22,9 +22,11 @@ Local checks: 25 Python guardrail/SQLite ordering tests, 10 sports gateway tests
 
 QA #664 compiled both variants. App tests passed 336/337; the sole failure was the icon set's old equality expectation, corrected to include the three new vector paths. All 15 existing emulator tests passed; the interrupted XMLTV test passed. The surf test selector was corrected to use its translated resource instead of an incorrect English label.
 
-QA #665 passed all 18 emulator tests, including adjacent information without retuning, interrupted XMLTV failure propagation, and D-pad movement from event to preview without changing the event. Its regression job stopped at the newly added EPG tests because CI lacked their existing `lxml==5.4.0` dependency; the workflow now installs it. This is intermediate evidence, not final APK acceptance.
+QA #665 passed all 18 emulator tests, including adjacent information without retuning, interrupted XMLTV failure propagation, and D-pad movement from event to preview without changing the event. Its regression job stopped at the newly added EPG tests because CI lacked their existing `lxml==5.4.0` dependency; the workflow now installs it. This is intermediate evidence, not final APK acceptance. The runner's newer default Python also lacks a wheel for the generator's pinned lxml; regression now explicitly selects Python 3.12 and a binary lxml wheel, matching the existing EPG workflow.
 
-Final signed APK identity and the final CI run must be recorded after all gates pass. Synthetic Exo/MPV probes do not establish provider stream quality, Fire TV lip-sync or sustained playback.
+QA #665 exported synthetic emulator measurements: poster navigation input-to-idle p50 77 ms / max 263 ms over 12 inputs; local Exo startup 1,095 ms and MPV startup 1,503 ms; zero recorded post-start buffering transitions for both. Process PSS was 234,288/248,886 KiB. These are labelled local emulator probes and do not measure Fire TV scrolling or A/V output drift.
+
+Final signed APK identity and the final CI run are recorded in the current PR #68 description after all gates pass. Synthetic Exo/MPV probes do not establish provider stream quality, Fire TV lip-sync or sustained playback.
 
 ## Backend findings and staged repairs
 
