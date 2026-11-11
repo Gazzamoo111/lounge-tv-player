@@ -140,7 +140,7 @@
 3	regex	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	[^a-z0-9]+
 1	json	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	{"scheme":"widevine","license":"https://c.mjh.nz/tvnz-1-wv"}
 1	json	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	{"scheme":"widevine","license":"https://c.mjh.nz/tvnz-2-wv"}
-8	empty	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	\0
+9	empty	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	#$it
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	catch-up '${ch.name}' prog='${programme.title}' -> ${tv.own.owntv.core.network.HttpClient.redactUrl(url)}
 1	log	app/src/main/java/tv/own/owntv/features/live/LiveViewModel.kt	catch-up external '${ch.name}' prog='${programme.title}'
@@ -2243,7 +2243,7 @@
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeEditorialOrder.kt	movie
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeEditorialOrder.kt	pay per view
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeEditorialOrder.kt	ppv
-1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeEditorialOrder.kt	relax
+3	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeEditorialOrder.kt	relax
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeEditorialOrder.kt	rugby
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeEditorialOrder.kt	rugby league
 1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeEditorialOrder.kt	rugby union
@@ -2259,7 +2259,6 @@
 1	technical	app/src/main/java/tv/own/owntv/player/PremiumLivePanel.kt	live-synopsis-browser
 1	technical	app/src/main/java/tv/own/owntv/ui/components/StageGlyphs.kt	M12 2 A10 10 0 1 0 12 22 A10 10 0 1 0 12 2 M12 7 L15.5 9.5 L14.2 14 H9.8 L8.5 9.5 Z M12 7 L12 3 M15.5 9.5 L20 8 M14.2 14 L17 18 M9.8 14 L7 18 M8.5 9.5 L4 8
 1	technical	app/src/main/java/tv/own/owntv/ui/components/StageGlyphs.kt	M12 2 A10 10 0 1 0 12 22 A10 10 0 1 0 12 2 M15.5 8.5 L13.5 13.5 L8.5 15.5 L10.5 10.5 Z M12 5 V7 M12 17 V19 M5 12 H7 M17 12 H19
-1	technical	app/src/main/java/tv/own/owntv/ui/components/StageGlyphs.kt	M12 2 A10 10 0 1 0 12 22 A10 10 0 1 0 12 2 M2 12 H22 M12 2 C8 7 8 17 12 22 M12 2 C16 7 16 17 12 22 M5 5 C9 8 15 8 19 5 M5 19 C9 16 15 16 19 19
 1	technical	app/src/main/java/tv/own/owntv/ui/components/StageGlyphs.kt	M12 2 A10 10 0 1 0 12 22 A10 10 0 1 0 12 2 M7 4 Q10 8 6 12 Q4 15 7 20 M17 4 Q14 8 18 12 Q20 15 17 20 M8 7 L10 8 M6 11 L8 12 M16 8 L18 7 M16 12 L18 11
 1	technical	app/src/main/java/tv/own/owntv/ui/components/StageGlyphs.kt	M12 2 L19 5 L22 12 L19 19 L12 22 L5 19 L2 12 L5 5 Z M7 14 Q6 10 9 9 L12 12 L15 9 Q18 10 17 14 L14 17 H10 Z
 1	technical	app/src/main/java/tv/own/owntv/ui/components/StageGlyphs.kt	M12 2 L20 5 V11 Q20 18 12 22 Q4 18 4 11 V5 Z M12 6 L13.4 9.2 L17 9.5 L14.2 11.8 L15.1 15.3 L12 13.4 L8.9 15.3 L9.8 11.8 L7 9.5 L10.6 9.2 Z
@@ -2275,6 +2274,9 @@
 1	technical	app/src/main/java/tv/own/owntv/ui/components/StageGlyphs.kt	M4 6 H20 V10 Q17 12 20 14 V18 H4 V14 Q7 12 4 10 Z M12 7 V9 M12 11 V13 M12 15 V17
 1	technical	app/src/main/java/tv/own/owntv/ui/components/StageGlyphs.kt	M5 3 V15 M19 3 V15 M5 7 H19 M9 17 Q12 14 15 17 Q12 22 9 17 Z M10 16 L14 19
 1	technical	app/src/main/java/tv/own/owntv/ui/components/StageGlyphs.kt	M7 2 V18 M7 3 L17 6 L7 10 M3 20 Q12 16 21 20 M12 16 A2 2 0 1 0 12 20 A2 2 0 1 0 12 16
-1	technical	app/src/main/java/tv/own/owntv/ui/components/StageGlyphs.kt	M7 3 L12 4 L10 17 L5 16 Z M7 17 L12 18 M16 5 V18 M19 5 V18 M15 18 H20 M18 3 A2 2 0 1 0 18 7 A2 2 0 1 0 18 3
 1	technical	app/src/main/java/tv/own/owntv/ui/components/StageGlyphs.kt	M7 3 V15 Q7 19 11 19 H18 M11 19 V21 H19 V19 M16 5 L10 16 M4 21 H9
 1	technical	app/src/main/java/tv/own/owntv/ui/components/StageGlyphs.kt	M9 3 Q17 3 19 10 Q19 17 12 18 Q5 19 3 12 Q2 5 9 3 Z M6 5 L17 16 M4 9 L13 18 M12 18 L9 22 M17 4 A2 2 0 1 0 17 8 A2 2 0 1 0 17 4
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeEditorialOrder.kt	·
+1	url	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-xtream-qa-next
+1	technical	app/src/main/java/tv/own/owntv/ui/components/StageGlyphs.kt	M12 3 A9 9 0 1 0 12 21 A9 9 0 1 0 12 3 M3 12 H21 M12 3 V21 M5.6 5.6 C12.7 5.6 18.4 11.3 18.4 18.4 M18.4 5.6 C11.3 5.6 5.6 11.3 5.6 18.4
+1	technical	app/src/main/java/tv/own/owntv/ui/components/StageGlyphs.kt	M4 18 L13 7 L17 10 L8 21 Z M13 7 L16 3 L20 6 L17 10 M17 18 A2 2 0 1 1 21 18 A2 2 0 1 1 17 18 Z

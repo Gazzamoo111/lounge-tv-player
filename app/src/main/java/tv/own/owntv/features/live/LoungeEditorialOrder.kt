@@ -35,7 +35,12 @@ internal object LoungeEditorialOrder {
     fun categoryIcon(section: LoungeLiveSection?, label: String): OwnTVIcon {
         val folder = loungeLiveFolderTitle(label).trim().lowercase(Locale.ROOT)
             .replace(Regex("\\s+"), " ")
+        // Retain a canonical Relax parent when its leaf is only "Nature"/"Landscapes".
+        // This chooses artwork only; it never admits an absent source into the catalogue.
+        val relaxParent = label.substringBefore(" · ").trim().lowercase(Locale.ROOT)
+            .let { it == "relax" || it.startsWith("relax ") }
         return when {
+            relaxParent -> OwnTVIcon.RELAX_LEAF
             folder == "us sports" || folder.startsWith("us sports ") -> OwnTVIcon.US_SPORTS
             folder == "uk sports" || folder.startsWith("uk sports ") -> OwnTVIcon.UK_SPORTS
             "rugby league" in folder || "super league" in folder || Regex("(^|\\W)nrl(\\W|$)").containsMatchIn(folder) -> OwnTVIcon.RUGBY_LEAGUE
@@ -68,6 +73,19 @@ internal object LoungeEditorialOrder {
     fun channelsEnabled(category: String?): Boolean = category != null &&
         loungeLiveSectionOf(category) == LoungeLiveSection.KIDS &&
         loungeLiveFolderTitle(category).equals("Movies", ignoreCase = true)
+
+    /** Apply explicit category positions before any section or editorial defaults. */
+    fun <T> orderedCategories(
+        rows: List<T>,
+        savedKeys: List<String>,
+        key: (T) -> String,
+        fallback: Comparator<T>,
+    ): List<T> {
+        val positions = savedKeys.withIndex().associate { (i, key) -> key to i }
+        return rows.sortedWith(compareBy<T>(
+            { key(it) !in positions }, { positions[key(it)] ?: Int.MAX_VALUE },
+        ).then(fallback))
+    }
 
     val preferredChildren = mapOf(LoungeLiveSection.SPORTS to listOf("US Sports", "UK Sports"))
 

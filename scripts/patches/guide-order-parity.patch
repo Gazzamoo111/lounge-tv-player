@@ -1,8 +1,19 @@
 --- a/core/src/main/java/tv/own/owntv/core/database/dao/ChannelDao.kt
 +++ b/core/src/main/java/tv/own/owntv/core/database/dao/ChannelDao.kt
-@@ -304,3 +304,14 @@
+@@ -304,3 +304,25 @@
      suspend fun snapshotByCategoryManual(categoryId: Long, profileId: Long, contextKey: String, limit: Int): List<ChannelEntity>
 -
++
++    /** Manual moves override NZ launch priority in both Live and Guide. */
++    @Query("SELECT EXISTS(SELECT 1 FROM content_order WHERE profileId=:profileId AND mediaType='LIVE' AND contextKey=:contextKey)")
++    suspend fun hasManualLiveOrder(profileId: Long, contextKey: String): Boolean
++
++    /** Exact SQLite collation of the corresponding Live A-Z queries. */
++    @Query("SELECT * FROM channels WHERE sourceId IN (:sourceIds) ORDER BY name ASC LIMIT :limit")
++    suspend fun snapshotAllAlpha(sourceIds: List<Long>, limit: Int): List<ChannelEntity>
++
++    @Query("SELECT * FROM channels WHERE sourceId IN (:sourceIds) AND catchup=1 ORDER BY name ASC LIMIT :limit")
++    suspend fun snapshotCatchupAlpha(sourceIds: List<Long>, limit: Int): List<ChannelEntity>
 +
 +    /** Bounded A-Z twin of pagingByCategoryManualAlpha for Guide/Live ordering parity. */
 +    @Query(

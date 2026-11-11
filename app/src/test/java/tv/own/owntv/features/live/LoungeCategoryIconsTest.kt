@@ -59,4 +59,22 @@ class LoungeCategoryIconsTest {
         assertEquals(OwnTVIcon.RELAX_LEAF, LoungeEditorialOrder.categoryIcon(null, "4K RELAX UHD 3840P"))
         assertEquals(OwnTVIcon.KIDS_KITE, LoungeEditorialOrder.categoryIcon(LoungeLiveSection.KIDS, "Kids & Family · TV"))
     }
+
+    @Test
+    fun semanticCategoryIdentityDoesNotDisappearBehindCanonicalLeafLabels() {
+        val expected = mapOf(
+            "Relax · Nature" to OwnTVIcon.RELAX_LEAF,
+            "Relax · Landscapes" to OwnTVIcon.RELAX_LEAF,
+            "Kids & Family · Movies" to OwnTVIcon.MOVIES,
+            "Streaming · SkyMix Series" to OwnTVIcon.SERIES,
+            "Documentaries & Lifestyle · Lifestyle" to OwnTVIcon.LIFESTYLE_HOME,
+            "Sports · US Sports" to OwnTVIcon.US_SPORTS,
+            "Sports · UK Sports" to OwnTVIcon.UK_SPORTS,
+            "Sports · NBA" to OwnTVIcon.BASKETBALL,
+            "Sports · NFL" to OwnTVIcon.AMERICAN_FOOTBALL,
+        )
+        expected.forEach { (label, icon) ->
+            assertEquals(label, icon, LoungeEditorialOrder.categoryIcon(loungeLiveSectionOf(label), label))
+        }
+    }
 }

@@ -31,6 +31,14 @@ class PremiumSportsPresentationTest {
         assertEquals(listOf(lateUtc), PremiumSportsPresentation.onDay(listOf(lateUtc), LocalDate.parse("2026-11-09"), null, emptySet()))
         assertTrue(PremiumSportsPresentation.onDay(listOf(lateUtc), LocalDate.parse("2026-11-08"), null, emptySet()).isEmpty())
     }
+    @Test fun `late NZ evening excludes next-day upcoming fixture from current-day list`() {
+        // QA #677 ran at this NZ wall time. Its former real-time UI fixture placed "soon" tomorrow.
+        val evening = Instant.parse("2026-11-11T10:45:00Z").toEpochMilli()
+        val live = match("live", MatchState.IN, evening - 60_000)
+        val soon = match("soon", MatchState.PRE, evening + 3_600_000)
+        assertEquals(listOf(live), PremiumSportsPresentation.onDay(listOf(live, soon), LocalDate.parse("2026-11-11"), null, emptySet()))
+        assertEquals(listOf(soon), PremiumSportsPresentation.onDay(listOf(live, soon), LocalDate.parse("2026-11-12"), null, emptySet()))
+    }
     @Test fun `NZ kickoff display ignores device US timezone and handles daylight saving`() {
         val november = Instant.parse("2026-11-10T00:00:00Z").toEpochMilli()
         val july = Instant.parse("2026-07-10T00:00:00Z").toEpochMilli()

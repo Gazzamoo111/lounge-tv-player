@@ -783,8 +783,11 @@ class LiveViewModel(
                 // Group categories by purpose rather than country. Explicit manual
                 // ordering stays pinned and custom folders remain at the front.
                 val orderIndex = cust.categoryOrder.withIndex().associate { (i, key) -> key to i }
-                val orderedFolders = displayFolders.withIndex().sortedWith(
-                    compareBy<IndexedValue<tv.own.owntv.core.customize.CustomizedCategory>>(
+                val orderedFolders = LoungeEditorialOrder.orderedCategories(
+                    rows = displayFolders.withIndex().toList(),
+                    savedKeys = cust.categoryOrder,
+                    key = { it.value.key },
+                    fallback = compareBy<IndexedValue<tv.own.owntv.core.customize.CustomizedCategory>>(
                         { if (it.value.customId != null) -1 else if (it.value.categoryId in nzIds) 0
                             else when (it.value.categoryId?.let(categoriesById::get)?.name?.let(::loungeLiveSectionOf)) {
                                 LoungeLiveSection.NEW_ZEALAND -> 1
@@ -1477,8 +1480,12 @@ class LiveViewModel(
         val raw = withContext(Dispatchers.IO) {
             when (key) {
                 LiveKey.Favorites -> channelDao.snapshotFavoritesManual(c.profileId, ContentOrderEntity.FAV_CONTEXT, sources, ZAP_LIST_LIMIT)
-                LiveKey.Catchup -> channelDao.snapshotCatchup(sources, ZAP_LIST_LIMIT)
-                else -> channelDao.snapshotAll(sources, ZAP_LIST_LIMIT)
+                LiveKey.Catchup -> if (sortMode.value == SettingsRepository.SortMode.ALPHA)
+                    channelDao.snapshotCatchupAlpha(sources, ZAP_LIST_LIMIT)
+                    else channelDao.snapshotCatchup(sources, ZAP_LIST_LIMIT)
+                else -> if (sortMode.value == SettingsRepository.SortMode.ALPHA)
+                    channelDao.snapshotAllAlpha(sources, ZAP_LIST_LIMIT)
+                    else channelDao.snapshotAll(sources, ZAP_LIST_LIMIT)
             }
         }
         val cust = custom.value
@@ -1494,7 +1501,9 @@ class LiveViewModel(
         if (c.profileId < 0) return emptyList()
         val cs = custResolved.value
         return withContext(Dispatchers.IO) {
-            customCategoryDao.snapshotChannels(c.profileId, key.id, c.sourceIds.ifEmpty { listOf(-1L) }, ZAP_LIST_LIMIT)
+            if (sortMode.value == SettingsRepository.SortMode.ALPHA)
+                customCategoryDao.snapshotChannelsAlpha(c.profileId, key.id, c.sourceIds.ifEmpty { listOf(-1L) }, ZAP_LIST_LIMIT)
+            else customCategoryDao.snapshotChannels(c.profileId, key.id, c.sourceIds.ifEmpty { listOf(-1L) }, ZAP_LIST_LIMIT)
         }
             .filter { customerChannelVisible(it) && isChannelVisible(it, cs.cust, cs.hiddenCats, key) && showInNzSelection(it) }
             .map { ch -> cs.cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
@@ -1506,11 +1515,15 @@ class LiveViewModel(
         val ctxKey = folderContextKeys.value[categoryId] ?: ""
         val channels = (if (LoungeEditorialOrder.channelsEnabled(categoryNamesById.value[categoryId]))
             channelDao.snapshotByCategoryEditorial(categoryId, pid, ctxKey, sortMode.value == SettingsRepository.SortMode.ALPHA, System.currentTimeMillis(), ZAP_LIST_LIMIT)
+        else if (sortMode.value == SettingsRepository.SortMode.ALPHA)
+            channelDao.snapshotByCategoryManualAlpha(categoryId, pid, ctxKey, ZAP_LIST_LIMIT)
         else channelDao.snapshotByCategoryManual(categoryId, pid, ctxKey, ZAP_LIST_LIMIT))
             .filter(::customerChannelVisible)
             .filter(::showInNzSelection)
         // The in-player category list must match Live TV's NZ Freeview order.
-        return if (categoryId in nzFreeviewFolderIds.value) LoungeNzOrder.firstFive(channels)
+        return if (categoryId in nzFreeviewFolderIds.value) LoungeNzOrder.firstFive(
+            channels, preserveManualOrder = ctxKey in orderedContexts.value,
+        )
             else channels
     }
 
@@ -1523,17 +1536,24 @@ class LiveViewModel(
             if (catId != null && pid != null) {
                 if (LoungeEditorialOrder.channelsEnabled(categoryNamesById.value[catId]))
                     channelDao.snapshotByCategoryEditorial(catId, pid, folderContextKeys.value[catId].orEmpty(), sortMode.value == SettingsRepository.SortMode.ALPHA, System.currentTimeMillis(), ZAP_LIST_LIMIT)
+                else if (sortMode.value == SettingsRepository.SortMode.ALPHA)
+                    channelDao.snapshotByCategoryManualAlpha(catId, pid, folderContextKeys.value[catId] ?: "", ZAP_LIST_LIMIT)
                 else channelDao.snapshotByCategoryManual(catId, pid, folderContextKeys.value[catId] ?: "", ZAP_LIST_LIMIT)
             } else {
                 // No category on this row (hand-made M3U entries) — fall back to All Channels.
-                channelDao.snapshotAll(ctx.value.sourceIds.ifEmpty { listOf(-1L) }, ZAP_LIST_LIMIT)
+                if (sortMode.value == SettingsRepository.SortMode.ALPHA)
+                    channelDao.snapshotAllAlpha(ctx.value.sourceIds.ifEmpty { listOf(-1L) }, ZAP_LIST_LIMIT)
+                else channelDao.snapshotAll(ctx.value.sourceIds.ifEmpty { listOf(-1L) }, ZAP_LIST_LIMIT)
             }
         }
         val cust = custom.value
         val hiddenCats = hiddenCategoryIds.value
-        return raw
+        val visible = raw
             .filter { CustomizeKeys.channel(it) !in cust.hiddenItems && (it.categoryId == null || it.categoryId !in hiddenCats) && showInNzSelection(it) }
             .map { ch -> cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
+        return if (catId in nzFreeviewFolderIds.value) LoungeNzOrder.firstFive(
+            visible, preserveManualOrder = folderContextKeys.value[catId] in orderedContexts.value,
+        ) else visible
     }
 
     /** The profile's recently-watched channels and when each was watched, for the right-hand in-player
@@ -2425,12 +2445,15 @@ class LiveViewModel(
         key: LiveKey, c: Ctx, query: String, sort: SettingsRepository.SortMode,
         nzFolderIds: Set<Long> = nzFreeviewFolderIds.value,
     ): PagingSource<Int, ChannelEntity> {
-        // Fixed launch five must lead in BOTH Playlist and A-Z modes. Keep the
-        // existing manual order for every other NZ channel and every other folder.
-        if (key is LiveKey.Folder && key.id in nzFolderIds && query.isBlank()) {
+        // The NZ launch five lead in either sort until the customer saves an explicit move.
+        // Saved category order then uses the same manual query as every other folder.
+        if (key is LiveKey.Folder && key.id in nzFolderIds && query.isBlank() &&
+            folderContextKeys.value[key.id] !in orderedContexts.value) {
             val contextKey = folderContextKeys.value[key.id].orEmpty()
             return LoungeNzPriorityPagingSource {
-                channelDao.snapshotByCategoryManual(key.id, c.profileId, contextKey, 300)
+                if (sort == SettingsRepository.SortMode.ALPHA)
+                    channelDao.snapshotByCategoryManualAlpha(key.id, c.profileId, contextKey, 300)
+                else channelDao.snapshotByCategoryManual(key.id, c.profileId, contextKey, 300)
             }
         }
         if (key is LiveKey.Folder && query.isBlank() && LoungeEditorialOrder.channelsEnabled(categoryNamesById.value[key.id])) {

@@ -1,6 +1,8 @@
 package tv.own.owntv.features.epg
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import tv.own.owntv.core.database.entity.ChannelEntity
 import tv.own.owntv.core.settings.SettingsRepository
@@ -90,4 +92,28 @@ class GuideChannelOrderingTest {
         assertEquals(0, GuideChannelOrdering.initialRow(emptyList(), 3L))
     }
 
+    @Test fun `return follows playback owner after surfing away from last Guide tune`() {
+        assertEquals(2, GuideChannelOrdering.initialRow(rows, 3L, lastTunedChannelId = 1L))
+        assertEquals(0, GuideChannelOrdering.initialRow(rows, 99L, lastTunedChannelId = 3L))
+        assertEquals(1, GuideChannelOrdering.initialRow(rows, null, lastTunedChannelId = 2L))
+    }
+
+    @Test fun `exact Live SQLite order wins over a different case folded alpha order`() {
+        val mixedCase = listOf(channel(1, "alpha"), channel(2, "Bravo"), channel(3, "Zulu"))
+        assertEquals(listOf(2L, 3L, 1L), GuideChannelOrdering.order(
+            mixedCase, SettingsRepository.GuideSort.LIVE_TV, SettingsRepository.SortMode.ALPHA,
+            emptySet(), liveOrderIds = listOf(2L, 3L, 1L),
+        ).map { it.id })
+    }
+
+
+    @Test fun `cached rows from the previous category cannot consume initial focus`() {
+        val previous = tv.own.owntv.core.live.LiveKey.Folder(1)
+        val requested = tv.own.owntv.core.live.LiveKey.Folder(2)
+        assertFalse(GuideChannelOrdering.loadedRowsMatchCategory(requested, previous, true, true))
+        assertTrue(GuideChannelOrdering.loadedRowsMatchCategory(requested, requested, true, true))
+        // The general Guide and Live Guide may share a category while using different channel rules.
+        assertFalse(GuideChannelOrdering.loadedRowsMatchCategory(requested, requested, true, false))
+        assertTrue(GuideChannelOrdering.loadedRowsMatchCategory(null, null, false, false))
+    }
 }

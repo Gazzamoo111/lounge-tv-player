@@ -32,4 +32,28 @@ class LoungeNzOrderTest {
         }
     }
 
+    @Test fun savedMoveOverridesTheFreeviewLaunchFive() {
+        val rows = listOf("Bravo", "TVNZ 2", "TVNZ 1").mapIndexed { i, name ->
+            tv.own.owntv.core.database.entity.ChannelEntity(
+                id = i.toLong(), sourceId = 1, name = name, streamUrl = "https://example.invalid/$i",
+            )
+        }
+        assertEquals(listOf("TVNZ 1", "TVNZ 2", "Bravo"), LoungeNzOrder.firstFive(rows).map { it.name })
+        assertEquals(rows, LoungeNzOrder.firstFive(rows, preserveManualOrder = true))
+    }
+
+
+    @Test fun optionalNzChannelsRetainTheirSelectedFallbackBehindTheLaunchFive() {
+        val providerNames = listOf("Zulu", "TVNZ 2", "Bravo", "Three", "TVNZ 1", "Alpha")
+        val providerRows = providerNames.mapIndexed { i, name ->
+            tv.own.owntv.core.database.entity.ChannelEntity(
+                id = i.toLong(), sourceId = 1, name = name, streamUrl = "https://example.invalid/$i",
+            )
+        }
+        val alphaRows = providerRows.sortedBy { it.name }
+        assertEquals(listOf("TVNZ 1", "TVNZ 2", "Three", "Zulu", "Bravo", "Alpha"),
+            LoungeNzOrder.firstFive(providerRows).map { it.name })
+        assertEquals(listOf("TVNZ 1", "TVNZ 2", "Three", "Alpha", "Bravo", "Zulu"),
+            LoungeNzOrder.firstFive(alphaRows).map { it.name })
+    }
 }

@@ -36,12 +36,13 @@ class FinishingPassUiTest {
         var tuned = 1L
         var browsed: ChannelEntity? = null
         var closed = 0
+        var currentChannelId by mutableStateOf(1L)
+        var highlighted by mutableStateOf<ChannelEntity?>(null)
         compose.setContent {
-            var highlighted by remember { mutableStateOf<ChannelEntity?>(null) }
             val focus = remember { FocusRequester() }
             OwnTVTheme(ThemeMode.DARK, AccentColor.BLUE, false, animationLevel = AnimationLevel.OFF) {
                 PremiumLivePanel("TEST info", null, null, null, null, emptyList(), focus,
-                    currentChannelId = 1, surfChannels = channels,
+                    currentChannelId = currentChannelId, surfChannels = channels,
                     browsedChannel = highlighted, onBrowse = { highlighted = it; browsed = it },
                     onTuneBrowsed = { tuned = it.id }, onGuide = {}, onMore = {}, onToggle = {},
                     onClose = { closed++ })
@@ -50,10 +51,26 @@ class FinishingPassUiTest {
         compose.onNodeWithTag("live-synopsis-browser").performSemanticsAction(SemanticsActions.RequestFocus)
         compose.onNodeWithTag("live-synopsis-browser").performKeyInput { pressKey(Key.DirectionRight) }
         compose.runOnIdle { assertEquals(2L, browsed?.id); assertEquals(1L, tuned) }
+        compose.onNodeWithTag("live-synopsis-browser").performKeyInput { pressKey(Key.DirectionLeft) }
+        compose.runOnIdle { assertEquals(1L, browsed?.id); assertEquals(1L, tuned) }
+        compose.onNodeWithTag("live-synopsis-browser").performKeyInput { pressKey(Key.DirectionRight) }
         compose.onNodeWithTag("live-synopsis-browser").performKeyInput { pressKey(Key.DirectionCenter) }
         compose.runOnIdle { assertEquals(2L, tuned) }
         compose.onNodeWithTag("live-synopsis-browser").performKeyInput { pressKey(Key.Back) }
         compose.runOnIdle { assertEquals(1, closed) }
+
+        // Numeric tuning can move playback outside its previous list before the async rebuild lands.
+        // The displayed current channel must stay owner when OK is pressed without information browsing.
+        compose.runOnIdle { currentChannelId = 99L; highlighted = null; tuned = 99L }
+        compose.onNodeWithTag("live-synopsis-browser").performKeyInput { pressKey(Key.DirectionCenter) }
+        compose.runOnIdle { assertEquals(99L, tuned) }
+        compose.onNodeWithTag("live-synopsis-browser").performKeyInput { pressKey(Key.DirectionLeft) }
+        compose.runOnIdle { assertEquals(3L, browsed?.id); assertEquals(99L, tuned) }
+        compose.onNodeWithTag("live-synopsis-browser").performKeyInput { pressKey(Key.DirectionCenter) }
+        compose.runOnIdle { assertEquals(3L, tuned) }
+        compose.runOnIdle { highlighted = null; tuned = 99L }
+        compose.onNodeWithTag("live-synopsis-browser").performKeyInput { pressKey(Key.DirectionRight) }
+        compose.runOnIdle { assertEquals(1L, browsed?.id); assertEquals(99L, tuned) }
     }
     @Test fun horizontalRemoteNavigationReachesPreviewWithoutChangingEvent() {
         val now = System.currentTimeMillis()

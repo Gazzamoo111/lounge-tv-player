@@ -91,6 +91,9 @@ data class EpgUiState(
     val message: EpgMessage? = null,
     /** False when the user hasn't added any EPG source yet → the screen shows an "Add EPG" prompt. */
     val hasEpgSources: Boolean = true,
+    /** Identity of the completed row load; cached rows stay visible while another category loads. */
+    val loadedCategory: tv.own.owntv.core.live.LiveKey? = null,
+    val loadedLiveMode: Boolean = false,
 )
 
 /**
@@ -899,6 +902,8 @@ class EpgViewModel(
 
     private suspend fun runLoad() {
         val loadStartedAt = android.os.SystemClock.elapsedRealtime()
+        val loadedCategory = _categoryFilter.value
+        val loadedLiveMode = liveTvGuideMode
         // Show the spinner only on the FIRST load. The EpgViewModel is shared, so on re-entry the guide
         // is already populated — keep the existing list on screen and refresh it silently, so opening the
         // Guide menu is instant instead of flashing a spinner and re-rendering from scratch every time.
@@ -956,7 +961,7 @@ class EpgViewModel(
             channelDao.channelsForGuide(playlistIds, q, MAX_CHANNELS)
         } else {
             val withGuide = channelDao.channelsWithGuide(ids, q, MAX_CHANNELS)
-            if (!liveTvGuideMode) {
+            if (!loadedLiveMode) {
                 withGuide
             } else {
                 // Supplement only the two approved NZ Sky Sport groups when their provider
@@ -999,7 +1004,7 @@ class EpgViewModel(
                 reviewedPlan.sourceIds, hiddenCatIds,
             ).hiddenIds
         }
-        val filter = _categoryFilter.value
+        val filter = loadedCategory
         // A provider folder keeps out the channels the user moved from it into a custom category.
         val folderKey = (filter as? tv.own.owntv.core.live.LiveKey.Folder)
             ?.let { categoryDao.getById(it.id) }?.let(CustomizeKeys::category)
@@ -1036,7 +1041,9 @@ class EpgViewModel(
                     val source = providerSources[category.sourceId]
                     if (source?.type == SourceType.M3U &&
                         source?.url.orEmpty().contains("i.mjh.nz/nz/", ignoreCase = true)
-                    ) LoungeNzOrder.firstFive(ordered) else ordered
+                    ) LoungeNzOrder.firstFive(
+                        ordered, preserveManualOrder = channelDao.hasManualLiveOrder(pid, contextKey),
+                    ) else ordered
                 }
                 is tv.own.owntv.core.live.LiveKey.Custom ->
                     if (liveSortMode == SettingsRepository.SortMode.ALPHA) {
@@ -1054,12 +1061,14 @@ class EpgViewModel(
                 tv.own.owntv.core.live.LiveKey.History ->
                     channelDao.recentlyWatched(pid, MAX_CHANNELS).first()
                 tv.own.owntv.core.live.LiveKey.Catchup -> {
-                    val catchup = channelDao.snapshotCatchup(sourceIds, MAX_CHANNELS)
                     if (liveSortMode == SettingsRepository.SortMode.ALPHA) {
-                        catchup.sortedBy { it.name.lowercase(java.util.Locale.ROOT) }
-                    } else catchup
+                        channelDao.snapshotCatchupAlpha(sourceIds, MAX_CHANNELS)
+                    } else channelDao.snapshotCatchup(sourceIds, MAX_CHANNELS)
                 }
-                null, tv.own.owntv.core.live.LiveKey.All -> emptyList()
+                null, tv.own.owntv.core.live.LiveKey.All ->
+                    if (liveSortMode == SettingsRepository.SortMode.ALPHA) {
+                        channelDao.snapshotAllAlpha(sourceIds, MAX_CHANNELS)
+                    } else channelDao.snapshotAll(sourceIds, MAX_CHANNELS)
             }
             rows.map { it.id }
         }
@@ -1144,6 +1153,7 @@ class EpgViewModel(
         _state.value = EpgUiState(
             channels = channels, windowStart = windowStart, windowEnd = windowEnd, now = now,
             loading = false, message = message, hasEpgSources = hasEpg,
+            loadedCategory = loadedCategory, loadedLiveMode = loadedLiveMode,
         )
 
         tv.own.owntv.core.CorePerf.log {

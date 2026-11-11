@@ -43,6 +43,9 @@ import tv.own.owntv.core.i18n.LocaleStore
 class Milestone4UiTest {
     @get:Rule val compose = createComposeRule()
     private val now = System.currentTimeMillis()
+    // Keep both fixture rows on one NZ day. Wall-clock +1h crosses midnight during evening CI,
+    // correctly removing the second row from All Events and making D-pad assertions impossible.
+    private val sportsNow = java.time.Instant.parse("2026-11-08T08:00:00Z").toEpochMilli()
     private fun event(id: String, start: Long, state: MatchState) = Match(id, Sport.SOCCER, "soccer/eng.1", "eng.1",
         "TEST competition", start, state, "TEST status", "TEST fixture $id", competitors = listOf(
             Competitor(Team("1", "TEST Blue", abbreviation = "BLU"), true, null, Score("1", 1)),
@@ -67,7 +70,7 @@ class Milestone4UiTest {
         compose.waitForIdle()
     }
     @Test fun sports_navigation_browses_without_starting_playback_and_renders_actual_screens() {
-        val matches = listOf(event("live", now - 60_000, MatchState.IN), event("soon", now + 3600_000, MatchState.PRE))
+        val matches = listOf(event("live", sportsNow - 60_000, MatchState.IN), event("soon", sportsNow + 3600_000, MatchState.PRE))
         var opened = 0; var selections = 0; var previewPicks = 0
         var focusEntry: (() -> Boolean)? = null
         var inputMode: InputModeManager? = null
@@ -77,7 +80,7 @@ class Milestone4UiTest {
             PremiumSportsContent(SportsHubState(discovery = SportLoungeDiscoverySnapshot(matches = matches)), 40.mpx, null,
                 { focusEntry = it }, {},
                 onSelect = { selections++; selectedEvent = it }, onOpenMatch = { opened++ }, onOpenLeague = {}, onFollow = {}, onHold = {},
-                detail = { match, compact -> SportsPreviewPanel(match, emptyList(), null, false,
+                clock = { sportsNow }, detail = { match, compact -> SportsPreviewPanel(match, emptyList(), null, false,
                     onOpen = { opened++ }, onFind = { previewPicks++ },
                     onPreview = { error("TEST must not tune a stream") },
                     onFullScreen = { error("TEST must not tune a stream") },
@@ -137,7 +140,7 @@ class Milestone4UiTest {
         assertTrue(selections > 0)
     }
     @Test fun lower_row_focus_updates_active_fixture_without_discovery_until_OK() {
-        val matches = listOf(event("live", now - 60_000, MatchState.IN), event("soon", now + 3600_000, MatchState.PRE))
+        val matches = listOf(event("live", sportsNow - 60_000, MatchState.IN), event("soon", sportsNow + 3600_000, MatchState.PRE))
         var requests = 0
         var selectedEvent: Match? = null
         var inputMode: InputModeManager? = null
@@ -145,7 +148,7 @@ class Milestone4UiTest {
             inputMode = LocalInputModeManager.current
             PremiumSportsContent(SportsHubState(discovery = SportLoungeDiscoverySnapshot(matches = matches)), 40.mpx, null,
                 null, {}, onSelect = { selectedEvent = it }, onOpenMatch = { requests++ }, onOpenLeague = {},
-                onFollow = {}, onHold = {}, detail = { _, _ -> })
+                onFollow = {}, onHold = {}, clock = { sportsNow }, detail = { _, _ -> })
         } }
         compose.runOnIdle { inputMode!!.requestInputMode(InputMode.Keyboard) }
         // The last visible competition card belongs to the lower Live & Upcoming rail.

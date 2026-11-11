@@ -303,6 +303,7 @@ fun EpgScreen(
     val rowRequesters = remember { HashMap<Int, FocusRequester>() }
     fun rowFocus(i: Int): FocusRequester = rowRequesters.getOrPut(i) { FocusRequester() }
     var focusedRow by remember { mutableIntStateOf(0) }
+    var focusedChannelId by remember(liveMode, categoryKey) { mutableStateOf<Long?>(null) }
     var gridHasFocus by remember { mutableStateOf(false) }
     var cursorTime by remember { mutableStateOf(0L) }
     // Row stage (false): ▲ ▼ move between channels, ◀ leaves for the menu. Cell stage (true): ◀ ▶ go
@@ -352,23 +353,38 @@ fun EpgScreen(
     // Opening or returning to the Guide should land on the channel that still owns playback.
     // This moves focus only; it never changes the preview/player owner while the user browses rows.
     var initialPlayingRowApplied by remember(liveMode, categoryKey) { mutableStateOf(false) }
+    val categoryRowsReady = GuideChannelOrdering.loadedRowsMatchCategory(
+        categoryKey, state.loadedCategory, liveMode, state.loadedLiveMode,
+    )
     LaunchedEffect(
         liveMode,
         categoryKey,
         restoreFocus,
         state.loading,
         state.channels,
+        categoryRowsReady,
         previewChannel?.id,
     ) {
-        if (initialPlayingRowApplied || restoreFocus || state.loading || state.channels.isEmpty()) {
+        if (initialPlayingRowApplied || restoreFocus || !categoryRowsReady || state.loading || state.channels.isEmpty()) {
             return@LaunchedEffect
         }
         val idx = GuideChannelOrdering.initialRow(state.channels, previewChannel?.id)
         focusedRow = idx
+        focusedChannelId = state.channels[idx].id
         if (idx > 0) runCatching { rowListState.scrollToItem(idx) }
         delay(80)
         focusGrid(idx)
         initialPlayingRowApplied = true
+    }
+    // A background order reload can replace the rows after initial focus was restored. Keep the
+    // channel identity, not its old row number, so a manual move cannot change the selected channel.
+    LaunchedEffect(state.channels, categoryRowsReady) {
+        if (!initialPlayingRowApplied || !categoryRowsReady || state.channels.isEmpty()) return@LaunchedEffect
+        val idx = GuideChannelOrdering.initialRow(state.channels, focusedChannelId)
+        if (idx != focusedRow) {
+            focusedRow = idx
+            if (gridHasFocus) focusGrid(idx)
+        }
     }
     // The cursor stays in view: scroll only when it reaches an edge, by one slot of room.
     LaunchedEffect(cursorTime, timelinePx) {
@@ -382,10 +398,11 @@ fun EpgScreen(
     }
 
     // Back from a channel tuned in the guide: its row again, once the reload has the grid on screen.
-    LaunchedEffect(restoreFocus, state.loading, state.channels.size) {
-        if (!restoreFocus || state.loading || state.channels.isEmpty()) return@LaunchedEffect
-        val idx = vm.lastTunedChannelId?.let { id -> state.channels.indexOfFirst { it.id == id } }?.takeIf { it >= 0 } ?: 0
+    LaunchedEffect(restoreFocus, state.loading, state.channels, categoryRowsReady, previewChannel?.id) {
+        if (!restoreFocus || !categoryRowsReady || state.loading || state.channels.isEmpty()) return@LaunchedEffect
+        val idx = GuideChannelOrdering.initialRow(state.channels, previewChannel?.id, vm.lastTunedChannelId)
         focusedRow = idx
+        focusedChannelId = state.channels[idx].id
         delay(80)
         focusGrid(idx)
         onRestored()
@@ -668,6 +685,7 @@ fun EpgScreen(
                                     reminderStarts = remindersByChannel[channel.id].orEmpty(),
                                     onFocused = {
                                         focusedRow = index
+                                        focusedChannelId = channel.id
                                         if (cursorTime !in state.windowStart until state.windowEnd) cursorTime = System.currentTimeMillis()
                                         if (!effectivePreview) liveVm.onChannelFocused(channel)
                                     },

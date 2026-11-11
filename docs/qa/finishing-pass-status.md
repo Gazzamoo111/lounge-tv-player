@@ -1,5 +1,7 @@
 # Lounge TV finishing pass — QA checkpoint
 
+Current next-pass implementation, isolated QA gateway validation and physical checklist are in [next-pass-validation.md](next-pass-validation.md). The historical audit below preserves earlier checkpoint evidence; its undeployed-backend statements predate the owner-approved isolated `lounge-core-xtream-qa-next` deployment. The production gateway remains unchanged.
+
 Production/main and deployed backend functions are unchanged. This next pass starts from the accepted QA #667 checkpoint / `483e020734f6dd0fb0cf1c9eb9ec94fd100d56ce` on draft PR #68. PR #70 remains reference-only and is not merged. The pinned core remains `1de78b1e2690c22b50c060e986bce221454bf880`.
 
 ## Implemented

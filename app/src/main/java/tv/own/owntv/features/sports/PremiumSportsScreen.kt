@@ -179,6 +179,7 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
     onSelect: (Match?) -> Unit, onOpenMatch: (Match) -> Unit, onOpenLeague: (String) -> Unit,
     onFollow: () -> Unit, onHold: (Match) -> Unit, modifier: Modifier = Modifier,
     previewFocus: FocusRequester? = null, active: Boolean = true,
+    clock: () -> Long = System::currentTimeMillis,
     detail: @Composable (Match?, Boolean) -> Unit) {
     var destination by rememberSaveable { mutableStateOf(SportsDestination.MY_SPORTS) }
     var sportName by rememberSaveable { mutableStateOf<String?>(null) }
@@ -190,8 +191,9 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
     // A row-selected fixture becomes the current Sports hero, even if it lies outside the top 12.
     var pickedHomeKey by rememberSaveable { mutableStateOf(restoreKey) }
     var selectedKey by rememberSaveable { mutableStateOf(restoreKey) }
-    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(Unit) { while (true) { delay(30_000); now = System.currentTimeMillis() } }
+    val currentClock by rememberUpdatedState(clock)
+    var now by remember { mutableLongStateOf(clock()) }
+    LaunchedEffect(Unit) { while (true) { delay(30_000); now = currentClock() } }
     val all = remember(state.board.matches, state.discovery.matches) { SportLoungeRules.dedupe(state.board.matches + state.discovery.matches) }
     val ranked = remember(all, state.config, now, sport) { PremiumSportsPresentation.ranked(all, state.config, now).filter { sport == null || it.sport == sport } }
     val heroes = ranked.take(12)

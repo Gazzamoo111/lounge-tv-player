@@ -32,6 +32,20 @@ class StageGlyphsTest {
             PathParser().parsePathString(path).toPath()
         }
         val paths = loungeCategoryMarks.map { requireNotNull(StageGlyphPaths[OwnTVIcon.valueOf(it)]) }
-        assertEquals("Lounge category marks must not reuse the same vector", paths.size, paths.toSet().size)
+        assertEquals("Lounge category marks must not reuse the same vector", paths.size, paths.map { it.replace(Regex("\\s+"), "") }.toSet().size)
+    }
+
+    @Test
+    fun categoryVectorsStayWithinTheSharedCoordinateGrid() {
+        // All Lounge-only marks use absolute paths. Validate every coordinate/control point,
+        // including the small sports details, so new art cannot silently clip outside the canvas.
+        loungeCategoryMarks.forEach { name ->
+            val path = requireNotNull(StageGlyphPaths[OwnTVIcon.valueOf(name)])
+            assertTrue("$name must use absolute vector commands", path.none { it in "mlhvcsqtaz" })
+            Regex("-?[0-9]+(?:\\.[0-9]+)?").findAll(path).forEach { number ->
+                assertTrue("$name exceeds the 24-unit coordinate grid: ${number.value}",
+                    number.value.toFloat() in 0f..24f)
+            }
+        }
     }
 }

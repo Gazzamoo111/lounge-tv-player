@@ -10,7 +10,7 @@
        and (
          category_id=any(${Array.from(SPORT_BACKEND_CATEGORY_IDS)}::text[])
 -        or name ~* '(sport|nba|nfl|nhl|mlb|ncaa|rugby|league|cricket|football|soccer|ufc|boxing|ppv|dazn|espn|sky sport|stan sport|premier sport|bein|tnt sport|fox sport)'
-+        or name ~* '(sport|nba|nfl|nhl|mlb|ncaa|rugby|league|cricket|football|soccer|ufc|boxing|ppv|dazn|espn|sky sport|stan sport|premier sport|bein|tnt sport|fox sport|tennis)'
++        or name ~* '(sport|nba|nfl|nhl|mlb|ncaa|rugby|league|cricket|football|soccer|ufc|boxing|ppv|dazn|espn|sky sport|stan sport|premier sport|bein|tnt sport|fox sport|(^|[^[:alnum:]])tennis([^[:alnum:]]|$))'
        )
      limit 1
    `;

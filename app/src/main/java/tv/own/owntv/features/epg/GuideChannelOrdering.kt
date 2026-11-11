@@ -6,9 +6,21 @@ import java.util.Locale
 
 /** Deterministic Guide ordering, including the exact rank exported by the selected Live rail. */
 internal object GuideChannelOrdering {
-    fun initialRow(channels: List<ChannelEntity>, currentChannelId: Long?): Int {
+    /** Cached rows must not consume the initial-focus request for a newly selected category. */
+    fun loadedRowsMatchCategory(
+        requestedCategory: tv.own.owntv.core.live.LiveKey?,
+        loadedCategory: tv.own.owntv.core.live.LiveKey?,
+        requestedLiveMode: Boolean,
+        loadedLiveMode: Boolean,
+    ): Boolean = requestedCategory == loadedCategory && requestedLiveMode == loadedLiveMode
+
+    fun initialRow(
+        channels: List<ChannelEntity>,
+        currentChannelId: Long?,
+        lastTunedChannelId: Long? = null,
+    ): Int {
         if (channels.isEmpty()) return 0
-        return currentChannelId
+        return (currentChannelId ?: lastTunedChannelId)
             ?.let { id -> channels.indexOfFirst { it.id == id } }
             ?.takeIf { it >= 0 }
             ?: 0

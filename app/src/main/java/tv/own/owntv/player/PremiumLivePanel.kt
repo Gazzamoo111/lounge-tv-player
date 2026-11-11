@@ -72,13 +72,17 @@ internal fun PremiumLivePanel(
     }
 
     val anchorId = browsedChannel?.id ?: currentChannelId
-    val anchorIndex = surfChannels.indexOfFirst { it.id == anchorId }.let { if (it >= 0) it else 0 }
-    val highlighted = browsedChannel ?: surfChannels.getOrNull(anchorIndex)
+    val anchorIndex = surfChannels.indexOfFirst { it.id == anchorId }
+    // The player can temporarily be outside this list while a numeric-tune rebuild is pending.
+    // Only an explicitly browsed channel may be confirmed, never an implicit first-row fallback.
+    val highlighted = browsedChannel?.takeIf { browsed -> surfChannels.any { it.id == browsed.id } }
     val canSurf = surfChannels.size > 1
 
     fun browse(delta: Int) {
         if (!canSurf) return
-        onBrowse(surfChannels[(anchorIndex + delta).mod(surfChannels.size)])
+        val target = if (anchorIndex >= 0) (anchorIndex + delta).mod(surfChannels.size)
+            else if (delta < 0) surfChannels.lastIndex else 0
+        onBrowse(surfChannels[target])
     }
 
     Column(
@@ -206,7 +210,7 @@ internal fun PremiumLivePanel(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                if (canSurf) {
+                if (canSurf && anchorIndex >= 0) {
                     stringResource(R.string.lounge_surf_position, anchorIndex + 1, surfChannels.size)
                 } else title,
                 style = stageText(16, 700),
