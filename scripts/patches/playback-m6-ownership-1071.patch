@@ -1,0 +1,17 @@
+--- a/player-core/src/main/java/tv/own/owntv/player/LiveTuneController.kt
++++ b/player-core/src/main/java/tv/own/owntv/player/LiveTuneController.kt
+@@ -454,6 +454,14 @@
+         stopExo()
+     }
+ 
++    /** A browsing pane must never stop a film owned by OwnTVPlayer on the shared mpv engine. */
++    fun stopBrowsingPreview() {
++        val ownsMpv = current != null && sessionUrl != null && engines.mpvUrl == sessionUrl
++        cancelTune()
++        releaseForArchive()
++        if (ownsMpv) engines.mpvStop()
++    }
++
+     /** Stop everything: both engines, every watcher. */
+     fun stop() {
+         cancelTune()
