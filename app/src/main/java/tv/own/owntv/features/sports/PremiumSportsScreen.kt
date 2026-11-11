@@ -337,6 +337,8 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
                         if (dayEvents.isEmpty()) Text(stringResource(R.string.m4_no_events), style = stageText(25, 700), color = LoungeSurface.Muted, modifier = Modifier.padding(24.mpx))
                         LazyColumn(state = eventList, modifier = Modifier.padding(top = 16.mpx).focusGroup(), verticalArrangement = Arrangement.spacedBy(16.mpx), contentPadding = PaddingValues(5.mpx)) {
                             itemsIndexed(dayEvents, key = { _, m -> m.key }) { index, m ->
+                                val previousEventFocus = dayEvents.getOrNull(index - 1)?.let { focus(it.key) } ?: chooseFocus
+                                val nextEventFocus = dayEvents.getOrNull(index + 1)?.let { focus(it.key) }
                                 Column(verticalArrangement = Arrangement.spacedBy(12.mpx)) {
                                     if (index == 0 || dayEvents[index - 1].state != m.state) Text(stringResource(when(m.state) {
                                         MatchState.IN -> R.string.sports_live_now
@@ -345,7 +347,11 @@ internal fun PremiumSportsContent(state: SportsHubState, contentStart: Dp, resto
                                         else -> R.string.sports_tab_fixtures
                                     }), style = stageText(24, 800), color = Color.White)
                                     PremiumEventCard(m, state.config.spoilerFree, false,
-                                        Modifier.fillMaxWidth().height(162.mpx).focusRequester(focus(m.key)).focusProperties { previewFocus?.let { right = it } }.onFocusChanged { if (it.isFocused) selectedKey = m.key },
+                                        Modifier.fillMaxWidth().height(162.mpx).focusRequester(focus(m.key)).focusProperties {
+                                            up = previousEventFocus
+                                            nextEventFocus?.let { down = it }
+                                            previewFocus?.let { right = it }
+                                        }.onFocusChanged { if (it.isFocused) selectedKey = m.key },
                                         { selectedKey = m.key; onOpenMatch(m); previewFocus?.let { runCatching { it.requestFocus() } } }, { onHold(m) })
                                 }
                             }
