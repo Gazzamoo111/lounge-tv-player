@@ -57,3 +57,5 @@ jobs:
           git -C target add -A
           git -C target commit -m "Complete Lounge TV QA next pass"
           git -C target push origin HEAD:feature/lounge-tv-2.0
+
+# This workflow is an isolated one-shot carrier; production and main are never modified.
