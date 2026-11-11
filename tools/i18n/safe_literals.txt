@@ -1272,6 +1272,10 @@
 1	locale	app/src/main/java/tv/own/owntv/features/sports/SportLoungeScreen.kt	h:mm a
 1	locale	app/src/main/java/tv/own/owntv/features/sports/SportLoungeScreen.kt	HH:mm
 1	locale	app/src/main/java/tv/own/owntv/features/sports/SportLoungeScreen.kt	Pacific/Auckland
+1	technical	app/src/main/java/tv/own/owntv/features/sports/PremiumSportsCalendarScreen.kt	EEE d MMM
+1	technical	app/src/main/java/tv/own/owntv/features/sports/PremiumSportsCalendarScreen.kt	MMMM yyyy
+1	technical	app/src/main/java/tv/own/owntv/features/sports/PremiumSportsCalendarScreen.kt	day-
+2	empty	app/src/main/java/tv/own/owntv/features/sports/PremiumSportsTeamScreen.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsHubScreen.kt	–
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsHubScreen.kt	– : –
 1	empty	app/src/main/java/tv/own/owntv/features/sports/SportsHubScreen.kt	\0
