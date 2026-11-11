@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ahXN00/OwnTV_Core
-          ref: 1de78b1e2690c22b50c060e986bce221454bf880
+          ref: 0b60ef6d25e03a24193f1a5680cb239816fd8625
           path: shared-core
           persist-credentials: false
       - name: Apply the same reviewed patches used by the APK
@@ -42,7 +42,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ahXN00/OwnTV_Core
-          ref: 1de78b1e2690c22b50c060e986bce221454bf880
+          ref: 0b60ef6d25e03a24193f1a5680cb239816fd8625
           path: baseline-core
           persist-credentials: false
       - name: Run identical controller scenarios against prior effective core
@@ -63,7 +63,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ahXN00/OwnTV_Core
-          ref: 1de78b1e2690c22b50c060e986bce221454bf880
+          ref: 0b60ef6d25e03a24193f1a5680cb239816fd8625
           path: qa610-core
           persist-credentials: false
       - name: Replay shared-session ownership against QA 610 and verify unchanged VOD configuration
