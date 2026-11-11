@@ -272,6 +272,11 @@ def apply(root: Path, milestone3: bool = True, milestone6: bool = True) -> None:
     subprocess.run(["git", "-C", str(root), "apply", str(sports_colours)], check=True)
     print("Rebased Lounge team colours and cache persistence onto Core 1.0.71")
 
+    metadata = Path(__file__).resolve().parent / "patches/playback-m6-metadata-1071.patch"
+    subprocess.run(["git", "-C", str(root), "apply", "--check", str(metadata)], check=True)
+    subprocess.run(["git", "-C", str(root), "apply", str(metadata)], check=True)
+    print("Rebased Lounge English-poster metadata policy onto Core 1.0.71")
+
     # The remaining legacy Milestone 3/6 overlays stay deferred until a controlled comparison
     # proves an upstream regression or a Lounge-only feature requires them.
     print("Deferred unproven legacy milestone overlays while validating Core 1.0.71 upstream behaviour")
