@@ -5,7 +5,7 @@ permissions:
   contents: read
 jobs:
   compose-tv:
-    if: github.head_ref == 'feature/lounge-tv-2.0' || github.ref_name == 'feature/lounge-tv-2.0'
+    if: startsWith(github.head_ref, 'feature/lounge-tv-2.0') || startsWith(github.ref_name, 'feature/lounge-tv-2.0')
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
