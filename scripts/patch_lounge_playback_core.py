@@ -24,6 +24,10 @@ PATCHES = {
   ],
   "player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt": [
     [
+      "    var decoderRebuilds: Int = 0,",
+      "    var decoderRebuilds: Int = 0,\n    /** One secure-decoder no-frame retry per tune; reset with TuneState. */\n    var decoderRetryDone: Boolean = false,"
+    ],
+    [
       "if (LiveStreamQuirks.isSessionLimit(code)) { noteSessionLimit(loadEventInfo.uri.toString()); return }",
       "if (LiveStreamQuirks.isSessionLimit(code) || LiveStreamQuirks.isTransientGatewayRefusal(code)) {\n                noteSessionLimit(loadEventInfo.uri.toString(), code); return\n            }"
     ],
