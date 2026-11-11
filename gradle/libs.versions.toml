@@ -79,7 +79,7 @@ espressoCore = "3.7.0"
 # Both artifacts always ship on the same version; never split them. Bumping this is how the TV app
 # takes a core change. For local work, owntv.corePath in ~/.gradle/gradle.properties substitutes
 # core's source for these artifacts, and this number is then ignored.
-owntvCore = "1.0.69"
+owntvCore = "1.0.71"
 
 [libraries]
 # The shared engine, from its own repository
@@ -134,6 +134,7 @@ androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscree
 
 # Coroutines
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 
 # Image loading
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }

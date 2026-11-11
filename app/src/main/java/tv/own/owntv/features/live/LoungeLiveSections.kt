@@ -6,6 +6,7 @@ import java.util.Locale
 /** Editorial sections for the original provider folder; no stream/database mutation. */
 enum class LoungeLiveSection(val titleRes: Int) {
     MY_CATEGORIES(R.string.lounge_section_custom),
+    FAVOURITE_FOLDERS(R.string.lounge_v2_favourite_folders),
     NEW_ZEALAND(R.string.lounge_section_nz),
     AUSTRALIA(R.string.lounge_section_aus),
     SPORTS(R.string.lounge_section_sports),

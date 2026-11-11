@@ -344,7 +344,7 @@ fun MoviesScreen(
             else effectiveListState.layoutInfo.visibleItemsInfo.map { it.index }
             info.map { if (grid) it - gridHeaderOffset else it - listHeaderOffset }.filter { it >= 0 && it < movies.itemCount }
                 .mapNotNull { movies.peek(it) }
-                .filter { it.posterUrl.isNullOrBlank() }
+
         }.distinctUntilChanged().collect { vm.onPosterlessVisible(it) }
     }
     // Returning from the player: scroll to and focus the movie you just played (waits for the grid to load).
@@ -550,7 +550,7 @@ fun MoviesScreen(
         vm.onMovieFocused(movie)
         if (rememberMovies) perCategoryMovieIds[selectedKey] = movie.id
     }
-    val posterOf: (MovieEntity) -> String? = { it.posterUrl?.takeIf { u -> u.isNotBlank() } ?: cachedPosters[it.id] }
+    val posterOf: (MovieEntity) -> String? = { tv.own.owntv.core.metadata.MetadataImages.poster(selectedMovieMeta?.takeIf { meta -> meta.movieId == it.id }?.cache?.posterPath) ?: cachedPosters[it.id] ?: it.posterUrl?.takeIf { u -> u.isNotBlank() } }
     val playHint = stringResource(R.string.common_ok) to stringResource(R.string.content_play)
     val optionsHint = stringResource(R.string.content_key_hold_ok) to stringResource(R.string.content_key_options)
 
@@ -1398,7 +1398,7 @@ private fun buildMovieDetails(
 ): tv.own.owntv.features.shell.components.MediaDetailsUi {
     val providerPoster = movie.posterUrl?.takeIf { it.isNotBlank() }
     val tmdbPoster = tv.own.owntv.core.metadata.MetadataImages.poster(meta?.posterPath)
-    val poster = if (tmdbWins) tmdbPoster ?: providerPoster else providerPoster ?: tmdbPoster
+    val poster = tmdbPoster ?: providerPoster
     // Backdrop is TMDB-only (providers don't carry one); fall back to the provider's if it exists.
     val backdrop = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath)
         ?: movie.backdropUrl?.takeIf { it.isNotBlank() }
@@ -1441,7 +1441,7 @@ internal fun movieTitleInfo(
         logoUrl = tv.own.owntv.core.metadata.MetadataImages.logo(meta?.logoPath),
         backdropUrl = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath, size = "w1280")
             ?: movie.backdropUrl?.takeIf { it.isNotBlank() },
-        posterUrl = if (tmdbWins) tmdbPoster ?: providerPoster else providerPoster ?: tmdbPoster,
+        posterUrl = tmdbPoster ?: providerPoster,
         year = if (tmdbWins) meta?.year ?: movie.year else movie.year ?: meta?.year,
         genres = jsonList(meta?.genresJson),
         runtimeSecs = movie.durationSecs?.takeIf { it > 0 },

@@ -71,6 +71,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import tv.own.owntv.R
@@ -122,7 +123,7 @@ import java.util.Locale
 private val RowGap = 40.mpx
 
 /** Lounge TV's first-login rails use the existing card widgets, without altering OwnTV Core. */
-private enum class LoungeHomeRow { FEATURED_MOVIES, POPULAR_SERIES, SPORTS_LINKS, SPORTS_FIXTURES }
+private enum class LoungeHomeRow { SPORTS_HERO, FEATURED_MOVIES, POPULAR_SERIES, SPORTS_LINKS, SPORTS_FIXTURES }
 
 /** Quick links only: every destination already exists in the v5.2.2.11 app. */
 enum class LoungeSportsShortcut(val title: Int, val subtitle: Int) {
@@ -185,6 +186,15 @@ fun HomeScreen(
     } else if (state.config.visibleOrder.isNotEmpty() && !state.isLoading) {
         sportsVm.featuredHomeEvents.collectAsStateWithLifecycle().value
     } else emptyList()
+    val featuredSports by sportsVm.featuredHomeEvents.collectAsStateWithLifecycle()
+    var sportsNow by remember { mutableStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(previewEnabled) {
+        while (previewEnabled) { delay(30_000); sportsNow = System.currentTimeMillis() }
+    }
+    val sportsPreferences by sportsVm.sportsConfig.collectAsStateWithLifecycle()
+    val sportsHero = remember(featuredSports, sportsPreferences, sportsNow) {
+        HomeSportsSelection.ranked(featuredSports, sportsPreferences, sportsNow)
+    }
     val trendingUnavailableMessage = stringResource(R.string.home_trending_unavailable)
     val heroPreviewEngine = koinInject<HeroPreviewEngine>()
     val engineState by heroPreviewEngine.state.collectAsStateWithLifecycle()
@@ -220,6 +230,7 @@ fun HomeScreen(
     // Do not resurrect any user-hidden existing Home rows.
     val orderedRows: List<Any> = buildList {
         val originalRows = state.config.visibleOrder
+        if (sportsHero.isNotEmpty() && originalRows.isNotEmpty()) add(LoungeHomeRow.SPORTS_HERO)
         val preferred = listOf<Any>(
             HomeRow.TRENDING,
             HomeRow.HERO,
@@ -443,6 +454,9 @@ fun HomeScreen(
                     val firstItemFocusRequester = rowFocusRequester(row)
                     val rowModifier = if (row == firstRowUnderHero) unfoldOnUp else Modifier
                     when (row) {
+                        LoungeHomeRow.SPORTS_HERO -> LoungeSportsHomeHero(sportsHero, contentStart, firstItemFocusRequester,
+                            onFocus = { onSportsRowFocused(LoungeHomeRow.SPORTS_HERO) }, onOpen = onOpenMatch,
+                            onRemind = { sportsVm.remind(it, emptyList()) }, active = previewEnabled)
                         LoungeHomeRow.SPORTS_LINKS -> LoungeSportsQuickLinks(
                             start = contentStart,
                             onSelect = onSportsShortcut,
@@ -804,6 +818,7 @@ private fun LoungeSportsQuickLinks(
 }
 
 private fun rowHasData(row: Any, state: HomeUiState, sportsCards: Int): Boolean = when (row) {
+    LoungeHomeRow.SPORTS_HERO -> true
     LoungeHomeRow.SPORTS_LINKS -> !state.isLoading
     LoungeHomeRow.SPORTS_FIXTURES -> sportsCards > 0
     LoungeHomeRow.FEATURED_MOVIES -> state.featuredMovies.isNotEmpty()

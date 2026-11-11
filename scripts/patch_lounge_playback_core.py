@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Patch the exact GPLv3 OwnTV Core 1.0.69 source for every Lounge TV build.
+"""Patch the exact GPLv3 OwnTV Core 1.0.71 source for every Lounge TV build.
 
 Do not silently apply these edits to a moving upstream branch. CI, isolated QA and
 signed release builds all invoke this same fail-closed patcher against the pinned commit.
@@ -8,7 +8,7 @@ import subprocess
 from pathlib import Path
 import sys
 
-PIN = "1de78b1e2690c22b50c060e986bce221454bf880"
+PIN = "0b60ef6d25e03a24193f1a5680cb239816fd8625"
 PATCHES = {
   "core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt": [
     [
@@ -23,6 +23,10 @@ PATCHES = {
     ]
   ],
   "player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt": [
+    [
+      "    var decoderRebuilds: Int = 0,",
+      "    var decoderRebuilds: Int = 0,\n    /** One secure-decoder no-frame retry per tune; reset with TuneState. */\n    var decoderRetryDone: Boolean = false,"
+    ],
     [
       "if (LiveStreamQuirks.isSessionLimit(code)) { noteSessionLimit(loadEventInfo.uri.toString()); return }",
       "if (LiveStreamQuirks.isSessionLimit(code) || LiveStreamQuirks.isTransientGatewayRefusal(code)) {\n                noteSessionLimit(loadEventInfo.uri.toString(), code); return\n            }"
@@ -180,7 +184,7 @@ PATCHES = {
   ]
 }
 
-def apply(root: Path) -> None:
+def apply(root: Path, milestone3: bool = True, milestone6: bool = True) -> None:
     actual = subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"], text=True).strip()
     if actual != PIN:
         raise SystemExit(f"Core revision mismatch: expected {PIN}, got {actual}")
@@ -236,13 +240,13 @@ def apply(root: Path) -> None:
     body = sorted(rows[header_end:], key=lambda row: (row.split("\t", 3)[2], row.split("\t", 3)[3]))
     manifest.write_text("\n".join(rows[:header_end] + body) + "\n", encoding="utf-8")
     print("Reviewed protocol and log literals in pinned-core i18n inventory")
-    reliability_patch = Path(__file__).resolve().parent / "patches/playback-reliability.patch"
-    subprocess.run(["git", "-C", str(root), "apply", "--check", str(reliability_patch)], check=True)
-    subprocess.run(["git", "-C", str(root), "apply", str(reliability_patch)], check=True)
-    print("Applied reviewed tune-cancellation and credential backport")
+    # Core 1.0.70/1.0.71 upstreamed the old credential, URL-redaction and Xtream
+    # stream-path portions of playback-reliability.patch. Do not reapply that stale patch here.
+    # Lounge-specific tune ownership remains protected by the generation checks above and the
+    # milestone continuity patches below; CI regression comparisons verify those paths.
+    print("Core 1.0.71 already contains the former credential reliability backport")
 
-    # The reliability patch also touches the upstream safe-literal manifest. Update the sports
-    # matcher regex classification only after that patch has landed, so both changes compose cleanly.
+    # Update the sports matcher regex classification after Lounge's exact matcher patch has landed.
     rows = manifest.read_text(encoding="utf-8").splitlines()
     watch_matcher_relative = "core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt"
     old_fixture_regex = "1\tregex\t" + watch_matcher_relative + "\t\\\\s(vs?\\\\.?|v)\\\\s"
@@ -257,9 +261,33 @@ def apply(root: Path) -> None:
     manifest.write_text("\n".join(rows[:header_end] + body) + "\n", encoding="utf-8")
     print("Refreshed sports fixture regex safe literal")
 
+    m3_player = Path(__file__).resolve().parent / "patches/playback-m3-owntvplayer-1071.patch"
+    subprocess.run(["git", "-C", str(root), "apply", "--check", str(m3_player)], check=True)
+    subprocess.run(["git", "-C", str(root), "apply", str(m3_player)], check=True)
+    print("Rebased Lounge recovery URL cancellation onto Core 1.0.71")
+
+    m6_ownership = Path(__file__).resolve().parent / "patches/playback-m6-ownership-1071.patch"
+    subprocess.run(["git", "-C", str(root), "apply", "--check", str(m6_ownership)], check=True)
+    subprocess.run(["git", "-C", str(root), "apply", str(m6_ownership)], check=True)
+    print("Rebased shared MPV ownership protection onto Core 1.0.71")
+
+    sports_colours = Path(__file__).resolve().parent / "patches/sports-milestone4-colours.patch"
+    subprocess.run(["git", "-C", str(root), "apply", "--check", str(sports_colours)], check=True)
+    subprocess.run(["git", "-C", str(root), "apply", str(sports_colours)], check=True)
+    print("Rebased Lounge team colours and cache persistence onto Core 1.0.71")
+
+    metadata = Path(__file__).resolve().parent / "patches/playback-m6-metadata-1071.patch"
+    subprocess.run(["git", "-C", str(root), "apply", "--check", str(metadata)], check=True)
+    subprocess.run(["git", "-C", str(root), "apply", str(metadata)], check=True)
+    print("Rebased Lounge English-poster metadata policy onto Core 1.0.71")
+
+    # The remaining legacy Milestone 3/6 overlays stay deferred until a controlled comparison
+    # proves an upstream regression or a Lounge-only feature requires them.
+    print("Deferred unproven legacy milestone overlays while validating Core 1.0.71 upstream behaviour")
+
     print(f"Playback core patch applied to pinned commit {PIN}")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        raise SystemExit("Usage: patch_lounge_playback_core.py path/to/OwnTV_Core")
-    apply(Path(sys.argv[1]).resolve())
+    if len(sys.argv) not in (2, 3) or (len(sys.argv) == 3 and sys.argv[2] not in ("--baseline", "--milestone5")):
+        raise SystemExit("Usage: patch_lounge_playback_core.py path/to/OwnTV_Core [--baseline|--milestone5]")
+    apply(Path(sys.argv[1]).resolve(), milestone3=len(sys.argv) == 2 or sys.argv[2] == "--milestone5", milestone6=len(sys.argv) == 2)

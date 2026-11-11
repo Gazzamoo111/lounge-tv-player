@@ -11,14 +11,18 @@ concurrency:
   group: lounge-tv-qa-${{ github.ref }}
   cancel-in-progress: true
 env:
+  LOUNGE_TV_2_QA: ${{ startsWith(github.head_ref, 'feature/lounge-tv-2.0') || startsWith(github.ref_name, 'feature/lounge-tv-2.0') }}
   ISOLATED_EVENT_QA: ${{ github.event_name != 'workflow_dispatch' }}
   RELIABILITY_AUDIT_QA: ${{ github.event_name != 'workflow_dispatch' }}
   LOUNGE_CORE_QA: ${{ startsWith(github.head_ref, 'core-qa/') || startsWith(github.ref_name, 'core-qa/') }}
 jobs:
   tests:
     uses: ./.github/workflows/playback-tests.yml
+  ui:
+    uses: ./.github/workflows/tv2-ui-tests.yml
   test:
-    needs: tests
+    needs: [tests, ui]
+    if: ${{ !cancelled() && needs.tests.result == 'success' && (needs.ui.result == 'success' || needs.ui.result == 'skipped') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +30,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ahXN00/OwnTV_Core
-          ref: 1de78b1e2690c22b50c060e986bce221454bf880
+          ref: 0b60ef6d25e03a24193f1a5680cb239816fd8625
           path: shared-core
           persist-credentials: false
       - name: Apply Lounge TV playback fixes to pinned core
@@ -75,6 +79,13 @@ jobs:
           [ "$qa_cert" != "$production_cert" ] || { echo "QA and production certificates must be different"; exit 1; }
           printf '%s' "$QA_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/loungetv-qa.keystore"
           echo "QA_KEYSTORE_FILE=$RUNNER_TEMP/loungetv-qa.keystore" >> "$GITHUB_ENV"
+      # Public debug signing identity, scoped by Actions cache to this PR. Never a production key.
+      - name: Preserve v2 QA debug identity for future checkpoints
+        if: env.LOUNGE_TV_2_QA == 'true' && github.event_name != 'workflow_dispatch'
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: lounge-tv-v2qa-debug-identity-v1
       - name: Compile QA APK
         env:
           QA_KEYSTORE_PASSWORD: ${{ secrets.QA_KEYSTORE_PASSWORD }}
@@ -94,7 +105,12 @@ jobs:
             APK_BADGING=$("$AAPT" dump badging "$QA_APK")
             APK_ID=$(printf '%s' "$APK_BADGING" | sed -n '1p')
             echo "Built APK identity: $APK_ID"
-            if [ "$LOUNGE_CORE_QA" = "true" ]; then
+            if [ "$LOUNGE_TV_2_QA" = "true" ]; then
+              case "$APK_ID" in
+                "package: name='com.loungetv.player.v2qa' versionCode='$VERSION_CODE' "*) ;;
+                *) echo "Expected isolated v2qa package, got: $APK_ID"; exit 1 ;;
+              esac
+            elif [ "$LOUNGE_CORE_QA" = "true" ]; then
               case "$APK_ID" in
                 "package: name='com.loungetv.player.catalogueqa' versionCode='$VERSION_CODE' "*) ;;
                 *) echo "Expected isolated catalogueqa package, got: $APK_ID"; exit 1 ;;
@@ -105,16 +121,24 @@ jobs:
                 *) echo "Expected isolated auditqa package, got: $APK_ID"; exit 1 ;;
               esac
             fi
-            "$APKSIGNER" verify "$QA_APK"
+            "$APKSIGNER" verify --print-certs "$QA_APK"
+            if [ "$LOUNGE_TV_2_QA" = "true" ]; then
+              python3 scripts/verify_update_compatibility.py "$QA_APK" \
+                --expected-package com.loungetv.player.v2qa \
+                --expected-cert-sha256 4c398a1c5614b1975ba5c64bb756125e7c39abf6b0193b3e30e0b14ad1c3949b \
+                --expected-version-code "$VERSION_CODE"
+            fi
           else
+            EXPECTED_PACKAGE=com.loungetv.player.qa
+            if [ "$LOUNGE_TV_2_QA" = "true" ]; then EXPECTED_PACKAGE=com.loungetv.player.v2qa; fi
             python3 scripts/verify_update_compatibility.py "$QA_APK" \
-              --expected-package com.loungetv.player.qa \
+              --expected-package "${EXPECTED_PACKAGE}" \
               --expected-cert-sha256 "$EXPECTED_QA_CERT_SHA256" \
               --expected-version-code "$VERSION_CODE"
           fi
       - name: Upload test APK
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.LOUNGE_CORE_QA == 'true' && 'lounge-tv-catalogue-qa' || (github.event_name != 'workflow_dispatch' && 'lounge-tv-reliability-auditqa' || 'lounge-tv-qa') }}
+          name: ${{ env.LOUNGE_TV_2_QA == 'true' && 'lounge-tv-2-v2qa' || env.LOUNGE_CORE_QA == 'true' && 'lounge-tv-catalogue-qa' || (github.event_name != 'workflow_dispatch' && 'lounge-tv-reliability-auditqa' || 'lounge-tv-qa') }}
           path: app/build/outputs/apk/standard/debug/*.apk
           if-no-files-found: error

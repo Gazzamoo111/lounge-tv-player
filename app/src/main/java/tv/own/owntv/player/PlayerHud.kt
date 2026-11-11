@@ -208,6 +208,7 @@ fun PlayerHud(
     // (the EPG data lives in LiveViewModel, not the player). Rendered on the right edge whenever the
     // controls are visible, like the top-bar channel card; informational only, never focusable.
     liveEpgCard: (@Composable () -> Unit)? = null,
+    premiumLivePanel: (@Composable (List<String>, FocusRequester, () -> Unit) -> Unit)? = null,
     // Now/next lines for the channel-change banner (the playing channel's guide). Null = name only.
     zapGuide: (@Composable () -> Unit)? = null,
     // The archive's own wall-clock instant while catch-up/rewind is playing; null means the picture is
@@ -286,6 +287,14 @@ fun PlayerHud(
         nextCardDue && !autoNextDismissed
 
     var controlsVisible by remember { mutableStateOf(true) }
+    var premiumTools by remember { mutableStateOf(false) }
+    LaunchedEffect(controlsVisible) { if (!controlsVisible) premiumTools = false }
+    LaunchedEffect(premiumTools) {
+        if (controlsVisible && !inert) {
+            androidx.compose.runtime.withFrameNanos { }
+            runCatching { playFocus.requestFocus() }
+        }
+    }
     var showInfo by remember { mutableStateOf(false) } // stream technical-info overlay
     // Used only by "Report this stream", which writes the current readout into the playback log.
     val reportContext = androidx.compose.ui.platform.LocalContext.current
@@ -294,7 +303,11 @@ fun PlayerHud(
     // First Back hides the controls (instead of leaving the channel); with the controls already hidden
     // this handler is disabled, so Back falls through to the shell, which exits the player. Also disabled
     // while an error/dialog is up (a dialog handles its own Back; an error should exit).
-    BackHandler(enabled = controlsVisible && !forceShow) { controlsVisible = false }
+    // One callback owns both levels so enabling the tools cannot reorder competing Back callbacks.
+    BackHandler(enabled = controlsVisible && !forceShow) {
+        if (premiumTools) { premiumTools = false; wakeTick++ }
+        else controlsVisible = false
+    }
     // Channel zap (live only): a brief "now watching" card on up/down without revealing the full HUD.
     val canZap = onChannelUp != null && onChannelDown != null
     var channelFlash by remember { mutableIntStateOf(0) }
@@ -657,6 +670,11 @@ fun PlayerHud(
         RecordingBadge(modifier = Modifier.align(Alignment.TopEnd))
 
         if (controlsVisible) {
+            if (isLive && error == null && premiumLivePanel != null && !premiumTools) {
+                Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 28.dp, vertical = 20.dp)) {
+                    premiumLivePanel(listOfNotNull(engineChip) + streamChips.ifEmpty { listOfNotNull(videoRes) }, playFocus) { premiumTools = true }
+                }
+            } else {
             // Scrims: a FLAT semi-transparent panel behind the controls, feathered to transparent only at
             // the inner edge. A pure gradient faded out exactly where the chips and the Now/Next text sit,
             // so those washed out on bright scenes; a hard-edged band would instead draw a visible seam
@@ -743,6 +761,9 @@ fun PlayerHud(
                     modifier = Modifier.align(Alignment.BottomStart),
                 )
             }
+        }
+
+            // End of the existing full tools chrome. The compact panel never owns playback.
         }
 
         // Next-episode countdown card (VOD queue only) — surfaces the automatic advance with Play now /

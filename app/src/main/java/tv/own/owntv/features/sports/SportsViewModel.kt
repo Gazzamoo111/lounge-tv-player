@@ -10,6 +10,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 import tv.own.owntv.core.database.dao.SourceDao
 import tv.own.owntv.core.database.entity.ChannelEntity
@@ -37,13 +39,17 @@ import tv.own.owntv.core.sports.GuideSportItem
 import tv.own.owntv.core.sports.MatchNotifications
 import tv.own.owntv.core.sports.SportOnChannels
 import tv.own.owntv.core.sports.SportsAlertsSetup
+import tv.own.owntv.core.sports.CalendarMonth
 import tv.own.owntv.core.sports.SportsBoard
+import tv.own.owntv.core.sports.SportsCalendar
 import tv.own.owntv.core.sports.SportsCatalog
 import tv.own.owntv.core.sports.SportsHomeRow
 import tv.own.owntv.core.sports.SportsConfig
 import tv.own.owntv.core.sports.SportsMemory
 import tv.own.owntv.core.sports.SportsRepository
 import tv.own.owntv.core.sports.SportsSource
+import tv.own.owntv.core.sports.SportsTeams
+import tv.own.owntv.core.sports.TeamSchedule
 import tv.own.owntv.core.sports.WatchFilter
 import tv.own.owntv.core.sports.WatchList
 import tv.own.owntv.core.sports.WatchOption
@@ -53,7 +59,10 @@ import tv.own.owntv.core.sports.model.League
 import tv.own.owntv.core.sports.model.Match
 import tv.own.owntv.core.sports.model.MatchSummary
 import tv.own.owntv.core.sports.model.StandingsTable
+import tv.own.owntv.core.sports.model.Team
 import tv.own.owntv.core.sports.model.Sport
+import java.time.LocalDate
+import java.time.YearMonth
 import java.util.Locale
 import java.io.File
 import tv.own.owntv.features.sports.data.FileSportEventCache
@@ -68,7 +77,7 @@ sealed interface ChannelSearch {
     data class Closed(val window: WatchWindow) : ChannelSearch
     data object NotSearched : ChannelSearch
     data object Searching : ChannelSearch
-    data class Found(val options: List<WatchOption>) : ChannelSearch
+    data class Found(val options: List<WatchOption>, val profileId: Long? = null) : ChannelSearch
 }
 
 /** The match page: the match, its summary and table from the board, and "Watch live" once searched. */
@@ -82,6 +91,7 @@ data class MatchPageState(
     val filter: WatchFilter,
     val playlists: List<Pair<Long, String>>,
     val preferredLanguages: List<String>,
+    val hasRejectedFeeds: Boolean = false,
 ) {
     val hasPlaylist: Boolean get() = playlists.isNotEmpty()
 }
@@ -93,6 +103,25 @@ data class LeaguePageState(
     val matches: List<Match>,
     val config: SportsConfig,
 )
+
+/** A team page is always scoped to a real Core league. [from] restores the match row that opened it. */
+data class TeamRef(val league: League, val team: Team, val from: String? = null)
+
+data class TeamPageState(val schedule: TeamSchedule?, val board: SportsBoard)
+
+private val NO_TEAM_PAGE = setOf(Sport.TENNIS, Sport.GOLF, Sport.RACING, Sport.MMA, Sport.CRICKET)
+
+internal fun hasTeamPages(sport: Sport): Boolean = sport !in NO_TEAM_PAGE
+
+internal fun teamRefOf(league: League, team: Team): TeamRef? =
+    if (!hasTeamPages(league.sport) || team.isAthlete || team.id.isBlank()) null else TeamRef(league, team)
+
+internal fun teamRefOf(match: Match, team: Team): TeamRef? {
+    val league = SportsCatalog.league(League.keyOf(match.sport, match.leagueSlug))
+        ?: SportsCatalog.league(match.feed)
+        ?: return null
+    return teamRefOf(league, team)
+}
 
 /**
  * Everything the hub draws. No channels: those are found per match, on the
@@ -125,15 +154,21 @@ class SportsViewModel(
     private val reminders: ReminderManager,
     private val playback: SportsPlayback,
     private val fixtureReminders: FixtureReminderScheduler,
+    private val calendar: SportsCalendar,
+    private val teams: SportsTeams,
     sportsSource: SportsSource,
     private val context: Context,
     private val sourceDao: SourceDao,
+    private val candidateResolver: SportsCandidateResolver,
 ) : ViewModel() {
 
     private val config = settings.activeSportsConfig.distinctUntilChanged()
     private val backendSportsCandidates = BackendSportsCandidateProvider()
+    private val correctionRevision = candidateResolver.revision
 
-    private val board = repository.observe(Demand.Hub)
+    private val foreground = kotlinx.coroutines.flow.MutableStateFlow(false)
+    fun setForeground(active: Boolean) { foreground.value = active }
+    private val board = foreground.whileForeground({ repository.board.value }) { repository.observe(Demand.Hub) }
 
     /** The profile's live playlists (id → name), for the filter panel's Playlist choice. */
     private val playlists = activeProfileSources(settings, sourceDao)
@@ -148,7 +183,9 @@ class SportsViewModel(
     /** The hub's ⟳ (and Settings → Sports → Refresh sports data now): the whole board built again. */
     fun rebuild() = repository.rebuild()
 
-    private val onNow = combine(board, hasPlaylist) { b, has -> has to b.matches.filter { it.isLive }.map { it.key } }
+    private val onNow = foreground.flatMapLatest { active ->
+      if (!active) flowOf(emptyMap()) else
+      combine(board, hasPlaylist) { b, has -> has to b.matches.filter { it.isLive }.map { it.key } }
         .distinctUntilChanged()
         .flatMapLatest { (has, _) ->
             if (!has) flowOf(emptyMap()) else onChannels.observe { repository.board.value.matches.filter { it.isLive } }
@@ -156,9 +193,14 @@ class SportsViewModel(
         .flowOn(Dispatchers.Default)
         .onStart { emit(emptyMap()) }
 
+    }
+
     private val reminderKeys = settings.activeProfileId.flatMapLatest { pid ->
         if (pid < 0) flowOf(emptySet()) else fixtureReminders.observe(pid).map { list -> list.map { it.fixtureId }.toSet() }
     }
+    val reminderSet: StateFlow<Set<String>> = reminderKeys.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet(),
+    )
 
     private val discovery = SportLoungeDiscovery(
         sportsSource,
@@ -169,12 +211,14 @@ class SportsViewModel(
     )
     // Discovery belongs to EVERY customer, not just a zero-follow profile.
     // Show cached fixtures immediately while the seven-day schedule refreshes.
-    private val discoveryState = flow {
+    private val discoveryState = foreground.flatMapLatest { active ->
+      if (!active) flowOf(discovery.cached() to false) else flow {
         emit(discovery.cached() to true)
         while (true) {
             emit(discovery.load() to false)
             delay(DISCOVERY_REFRESH_MS)
         }
+      }
     }.flowOn(Dispatchers.IO)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SportLoungeDiscoverySnapshot() to false)
 
@@ -204,6 +248,19 @@ class SportsViewModel(
     /** The profile's sports settings alone — no scores are asked for by reading it. */
     val sportsConfig: StateFlow<SportsConfig> = config.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SportsConfig())
 
+    private data class MonthAsk(val leagues: Set<String>, val month: YearMonth, val focus: LocalDate?)
+    private val monthAsk = MutableStateFlow<MonthAsk?>(null)
+
+    /** Core 1.0.71 month data only. Opening a fixture still goes through Lounge's evidence-gated match page. */
+    fun showMonth(leagues: Set<String>, month: YearMonth, focus: LocalDate?) {
+        monthAsk.value = MonthAsk(leagues, month, focus)
+    }
+
+    val calendarMonth: StateFlow<CalendarMonth?> = monthAsk.flatMapLatest { ask ->
+        if (ask == null) flowOf(null)
+        else combine(calendar.month(ask.leagues, ask.month, ask.focus), repository.observe(Demand.Calendar)) { month, _ -> month }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
     // --- The Home row --------------------------------------------------------------------------------
 
     /**
@@ -216,26 +273,17 @@ class SportsViewModel(
         delay(HOME_ROW_DELAY_MS)
         emitAll(
             // In the user's order (Settings → Sports and leagues), live first within it, then by kick-off.
-            combine(repository.observe(Demand.HomeRow), config) { b, c ->
+            combine(foreground.flatMapLatest { if (it) repository.observe(Demand.HomeRow) else flowOf(repository.board.value) }, config) { b, c ->
                 SportsHomeRow.items(b, c, c.leagues.toSet(), System.currentTimeMillis())
                     .sortedWith(compareBy<Match>({ c.rankOf(it.sport, it.feed).first }, { c.rankOf(it.sport, it.feed).second }, { !it.isLive }, { it.startMs }))
             },
         )
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    /** Small Home-only fixture rail; does not alter the existing personalised Sports row. */
-    val featuredHomeEvents: StateFlow<List<Match>> = flow {
-        delay(HOME_ROW_DELAY_MS)
-        emitAll(combine(repository.observe(Demand.Hub), config) { board, preference ->
-            val now = System.currentTimeMillis()
-            val followed = preference.leagues.toSet()
-            board.matches.asSequence()
-                .filter { it.isLive || (it.startMs in now..(now + 90 * 60_000L)) }
-                .distinctBy { it.key }
-                .sortedWith(compareBy<Match>({ !it.isLive }, { it.feed !in followed }, { it.startMs }))
-                .take(10)
-                .toList()
-        })
+    /** Same cached, seven-day fixture pool as Sport Lounge; never starts a stream. */
+    val featuredHomeEvents: StateFlow<List<Match>> = combine(board, discoveryState, config) { board, discovery, preference ->
+        tv.own.owntv.features.home.HomeSportsSelection.ranked(board.matches + discovery.first.matches,
+            preference, System.currentTimeMillis())
     }.flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
@@ -274,8 +322,11 @@ class SportsViewModel(
                 delay(60_000L)
             }
         }.distinctUntilChanged()
-        val search = combine(config, hasPlaylist, findAsked, window) { c, has, asked, w -> listOf(c, has, asked, w) }.transformLatest { (cv, hv, av, w) ->
-            val c = cv as SportsConfig
+        val profileConfig = if (tv.own.owntv.BuildConfig.LOUNGE_TV_2)
+            combine(config, settings.activeProfileId) { c, pid -> c to pid }
+        else config.map { it to settings.activeProfileIdNow() }
+        val search = combine(profileConfig, hasPlaylist, findAsked, window) { c, has, asked, w -> listOf(c, has, asked, w) }.transformLatest { (cv, hv, av, w) ->
+            val (c, searchProfile) = cv as Pair<SportsConfig, Long>
             val has = hv as Boolean
             val asked = av as Boolean
             if (!has) return@transformLatest emit(ChannelSearch.NotSearched)
@@ -283,25 +334,22 @@ class SportsViewModel(
             if (w != WatchWindow.Open) return@transformLatest emit(ChannelSearch.Closed(w as WatchWindow))
             if (!asked) return@transformLatest emit(ChannelSearch.NotSearched)
             emit(ChannelSearch.Searching)
-            val merged = coroutineScope {
-                val loungeSource = activeProfileSources(settings, sourceDao).first().sources.firstOrNull { source ->
-                    source.syncLive &&
-                        tv.own.owntv.features.setup.isLoungeXtream(source.type, source.url) &&
-                        !source.username.isNullOrBlank() &&
-                        !source.password.isNullOrBlank()
-                }
-                val backendJob = async(Dispatchers.IO) {
-                    loungeSource?.let { backendSportsCandidates.options(m, it) }.orEmpty()
-                }
-                val localJob = async(Dispatchers.Default) {
-                    watchReader.found(m) { SportsMemory.rememberedFor(c, it) }
-                        ?: watchReader.watchFor(listOf(m)) { SportsMemory.rememberedFor(c, it) }[m.key].orEmpty()
-                }
-                mergeBackendSportsOptions(backendJob.await(), localJob.await())
-            }
-            emit(ChannelSearch.Found(merged))
+            // The match page and Sport Lounge cards must discover the same sources.
+            val merged = discoverFixtureFeeds(m, c)
+            if (settings.activeProfileIdNow() == searchProfile)
+                emit(ChannelSearch.Found(candidateResolver.inspect(m, merged), searchProfile))
         }.flowOn(Dispatchers.Default)
-        combine(boards, config, search, pageFilter, playlists) { b, c, s, f, lists ->
+        val correctedSearch = combine(search, correctionRevision, settings.activeProfileId) { s, _, pid ->
+            val rejected = if (tv.own.owntv.BuildConfig.LOUNGE_TV_2 && pid >= 0)
+                candidateResolver.rejected(pid, m) else emptySet()
+            val corrected = if (tv.own.owntv.BuildConfig.LOUNGE_TV_2 && s is ChannelSearch.Found && s.profileId != pid) ChannelSearch.NotSearched
+            else if (s is ChannelSearch.Found) s.copy(options = s.options.filterNot { option ->
+                candidateResolver.key(option.channel) in rejected
+            }) else s
+            corrected to rejected.isNotEmpty()
+        }.flowOn(Dispatchers.Default)
+        combine(boards, config, correctedSearch, pageFilter, playlists) { b, c, corrected, f, lists ->
+            val (s, hasRejected) = corrected
             val appLanguage = Locale.getDefault().language
             val filter = f ?: WatchFilter.from(c, appLanguage, lists.map { it.first })
             val preferred = c.preferredLanguages(appLanguage).toList()
@@ -316,6 +364,7 @@ class SportsViewModel(
                 filter = filter,
                 playlists = lists,
                 preferredLanguages = preferred,
+                hasRejectedFeeds = hasRejected,
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
@@ -334,6 +383,24 @@ class SportsViewModel(
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun openLeague(key: String?) { openLeague.value = key }
+
+    fun teamPage(ref: TeamRef): Flow<TeamPageState> = combine(
+        repository.observe(Demand.TeamPage(ref.league.key)),
+        flow {
+            emit(null)
+            emit(teams.schedule(ref.league, ref.team.id, repository.board.value))
+        },
+    ) { board, schedule -> TeamPageState(schedule, board) }.flowOn(Dispatchers.Default)
+
+    suspend fun teamRefFor(team: FollowedTeam): TeamRef? {
+        val current = config.first()
+        val board = repository.board.value
+        val leagues = current.followedLeagues().mapNotNull(SportsCatalog::league).filter { it.sport == team.sport }
+        val league = leagues.firstOrNull { candidate ->
+            board.standings[candidate.key]?.groups?.any { group -> group.rows.any { it.team.id == team.id } } == true
+        } ?: leagues.firstOrNull() ?: SportsCatalog.leaguesOf(team.sport).firstOrNull() ?: return null
+        return teamRefOf(league, Team(team.id, team.name, abbreviation = team.abbreviation))
+    }
 
     fun open(match: Match?) {
         pageFilter.value = null
@@ -367,6 +434,18 @@ class SportsViewModel(
                 sourceIds = filter.sourceIds,
             )
         }
+    }
+
+    fun rejectFixtureChannel(match: Match, channel: ChannelEntity, onResult: (Boolean) -> Unit) = viewModelScope.launch {
+        val saved = candidateResolver.reject(match, channel)
+        if (saved) playback.refreshCorrections(match)
+        onResult(saved)
+    }
+
+    fun restoreFixtureChannels(match: Match, onResult: (Boolean) -> Unit) = viewModelScope.launch {
+        val saved = candidateResolver.restore(match)
+        if (saved) playback.refreshCorrections(match)
+        onResult(saved)
     }
 
     /** Hold OK on a channel: "Always use for <competition>". */
@@ -409,6 +488,7 @@ class SportsViewModel(
     fun playedFrom(match: Match, channels: List<WatchOption>, playing: ChannelEntity? = null) {
         playback.lastPlayedChannelId = playing?.id
         playback.start(match, channels)
+        if (playing != null) viewModelScope.launch { candidateResolver.remember(match, playing) }
         recordPlay(match)
     }
 
@@ -423,11 +503,51 @@ class SportsViewModel(
         return config.orderSports(SportsCatalog.sports.filter { s -> keys.any { SportsCatalog.league(it)?.sport == s } })
     }
 
+    /**
+     * One bounded discovery route for the match page and explicit card playback.
+     * Backend suggestions are evidence-filtered by candidateResolver before tuning.
+     * No lookup occurs on focus, and profile changes invalidate in-flight results.
+     */
+    private suspend fun discoverFixtureFeeds(match: Match, config: SportsConfig): List<WatchOption> = coroutineScope {
+        val profile = settings.activeProfileIdNow()
+        val loungeSource = activeProfileSources(settings, sourceDao).first().sources.firstOrNull { source ->
+            source.syncLive &&
+                tv.own.owntv.features.setup.isLoungeXtream(source.type, source.url) &&
+                !source.username.isNullOrBlank() &&
+                !source.password.isNullOrBlank()
+        }
+        val backend = async(Dispatchers.IO) {
+            loungeSource?.let { backendSportsCandidates.options(match, it) }.orEmpty()
+        }
+        val local = async(Dispatchers.Default) {
+            watchReader.found(match) { SportsMemory.rememberedFor(config, it) }
+                ?: watchReader.watchFor(listOf(match)) { SportsMemory.rememberedFor(config, it) }[match.key].orEmpty()
+        }
+        val merged = mergeBackendSportsOptions(backend.await(), local.await())
+        if (settings.activeProfileIdNow() == profile) merged else emptyList()
+    }
+
+    /**
+     * Explicit action only: search backend and local guide, as Find channels does.
+     * Never launch a stream from card focus or falsely label a candidate as confirmed.
+     */
+    val candidateRevision = candidateResolver.revision
+
+    suspend fun previewChoices(match: Match): List<WatchOption> {
+        val profile = settings.activeProfileIdNow()
+        val c = config.first()
+        val found = discoverFixtureFeeds(match, c)
+        if (settings.activeProfileIdNow() != profile) return emptyList()
+        return candidateResolver.prioritizeFixtureChoice(match, WatchList.of(candidateResolver.resolve(match, found),
+            WatchFilter.from(c, Locale.getDefault().language, liveSources.value)).shown)
+    }
+
     /** [match]'s channels if Find channels already ran for it (the hub's Remind me needs one); never searches. */
     suspend fun channelsFound(match: Match): List<WatchOption> {
         val c = config.first()
         val options = watchReader.found(match) { SportsMemory.rememberedFor(c, it) } ?: return emptyList()
-        return WatchList.of(options, WatchFilter.from(c, Locale.getDefault().language, liveSources.value)).shown
+        return candidateResolver.prioritizeFixtureChoice(match,
+            WatchList.of(candidateResolver.resolve(match, options), WatchFilter.from(c, Locale.getDefault().language, liveSources.value)).shown)
     }
 
     companion object {

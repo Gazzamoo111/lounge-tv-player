@@ -32,11 +32,16 @@ fun SportsScreen(
     vm: SportsViewModel = koinViewModel(),
     liveVm: LiveViewModel = koinViewModel(),
 ) {
+    val hubState = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
+    val profileSettings = koinInject<tv.own.owntv.core.settings.SettingsRepository>()
+    val hubProfile by profileSettings.activeProfileId.collectAsStateWithLifecycle(-1L)
     var match by remember { mutableStateOf<Match?>(null) }
     var filters by remember { mutableStateOf(false) }
     // The league page, over the hub or a match (Back returns to whichever it came from).
     var league by remember { mutableStateOf<String?>(null) }
+    var team by remember { mutableStateOf<TeamRef?>(null) }
     val openLeague: (String?) -> Unit = { k -> league = k; vm.openLeague(k) }
+    val openTeam: (TeamRef) -> Unit = { ref -> team = ref }
     // Set when the page was opened from the player's Match button: Back plays that channel again.
     var returnTo by remember { mutableStateOf<ChannelEntity?>(null) }
     // The card a match was opened from, so Back lands on it.
@@ -47,7 +52,12 @@ fun SportsScreen(
         playback.pendingMatch.value?.let { (m, ch) ->
             playback.pendingMatch.value = null
             returnTo = ch
-            open(m)
+            if (tv.own.owntv.BuildConfig.LOUNGE_TV_2 && ch == null) {
+                // Home event action is explicit: go directly to this fixture's Watch live page.
+                // Open resets findAsked, so trigger the bounded search only after opening.
+                open(m)
+                vm.findChannels()
+            } else open(m)
         } ?: playback.returnToMatch?.let { m ->
             playback.returnToMatch = null
             open(m)
@@ -55,7 +65,18 @@ fun SportsScreen(
     }
     val current = match
     val leagueKey = league
-    if (leagueKey != null) {
+    val teamRef = team
+    if (teamRef != null) {
+        PremiumSportsTeamScreen(
+            vm = vm,
+            ref = teamRef,
+            onOpenMatch = { m -> team = null; open(m) },
+            onBack = { team = null },
+            active = active,
+            contentStart = contentStart,
+            modifier = modifier,
+        )
+    } else if (leagueKey != null) {
         SportsLeagueScreen(
             vm = vm,
             onOpenMatch = { m -> openLeague(null); open(m) },
@@ -65,7 +86,13 @@ fun SportsScreen(
             modifier = modifier,
         )
     } else if (current == null) {
-        SportLoungeScreen(
+        if (tv.own.owntv.BuildConfig.LOUNGE_TV_2) hubState.SaveableStateProvider(hubProfile) {
+            PremiumSportsScreen(
+            vm, liveVm, onOpenMatch = { open(it) }, onOpenLeague = { openLeague(it) },
+            onPlayChannel = onPlayChannel, onChildFocused = onChildFocused, onEntryHook = onEntryHook,
+            contentStart = contentStart, active = active, restoreKey = lastKey, modifier = modifier,
+            )
+        } else SportLoungeScreen(
             vm = vm,
             onOpenMatch = open,
             onPlayChannel = onPlayChannel,
@@ -82,6 +109,7 @@ fun SportsScreen(
             onPlayChannel = { ch, zap -> playback.returnToMatch = current; onPlayChannel(ch, zap) },
             onOpenFilters = { filters = true },
             onOpenLeague = { m -> openLeague(tv.own.owntv.core.sports.model.League.keyOf(m.sport, m.leagueSlug)) },
+            onOpenTeam = openTeam,
             onAddPlaylist = onAddPlaylist,
             onBack = {
                 val ch = returnTo

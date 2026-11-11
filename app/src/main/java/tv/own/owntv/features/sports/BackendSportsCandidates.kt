@@ -11,19 +11,37 @@ import tv.own.owntv.core.sports.model.Match
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLEncoder
+import java.time.Instant
 
 internal const val BACKEND_CONFIDENCE_PREFIX = "__LTV_BACKEND__:"
 
 internal class BackendSportsCandidateProvider(
     private val endpoint: String = "https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-sports-candidates",
     private val playbackEndpoint: String = "https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-xtream",
+    private val qaEndpoint: String = "https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-sports-candidates-qa",
 ) {
     suspend fun options(match: Match, source: SourceEntity): List<WatchOption> = withContext(Dispatchers.IO) {
         val username = source.username?.takeIf(String::isNotBlank) ?: return@withContext emptyList()
         val password = source.password?.takeIf(String::isNotBlank) ?: return@withContext emptyList()
         val home = match.home?.team?.name.orEmpty()
         val away = match.away?.team?.name.orEmpty()
-        val params = linkedMapOf(
+        // QA tennis uses the independently evidenced contract-v2 matcher. The legacy
+        // endpoint has no tennis-specific network branch and can return no usable channels.
+        // This is QA-only and never changes the production candidate service or catalogue.
+        val qaTennis = tv.own.owntv.BuildConfig.LOUNGE_TV_2 &&
+            match.sport == tv.own.owntv.core.sports.model.Sport.TENNIS
+        val params = if (qaTennis) linkedMapOf(
+            "contractVersion" to "2",
+            "eventId" to match.key,
+            "sportId" to match.sport.name,
+            "competitionId" to match.leagueSlug.ifBlank { match.feed },
+            "scheduledStartUtc" to Instant.ofEpochMilli(match.startMs).toString(),
+            "status" to match.state.name,
+            "title" to match.title,
+            "home" to home,
+            "away" to away,
+            "limit" to "12",
+        ) else linkedMapOf(
             "sport" to match.sport.path,
             "league" to match.leagueName,
             "title" to match.title,
@@ -32,7 +50,8 @@ internal class BackendSportsCandidateProvider(
             "broadcasters" to match.broadcasts.joinToString("|") { it.name },
         )
         val query = params.entries.joinToString("&") { (key, value) -> q(key) + "=" + q(value) }
-        val connection = (URL(endpoint + "?" + query).openConnection() as HttpURLConnection).apply {
+        val target = if (qaTennis) qaEndpoint else endpoint
+        val connection = (URL(target + "?" + query).openConnection() as HttpURLConnection).apply {
             connectTimeout = 8_000
             readTimeout = 12_000
             requestMethod = "GET"
@@ -46,8 +65,11 @@ internal class BackendSportsCandidateProvider(
                 for (index in 0 until rows.length()) {
                     val row = rows.optJSONObject(index) ?: continue
                     val providerItemId = row.optLong("providerItemId", 0L).takeIf { it > 0L } ?: continue
-                    val name = row.optString("name").takeIf(String::isNotBlank) ?: continue
-                    val confidence = row.optString("confidence").lowercase()
+                    val name = row.optString(if (qaTennis) "displayName" else "name").takeIf(String::isNotBlank) ?: continue
+                    if (tv.own.owntv.BuildConfig.LOUNGE_TV_2 && isRetrospectiveSportsFeed(name)) continue
+                    // The QA matcher reports candidates as plausible, not playback-confirmed.
+                    // Local fixture/EPG evidence may promote them after inspection.
+                    val confidence = if (qaTennis) "maybe" else row.optString("confidence").lowercase()
                     if (confidence !in setOf("definite", "likely", "maybe")) continue
                     val streamUrl = playbackEndpoint + "/sport/_/_/" + providerItemId + ".ts" +
                         "?username=" + q(username) + "&password=" + q(password)
@@ -74,6 +96,8 @@ internal class BackendSportsCandidateProvider(
                     )
                 }
             }
+        } catch (cancel: kotlinx.coroutines.CancellationException) {
+            throw cancel
         } catch (_: Exception) {
             emptyList()
         } finally {

@@ -58,6 +58,8 @@ import org.koin.androidx.compose.koinViewModel
 import tv.own.owntv.R
 import tv.own.owntv.core.database.entity.ChannelEntity
 import tv.own.owntv.core.database.entity.EpgProgrammeEntity
+import tv.own.owntv.core.epg.displayLogoUrl
+import tv.own.owntv.features.live.ProgrammeArtwork
 import tv.own.owntv.core.live.LiveKey
 import tv.own.owntv.core.model.RecordingStatus
 import tv.own.owntv.core.settings.SettingsRepository
@@ -148,6 +150,25 @@ private fun programmeAt(progs: List<EpgProgrammeEntity>?, time: Long): EpgProgra
 
 /** Across a gap the cursor moves by half an hour, rather than leaping hours to the next programme. */
 private const val GAP_STEP_MS = 30L * 60 * 1000
+
+internal const val NO_CURSOR = -1L
+
+internal data class GuideRowFocusArgs(val selectedRow: Boolean, val cursorTime: Long, val cellMode: Boolean)
+
+internal fun guideRowFocusArgs(
+    index: Int,
+    focusedRow: Int,
+    cursorTime: Long,
+    inCellMode: Boolean,
+    gridHasFocus: Boolean,
+): GuideRowFocusArgs {
+    val sel = index == focusedRow
+    return GuideRowFocusArgs(
+        selectedRow = gridHasFocus && sel,
+        cursorTime = if (sel) cursorTime else NO_CURSOR,
+        cellMode = sel && inCellMode,
+    )
+}
 
 /** Where ◀ ([dir] -1) or ▶ (+1) takes the cursor: programme by programme, half an hour at a time across gaps. */
 private fun cursorStep(progs: List<EpgProgrammeEntity>, cursor: Long, dir: Int, windowStart: Long, windowEnd: Long): Long {
@@ -490,13 +511,17 @@ fun EpgScreen(
         Box(Modifier.weight(1f).fillMaxHeight()) {
             if (topChannel != null) {
                 val chName = ProviderTags.parse(topChannel.name).name
-                GuideProgrammeBlock(
-                    eyebrow = shown?.let { programmeEyebrow(it, chName, liveNow) },
-                    title = shown?.title ?: chName,
-                    details = if (shown == null) stringResource(R.string.content_epg_no_programme) else programmeDetailsLine(shown),
-                    synopsis = shown?.description,
-                    modifier = Modifier.padding(start = 46.mpx, top = 76.mpx).widthIn(max = 1080.mpx),
-                )
+                Row(Modifier.fillMaxSize().padding(start = 24.mpx), verticalAlignment = Alignment.CenterVertically) {
+                    ProgrammeArtwork(shown, topChannel.displayLogoUrl, Modifier.width(170.mpx).height(250.mpx),
+                        channelName = topChannel.name)
+                    GuideProgrammeBlock(
+                        eyebrow = shown?.let { programmeEyebrow(it, chName, liveNow) },
+                        title = shown?.title ?: chName,
+                        details = if (shown == null) stringResource(R.string.content_epg_no_programme) else programmeDetailsLine(shown),
+                        synopsis = shown?.description,
+                        modifier = Modifier.weight(1f).padding(start = 24.mpx).widthIn(max = 900.mpx),
+                    )
+                }
             }
             // The key hints at the bottom right of the top area, level with the video's bottom edge.
             Box(Modifier.align(Alignment.BottomEnd)) { GuideKeyHints(cellMode = inCellMode && gridHasFocus) }
@@ -597,6 +622,7 @@ fun EpgScreen(
                             contentPadding = PaddingValues(bottom = 24.mpx),
                         ) {
                             itemsIndexed(state.channels, key = { _, ch -> ch.id }) { index, channel ->
+                                val focus = guideRowFocusArgs(index, focusedRow, cursorTime, inCellMode, gridHasFocus)
                                 GuideRow(
                                     vm = vm,
                                     channel = channel,
@@ -609,9 +635,9 @@ fun EpgScreen(
                                     now = liveNow,
                                     scrollPx = scrollPx,
                                     focusRequester = rowFocus(index),
-                                    selectedRow = gridHasFocus && index == focusedRow,
-                                    cursorTime = cursorTime,
-                                    cellMode = inCellMode,
+                                    selectedRow = focus.selectedRow,
+                                    cursorTime = focus.cursorTime,
+                                    cellMode = focus.cellMode,
                                     onEnterCell = {
                                         cursorTime = System.currentTimeMillis()
                                         inCellMode = true

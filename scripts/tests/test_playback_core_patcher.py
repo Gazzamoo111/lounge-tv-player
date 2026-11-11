@@ -9,6 +9,7 @@ SCRIPTS = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(SCRIPTS))
 
 import patch_lounge_playback_core as patcher
+import patch_lounge_playback_core_1069 as legacy_patcher
 
 
 class PlaybackCorePatcherTests(unittest.TestCase):
@@ -49,7 +50,7 @@ class PlaybackCorePatcherTests(unittest.TestCase):
             self.make_pinned_core_fixture(root)
             with patch.object(patcher.subprocess, "check_output", return_value=patcher.PIN), patch.object(patcher.subprocess, "run") as git_apply:
                 patcher.apply(root)
-                self.assertEqual(2, git_apply.call_count)
+                self.assertEqual(8, git_apply.call_count)
                 self.assertIn("--check", git_apply.call_args_list[0].args[0])
                 self.assertTrue(git_apply.call_args_list[0].kwargs["check"])
 
@@ -60,6 +61,16 @@ class PlaybackCorePatcherTests(unittest.TestCase):
                         self.assertNotIn(before, text, relative)
                     if not any(later_before in after for later_before, _ in changes[index + 1:]):
                         self.assertIn(after, text, relative)
+
+    def test_legacy_1069_patcher_still_applies_the_reviewed_overlay_stack(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.make_pinned_core_fixture(root)
+            with patch.object(legacy_patcher.subprocess, "check_output", return_value=legacy_patcher.PIN), patch.object(legacy_patcher.subprocess, "run") as git_apply:
+                legacy_patcher.apply(root)
+                self.assertEqual(8, git_apply.call_count)
+                self.assertIn("--check", git_apply.call_args_list[0].args[0])
+                self.assertTrue(git_apply.call_args_list[0].kwargs["check"])
 
     def test_patcher_fails_closed_when_source_is_already_patched(self):
         with tempfile.TemporaryDirectory() as directory:

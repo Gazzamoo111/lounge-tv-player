@@ -1,0 +1,103 @@
+--- a/player-core/src/main/java/tv/own/owntv/player/OwnTVPlayer.kt
++++ b/player-core/src/main/java/tv/own/owntv/player/OwnTVPlayer.kt
+@@ -12,6 +12,7 @@
+ import kotlinx.coroutines.SupervisorJob
+ import kotlinx.coroutines.cancel
+ import kotlinx.coroutines.delay
++import kotlinx.coroutines.ensureActive
+ import kotlinx.coroutines.flow.MutableStateFlow
+ import kotlinx.coroutines.flow.StateFlow
+ import kotlinx.coroutines.flow.asStateFlow
+@@ -635,6 +636,8 @@
+      * the previous channel's provider and retry into a live stream. Stalker VOD passes its own
+      * provider — a `create_link` URL expires in a couple of hours, which is well inside a film.
+      */
++    private var recoveryResolveJob: Job? = null
++
+     @Volatile var reconnectUrlProvider: tv.own.owntv.core.stalker.ReconnectUrlProvider? = null
+     private var consecutiveHardResets = 0
+     // Snapshot of a non-live item taken when the app backgrounds (screensaver / Home), so it can be restored
+@@ -1976,6 +1979,8 @@
+         val pos = _position.value
+         pendingImageSub = sub
+         _subTrackList.value = _subTrackList.value.map { it.copy(selected = it.mpvId == sub.mpvId) }
++        recoveryResolveJob?.cancel()
++        recoveryResolveJob = null
+         loadGeneration++ // supersede any mpv retry/watchdog work for this item
+         errorCheckJob?.cancel(); videoCheckJob?.cancel()
+         load.expectingPlayback = false
+@@ -2162,6 +2167,8 @@
+         // Resume where mpv got to only if the file actually opened; otherwise _position is stale from the
+         // previous item — use the intended start position instead.
+         val pos = if (load.fileLoaded && _position.value > 0) _position.value else load.pendingSeekMs
++        recoveryResolveJob?.cancel()
++        recoveryResolveJob = null
+         loadGeneration++ // supersede any mpv retry/watchdog work for this item
+         val gen = loadGeneration
+         errorCheckJob?.cancel(); videoCheckJob?.cancel()
+@@ -2285,7 +2292,9 @@
+             mpvFailureBeforeFallback = null
+             item.triedExoVodFallback = false
+             itemEngine = tv.own.owntv.core.player.EnginePreference.EXO_FIRST // see the mpv branch above
+-            loadGeneration++ // supersede mpv retry/watchdog work for this item
++            recoveryResolveJob?.cancel()
++        recoveryResolveJob = null
++        loadGeneration++ // supersede mpv retry/watchdog work for this item
+             val gen = loadGeneration
+             errorCheckJob?.cancel(); videoCheckJob?.cancel()
+             load.expectingPlayback = false
+@@ -2943,6 +2952,8 @@
+             "mpv_load live=$isLive url=${HttpClient.redactUrl(url)} " +
+                 "ua=${if (currentUserAgent.isNullOrBlank()) "default" else "custom"}",
+         )
++        recoveryResolveJob?.cancel()
++        recoveryResolveJob = null
+         loadGeneration++
+         errorCheckJob?.cancel()
+         videoCheckJob?.cancel()
+@@ -3873,11 +3884,13 @@
+             return
+         }
+         val gen = loadGeneration
+-        scope.launch {
+-            val fresh = withContext(Dispatchers.IO) {
+-                runCatching { provider.freshUrl() }.getOrNull()
+-            }
+-            if (gen != loadGeneration || currentUrl == null) return@launch // zapped/stopped during resolve
++        recoveryResolveJob?.cancel()
++        recoveryResolveJob = scope.launch {
++            val fresh = withContext(Dispatchers.IO) { resolvePlaybackRecoveryUrl(provider) }
++            kotlinx.coroutines.currentCoroutineContext().ensureActive()
++            if (gen != loadGeneration || currentUrl == null) return@launch
++            // loadUrl cancels obsolete resolution; this operation has completed and owns that load.
++            recoveryResolveJob = null
+             loadUrl(fresh ?: url, currentMetaSnapshot(), isLive = isLive, startPositionMs = startAt, resetRetries = resetRetries, isArchive = archive)
+         }
+     }
+@@ -3886,6 +3899,8 @@
+         clearToast()
+         deactivateExo() // give the surface back to mpv before tearing down
+         load.pendingExoStart = false
++        recoveryResolveJob?.cancel()
++        recoveryResolveJob = null
+         loadGeneration++ // cancels any queued-but-not-yet-executed load
+         load.expectingPlayback = false
+         errorCheckJob?.cancel()
+@@ -3982,6 +3997,8 @@
+         initialized = false
+         surfaceAttached = false
+         mpvHasSurface = false
++        recoveryResolveJob?.cancel()
++        recoveryResolveJob = null
+         loadGeneration++
+         pendingUrl = null
+         // The core about to be destroyed owes these END_FILEs; the fresh one must not inherit them, or
+@@ -4837,6 +4854,8 @@
+         if (!isLiveContent && fallbackToExoVod(msg, mpvStuck = false)) return
+         // Halt decoding but KEEP currentUrl so the HUD's Retry works (e.g. after the user flips the
+         // hardware-decoding setting, which applies live).
++        recoveryResolveJob?.cancel()
++        recoveryResolveJob = null
+         loadGeneration++
+         load.expectingPlayback = false
+         errorCheckJob?.cancel()

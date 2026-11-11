@@ -262,6 +262,21 @@ fun OwnTVShell(
     // up/down (CH+/CH-). Guide tunes start through LiveViewModel too (they set zapSource = LIVE_TV), so
     // there is exactly ONE zap path: liveVm's. The Guide keeps its own EpgViewModel only for the grid.
     val liveVm = org.koin.androidx.compose.koinViewModel<LiveViewModel>()
+    val sportsWorkVm = org.koin.androidx.compose.koinViewModel<tv.own.owntv.features.sports.SportsViewModel>()
+    LaunchedEffect(selectedSection, playerMode) {
+        sportsWorkVm.setForeground(playerMode == PlayerMode.NONE &&
+            (selectedSection == MainSection.HOME || selectedSection == MainSection.SPORTS))
+    }
+
+    var fullscreenFavouriteChannel by remember { mutableStateOf<ChannelEntity?>(null) }
+    var fullscreenCreateFavouriteFolder by remember { mutableStateOf(false) }
+    var fullscreenFolderFocusVersion by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    val dismissFullscreenFavouriteFolder: () -> Unit = {
+        fullscreenFavouriteChannel = null
+        fullscreenCreateFavouriteFolder = false
+        fullscreenFolderFocusVersion++
+        Unit
+    }
     // "Previous" from the system media controls on a live channel goes back a channel.
     DisposableEffect(playbackSession, liveVm) {
         playbackSession.livePrevious = { liveVm.previousChannel() }
@@ -560,10 +575,15 @@ fun OwnTVShell(
         browsedIntoCategory = false
         showHistoryList = false
         liveVm.hideCategoryBrowser()
-        liveVm.onFullscreenExited() // no longer full-screen on ExoPlayer → let the preview re-take the engine
+        val sportsPreview = liveVm.previewChannel.value?.takeIf { channel ->
+            tv.own.owntv.BuildConfig.LOUNGE_TV_2 && selectedSection == MainSection.SPORTS &&
+                sportsMatchRequests.session.value?.options?.any { it.channel.id == channel.id } == true
+        }
+        liveVm.onFullscreenExited(keepPreview = sportsPreview != null)
         player.stop()
         subtitleController.clear() // leaving the player drops the OpenSubtitles item context
-        if (selectedSection != MainSection.LIVE_TV) liveVm.clearLiveOnExo()
+        if (sportsPreview != null) liveVm.playPreview(sportsPreview, withAudio = true)
+        else if (selectedSection != MainSection.LIVE_TV) liveVm.clearLiveOnExo()
         restoreFocus = true
         focusRail()
         Unit
@@ -846,7 +866,8 @@ fun OwnTVShell(
     // The preview runs on the ExoPlayer live engine, not mpv: stopping only mpv here (as when the preview
     // was mpv) left it decoding and holding a provider connection after a shortcut or deep link out.
     LaunchedEffect(selectedSection, playerMode) {
-        if (selectedSection != MainSection.LIVE_TV && selectedSection != MainSection.EPG && playerMode == PlayerMode.NONE) liveVm.stopPreview()
+        if (selectedSection != MainSection.LIVE_TV && selectedSection != MainSection.EPG &&
+            !(tv.own.owntv.BuildConfig.LOUNGE_TV_2 && selectedSection == MainSection.SPORTS) && playerMode == PlayerMode.NONE) liveVm.stopPreview()
         if (selectedSection != MainSection.HOME || playerMode != PlayerMode.NONE) homeVm.stopPreview()
     }
 
@@ -1730,6 +1751,40 @@ fun OwnTVShell(
                         }
                     } else null,
                     // Guide card for the playing channel (nowNext follows previewChannel = what's playing).
+                    premiumLivePanel = if (tv.own.owntv.BuildConfig.LOUNGE_TV_2 && isLiveChannel && !timeshifted) {
+                        { chips, playFocus, more ->
+                            val engine = if (liveOnExo) liveVm.previewEngine else mpvEngine
+                            val meta by engine.currentMeta.collectAsStateWithLifecycle()
+                            val epg by liveVm.nowNext.collectAsStateWithLifecycle()
+                            val playingNow by engine.isPlaying.collectAsStateWithLifecycle()
+                            val recent by liveVm.recentlyWatched.collectAsStateWithLifecycle()
+                            val current = epg?.now
+                            var recentProgrammes by remember { mutableStateOf<Map<Long, tv.own.owntv.core.parser.XtEpgEntry>>(emptyMap()) }
+                            LaunchedEffect(recent) {
+                                recentProgrammes = emptyMap()
+                                while (true) {
+                                    recentProgrammes = liveVm.nowPlayingFor(recent.take(12))
+                                    kotlinx.coroutines.delay(60_000)
+                                }
+                            }
+                            tv.own.owntv.player.PremiumLivePanel(
+                                title = meta.title.orEmpty(), number = meta.subtitle, logo = meta.logoUrl,
+                                current = current, next = epg?.next, technical = chips, isPlaying = playingNow,
+                                recent = recent, playFocus = playFocus,
+                                currentChannelId = previewChannel?.id, programmes = recentProgrammes,
+                                onToggle = engine::togglePlayPause,
+                                onGuide = { exitPlayer(); onSelectSection(MainSection.EPG) },
+                                onMore = more,
+                                onRecent = { ch -> scope.launch { liveVm.ensurePlayingByIdAsync(ch.id, recent) } },
+                                artwork = {
+                                    val programme = current?.let { tv.own.owntv.core.database.entity.EpgProgrammeEntity(
+                                        0, previewChannel?.sourceId ?: 0, "", it.startMs, it.stopMs, it.title, description = it.description,
+                                        year = epg?.nowDetails?.year, episode = epg?.nowDetails?.episode) }
+                                    tv.own.owntv.features.live.ProgrammeArtwork(programme, meta.logoUrl, Modifier.fillMaxSize(), channelName = previewChannel?.name)
+                                },
+                            )
+                        }
+                    } else null,
                     liveEpgCard = if (isLiveChannel) {
                         {
                             val epg by liveVm.nowNext.collectAsStateWithLifecycle()
@@ -1896,6 +1951,8 @@ fun OwnTVShell(
                             onChannelFocused = { channel ->
                                 browsingKey?.let { lastBrowsedChannel[it] = channel.id }
                             },
+                            onLongPress = { fullscreenFavouriteChannel = it },
+                            returnFocusVersion = fullscreenFolderFocusVersion,
                             onSelect = {
                                 liveVm.ensurePlaying(it)
                                 showChannelList = false
@@ -1923,6 +1980,8 @@ fun OwnTVShell(
                         title = stringResource(R.string.content_category_recently_watched),
                         showNumbers = directTuneEnabled,
                         alignEnd = true,
+                        onLongPress = { fullscreenFavouriteChannel = it },
+                        returnFocusVersion = fullscreenFolderFocusVersion,
                         onSelect = { liveVm.ensurePlaying(it); showHistoryList = false },
                         onDismiss = { showHistoryList = false },
                         modifier = Modifier.fillMaxSize(),
@@ -1943,6 +2002,31 @@ fun OwnTVShell(
             }
         }
       }
+
+    // The browsing overlay stays behind the picker; saving never retunes the stream.
+    fullscreenFavouriteChannel?.let { channel ->
+        if (fullscreenCreateFavouriteFolder) {
+            tv.own.owntv.ui.components.TextInputDialog(
+                title = stringResource(R.string.lounge_v2_new_favourite_folder),
+                hint = stringResource(R.string.lounge_v2_favourite_folder_name_hint),
+                confirmLabel = stringResource(R.string.common_create),
+                allowBlank = false,
+                onConfirm = {
+                    liveVm.createFavouriteFolderAndSave(it, channel)
+                    dismissFullscreenFavouriteFolder()
+                },
+                onDismiss = { fullscreenCreateFavouriteFolder = false },
+            )
+        } else {
+            val folders by liveVm.favouriteFolderTargets.collectAsStateWithLifecycle()
+            tv.own.owntv.features.customize.FavouriteFolderPicker(
+                folders = folders,
+                onCreate = { fullscreenCreateFavouriteFolder = true },
+                onSelect = { liveVm.saveToFavouriteFolder(channel, it); dismissFullscreenFavouriteFolder() },
+                onDismiss = dismissFullscreenFavouriteFolder,
+            )
+        }
+    }
 
     if (showExit) {
         ExitDialog(onConfirm = onExitApp, onDismiss = { showExit = false })
