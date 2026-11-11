@@ -262,8 +262,18 @@ def apply(root: Path, milestone3: bool = True, milestone6: bool = True) -> None:
     subprocess.run(["git", "-C", str(root), "apply", str(m3_player)], check=True)
     print("Rebased Lounge recovery URL cancellation onto Core 1.0.71")
 
-    # The rest of Milestone 3/4/6 was authored against Core 1.0.69. It remains deferred until
-    # a controlled comparison proves an upstream regression or a Lounge-only feature requires it.
+    m6_ownership = Path(__file__).resolve().parent / "patches/playback-m6-ownership-1071.patch"
+    subprocess.run(["git", "-C", str(root), "apply", "--check", str(m6_ownership)], check=True)
+    subprocess.run(["git", "-C", str(root), "apply", str(m6_ownership)], check=True)
+    print("Rebased shared MPV ownership protection onto Core 1.0.71")
+
+    sports_colours = Path(__file__).resolve().parent / "patches/sports-milestone4-colours.patch"
+    subprocess.run(["git", "-C", str(root), "apply", "--check", str(sports_colours)], check=True)
+    subprocess.run(["git", "-C", str(root), "apply", str(sports_colours)], check=True)
+    print("Rebased Lounge team colours and cache persistence onto Core 1.0.71")
+
+    # The remaining legacy Milestone 3/6 overlays stay deferred until a controlled comparison
+    # proves an upstream regression or a Lounge-only feature requires them.
     print("Deferred unproven legacy milestone overlays while validating Core 1.0.71 upstream behaviour")
 
     print(f"Playback core patch applied to pinned commit {PIN}")
