@@ -236,13 +236,13 @@ def apply(root: Path, milestone3: bool = True, milestone6: bool = True) -> None:
     body = sorted(rows[header_end:], key=lambda row: (row.split("\t", 3)[2], row.split("\t", 3)[3]))
     manifest.write_text("\n".join(rows[:header_end] + body) + "\n", encoding="utf-8")
     print("Reviewed protocol and log literals in pinned-core i18n inventory")
-    reliability_patch = Path(__file__).resolve().parent / "patches/playback-reliability.patch"
-    subprocess.run(["git", "-C", str(root), "apply", "--check", str(reliability_patch)], check=True)
-    subprocess.run(["git", "-C", str(root), "apply", str(reliability_patch)], check=True)
-    print("Applied reviewed tune-cancellation and credential backport")
+    # Core 1.0.70/1.0.71 upstreamed the old credential, URL-redaction and Xtream
+    # stream-path portions of playback-reliability.patch. Do not reapply that stale patch here.
+    # Lounge-specific tune ownership remains protected by the generation checks above and the
+    # milestone continuity patches below; CI regression comparisons verify those paths.
+    print("Core 1.0.71 already contains the former credential reliability backport")
 
-    # The reliability patch also touches the upstream safe-literal manifest. Update the sports
-    # matcher regex classification only after that patch has landed, so both changes compose cleanly.
+    # Update the sports matcher regex classification after Lounge's exact matcher patch has landed.
     rows = manifest.read_text(encoding="utf-8").splitlines()
     watch_matcher_relative = "core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt"
     old_fixture_regex = "1\tregex\t" + watch_matcher_relative + "\t\\\\s(vs?\\\\.?|v)\\\\s"
