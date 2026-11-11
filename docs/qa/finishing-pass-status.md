@@ -19,6 +19,8 @@ Production/main and deployed backend functions are unchanged. This next pass sta
 
 ## Automated evidence
 
+Implementation commit: `08bff7bde8ed22e544206d2ca9dddce9665ddf40`. This documentation checkpoint is repository-owner-authored so PR CI evaluates that exact implementation; it does not modify production, `main` or deployed backend functions.
+
 Local next-pass checks: 25 Python patcher/guardrail tests, five staged NZ/tennis gateway contracts, the hardcoded-string inventory, XML resource parsing, clean patch whitespace and clean applicability of the new pinned-core Guide-order patch. Android compilation, JVM tests and emulator tests are authoritative in GitHub Actions because the local worker does not carry the repository's Gradle 9.7.1 distribution.
 
 QA #664 compiled both variants. App tests passed 336/337; the sole failure was the icon set's old equality expectation, corrected to include the three new vector paths. All 15 existing emulator tests passed; the interrupted XMLTV test passed. The surf test selector was corrected to use its translated resource instead of an incorrect English label.
@@ -29,7 +31,7 @@ QA #665 exported synthetic emulator measurements: poster navigation input-to-idl
 
 Final signed APK identity and the final CI run are recorded in the current PR #68 description after all gates pass. Synthetic Exo/MPV probes do not establish provider stream quality, Fire TV lip-sync or sustained playback.
 
-The next-pass CI run and signed ARM QA identity will be appended here only after the full workflow passes. Until then, synopsis layout, category rendering and Guide focus/order remain implementation-complete but device-unverified.
+The final next-pass CI run and signed ARM QA identity are recorded in PR #68 after the full workflow passes. Until then, synopsis layout, category rendering and Guide focus/order remain implementation-complete but device-unverified.
 
 ## Backend findings and staged repairs
 
