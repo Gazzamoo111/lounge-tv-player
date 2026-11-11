@@ -1497,7 +1497,9 @@ class LiveViewModel(
     private suspend fun channelsInCategory(categoryId: Long): List<ChannelEntity> {
         val pid = currentProfileId() ?: return emptyList()
         val ctxKey = folderContextKeys.value[categoryId] ?: ""
-        val channels = channelDao.snapshotByCategoryManual(categoryId, pid, ctxKey, ZAP_LIST_LIMIT)
+        val channels = (if (LoungeEditorialOrder.channelsEnabled(categoryNamesById.value[categoryId]))
+            channelDao.snapshotByCategoryEditorial(categoryId, pid, ctxKey, sortMode.value == SettingsRepository.SortMode.ALPHA, System.currentTimeMillis(), ZAP_LIST_LIMIT)
+        else channelDao.snapshotByCategoryManual(categoryId, pid, ctxKey, ZAP_LIST_LIMIT))
             .filter(::showInNzSelection)
         // The in-player category list must match Live TV's NZ Freeview order.
         return if (categoryId in nzFreeviewFolderIds.value) LoungeNzOrder.firstFive(channels)
@@ -1511,7 +1513,9 @@ class LiveViewModel(
         val pid = currentProfileId()
         val raw = withContext(Dispatchers.IO) {
             if (catId != null && pid != null) {
-                channelDao.snapshotByCategoryManual(catId, pid, folderContextKeys.value[catId] ?: "", ZAP_LIST_LIMIT)
+                if (LoungeEditorialOrder.channelsEnabled(categoryNamesById.value[catId]))
+                    channelDao.snapshotByCategoryEditorial(catId, pid, folderContextKeys.value[catId].orEmpty(), sortMode.value == SettingsRepository.SortMode.ALPHA, System.currentTimeMillis(), ZAP_LIST_LIMIT)
+                else channelDao.snapshotByCategoryManual(catId, pid, folderContextKeys.value[catId] ?: "", ZAP_LIST_LIMIT)
             } else {
                 // No category on this row (hand-made M3U entries) — fall back to All Channels.
                 channelDao.snapshotAll(ctx.value.sourceIds.ifEmpty { listOf(-1L) }, ZAP_LIST_LIMIT)
@@ -2420,6 +2424,10 @@ class LiveViewModel(
             return LoungeNzPriorityPagingSource {
                 channelDao.snapshotByCategoryManual(key.id, c.profileId, contextKey, 300)
             }
+        }
+        if (key is LiveKey.Folder && query.isBlank() && LoungeEditorialOrder.channelsEnabled(categoryNamesById.value[key.id])) {
+            return channelDao.pagingByCategoryEditorial(key.id, c.profileId, folderContextKeys.value[key.id].orEmpty(),
+                sort == SettingsRepository.SortMode.ALPHA, System.currentTimeMillis())
         }
         return livePagingSource(
             key = key,

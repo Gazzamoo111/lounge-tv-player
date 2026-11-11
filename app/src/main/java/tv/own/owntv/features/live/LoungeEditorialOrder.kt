@@ -1,6 +1,5 @@
 package tv.own.owntv.features.live
 
-import java.util.Locale
 
 /** Explicit children followed by the caller's existing sort. User moves always win. */
 internal object LoungeEditorialOrder {
@@ -14,6 +13,11 @@ internal object LoungeEditorialOrder {
         LoungeLiveSection.SEASONAL -> tv.own.owntv.ui.components.OwnTVIcon.CLOCK
         else -> tv.own.owntv.ui.components.OwnTVIcon.LIVE_TV
     }
+    /** Only selected editorial shelves; other categories keep provider/A-Z behavior. */
+    fun channelsEnabled(category: String?): Boolean = category != null &&
+        loungeLiveSectionOf(category) == LoungeLiveSection.KIDS &&
+        loungeLiveFolderTitle(category).equals("Movies", ignoreCase = true)
+
     val preferredChildren = mapOf(LoungeLiveSection.SPORTS to listOf("US Sports", "UK Sports"))
     fun categoryPriority(section: LoungeLiveSection?, label: String): Int {
         val names = preferredChildren[section].orEmpty()

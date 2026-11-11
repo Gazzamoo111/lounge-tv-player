@@ -1,0 +1,5 @@
+1	log	core/src/main/java/tv/own/owntv/core/parser/XmltvParser.kt	parse read failed channels=$channels programmes=$programmes: ${e.message}
+1	sql	core/src/main/java/tv/own/owntv/core/database/dao/ChannelDao.kt	, CASE WHEN :alpha THEN c.name END, c.sortOrder, c.name, c.id
+1	sql	core/src/main/java/tv/own/owntv/core/database/dao/ChannelDao.kt	, CASE WHEN :alpha THEN c.name END, c.sortOrder, c.name, c.id LIMIT :limit
+1	sql	core/src/main/java/tv/own/owntv/core/database/dao/ChannelEditorialSql.kt	CASE WHEN UPPER(c.name) LIKE '% BACKUP%' OR UPPER(c.name) LIKE '%(BK)%' THEN 4 WHEN UPPER(TRIM(c.name)) IN ('DISNEY+ CLASSIC','DISNEY+PIXAR','PIXAR CHANNEL') THEN 0 WHEN c.name LIKE '24/7%' OR c.name LIKE '24-7%' THEN 3 WHEN EXISTS(SELECT 1 FROM epg_programmes e WHERE e.epgChannelId=LOWER(TRIM(c.epgChannelId)) AND e.startMs<=:nowMs AND e.stopMs>:nowMs) THEN 1 ELSE 2 END
+2	sql	core/src/main/java/tv/own/owntv/core/database/dao/ChannelDao.kt	SELECT c.* FROM channels c LEFT JOIN content_order o ON o.itemId=c.id AND o.profileId=:profileId AND o.mediaType='LIVE' AND o.contextKey=:contextKey WHERE c.categoryId=:categoryId ORDER BY (o.position IS NULL), o.position,

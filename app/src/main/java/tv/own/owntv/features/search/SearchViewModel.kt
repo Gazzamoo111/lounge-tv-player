@@ -120,11 +120,16 @@ class SearchViewModel(
 
     /** The core SearchReader already respects persisted category and item hides.
      *  Also filter unambiguous provider language prefixes in search and curated rows. */
-    private fun englishOnly(result: SearchResults): SearchResults = result.copy(
+    private suspend fun englishOnly(result: SearchResults): SearchResults {
+        val hiddenProgrammeCategories = result.programmes.mapNotNull { it.channel.categoryId }.distinct()
+            .filter { id -> tv.own.owntv.features.live.LoungeCustomerCatalogue.internalOnly(categoryDao.getById(id)?.name) }.toSet()
+        return result.copy(
+        programmes = result.programmes.filterNot { it.channel.categoryId in hiddenProgrammeCategories },
         channels = result.channels.filterNot { tv.own.owntv.features.live.LoungeCustomerCatalogue.internalOnly(it.categoryName) },
         movies = result.movies.filter { LoungeVodCatalogueCleanup.visibleEnglish(it.name, it.providerLanguage) },
         series = result.series.filter { LoungeVodCatalogueCleanup.visibleEnglish(it.name, it.providerLanguage) },
-    )
+        )
+    }
 
     // --- Stage page ---
 

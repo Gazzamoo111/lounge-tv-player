@@ -2196,3 +2196,11 @@
 1	technical	app/src/main/java/tv/own/owntv/features/sports/PremiumSportsPresentation.kt	EEE d MMM · h:mm a
 1	technical	app/src/main/java/tv/own/owntv/features/sports/PremiumSportsPresentation.kt	h:mm a
 2	locale	app/src/main/java/tv/own/owntv/features/sports/PremiumSportsPresentation.kt	NZ
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeEditorialOrder.kt	Movies
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeEditorialOrder.kt	UK Sports
+1	protocol	app/src/main/java/tv/own/owntv/features/live/LoungeEditorialOrder.kt	US Sports
+1	regex	app/src/main/java/tv/own/owntv/features/live/LoungeCustomerCatalogue.kt	\\bppv\\b|\\bpay[ -]+per[ -]+view\\b
+1	technical	app/src/main/java/tv/own/owntv/ui/components/StageGlyphs.kt	M3 19 Q9 18 11 11 L15 8 L15 3 L17 7 L20 7 L21 10 L17 11 L15 16 L19 21 L14 21 L11 17 L8 21 M11 11 L8 13 L5 12
+1	technical	app/src/main/java/tv/own/owntv/ui/components/StageGlyphs.kt	M5 20 Q6 11 19 4 Q23 19 8 18 M6 20 L17 8
+1	technical	app/src/main/java/tv/own/owntv/ui/components/StageGlyphs.kt	M5 21 C7 16 9 9 18 3 M8 14 L4 11 M9 11 L6 7 M11 8 L10 4 M8 16 L13 16 M10 12 L16 12 M13 8 L19 8 M16 5 L20 5
+2	locale	app/src/main/java/tv/own/owntv/player/PremiumLivePanel.kt	Pacific/Auckland

@@ -271,6 +271,9 @@ def apply(root: Path, milestone3: bool = True, milestone6: bool = True) -> None:
             subprocess.run(["git", "-C", str(root), "apply", "--check", str(recovery)], check=True)
             subprocess.run(["git", "-C", str(root), "apply", str(recovery)], check=True)
             print("Applied isolated preview ownership and English poster policy")
+            editorial_patch = Path(__file__).resolve().parent / "patches/channel-editorial-order.patch"
+            subprocess.run(["git", "-C", str(root), "apply", "--check", str(editorial_patch)], check=True)
+            subprocess.run(["git", "-C", str(root), "apply", str(editorial_patch)], check=True)
             guide_patch = Path(__file__).resolve().parent / "patches/guide-interrupted-download.patch"
             subprocess.run(["git", "-C", str(root), "apply", "--check", str(guide_patch)], check=True)
             subprocess.run(["git", "-C", str(root), "apply", str(guide_patch)], check=True)
@@ -280,6 +283,9 @@ def apply(root: Path, milestone3: bool = True, milestone6: bool = True) -> None:
             if settings_text.count(old_default) != 1:
                 raise SystemExit("Unexpected preview audio default")
             settings_path.write_text(settings_text.replace(old_default, "it[Keys.LIVE_PREVIEW_AUDIO] ?: true"))
+            finishing_literals = Path(__file__).resolve().parent / "patches/finishing-core-safe-literals.txt"
+            with manifest.open("a", encoding="utf-8") as output:
+                output.write(finishing_literals.read_text(encoding="utf-8"))
             print("Ported OwnTV 991118af interrupted XMLTV handling and audible preview default")
             benchmark = Path(__file__).resolve().parent / "benchmarks/Milestone6OwnershipComparisonTest.kt"
             target = root / "player-core/src/test/java/tv/own/owntv/player/Milestone6OwnershipComparisonTest.kt"

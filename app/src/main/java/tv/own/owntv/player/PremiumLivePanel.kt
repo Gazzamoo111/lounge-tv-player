@@ -54,8 +54,9 @@ internal fun PremiumLivePanel(title: String, number: String?, logo: String?, cur
                 Text(current?.title ?: stringResource(R.string.m4_no_programme), style = stageText(33, 800), color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (technical.isNotEmpty()) Text(technical.joinToString(stringResource(R.string.content_epg_bits_separator)), style = stageText(17, 700), color = LoungeSurface.Cyan, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 current?.let {
-                    Text(tv.own.owntv.features.sports.PremiumSportsPresentation.nzKickoffTime(it.startMs) + " – " +
-                        tv.own.owntv.features.sports.PremiumSportsPresentation.nzKickoffTime(it.stopMs),
+                    Text(stringResource(R.string.lounge_programme_time_range,
+                        tv.own.owntv.features.sports.PremiumSportsPresentation.nzKickoffTime(it.startMs),
+                        tv.own.owntv.features.sports.PremiumSportsPresentation.nzKickoffTime(it.stopMs)),
                         style = stageText(18, 500), color = LoungeSurface.Muted)
                 }
                 current?.description?.takeIf { it.isNotBlank() }?.let { Text(it, style = stageText(20, 400), color = LoungeSurface.Muted, maxLines = 2, overflow = TextOverflow.Ellipsis) }

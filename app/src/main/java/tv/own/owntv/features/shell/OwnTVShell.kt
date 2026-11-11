@@ -1780,8 +1780,8 @@ fun OwnTVShell(
                             }
                             tv.own.owntv.player.PremiumLivePanel(
                                 title = browsed?.name ?: meta.title.orEmpty(),
-                                number = browsed?.number?.toString() ?: meta.subtitle,
-                                logo = browsed?.displayLogoUrl ?: meta.logoUrl,
+                                number = if (browsed == null) meta.subtitle else browsed?.number?.toString(),
+                                logo = if (browsed == null) meta.logoUrl else browsed?.displayLogoUrl,
                                 current = current, next = displayedGuide?.next, technical = chips, isPlaying = playingNow,
                                 recent = recent, playFocus = playFocus,
                                 currentChannelId = previewChannel?.id, programmes = recentProgrammes,

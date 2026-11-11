@@ -413,7 +413,16 @@ class HomeViewModel(
     private suspend fun loadHomeData(profileId: Long) {
         val previous = _uiState.value
         val now = System.currentTimeMillis()
-        val data = feed.load(profileId)
+        val rawData = feed.load(profileId)
+        val liveCategories = (rawData.recentLive + rawData.favoriteLive).mapNotNull { it.categoryId }.distinct()
+        val internalCategories = withContext(Dispatchers.IO) {
+            liveCategories.filter { id -> tv.own.owntv.features.live.LoungeCustomerCatalogue.internalOnly(categoryDao.getById(id)?.name) }.toSet()
+        }
+        val data = rawData.copy(
+            recentLive = rawData.recentLive.filterNot { it.categoryId in internalCategories },
+            favoriteLive = rawData.favoriteLive.filterNot { it.categoryId in internalCategories },
+            heroItems = rawData.heroItems.filterNot { it is HeroItem.LiveHero && it.channel.categoryId in internalCategories },
+        )
         discoveryLoadedAt = now
         _uiState.value = HomeUiState(
             trendingItems = HomeDiscoveryRotation.rotate(data.trendingItems, profileId, now),
