@@ -61,4 +61,10 @@
     <string name="m4_next_month">Next month</string>
     <string name="m4_calendar_empty">No fixtures are available for this month.</string>
     <string name="m4_calendar_follow_first">Follow at least one league to build your sports calendar.</string>
+    <string name="m4_team_follow">Follow team</string>
+    <string name="m4_team_following">Following</string>
+    <string name="m4_team_fixtures">Fixtures</string>
+    <string name="m4_team_results">Results</string>
+    <string name="m4_team_schedule_empty">No fixtures or results are available for this team.</string>
+    <string name="m4_back">Back</string>
 </resources>
