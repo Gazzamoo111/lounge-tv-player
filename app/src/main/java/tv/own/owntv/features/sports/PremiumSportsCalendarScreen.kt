@@ -102,7 +102,7 @@ internal fun PremiumSportsCalendarScreen(
                 days.forEach { (date, matches) ->
                     item("day-" + date.toString()) {
                         Text(
-                            PremiumSportsPresentation.nzDayHeading(date),
+                            date.format(DateTimeFormatter.ofPattern("EEE d MMM", Locale.getDefault())),
                             style = stageText(24, 800),
                             color = StageColors.Text,
                             modifier = Modifier.padding(top = 14.mpx, bottom = 4.mpx),
