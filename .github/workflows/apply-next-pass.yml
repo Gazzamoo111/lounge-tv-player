@@ -1,0 +1,59 @@
+name: Apply QA next pass
+
+on:
+  push:
+    branches:
+      - work/source-export-qa667-20261111
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout isolated patch carrier
+        uses: actions/checkout@v4
+
+      - name: Checkout accepted QA branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/lounge-tv-2.0
+          path: target
+          fetch-depth: 1
+
+      - name: Apply and validate reviewed next-pass patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected_head=483e020734f6dd0fb0cf1c9eb9ec94fd100d56ce
+          actual_head=$(git -C target rev-parse HEAD)
+          test "$actual_head" = "$expected_head" || {
+            echo "feature/lounge-tv-2.0 moved: expected $expected_head, got $actual_head"
+            exit 1
+          }
+
+          cat qa/next-pass-upload/patch.gz.b64.* | base64 -d | gzip -d > /tmp/lounge-tv-next-pass.patch
+          echo "966d07b349818e717bb45a3327a8e3ee9f51417493047d37731db272e4d7db7b  /tmp/lounge-tv-next-pass.patch" | sha256sum -c -
+          git -C target apply --check /tmp/lounge-tv-next-pass.patch
+          git -C target apply /tmp/lounge-tv-next-pass.patch
+          git -C target diff --check
+
+          (
+            cd target
+            PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/tests -p 'test_*.py'
+            node --test qa/gateway/*.test.mjs
+            python3 tools/i18n/check_hardcoded_strings.py verify --bootstrap
+            python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+          ET.parse('app/src/main/res/values/strings.xml')
+          print('strings.xml: OK')
+          PY
+          )
+
+          git -C target config user.name "github-actions[bot]"
+          git -C target config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C target add -A
+          git -C target commit -m "Complete Lounge TV QA next pass"
+          git -C target push origin HEAD:feature/lounge-tv-2.0
