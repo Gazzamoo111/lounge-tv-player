@@ -42,14 +42,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ahXN00/OwnTV_Core
-          ref: 0b60ef6d25e03a24193f1a5680cb239816fd8625
+          ref: 1de78b1e2690c22b50c060e986bce221454bf880
           path: baseline-core
           persist-credentials: false
       - name: Run identical controller scenarios against prior effective core
         env:
           LOUNGE_M3_BASELINE: 'true'
         run: |
-          python3 scripts/patch_lounge_playback_core.py baseline-core --baseline
+          python3 scripts/patch_lounge_playback_core_1069.py baseline-core --baseline
           python3 - <<'PYBENCH'
           from pathlib import Path
           template = Path('scripts/benchmarks/LivePlaybackWorkBenchmarkTest.kt').read_text()
@@ -63,14 +63,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ahXN00/OwnTV_Core
-          ref: 0b60ef6d25e03a24193f1a5680cb239816fd8625
+          ref: 1de78b1e2690c22b50c060e986bce221454bf880
           path: qa610-core
           persist-credentials: false
       - name: Replay shared-session ownership against QA 610 and verify unchanged VOD configuration
         env:
           LOUNGE_M6_BASELINE: 'true'
         run: |
-          python3 scripts/patch_lounge_playback_core.py qa610-core --milestone5
+          python3 scripts/patch_lounge_playback_core_1069.py qa610-core --milestone5
           cp scripts/benchmarks/Milestone6OwnershipComparisonTest.kt qa610-core/player-core/src/test/java/tv/own/owntv/player/
           chmod +x qa610-core/gradlew
           qa610-core/gradlew -p qa610-core :player-core:testDebugUnitTest --tests tv.own.owntv.player.Milestone6OwnershipComparisonTest --stacktrace
