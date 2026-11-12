@@ -32,7 +32,11 @@ class PlaybackCorePatcherTests(unittest.TestCase):
 
         settings = root / "core/src/main/java/tv/own/owntv/core/settings/SettingsRepository.kt"
         settings.parent.mkdir(parents=True, exist_ok=True)
-        settings.write_text("it[Keys.LIVE_PREVIEW_AUDIO] ?: false")
+        settings.write_text(
+            "it[Keys.LIVE_PREVIEW_AUDIO] ?: false\\n"
+            "            ?: if (prefs[Keys.VOD_PREFER_EXO] == true) tv.own.owntv.core.player.EnginePreference.EXO_FIRST\\n"
+            "            else tv.own.owntv.core.player.EnginePreference.MPV_FIRST"
+        )
         live = "player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt"
         matcher = "core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt"
         manifest = root / "tools/i18n/safe_literals.txt"
@@ -55,6 +59,10 @@ class PlaybackCorePatcherTests(unittest.TestCase):
                 self.assertEqual(18, git_apply.call_count)
                 self.assertIn("--check", git_apply.call_args_list[0].args[0])
                 self.assertTrue(git_apply.call_args_list[0].kwargs["check"])
+
+            settings = (root / "core/src/main/java/tv/own/owntv/core/settings/SettingsRepository.kt").read_text()
+            self.assertIn("?: tv.own.owntv.core.player.EnginePreference.EXO_FIRST", settings)
+            self.assertIn("prefs[Keys.VOD_PREFER_EXO]?.let", settings)
 
             for relative, changes in patcher.PATCHES.items():
                 text = (root / relative).read_text(encoding="utf-8")
