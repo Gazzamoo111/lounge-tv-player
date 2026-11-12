@@ -131,6 +131,44 @@ class HubTests(unittest.TestCase):
         self.assertIn("BlackCinema.us", targets)
         self.assertNotIn("live:netflix", targets)
 
+    def test_reviewed_uk_duplicate_broadcasters_share_schedule_only_when_identical(self):
+        self.rows.extend([
+            {"category": "Entertainment", "subcategory": "UK TV",
+             "name": "SKY ARTS", "epgId": "SkyArts.uk"},
+            {"category": "Entertainment", "subcategory": "UK Now TV",
+             "name": "SKY ARTS 1", "epgId": "SkyArts.uk"},
+            {"category": "Entertainment", "subcategory": "UK TV",
+             "name": "CHANNEL 4", "epgId": "Channel4.uk"},
+            {"category": "Entertainment", "subcategory": "UK TV",
+             "name": "CHANNEL 4SEVEN", "epgId": "Channel4.uk"},
+            {"category": "Sports", "subcategory": "UK Sports",
+             "name": "SKY SPORTS F1", "epgId": "SkySportsF1.uk"},
+            {"category": "Sports", "subcategory": "UK Sports",
+             "name": "SKY SPORTS DARTS", "epgId": "SkySportsF1.uk"},
+        ])
+        self.manifest.write_text(json.dumps({"rows": self.rows}))
+        targets, conflicts, _ = catalogue(self.manifest)
+        self.assertIn("SkyArts.uk", targets)
+        self.assertNotIn("SkyArts.uk", conflicts)
+        self.assertIn("Channel4.uk", conflicts)
+        self.assertIn("SkySportsF1.uk", conflicts)
+        self.assertNotIn("Channel4.uk", targets)
+        self.assertNotIn("SkySportsF1.uk", targets)
+
+    def test_reviewed_alias_blocked_if_a_third_different_channel_shares_id(self):
+        self.rows.extend([
+            {"category": "Entertainment", "subcategory": "UK TV",
+             "name": "SKY ARTS", "epgId": "SkyArts.uk"},
+            {"category": "Entertainment", "subcategory": "UK Now TV",
+             "name": "SKY ARTS 1", "epgId": "SkyArts.uk"},
+            {"category": "Entertainment", "subcategory": "UK TV",
+             "name": "SKY ARTS +1", "epgId": "SkyArts.uk"},
+        ])
+        self.manifest.write_text(json.dumps({"rows": self.rows}))
+        targets, conflicts, _ = catalogue(self.manifest)
+        self.assertIn("SkyArts.uk", conflicts)
+        self.assertNotIn("SkyArts.uk", targets)
+
     def test_normalisation_retains_variants(self):
         self.assertNotEqual(norm("Sky Sport 1 +1"), norm("Sky Sport 1"))
         self.assertNotEqual(norm("TNT West"), norm("TNT East"))
