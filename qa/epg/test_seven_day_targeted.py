@@ -32,11 +32,11 @@ class EpgTargetedTest(unittest.TestCase):
             {"primary": source_index(root, NOW, NOW + timedelta(days=7))},
             NOW, NOW + timedelta(days=7)))
 
-    def test_four_real_days_accepted(self):
+    def test_three_real_days_accepted(self):
         au = etree.Element("tv")
         c = etree.SubElement(au, "channel", id="Channel9.au")
         etree.SubElement(c, "display-name").text = "Channel 9"
-        for day in range(4):
+        for day in range(3):
             start = NOW + timedelta(days=day)
             p = etree.SubElement(au, "programme", channel="Channel9.au",
                 start=start.strftime("%Y%m%d%H%M%S +0000"),
@@ -46,19 +46,19 @@ class EpgTargetedTest(unittest.TestCase):
             {"primary": source_index(au, NOW, NOW + timedelta(days=7))},
             NOW, NOW + timedelta(days=7))
         self.assertIsNotNone(found)
-        self.assertEqual(found[0], NOW + timedelta(days=4))
+        self.assertEqual(found[0], NOW + timedelta(days=3))
 
-    def test_less_than_four_real_days_rejected(self):
+    def test_less_than_three_real_days_rejected(self):
         au = etree.fromstring(
             b'<tv><channel id="Channel9.au"><display-name>Channel 9</display-name></channel>'
             b'<programme channel="Channel9.au" start="20261105000000 +0000" '
-            b'stop="20261108230000 +0000"><title>Real programme</title></programme></tv>')
+            b'stop="20261107230000 +0000"><title>Real programme</title></programme></tv>')
         found = select_feed({"name": "Channel 9", "epgId": "Channel9.au"},
             {"primary": source_index(au, NOW, NOW + timedelta(days=7))},
             NOW, NOW + timedelta(days=7))
         self.assertIsNone(found)
 
-    def test_prefers_seven_day_schedule_over_four_day(self):
+    def test_prefers_seven_day_schedule_over_three_day(self):
         def feed(days):
             au = etree.Element("tv")
             c = etree.SubElement(au, "channel", id="Channel9.au")
@@ -71,11 +71,11 @@ class EpgTargetedTest(unittest.TestCase):
                 etree.SubElement(p, "title").text = "Actual programme"
             return source_index(au, NOW, NOW + timedelta(days=7))
         choice = select_feed({"name": "Channel 9", "epgId": "Channel9.au"},
-            {"four": feed(4), "seven": feed(7)}, NOW, NOW + timedelta(days=7))
+            {"three": feed(3), "seven": feed(7)}, NOW, NOW + timedelta(days=7))
         self.assertEqual(choice[2], "seven")
         self.assertEqual(choice[0], NOW + timedelta(days=7))
 
-    def test_four_day_candidate_reports_actual_horizon_without_fake_schedule(self):
+    def test_three_day_candidate_reports_actual_horizon_without_fake_schedule(self):
         with tempfile.TemporaryDirectory() as td:
             base = Path(td)
             manifest = {"rows": (
@@ -90,7 +90,7 @@ class EpgTargetedTest(unittest.TestCase):
             au = etree.Element("tv")
             c = etree.SubElement(au, "channel", id="Channel9.au")
             etree.SubElement(c, "display-name").text = "Channel 9"
-            for day in range(4):
+            for day in range(3):
                 start = NOW + timedelta(days=day)
                 p = etree.SubElement(au, "programme", channel="Channel9.au",
                     start=start.strftime("%Y%m%d%H%M%S +0000"),
@@ -105,14 +105,14 @@ class EpgTargetedTest(unittest.TestCase):
             done = subprocess.run(cmd, capture_output=True, text=True)
             self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
             report = json.loads((base / "out/report.json").read_text())
-            self.assertEqual(report["minimumRealDays"], 4)
-            self.assertEqual(report["auChannelsWithFourDaySource"], 1)
+            self.assertEqual(report["minimumRealDays"], 3)
+            self.assertEqual(report["auChannelsWithThreeDaySource"], 1)
             self.assertEqual(report["auChannelsWithSevenDaySource"], 0)
-            self.assertEqual(datetime.fromisoformat(report["requiredThroughUtc"]), NOW + timedelta(days=4))
+            self.assertEqual(datetime.fromisoformat(report["requiredThroughUtc"]), NOW + timedelta(days=3))
             self.assertEqual(datetime.fromisoformat(report["preferredThroughUtc"]), NOW + timedelta(days=7))
             with gzip.open(base / "out/guide.xml.gz", "rb") as f:
                 published = etree.parse(f).getroot()
-            self.assertEqual(len(published.xpath('programme[@channel="Channel9.au"]')), 4)
+            self.assertEqual(len(published.xpath('programme[@channel="Channel9.au"]')), 3)
             self.assertEqual(len(published.xpath('programme[@channel="live:show-0"]')), 7)
 
     def test_targeted_merge_no_other_regions_or_catalogue_changed(self):
