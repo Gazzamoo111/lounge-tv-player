@@ -115,6 +115,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Artifact ZIP contains candidate/{report.json,guide.xml.gz,short/}.
+          # actions/download-artifact preserves that prefix.
+          test -s reviewed/candidate/report.json
+          test -s reviewed/candidate/guide.xml.gz
+          cp -a reviewed/candidate/. reviewed/
           test -s reviewed/report.json
           test -s reviewed/guide.xml.gz
           EXPECTED="$(cat reviewed/source-head.txt)"
