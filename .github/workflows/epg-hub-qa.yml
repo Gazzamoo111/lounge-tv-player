@@ -58,7 +58,10 @@ jobs:
           assert d['after']['3day']>=d['before']['3day']
           assert d['after']['7day']>=d['before']['7day']
           assert d['totalProgrammes']==d['preservedProgrammes']+d['addedProgrammes']
-          assert d['manifestTargets']>900
+          assert d['manifestTargets']>600  # excludes unstructured TV-show loops and Sky Store
+          assert len(d['byUsUkSubcategory'])>=10
+          assert d['byRegion']['us']['after']['3day'] >= d['byRegion']['us']['before']['3day']
+          assert d['byRegion']['uk']['after']['3day'] >= d['byRegion']['uk']['before']['3day']
           assert sum(s['status']=='ok' for s in d['sources'])>=4
           with gzip.open('candidate/guide.xml.gz','rb') as f:
             tree=etree.parse(f,etree.XMLParser(no_network=True,resolve_entities=False,huge_tree=True))
