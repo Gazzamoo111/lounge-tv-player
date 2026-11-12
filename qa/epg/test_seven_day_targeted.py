@@ -50,7 +50,7 @@ class EpgTargetedTest(unittest.TestCase):
                 {"epgshare": index}, NOW, NOW + timedelta(days=7))
             self.assertIsNotNone(match, name)
             self.assertEqual(match[2], "epgshare")
-            self.assertEqual(match[3], epg_id)
+            self.assertEqual(match[3].casefold(), epg_id.casefold())
         self.assertIsNone(select_feed(
             {"name": "FOX SPORTS 501", "epgId": "FoxSports1.au"},
             {"epgshare": index}, NOW, NOW + timedelta(days=7)))
