@@ -1,4 +1,4 @@
-name: Lounge TV scheduled AU EPG | 4-day minimum and honest 24-7
+name: Lounge TV scheduled AU EPG | 3-day minimum and honest 24-7
 on:
   push:
     branches: [main]
@@ -54,7 +54,7 @@ jobs:
             https://xmltv.net/xml_files/Sydney.xml \
             -o /tmp/lounge-epg7/au-xmltv-net.xml || true
           test -s /tmp/lounge-epg7/existing.xml.gz
-      - name: Build four-day-minimum AU guide and seven-day 24/7 labels
+      - name: Build three-day-minimum AU guide and seven-day 24/7 labels
         run: |
           python qa/epg/seven_day_targeted.py \
             --manifest epg-release/qa/epg/active-release.json \
@@ -74,19 +74,19 @@ jobs:
           r=json.loads(Path('qa/epg/rolling7-out/report.json').read_text())
           assert r['auChannels']==38
           assert r['loopChannels']==672
-          assert r['auChannelsWithFourDaySource']>0
-          assert r['minimumRealDays']==4
-          assert r['auChannelsWithSevenDaySource']<=r['auChannelsWithFourDaySource']
+          assert r['auChannelsWithThreeDaySource']>0
+          assert r['minimumRealDays']==3
+          assert r['auChannelsWithSevenDaySource']<=r['auChannelsWithThreeDaySource']
           assert r['loopChannelsNewlyCovered']>0
           assert r['untouchedExistingProgrammeEntries'] == r['existingProgrammeEntries']
-          assert datetime.fromisoformat(r['requiredThroughUtc']) - datetime.fromisoformat(r['generatedAtUtc']) == timedelta(days=4)
+          assert datetime.fromisoformat(r['requiredThroughUtc']) - datetime.fromisoformat(r['generatedAtUtc']) == timedelta(days=3)
           assert datetime.fromisoformat(r['preferredThroughUtc']) - datetime.fromisoformat(r['generatedAtUtc']) == timedelta(days=7)
           with gzip.open('qa/epg/rolling7-out/guide.xml.gz','rb') as file:
             tree=etree.parse(file)
           changed=set(r['changedEpgIds'])
           assert len(changed)>100
           assert all(tree.xpath('channel[@id=$cid]',cid=cid) for cid in changed)
-          print('EPG_AU_FOUR_DAY_GATE_PASS',r['auChannelsWithFourDaySource'],r['auChannelsWithSevenDaySource'],r['loopChannelsNewlyCovered'])
+          print('EPG_AU_THREE_DAY_GATE_PASS',r['auChannelsWithThreeDaySource'],r['auChannelsWithSevenDaySource'],r['loopChannelsNewlyCovered'])
           PY
       - name: Attach exact source revision for atomic compare-and-swap
         run: cp /tmp/lounge-epg7/source-head.txt qa/epg/rolling7-out/source-head.txt
@@ -150,5 +150,5 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add epg/guide.xml.gz epg/guide.xml epg/short epg/rolling7-au-247-report.json
           git diff --cached --quiet && exit 0
-          git commit -m 'epg: refresh Australian schedules with four-day minimum and honest 24/7 labels'
+          git commit -m 'epg: refresh Australian schedules with three-day minimum and honest 24/7 labels'
           git push origin HEAD:epg-data

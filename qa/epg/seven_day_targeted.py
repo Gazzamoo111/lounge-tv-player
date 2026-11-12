@@ -20,7 +20,7 @@ from lxml import etree
 
 UTC = timezone.utc
 DAYS = 7  # Preferred source window and continuous 24/7 label window.
-MIN_REAL_DAYS = 4  # Minimum genuine Australian schedule horizon for acceptance.
+MIN_REAL_DAYS = 3  # Minimum genuine Australian schedule horizon for acceptance.
 ALIAS = {
     "FOX SPORTS 501": "FoxCricket.au",
     "FOX SPORTS 502": "FoxLeague.au",
@@ -129,7 +129,7 @@ def select_feed(row, feeds, now, end):
             continue
         earliest = min(e[0] for e in rows)
         latest = max(e[1] for e in rows)
-        # At least four actual days are required; longer sources remain preferable.
+        # At least three actual days are required; longer sources remain preferable.
         # The separate 24/7 continuous labels are not real broadcast schedules.
         if earliest > now + timedelta(hours=3) or latest < now + timedelta(days=MIN_REAL_DAYS):
             continue
@@ -252,7 +252,7 @@ def main():
             continue
         choice = select_feed(row, feeds, now, end)
         if not choice:
-            au_status[row["name"]] = "no-four-day-source"
+            au_status[row["name"]] = "no-three-day-source"
             possible = []
             for feed_name, (ids, names, programs) in feeds.items():
                 desired = str(row.get("epgId") or "").strip()
@@ -349,7 +349,7 @@ def main():
         "requiredThroughUtc": (now + timedelta(days=MIN_REAL_DAYS)).isoformat(),
         "preferredThroughUtc": end.isoformat(), "minimumRealDays": MIN_REAL_DAYS,
         "sourceErrors": errors, "auChannels": len(au_rows),
-        "auChannelsWithFourDaySource": sum(isinstance(v, dict) for v in au_status.values()),
+        "auChannelsWithThreeDaySource": sum(isinstance(v, dict) for v in au_status.values()),
         "auChannelsWithSevenDaySource": sum(
             isinstance(v, dict) and datetime.fromisoformat(v["latest"]) >= end
             for v in au_status.values()),
@@ -361,7 +361,7 @@ def main():
         "existingProgrammeEntries": len(before),
         "totalProgrammeEntries": len(root.findall("programme")),
         "shortFilesUpdated": len(short_count),
-        "sourceCoverageClaim": "At least four days of real AU schedule horizon, seven where available; other regions unchanged",
+        "sourceCoverageClaim": "At least three days of real AU schedule horizon, seven where available; other regions unchanged",
     }
     (out / "report.json").write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps({k: v for k, v in report.items() if k not in

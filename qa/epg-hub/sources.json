@@ -1,0 +1,151 @@
+{
+  "version": 1,
+  "minimumRealDays": 3,
+  "preferredDays": 7,
+  "mode": "qa-only",
+  "sources": [
+    {
+      "id": "nz-mjh",
+      "region": "nz",
+      "url": "https://i.mjh.nz/nz/epg.xml.gz",
+      "maxMb": 12,
+      "enabled": true
+    },
+    {
+      "id": "nz-nzxmltv-freeview",
+      "region": "nz",
+      "url": "https://nzxmltv.com/freeview/guide-static.xml.gz",
+      "maxMb": 12,
+      "enabled": true
+    },
+    {
+      "id": "nz-nzxmltv-sky",
+      "region": "nz",
+      "url": "https://nzxmltv.com/sky/guide-static.xml.gz",
+      "maxMb": 18,
+      "enabled": true
+    },
+    {
+      "id": "nz-epgshare",
+      "region": "nz",
+      "url": "https://epgshare01.online/epgshare01/epg_ripper_NZ1.xml.gz",
+      "maxMb": 12,
+      "enabled": true
+    },
+    {
+      "id": "nz-iptv-epg",
+      "region": "nz",
+      "url": "https://iptv-epg.org/files/epg-nz.xml.gz",
+      "maxMb": 12,
+      "enabled": true
+    },
+    {
+      "id": "au-iptv-epg",
+      "region": "au",
+      "url": "https://iptv-epg.org/files/epg-au.xml.gz",
+      "maxMb": 25,
+      "enabled": true
+    },
+    {
+      "id": "au-epgshare",
+      "region": "au",
+      "url": "https://epgshare01.online/epgshare01/epg_ripper_AU1.xml.gz",
+      "maxMb": 12,
+      "enabled": true
+    },
+    {
+      "id": "au-mjh-sydney",
+      "region": "au",
+      "url": "https://i.mjh.nz/au/Sydney/epg.xml.gz",
+      "maxMb": 12,
+      "enabled": true
+    },
+    {
+      "id": "au-xmltv-net",
+      "region": "au",
+      "url": "https://xmltv.net/xml_files/Sydney.xml",
+      "maxMb": 12,
+      "enabled": true
+    },
+    {
+      "id": "uk-epgtalk",
+      "region": "uk",
+      "url": "https://raw.githubusercontent.com/acidjesuz/EPGTalk/master/UK_guide.xml.gz",
+      "maxMb": 25,
+      "enabled": true
+    },
+    {
+      "id": "uk-epgshare",
+      "region": "uk",
+      "url": "https://epgshare01.online/epgshare01/epg_ripper_UK1.xml.gz",
+      "maxMb": 12,
+      "enabled": true
+    },
+    {
+      "id": "uk-iptv-epg",
+      "region": "uk",
+      "url": "https://iptv-epg.org/files/epg-gb.xml.gz",
+      "maxMb": 25,
+      "enabled": true
+    },
+    {
+      "id": "us-epgtalk",
+      "region": "us",
+      "url": "https://raw.githubusercontent.com/acidjesuz/EPGTalk/master/US_guide.xml.gz",
+      "maxMb": 25,
+      "enabled": true
+    },
+    {
+      "id": "us-epgshare",
+      "region": "us",
+      "url": "https://epgshare01.online/epgshare01/epg_ripper_US2.xml.gz",
+      "maxMb": 25,
+      "enabled": true
+    },
+    {
+      "id": "us-sports-epgshare",
+      "region": "us",
+      "url": "https://epgshare01.online/epgshare01/epg_ripper_US_SPORTS1.xml.gz",
+      "maxMb": 12,
+      "enabled": true
+    },
+    {
+      "id": "us-sports-epgtalk",
+      "region": "us",
+      "url": "https://raw.githubusercontent.com/acidjesuz/EPGTalk/master/Sports_guide.xml.gz",
+      "maxMb": 12,
+      "enabled": true
+    },
+    {
+      "id": "us-epgtalk-locals",
+      "region": "us",
+      "url": "https://raw.githubusercontent.com/acidjesuz/EPGTalk/master/US_local_guide.xml.gz",
+      "maxMb": 12,
+      "enabled": true
+    },
+    {
+      "id": "us-epgtalk-freetv",
+      "region": "us",
+      "url": "https://raw.githubusercontent.com/acidjesuz/EPGTalk/master/FreeTV_guide.xml.gz",
+      "maxMb": 18,
+      "enabled": true
+    },
+    {
+      "id": "us-iptv-epg-large",
+      "region": "us",
+      "url": "https://iptv-epg.org/files/epg-us.xml.gz",
+      "maxMb": 110,
+      "enabled": true
+    }
+  ],
+  "deferred": [
+    {
+      "id": "epg-pw",
+      "reason": "Published terms restrict commercial use; not eligible for Lounge TV customer redistribution without permission"
+    },
+    {
+      "id": "epgenius",
+      "reason": "Provider-specific personal M3U templates, no verified universal reusable XMLTV feed"
+    }
+  ]
+}
