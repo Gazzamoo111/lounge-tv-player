@@ -115,7 +115,7 @@ def explicit_source_region(channel_id, labels):
             markets.add(tail.group(1).lower())
         if lead:
             markets.add(lead.group(1).lower())
-    return next(iter(markets)) if len(markets) == 1 else None
+    return "conflict" if len(markets) > 1 else (next(iter(markets)) if markets else None)
 
 
 def parse_source(path, region_code, targets, name_counts, now):
