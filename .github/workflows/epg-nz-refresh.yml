@@ -61,7 +61,7 @@ jobs:
           python source/qa/shared-epg/repair_nz.py \
             --manifest source/qa/shared-epg/current-manifest.json \
             --existing published/epg/guide.xml.gz \
-            "\${args[@]}" --out candidate
+            "${args[@]}" --out candidate
       - name: Validate real NZ candidate and unchanged guide integrity
         run: |
           python - <<'PY'
