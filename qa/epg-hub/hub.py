@@ -25,6 +25,9 @@ IGNORE_CATEGORIES = {"24/7", "PPV"}
 IGNORE_SUBCATEGORIES = {"CINEMANIA TV SHOWS", "Sky Store"}
 BAD_TITLE = re.compile(r"^(?:no (?:programme|program) (?:data|information)|to be announced|dummy|tba)$", re.I)
 QUALITY = re.compile(r"\b(?:8k|4k|uhd|fhd|hd|sd|hevc|h265|50fps|60fps)\b", re.I)
+# 4K/UHD may be a separate sports production. Never name-match its EPG to a
+# standard HD feed merely because quality tokens are removed by norm().
+UHD_VARIANT = re.compile(r"\b(?:8k|4k|uhd)\b", re.I)
 MARKET = re.compile(r"^(?:US|UK|UK-NOWTV|NZ|AU|USA|AUS)\s*[|:]\s*", re.I)
 COUNTRIES = {"New Zealand": "nz", "Australia": "au"}
 # Reviewed identities that genuinely describe the same UK broadcast. These
@@ -158,6 +161,13 @@ def parse_source(path, region_code, targets, name_counts, now):
             if len(matches) != 1 or name_counts[(market, key)] != 1:
                 continue
             cid, method = next(iter(matches)), "unique-name"
+            target_uhd = bool(UHD_VARIANT.search(target["name"]))
+            source_uhd = any(
+                UHD_VARIANT.search(label)
+                for label in [cid, *source_labels.get(cid, [])]
+            )
+            if target_uhd != source_uhd:
+                continue
         source_market = explicit_source_region(cid, source_labels.get(cid, []))
         if source_market and source_market != market:
             continue
@@ -217,6 +227,41 @@ def actual_coverage(programmes, targets, now, days):
     return {"now": len(current),
             "3day": len({t for t in current if latest[t] >= now + timedelta(days=days)}),
             "7day": len({t for t in current if latest[t] >= now + timedelta(days=7)})}
+
+
+def uncovered_three_day(programmes_by_id, targets, now, minimum_days):
+    """Complete genuine US/UK three-day gap report, with no arbitrary item limit.
+
+    An on-air programme with a short remaining schedule is a gap as well;
+    rejecting fabricated 24/7 placeholders mirrors actual_coverage().
+    """
+    required = now + timedelta(days=minimum_days)
+    missing = []
+    for tid, target in sorted(targets.items()):
+        if target["region"] not in ("us", "uk"):
+            continue
+        current = False
+        latest = None
+        for p in programmes_by_id.get(tid, []):
+            start, stop = dt(p.get("start")), dt(p.get("stop"))
+            title = (p.findtext("title") or "").strip()
+            if (not start or not stop or stop <= start or not title
+                    or BAD_TITLE.fullmatch(title) or title.startswith("24/7 • ")):
+                continue
+            if start <= now < stop:
+                current = True
+            if latest is None or stop > latest:
+                latest = stop
+        if current and latest is not None and latest >= required:
+            continue
+        missing.append({
+            "id": tid, "name": target["name"], "region": target["region"],
+            "category": target["category"], "subcategory": target["subcategory"],
+            "syntheticId": tid.startswith("live:"),
+            "gapReason": "no-current-listing" if not current else "short-horizon",
+            "latestUtc": latest.isoformat() if latest else None,
+        })
+    return missing
 
 
 def build(manifest, existing, source_entries, out, now=None, minimum_days=3):
@@ -366,13 +411,7 @@ def build(manifest, existing, source_entries, out, now=None, minimum_days=3):
               "byUsUkSubcategory": by_subcategory,
               "addedProgrammes": added, "changedTargets": len(amended),
               "preservedProgrammes": before_count, "totalProgrammes": before_count + added,
-              "selected": proven, "uncovered3day": [
-                  {"id": tid, "name": t["name"], "region": t["region"],
-                   "subcategory": t["subcategory"], "syntheticId": tid.startswith("live:")}
-                  for tid, t in targets.items()
-                  if t["region"] in ("us", "uk") and
-                     not any((dt(p.get("start")) or now) <= now < (dt(p.get("stop")) or now)
-                          for p in existing_by_id[tid])][:150]}
+              "selected": proven, "uncovered3day": uncovered_three_day(existing_by_id, targets, now, minimum_days)}
     (out / "report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
     print(json.dumps({k: v for k, v in report.items()
                       if k not in ("selected", "uncovered3day")},

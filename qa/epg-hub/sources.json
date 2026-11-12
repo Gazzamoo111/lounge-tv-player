@@ -213,6 +213,17 @@
       "provenance": "ferteque/Curated-M3U-Repository",
       "scope": "QA-only: exact ID and explicitly region-qualified name matches",
       "redistributionRights": "unverified"
+    },
+    {
+      "id": "ferteque-epg55",
+      "region": "multi",
+      "url": "https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg55.xml.gz",
+      "maxMb": 12,
+      "enabled": true,
+      "expectedCompressedBytes": 8149345,
+      "provenance": "ferteque/Curated-M3U-Repository",
+      "scope": "QA-only: exact ID and explicitly region-qualified name matches",
+      "redistributionRights": "unverified"
     }
   ],
   "deferred": [
