@@ -1343,9 +1343,9 @@ class LiveViewModel(
     fun sourceOf(channel: ChannelEntity): SourceEntity? = sourceById[channel.sourceId]
 
     /**
-     * The five NZ free-to-air rows are delivered by the Lounge Xtream catalogue, but TVNZ 1/2 need
-     * Widevine metadata that Xtream has no standard field for. Apply the audited direct source only
-     * to Lounge's own Xtream source. This keeps one customer playlist while preserving DRM in-app.
+     * Lounge's NZ TVNZ 1/2 live URLs now resolve centrally to validated BEST sources.
+     * Preserve those URLs instead of overriding to obsolete MJH Widevine streams.
+     * The three unencrypted Freeview channels continue to use their known HLS sources.
      */
     private fun loungeNzPlaybackChannel(channel: ChannelEntity): ChannelEntity {
         val source = sourceById[channel.sourceId] ?: return channel
@@ -1358,18 +1358,11 @@ class LiveViewModel(
             .filter { it.isLetterOrDigit() }
         val userAgent = "User-Agent: otg/1.5.1 (AppleTv Apple TV 4; tvOS16.0; appletv.client) libcurl/7.58.0 OpenSSL/1.0.2o zlib/1.2.11 clib/1.8.56"
         return when (key) {
-            "TVNZ1" -> channel.copy(
-                streamUrl = "https://i.mjh.nz/.r/tvnz-1.mpd",
-                httpHeaders = userAgent,
-                drmConfig = """{"scheme":"widevine","license":"https://c.mjh.nz/tvnz-1-wv"}""",
-                manifestType = "mpd",
-                directSource = null,
-            )
-            "TVNZ2" -> channel.copy(
-                streamUrl = "https://i.mjh.nz/.r/tvnz-2.mpd",
-                httpHeaders = userAgent,
-                drmConfig = """{"scheme":"widevine","license":"https://c.mjh.nz/tvnz-2-wv"}""",
-                manifestType = "mpd",
+            // TVNZ 1/2 now use the canonical BEST-backed Xtream URLs supplied by
+            // the Lounge gateway. Do not replace these with legacy MJH Widevine manifests.
+            "TVNZ1", "TVNZ2" -> channel.copy(
+                drmConfig = null,
+                manifestType = null,
                 directSource = null,
             )
             "THREE" -> channel.copy(
