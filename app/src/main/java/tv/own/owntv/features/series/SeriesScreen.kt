@@ -506,8 +506,8 @@ private fun SeriesGrid(
             repeat(12) {
                 withFrameNanos { }
                 val target = when {
-                    displayFeatured -> firstFeaturedFocus
                     displayNewReleases -> firstNewReleaseFocus
+                    displayFeatured -> firstFeaturedFocus
                     series.itemCount > 0 -> firstItemFocus
                     else -> listSearchFocus
                 }
@@ -579,8 +579,8 @@ private fun SeriesGrid(
         repeat(16) {
             withFrameNanos { }
             val target = when {
-                displayFeatured -> firstFeaturedFocus
                 displayNewReleases -> firstNewReleaseFocus
+                displayFeatured -> firstFeaturedFocus
                 series.itemCount > 0 -> firstItemFocus
                 else -> listSearchFocus
             }
@@ -748,35 +748,6 @@ private fun SeriesGrid(
                                 contentPadding = PaddingValues(start = fx(84), end = fx(64), top = 14.mpx, bottom = glowRoom),
                                 modifier = Modifier.fillMaxWidth().weight(1f),
                             ) {
-                                if (displayFeatured) {
-                                    item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
-                                        Text(
-                                            text = stringResource(R.string.lounge_series_featured),
-                                            style = stageText(28, 800),
-                                            color = StageColors.Text,
-                                            modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
-                                        )
-                                    }
-                                    items(
-                                        count = featuredPreview.size,
-                                        key = { index -> Long.MIN_VALUE + 100L + index.toLong() },
-                                        contentType = { 11 },
-                                    ) { index ->
-                                        val show = featuredPreview[index]
-                                        LoungeSeriesEditorialPoster(
-                                            item = show,
-                                            width = posterW,
-                                            title = homeEditorial.popularSeriesNames[show.id] ?: show.canonicalTitle.ifBlank { show.name },
-                                            posterUrl = posterOf(show),
-                                            firstInSection = index == 0,
-                                            atLeftEdge = index % columns == 0,
-                                            focusRequester = firstFeaturedFocus,
-                                            onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
-                                            onFocus = onShowFocus,
-                                            onOpen = openHighlightedShow,
-                                        )
-                                    }
-                                }
                                 if (displayNewReleases) {
                                     item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
                                         Text(
@@ -800,6 +771,35 @@ private fun SeriesGrid(
                                             firstInSection = index == 0,
                                             atLeftEdge = index % columns == 0,
                                             focusRequester = firstNewReleaseFocus,
+                                            onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                            onFocus = onShowFocus,
+                                            onOpen = openHighlightedShow,
+                                        )
+                                    }
+                                }
+                                if (displayFeatured) {
+                                    item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
+                                        Text(
+                                            text = stringResource(R.string.lounge_series_featured),
+                                            style = stageText(28, 800),
+                                            color = StageColors.Text,
+                                            modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
+                                        )
+                                    }
+                                    items(
+                                        count = featuredPreview.size,
+                                        key = { index -> Long.MIN_VALUE + 100L + index.toLong() },
+                                        contentType = { 11 },
+                                    ) { index ->
+                                        val show = featuredPreview[index]
+                                        LoungeSeriesEditorialPoster(
+                                            item = show,
+                                            width = posterW,
+                                            title = homeEditorial.popularSeriesNames[show.id] ?: show.canonicalTitle.ifBlank { show.name },
+                                            posterUrl = posterOf(show),
+                                            firstInSection = index == 0,
+                                            atLeftEdge = index % columns == 0,
+                                            focusRequester = firstFeaturedFocus,
                                             onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
                                             onFocus = onShowFocus,
                                             onOpen = openHighlightedShow,

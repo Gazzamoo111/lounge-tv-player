@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import tv.own.owntv.core.database.OwnTVDatabase
 import tv.own.owntv.core.database.dao.CategoryDao
 import tv.own.owntv.core.customize.CustomizationStore
 import tv.own.owntv.core.database.dao.ChannelDao
@@ -102,6 +103,8 @@ data class HomeUiState(
     val favoriteLive: List<ChannelEntity> = emptyList(),
     val favoriteMovies: List<MovieEntity> = emptyList(),
     val favoriteSeries: List<SeriesEntity> = emptyList(),
+    val newMovies: List<MovieEntity> = emptyList(),
+    val newSeries: List<SeriesEntity> = emptyList(),
     val featuredMovies: List<MovieEntity> = emptyList(),
     val popularSeries: List<SeriesEntity> = emptyList(),
     val featuredMovieNames: Map<Long, String> = emptyMap(),
@@ -158,6 +161,7 @@ class HomeViewModel(
     private val catalogSyncScheduler: CatalogSyncScheduler,
     private val context: android.content.Context,
     private val customizations: CustomizationStore,
+    private val database: OwnTVDatabase,
 ) : ViewModel() {
     // One automatic recovery attempt per playlist per Home VM lifetime.
     // A normal provider sync or backfill still owns its own Trending updates.
@@ -475,10 +479,12 @@ class HomeViewModel(
             try {
                 val selection = LoungeHomeHighlightsReader(
                     movieDao, seriesDao, channelDao, categoryDao,
-                    profileDao, sourceDao, settings, customizations, context,
+                    profileDao, sourceDao, settings, customizations, context, database,
                 ).load(profileId, now)
                 if (currentProfileId() == profileId) {
                     _uiState.value = _uiState.value.copy(
+                        newMovies = selection.newMovies,
+                        newSeries = selection.newSeries,
                         featuredMovies = selection.movies,
                         popularSeries = selection.series,
                         featuredMovieNames = selection.movieNames,

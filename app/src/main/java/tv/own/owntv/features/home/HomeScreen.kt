@@ -126,7 +126,20 @@ import java.util.Locale
 private val RowGap = 40.mpx
 
 /** Lounge TV's first-login rails use the existing card widgets, without altering OwnTV Core. */
-private enum class LoungeHomeRow { SPORTS_HERO, FEATURED_MOVIES, POPULAR_SERIES, SPORTS_LINKS, SPORTS_FIXTURES }
+internal enum class LoungeHomeRow { SPORTS_HERO, NEW_RELEASES, FEATURED_MOVIES, POPULAR_SERIES, SPORTS_LINKS, SPORTS_FIXTURES }
+
+private sealed interface HomeNewRelease {
+    data class Movie(val movie: MovieEntity) : HomeNewRelease
+    data class Series(val series: SeriesEntity) : HomeNewRelease
+}
+
+internal fun loungeCuratedHomeRows(hidden: Set<HomeRow>): List<Any> = buildList<Any> {
+    if (HomeRow.HERO !in hidden) add(HomeRow.HERO)
+    add(LoungeHomeRow.NEW_RELEASES)
+    if (HomeRow.TRENDING !in hidden) add(HomeRow.TRENDING)
+    add(LoungeHomeRow.FEATURED_MOVIES)
+    add(LoungeHomeRow.POPULAR_SERIES)
+}
 
 /** Quick links only: every destination already exists in the v5.2.2.11 app. */
 enum class LoungeSportsShortcut(val title: Int, val subtitle: Int) {
@@ -236,29 +249,14 @@ fun HomeScreen(
     // A Keep watching card plays its preview only after 3 s of continuous focus (the dwell below).
     var previewIndex by remember { mutableStateOf(-1) }
     var focusedHeroIndex by remember { mutableStateOf(-1) }
-    // Keep Watching follows the featured hero, then favourites and curated VOD.
-    // Do not build a Live TV Highlights row from incomplete programme listings.
-    // Do not resurrect any user-hidden existing Home rows.
-    val orderedRows: List<Any> = buildList {
-        val originalRows = state.config.visibleOrder
-        if (sportsHero.isNotEmpty() && originalRows.isNotEmpty()) add(LoungeHomeRow.SPORTS_HERO)
-        val preferred = listOf<Any>(
-            HomeRow.TRENDING,
-            HomeRow.HERO,
-            HomeRow.FAVORITE_CHANNELS,
-            HomeRow.FAVORITE_MOVIES,
-            HomeRow.FAVORITE_SERIES,
-            LoungeHomeRow.FEATURED_MOVIES,
-            LoungeHomeRow.POPULAR_SERIES,
-        )
-        preferred.forEach { row ->
-            if (row is LoungeHomeRow || (row is HomeRow && row in originalRows)) add(row)
-        }
-        originalRows.forEach { row -> if (row !in this) add(row) }
-        // Append only. Never move/remove the hero, films, series, recent or favourites.
-        if (originalRows.isNotEmpty()) {
-            add(LoungeHomeRow.SPORTS_LINKS)
-            if (HomeRow.LIVE_SPORTS !in originalRows) add(LoungeHomeRow.SPORTS_FIXTURES)
+    // Exactly five Home shelves; old Continue and sports sections remain available elsewhere.
+    val orderedRows: List<Any> = loungeCuratedHomeRows(state.config.hidden)
+    val newReleaseItems = remember(state.newMovies, state.newSeries) {
+        buildList<HomeNewRelease> {
+            for (index in 0 until maxOf(state.newMovies.size, state.newSeries.size)) {
+                state.newMovies.getOrNull(index)?.let { add(HomeNewRelease.Movie(it)) }
+                state.newSeries.getOrNull(index)?.let { add(HomeNewRelease.Series(it)) }
+            }
         }
     }
     val heroVisible = HomeRow.HERO in orderedRows
@@ -268,11 +266,9 @@ fun HomeScreen(
     val firstDataRow = renderRows.firstOrNull { it != HomeRow.HERO && rowHasData(it, state, sportsCards.size) }
     val showAllHiddenState = orderedRows.isEmpty()
     val showEmptyState = orderedRows.isNotEmpty() && renderRows.isEmpty()
-    val fullBleed = renderRows.firstOrNull() == HomeRow.TRENDING &&
-        state.config.trendingStyle == HomeTrendingStyle.HERO
-    // Trending layout = Posters only: the folded line on top follows the focused poster.
-    val posterHero = renderRows.firstOrNull() == HomeRow.TRENDING &&
-        state.config.trendingStyle == HomeTrendingStyle.POSTERS
+    // Trending is a third-row poster shelf, not a first-row full-bleed hero.
+    val fullBleed = false
+    val posterHero = false
     var posterIndex by remember { mutableIntStateOf(0) }
     val rowFocusRequester: (Any) -> FocusRequester? = { row ->
         if (row == renderRows.firstOrNull() && firstRowFocusRequester != null) {
@@ -483,6 +479,36 @@ fun HomeScreen(
                             start = contentStart,
                             onOpenMatch = onOpenMatch,
                             onFocus = { onSportsRowFocused(LoungeHomeRow.SPORTS_FIXTURES) },
+                            firstItemFocusRequester = firstItemFocusRequester,
+                            track = track,
+                            modifier = rowModifier,
+                        )
+
+                        LoungeHomeRow.NEW_RELEASES -> FavoritePosterRow(
+                            title = stringResource(R.string.lounge_movies_new_releases),
+                            items = newReleaseItems,
+                            key = { when (it) {
+                                is HomeNewRelease.Movie -> it.movie.id * 2L
+                                is HomeNewRelease.Series -> it.series.id * 2L + 1L
+                            } },
+                            name = { when (it) {
+                                is HomeNewRelease.Movie -> loungeVodTitle(it.movie.canonicalTitle.ifBlank { it.movie.name })
+                                is HomeNewRelease.Series -> loungeVodTitle(it.series.canonicalTitle.ifBlank { it.series.name })
+                            } },
+                            poster = { when (it) {
+                                is HomeNewRelease.Movie -> it.movie.posterUrl
+                                is HomeNewRelease.Series -> it.series.posterUrl
+                            } },
+                            badges = { when (it) {
+                                is HomeNewRelease.Movie -> vodMoviePosterBadges(it.movie.rating, movieProgress[it.movie.id])
+                                is HomeNewRelease.Series -> vodSeriesPosterBadges(it.series.rating, seriesProgress[it.series.id])
+                            } },
+                            start = contentStart,
+                            onItemClick = { when (it) {
+                                is HomeNewRelease.Movie -> onOpenMovie(it.movie)
+                                is HomeNewRelease.Series -> onOpenSeries(it.series)
+                            } },
+                            onFocus = onNonHeroFocused,
                             firstItemFocusRequester = firstItemFocusRequester,
                             track = track,
                             modifier = rowModifier,
@@ -841,6 +867,7 @@ private fun rowHasData(row: Any, state: HomeUiState, sportsCards: Int): Boolean 
     LoungeHomeRow.SPORTS_HERO -> true
     LoungeHomeRow.SPORTS_LINKS -> !state.isLoading
     LoungeHomeRow.SPORTS_FIXTURES -> sportsCards > 0
+    LoungeHomeRow.NEW_RELEASES -> state.newMovies.isNotEmpty() || state.newSeries.isNotEmpty()
     LoungeHomeRow.FEATURED_MOVIES -> state.featuredMovies.isNotEmpty()
     LoungeHomeRow.POPULAR_SERIES -> state.popularSeries.isNotEmpty()
     HomeRow.TRENDING -> state.trendingItems.size >= TrendingDao.MIN_ELIGIBLE_ITEMS
@@ -1379,27 +1406,31 @@ private fun ContinuePosterRow(
 ) {
     Column(modifier) {
         HomeRowHeader(title, small = items.size.toString(), start = start)
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(20.mpx),
-            contentPadding = PaddingValues(start = start, end = 64.mpx),
-            modifier = Modifier.focusRestorer().focusGroup(),
-        ) {
-            itemsIndexed(items, key = { _, item -> item.stableKey }) { index, item ->
-                val badge = badges(item)
-                StagePoster(
-                    title = loungeVodTitle(item.title),
-                    rating = badge.rating,
-                    watched = badge.watched,
-                    progress = badge.progress,
-                    onClick = { onItemClick(item) },
-                    width = 196.mpx,
-                    height = 294.mpx,
-                    modifier = Modifier
-                        .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
-                        .tracked(track = track)
-                        .onFocusChanged { if (it.hasFocus) onFocus() },
-                ) {
-                    AsyncImage(model = item.posterUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val posterWidth = ((maxWidth - start - 64.mpx - 100.mpx) / 6).coerceAtLeast(150.mpx)
+            val posterHeight = posterWidth * 1.5f
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(20.mpx),
+                contentPadding = PaddingValues(start = start, end = 64.mpx),
+                modifier = Modifier.focusRestorer().focusGroup(),
+            ) {
+                itemsIndexed(items, key = { _, item -> item.stableKey }) { index, item ->
+                    val badge = badges(item)
+                    StagePoster(
+                        title = loungeVodTitle(item.title),
+                        rating = badge.rating,
+                        watched = badge.watched,
+                        progress = badge.progress,
+                        onClick = { onItemClick(item) },
+                        width = posterWidth,
+                        height = posterHeight,
+                        modifier = Modifier
+                            .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
+                            .tracked(track = track)
+                            .onFocusChanged { if (it.hasFocus) onFocus() },
+                    ) {
+                        AsyncImage(model = item.posterUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                    }
                 }
             }
         }
@@ -1424,27 +1455,31 @@ private fun <T> FavoritePosterRow(
 ) {
     Column(modifier) {
         HomeRowHeader(title, small = items.size.toString(), start = start)
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(20.mpx),
-            contentPadding = PaddingValues(start = start, end = 64.mpx),
-            modifier = Modifier.focusRestorer().focusGroup(),
-        ) {
-            itemsIndexed(items, key = { _, item -> key(item) }) { index, item ->
-                val badge = badges(item)
-                StagePoster(
-                    title = name(item),
-                    rating = badge.rating,
-                    watched = badge.watched,
-                    progress = badge.progress,
-                    onClick = { onItemClick(item) },
-                    width = 196.mpx,
-                    height = 294.mpx,
-                    modifier = Modifier
-                        .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
-                        .tracked(track = track)
-                        .onFocusChanged { if (it.hasFocus) onFocus() },
-                ) {
-                    AsyncImage(model = poster(item), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val posterWidth = ((maxWidth - start - 64.mpx - 100.mpx) / 6).coerceAtLeast(150.mpx)
+            val posterHeight = posterWidth * 1.5f
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(20.mpx),
+                contentPadding = PaddingValues(start = start, end = 64.mpx),
+                modifier = Modifier.focusRestorer().focusGroup(),
+            ) {
+                itemsIndexed(items, key = { _, item -> key(item) }) { index, item ->
+                    val badge = badges(item)
+                    StagePoster(
+                        title = name(item),
+                        rating = badge.rating,
+                        watched = badge.watched,
+                        progress = badge.progress,
+                        onClick = { onItemClick(item) },
+                        width = posterWidth,
+                        height = posterHeight,
+                        modifier = Modifier
+                            .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
+                            .tracked(track = track)
+                            .onFocusChanged { if (it.hasFocus) onFocus() },
+                    ) {
+                        AsyncImage(model = poster(item), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                    }
                 }
             }
         }
@@ -1472,43 +1507,47 @@ private fun TrendingPosterRow(
     Column {
         HomeRowHeader(title, small = null, start = start)
         Spacer(Modifier.height(headerGap))
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(20.mpx),
-            contentPadding = PaddingValues(start = start, end = 64.mpx),
-            modifier = Modifier.focusRestorer().focusGroup(),
-        ) {
-            itemsIndexed(items, key = { _, item -> item.stableKey }) { index, item ->
-                val badge = badges(item)
-                StagePoster(
-                    title = when (item) {
-                        is TrendingHomeItem.Movie -> loungeVodTitle(item.movie.name)
-                        is TrendingHomeItem.Series -> loungeVodTitle(item.series.name)
-                    },
-                    onClick = { onItemClick(item) },
-                    width = 196.mpx,
-                    height = 294.mpx,
-                    rating = badge.rating,
-                    watched = badge.watched,
-                    progress = badge.progress,
-                    modifier = Modifier
-                        .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
-                        .tracked(track = track)
-                        .onFocusChanged {
-                            if (it.hasFocus) {
-                                onItemFocused(index)
-                                onFocus()
-                            }
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val posterWidth = ((maxWidth - start - 64.mpx - 100.mpx) / 6).coerceAtLeast(150.mpx)
+            val posterHeight = posterWidth * 1.5f
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(20.mpx),
+                contentPadding = PaddingValues(start = start, end = 64.mpx),
+                modifier = Modifier.focusRestorer().focusGroup(),
+            ) {
+                itemsIndexed(items, key = { _, item -> item.stableKey }) { index, item ->
+                    val badge = badges(item)
+                    StagePoster(
+                        title = when (item) {
+                            is TrendingHomeItem.Movie -> loungeVodTitle(item.movie.name)
+                            is TrendingHomeItem.Series -> loungeVodTitle(item.series.name)
                         },
-                ) {
-                    AsyncImage(
-                        model = when (item) {
-                            is TrendingHomeItem.Movie -> item.movie.posterUrl
-                            is TrendingHomeItem.Series -> item.series.posterUrl
-                        },
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize(),
-                    )
+                        onClick = { onItemClick(item) },
+                        width = posterWidth,
+                        height = posterHeight,
+                        rating = badge.rating,
+                        watched = badge.watched,
+                        progress = badge.progress,
+                        modifier = Modifier
+                            .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
+                            .tracked(track = track)
+                            .onFocusChanged {
+                                if (it.hasFocus) {
+                                    onItemFocused(index)
+                                    onFocus()
+                                }
+                            },
+                    ) {
+                        AsyncImage(
+                            model = when (item) {
+                                is TrendingHomeItem.Movie -> item.movie.posterUrl
+                                is TrendingHomeItem.Series -> item.series.posterUrl
+                            },
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
                 }
             }
         }

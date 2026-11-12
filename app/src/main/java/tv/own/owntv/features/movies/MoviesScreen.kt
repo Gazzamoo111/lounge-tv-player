@@ -450,8 +450,8 @@ fun MoviesScreen(
             repeat(12) {
                 withFrameNanos { }
                 val requester = when {
-                    displayFeatured -> firstFeaturedFocus
                     displayNewReleases -> firstNewReleaseFocus
+                    displayFeatured -> firstFeaturedFocus
                     movies.itemCount > 0 -> firstItemFocus
                     else -> listSearchFocus
                 }
@@ -525,8 +525,8 @@ fun MoviesScreen(
         repeat(16) {
             withFrameNanos { }
             val requester = when {
-                displayFeatured -> firstFeaturedFocus
                 displayNewReleases -> firstNewReleaseFocus
+                displayFeatured -> firstFeaturedFocus
                 movies.itemCount > 0 -> firstItemFocus
                 else -> listSearchFocus
             }
@@ -693,35 +693,6 @@ fun MoviesScreen(
                                 modifier = Modifier.fillMaxWidth().weight(1f),
                             ) {
                                 // Two large rows scroll up with the existing paged grid.
-                                if (displayFeatured) {
-                                    item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
-                                        Text(
-                                            text = stringResource(R.string.lounge_home_featured_movies),
-                                            style = stageText(28, 800),
-                                            color = StageColors.Text,
-                                            modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
-                                        )
-                                    }
-                                    items(
-                                        count = featuredPreview.size,
-                                        key = { index -> Long.MIN_VALUE + 100L + index.toLong() },
-                                        contentType = { 11 },
-                                    ) { index ->
-                                        val movie = featuredPreview[index]
-                                        LoungeMoviesEditorialPoster(
-                                            item = movie,
-                                            width = posterW,
-                                            title = homeEditorial.featuredMovieNames[movie.id] ?: movie.canonicalTitle.ifBlank { movie.name },
-                                            posterUrl = posterOf(movie),
-                                            firstInSection = index == 0,
-                                            atLeftEdge = index % columns == 0,
-                                            focusRequester = firstFeaturedFocus,
-                                            onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
-                                            onFocus = onMovieFocus,
-                                            onOpen = startMovie,
-                                        )
-                                    }
-                                }
                                 if (displayNewReleases) {
                                     item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
                                         Text(
@@ -745,6 +716,35 @@ fun MoviesScreen(
                                             firstInSection = index == 0,
                                             atLeftEdge = index % columns == 0,
                                             focusRequester = firstNewReleaseFocus,
+                                            onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                            onFocus = onMovieFocus,
+                                            onOpen = startMovie,
+                                        )
+                                    }
+                                }
+                                if (displayFeatured) {
+                                    item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
+                                        Text(
+                                            text = stringResource(R.string.lounge_home_featured_movies),
+                                            style = stageText(28, 800),
+                                            color = StageColors.Text,
+                                            modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
+                                        )
+                                    }
+                                    items(
+                                        count = featuredPreview.size,
+                                        key = { index -> Long.MIN_VALUE + 100L + index.toLong() },
+                                        contentType = { 11 },
+                                    ) { index ->
+                                        val movie = featuredPreview[index]
+                                        LoungeMoviesEditorialPoster(
+                                            item = movie,
+                                            width = posterW,
+                                            title = homeEditorial.featuredMovieNames[movie.id] ?: movie.canonicalTitle.ifBlank { movie.name },
+                                            posterUrl = posterOf(movie),
+                                            firstInSection = index == 0,
+                                            atLeftEdge = index % columns == 0,
+                                            focusRequester = firstFeaturedFocus,
                                             onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
                                             onFocus = onMovieFocus,
                                             onOpen = startMovie,

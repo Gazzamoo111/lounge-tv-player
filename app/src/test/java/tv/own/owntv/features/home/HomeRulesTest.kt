@@ -1,10 +1,21 @@
 package tv.own.owntv.features.home
 
 import org.junit.Assert.assertEquals
+import tv.own.owntv.core.model.HomeRow
 import org.junit.Assert.assertNull
 import org.junit.Test
 
 class HomeRulesTest {
+    @Test fun curatedHomeHasOnlyRequestedRowsInOrder() = assertEquals(
+        listOf(HomeRow.HERO, LoungeHomeRow.NEW_RELEASES, HomeRow.TRENDING,
+            LoungeHomeRow.FEATURED_MOVIES, LoungeHomeRow.POPULAR_SERIES),
+        loungeCuratedHomeRows(emptySet()),
+    )
+
+    @Test fun curatedHomeHonoursHiddenKeepWatchingAndTrending() = assertEquals(
+        listOf(LoungeHomeRow.NEW_RELEASES, LoungeHomeRow.FEATURED_MOVIES, LoungeHomeRow.POPULAR_SERIES),
+        loungeCuratedHomeRows(setOf(HomeRow.HERO, HomeRow.TRENDING)),
+    )
 
     // --- Keep watching stills: TMDB backdrop → provider backdrop → poster → channel logo ---
 
