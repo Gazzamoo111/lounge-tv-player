@@ -126,7 +126,8 @@ import java.util.Locale
 private val RowGap = 40.mpx
 
 internal const val LOUNGE_HOME_POSTERS_PER_ROW = 6
-internal fun <T> loungeHomePosterItems(items: List<T>): List<T> = items.take(LOUNGE_HOME_POSTERS_PER_ROW)
+/** Compute how many posters fill the viewport, never truncating the horizontally browsable titles. */
+internal fun loungeHomeVisiblePosterCount(total: Int): Int = minOf(total, LOUNGE_HOME_POSTERS_PER_ROW)
 
 /** Lounge TV's first-login rails use the existing card widgets, without altering OwnTV Core. */
 internal enum class LoungeHomeRow { SPORTS_HERO, NEW_RELEASES, FEATURED_MOVIES, POPULAR_SERIES, SPORTS_LINKS, SPORTS_FIXTURES }
@@ -1414,14 +1415,14 @@ private fun ContinuePosterRow(
     Column(modifier) {
         HomeRowHeader(title, small = items.size.toString(), start = start)
         BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val posterWidth = ((maxWidth - start - 64.mpx - 5 * 20.mpx) / LOUNGE_HOME_POSTERS_PER_ROW).coerceAtLeast(1.dp)
+            val posterWidth = ((maxWidth - start - 64.mpx - 20.mpx * 5) / LOUNGE_HOME_POSTERS_PER_ROW).coerceAtLeast(1.dp)
             val posterHeight = posterWidth * 1.5f
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(20.mpx),
                 contentPadding = PaddingValues(start = start, end = 64.mpx),
-                modifier = Modifier.focusRestorer().focusGroup(),
+                modifier = Modifier.width((maxWidth - 64.mpx).coerceAtLeast(1.dp)).focusRestorer().focusGroup(),
             ) {
-                itemsIndexed(loungeHomePosterItems(items), key = { _, item -> item.stableKey }) { index, item ->
+                itemsIndexed(items, key = { _, item -> item.stableKey }) { index, item ->
                     val badge = badges(item)
                     StagePoster(
                         title = loungeVodTitle(item.title),
@@ -1463,14 +1464,14 @@ private fun <T> FavoritePosterRow(
     Column(modifier) {
         HomeRowHeader(title, small = items.size.toString(), start = start)
         BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val posterWidth = ((maxWidth - start - 64.mpx - 5 * 20.mpx) / LOUNGE_HOME_POSTERS_PER_ROW).coerceAtLeast(1.dp)
+            val posterWidth = ((maxWidth - start - 64.mpx - 20.mpx * 5) / LOUNGE_HOME_POSTERS_PER_ROW).coerceAtLeast(1.dp)
             val posterHeight = posterWidth * 1.5f
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(20.mpx),
                 contentPadding = PaddingValues(start = start, end = 64.mpx),
-                modifier = Modifier.focusRestorer().focusGroup(),
+                modifier = Modifier.width((maxWidth - 64.mpx).coerceAtLeast(1.dp)).focusRestorer().focusGroup(),
             ) {
-                itemsIndexed(loungeHomePosterItems(items), key = { _, item -> key(item) }) { index, item ->
+                itemsIndexed(items, key = { _, item -> key(item) }) { index, item ->
                     val badge = badges(item)
                     StagePoster(
                         title = name(item),
@@ -1516,14 +1517,14 @@ private fun TrendingPosterRow(
         HomeRowHeader(title, small = null, start = start)
         Spacer(Modifier.height(headerGap))
         BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val posterWidth = ((maxWidth - start - 64.mpx - 5 * 20.mpx) / LOUNGE_HOME_POSTERS_PER_ROW).coerceAtLeast(1.dp)
+            val posterWidth = ((maxWidth - start - 64.mpx - 20.mpx * 5) / LOUNGE_HOME_POSTERS_PER_ROW).coerceAtLeast(1.dp)
             val posterHeight = posterWidth * 1.5f
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(20.mpx),
                 contentPadding = PaddingValues(start = start, end = 64.mpx),
-                modifier = Modifier.focusRestorer().focusGroup(),
+                modifier = Modifier.width((maxWidth - 64.mpx).coerceAtLeast(1.dp)).focusRestorer().focusGroup(),
             ) {
-                itemsIndexed(loungeHomePosterItems(items), key = { _, item -> item.stableKey }) { index, item ->
+                itemsIndexed(items, key = { _, item -> item.stableKey }) { index, item ->
                     val badge = badges(item)
                     StagePoster(
                         title = when (item) {
