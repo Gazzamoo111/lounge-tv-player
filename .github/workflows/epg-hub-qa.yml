@@ -43,9 +43,12 @@ jobs:
           import json
           from pathlib import Path
           rows=json.loads(Path('feeds/download-report.json').read_text())
-          seven=[x for x in rows if x['id'].startswith('ferteque-')]
-          assert len(seven)==7, 'All seven candidate feeds must be checked'
-          for s in seven:
+          curated=[x for x in rows if x['id'].startswith('ferteque-')]
+          required={'ferteque-epg6','ferteque-epg2','ferteque-epg66',
+                    'ferteque-epg52','ferteque-epg41','ferteque-epg63',
+                    'ferteque-epg37'}
+          assert required <= {x['id'] for x in curated}, 'All original seven feeds must be checked'
+          for s in curated:
               print('FERTEQUE_FEED',s['id'],s['status'],s.get('bytes',0),s.get('error',''))
           PY
       - name: Build one candidate against the existing shared guide
