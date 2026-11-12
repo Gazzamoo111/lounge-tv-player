@@ -240,6 +240,29 @@ class HubTests(unittest.TestCase):
         self.assertEqual(len(gaps), 201)
         self.assertTrue(all(x["gapReason"] == "no-current-listing" for x in gaps))
 
+    def test_uhd_sports_variant_cannot_inherit_regular_feed_schedule(self):
+        self.rows.append({"category": "Sports", "subcategory": "US Sports",
+                          "sourceName": "US| NBC SPORTS UHD/4K",
+                          "name": "NBC SPORTS UHD/4K",
+                          "epgId": "live:nbc-sports-uhd-4k"})
+        self.manifest.write_text(json.dumps({"rows": self.rows}))
+        self.add_source("ordinary", "multi", [("nbcsports.us", "NBC SPORTS")], 7)
+        report = self.run_build()
+        self.assertEqual(report["changedTargets"], 0)
+        self.assertNotIn("live:nbc-sports-uhd-4k",
+                         {x["epgId"] for x in report["selected"]})
+
+    def test_explicit_uhd_variant_can_supply_uhd_channel(self):
+        self.rows.append({"category": "Sports", "subcategory": "US Sports",
+                          "sourceName": "US| NBC SPORTS UHD/4K",
+                          "name": "NBC SPORTS UHD/4K",
+                          "epgId": "live:nbc-sports-uhd-4k"})
+        self.manifest.write_text(json.dumps({"rows": self.rows}))
+        self.add_source("uhd", "multi", [("nbcsports4k.us", "NBC SPORTS UHD/4K")], 7)
+        report = self.run_build()
+        self.assertIn("live:nbc-sports-uhd-4k",
+                      {x["epgId"] for x in report["selected"]})
+
     def test_normalisation_retains_variants(self):
         self.assertNotEqual(norm("Sky Sport 1 +1"), norm("Sky Sport 1"))
         self.assertNotEqual(norm("TNT West"), norm("TNT East"))

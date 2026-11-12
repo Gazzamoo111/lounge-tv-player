@@ -25,6 +25,9 @@ IGNORE_CATEGORIES = {"24/7", "PPV"}
 IGNORE_SUBCATEGORIES = {"CINEMANIA TV SHOWS", "Sky Store"}
 BAD_TITLE = re.compile(r"^(?:no (?:programme|program) (?:data|information)|to be announced|dummy|tba)$", re.I)
 QUALITY = re.compile(r"\b(?:8k|4k|uhd|fhd|hd|sd|hevc|h265|50fps|60fps)\b", re.I)
+# 4K/UHD may be a separate sports production. Never name-match its EPG to a
+# standard HD feed merely because quality tokens are removed by norm().
+UHD_VARIANT = re.compile(r"\b(?:8k|4k|uhd)\b", re.I)
 MARKET = re.compile(r"^(?:US|UK|UK-NOWTV|NZ|AU|USA|AUS)\s*[|:]\s*", re.I)
 COUNTRIES = {"New Zealand": "nz", "Australia": "au"}
 # Reviewed identities that genuinely describe the same UK broadcast. These
@@ -158,6 +161,13 @@ def parse_source(path, region_code, targets, name_counts, now):
             if len(matches) != 1 or name_counts[(market, key)] != 1:
                 continue
             cid, method = next(iter(matches)), "unique-name"
+            target_uhd = bool(UHD_VARIANT.search(target["name"]))
+            source_uhd = any(
+                UHD_VARIANT.search(label)
+                for label in [cid, *source_labels.get(cid, [])]
+            )
+            if target_uhd != source_uhd:
+                continue
         source_market = explicit_source_region(cid, source_labels.get(cid, []))
         if source_market and source_market != market:
             continue
