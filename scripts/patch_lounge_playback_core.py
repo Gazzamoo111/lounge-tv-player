@@ -292,13 +292,13 @@ def apply(root: Path, milestone3: bool = True, milestone6: bool = True) -> None:
             if settings_text.count(old_default) != 1:
                 raise SystemExit("Unexpected preview audio default")
             vod_previous = (
-                "            ?: if (prefs[Keys.VOD_PREFER_EXO] == true) tv.own.owntv.core.player.EnginePreference.EXO_FIRST\\n"
+                "            ?: if (prefs[Keys.VOD_PREFER_EXO] == true) tv.own.owntv.core.player.EnginePreference.EXO_FIRST\n"
                 "            else tv.own.owntv.core.player.EnginePreference.MPV_FIRST"
             )
             vod_default = (
                 "            ?: prefs[Keys.VOD_PREFER_EXO]?.let { if (it) "
                 "tv.own.owntv.core.player.EnginePreference.EXO_FIRST else "
-                "tv.own.owntv.core.player.EnginePreference.MPV_FIRST }\\n"
+                "tv.own.owntv.core.player.EnginePreference.MPV_FIRST }\n"
                 "            ?: tv.own.owntv.core.player.EnginePreference.EXO_FIRST"
             )
             if settings_text.count(vod_previous) != 1:
