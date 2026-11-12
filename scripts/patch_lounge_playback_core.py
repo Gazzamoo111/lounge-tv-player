@@ -306,6 +306,36 @@ def apply(root: Path, milestone3: bool = True, milestone6: bool = True) -> None:
             settings_text = settings_text.replace(old_default, "it[Keys.LIVE_PREVIEW_AUDIO] ?: true")
             settings_text = settings_text.replace(vod_previous, vod_default)
             settings_path.write_text(settings_text)
+            # Keep the Guide reachable inside Live TV; My Lounge replaces its rail entry.
+            nav_path = root / "core/src/main/java/tv/own/owntv/core/nav/MainSection.kt"
+            nav_text = nav_path.read_text(encoding="utf-8")
+            nav_changes = [
+                ("    DOWNLOADS(R.string.common_nav_downloads),",
+                 "    MY_LOUNGE(R.string.common_nav_my_lounge),\n    DOWNLOADS(R.string.common_nav_downloads),"),
+                ("listOf(HOME, LIVE_TV, SPORTS, MOVIES, SERIES, DOWNLOADS, EPG)",
+                 "listOf(HOME, LIVE_TV, SPORTS, MOVIES, SERIES, MY_LOUNGE, DOWNLOADS)"),
+                ("            add(SPORTS)\n            if (hasLive) { add(LIVE_TV); add(EPG) }",
+                 "            add(SPORTS)\n            add(MY_LOUNGE)\n            if (hasLive) add(LIVE_TV)"),
+            ]
+            for before, after in nav_changes:
+                if nav_text.count(before) != 1:
+                    raise SystemExit("Unexpected pinned core navigation: " + before)
+                nav_text = nav_text.replace(before, after)
+            nav_path.write_text(nav_text, encoding="utf-8")
+            strings_path = root / "core/src/main/res/values/strings.xml"
+            strings_text = strings_path.read_text(encoding="utf-8")
+            old_label = '<string name="common_nav_downloads">Downloads</string>'
+            if strings_text.count(old_label) != 1:
+                raise SystemExit("Unexpected pinned core nav strings")
+            strings_path.write_text(strings_text.replace(old_label,
+                '<string name="common_nav_my_lounge">My Lounge</string>\n    ' + old_label), encoding="utf-8")
+            nav_test_path = root / "core/src/test/java/tv/own/owntv/core/nav/MainSectionTest.kt"
+            nav_test_text = nav_test_path.read_text(encoding="utf-8")
+            old_expected = 'setOf(MainSection.HOME, MainSection.SPORTS)'
+            if nav_test_text.count(old_expected) != 1:
+                raise SystemExit("Unexpected pinned core nav test")
+            nav_test_path.write_text(nav_test_text.replace(old_expected,
+                'setOf(MainSection.HOME, MainSection.SPORTS, MainSection.MY_LOUNGE)'), encoding="utf-8")
             finishing_literals = Path(__file__).resolve().parent / "patches/finishing-core-safe-literals.txt"
             with manifest.open("a", encoding="utf-8") as output:
                 output.write(finishing_literals.read_text(encoding="utf-8"))

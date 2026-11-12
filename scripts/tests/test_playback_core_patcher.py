@@ -37,6 +37,19 @@ class PlaybackCorePatcherTests(unittest.TestCase):
             "            ?: if (prefs[Keys.VOD_PREFER_EXO] == true) tv.own.owntv.core.player.EnginePreference.EXO_FIRST\n"
             "            else tv.own.owntv.core.player.EnginePreference.MPV_FIRST"
         )
+        nav = root / "core/src/main/java/tv/own/owntv/core/nav/MainSection.kt"
+        nav.parent.mkdir(parents=True, exist_ok=True)
+        nav.write_text(
+            "    DOWNLOADS(R.string.common_nav_downloads),\n"
+            "val browseOrder: List<MainSection> = listOf(HOME, LIVE_TV, SPORTS, MOVIES, SERIES, DOWNLOADS, EPG)\n"
+            "            add(SPORTS)\n            if (hasLive) { add(LIVE_TV); add(EPG) }"
+        )
+        labels = root / "core/src/main/res/values/strings.xml"
+        labels.parent.mkdir(parents=True, exist_ok=True)
+        labels.write_text('<string name="common_nav_downloads">Downloads</string>')
+        nav_test = root / "core/src/test/java/tv/own/owntv/core/nav/MainSectionTest.kt"
+        nav_test.parent.mkdir(parents=True, exist_ok=True)
+        nav_test.write_text("assertEquals(setOf(MainSection.HOME, MainSection.SPORTS), MainSection.dynamicVisible(false,false,false))")
         live = "player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt"
         matcher = "core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt"
         manifest = root / "tools/i18n/safe_literals.txt"
@@ -63,6 +76,9 @@ class PlaybackCorePatcherTests(unittest.TestCase):
             settings = (root / "core/src/main/java/tv/own/owntv/core/settings/SettingsRepository.kt").read_text()
             self.assertIn("?: tv.own.owntv.core.player.EnginePreference.EXO_FIRST", settings)
             self.assertIn("prefs[Keys.VOD_PREFER_EXO]?.let", settings)
+            nav = (root / "core/src/main/java/tv/own/owntv/core/nav/MainSection.kt").read_text()
+            self.assertIn("MY_LOUNGE", nav)
+            self.assertNotIn("DOWNLOADS, EPG)", nav)
 
             for relative, changes in patcher.PATCHES.items():
                 text = (root / relative).read_text(encoding="utf-8")
