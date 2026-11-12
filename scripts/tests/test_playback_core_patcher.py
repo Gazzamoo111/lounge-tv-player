@@ -33,8 +33,8 @@ class PlaybackCorePatcherTests(unittest.TestCase):
         settings = root / "core/src/main/java/tv/own/owntv/core/settings/SettingsRepository.kt"
         settings.parent.mkdir(parents=True, exist_ok=True)
         settings.write_text(
-            "it[Keys.LIVE_PREVIEW_AUDIO] ?: false\\n"
-            "            ?: if (prefs[Keys.VOD_PREFER_EXO] == true) tv.own.owntv.core.player.EnginePreference.EXO_FIRST\\n"
+            "it[Keys.LIVE_PREVIEW_AUDIO] ?: false\n"
+            "            ?: if (prefs[Keys.VOD_PREFER_EXO] == true) tv.own.owntv.core.player.EnginePreference.EXO_FIRST\n"
             "            else tv.own.owntv.core.player.EnginePreference.MPV_FIRST"
         )
         live = "player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt"
