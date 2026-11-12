@@ -1270,6 +1270,30 @@ fun OwnTVShell(
                                 sportsMatchRequests.pendingMatch.value = m to null
                                 onSelectSection(MainSection.SPORTS)
                             },
+                            // OK on Home's Live Sports shelf resolves the stream for THIS fixture,
+                            // then goes directly to fullscreen Live. Never route through Sport Lounge.
+                            onPlayLiveSport = { match, unavailable ->
+                                scope.launch {
+                                    val candidates = runCatching {
+                                        kotlinx.coroutines.withTimeoutOrNull(20_000L) {
+                                            sportsWorkVm.previewChoices(match)
+                                        }
+                                    }.getOrNull().orEmpty()
+                                    // A delayed search must not open playback after leaving Home.
+                                    if (selectedSection != MainSection.HOME || playerMode != PlayerMode.NONE) return@launch
+                                    val choice = candidates.firstOrNull()
+                                    if (choice == null) {
+                                        unavailable()
+                                    } else if (liveVm.ensurePlayingByIdAsync(
+                                            choice.channel.id, candidates.map { it.channel }
+                                        )) {
+                                        sportsWorkVm.playedFrom(match, candidates, choice.channel)
+                                        openFullscreen(MainSection.LIVE_TV, forceFullscreen = true)
+                                    } else {
+                                        unavailable()
+                                    }
+                                }
+                            },
                             onSportsShortcut = { shortcut ->
                                 when (shortcut) {
                                     tv.own.owntv.features.home.LoungeSportsShortcut.SPORTS ->
