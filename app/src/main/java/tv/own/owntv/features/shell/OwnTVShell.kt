@@ -1773,6 +1773,18 @@ fun OwnTVShell(
                             val engine = if (liveOnExo) liveVm.previewEngine else mpvEngine
                             val meta by engine.currentMeta.collectAsStateWithLifecycle()
                             val epg by liveVm.nowNext.collectAsStateWithLifecycle()
+                            // Synopsis browse context follows the tuned channel's actual provider
+                            // category, not a stale CH+/- rail from the previous channel.
+                            val tunedSynopsisChannel = previewChannel
+                            val synopsisChannels by produceState(
+                                initialValue = emptyList<ChannelEntity>(),
+                                key1 = tunedSynopsisChannel?.id,
+                                key2 = tunedSynopsisChannel?.categoryId,
+                            ) {
+                                value = tunedSynopsisChannel?.let {
+                                    liveVm.synopsisChannelsFor(it, playbackZapChannels)
+                                }.orEmpty()
+                            }
                             var browsed by remember(previewChannel?.id) { mutableStateOf<ChannelEntity?>(null) }
                             var browseGuide by remember(previewChannel?.id) { mutableStateOf<tv.own.owntv.core.live.EpgNowNext?>(null) }
                             LaunchedEffect(browsed?.id) {
@@ -1793,13 +1805,13 @@ fun OwnTVShell(
                                 technical = chips,
                                 browserFocus = browserFocus,
                                 currentChannelId = previewChannel?.id,
-                                surfChannels = playbackZapChannels,
+                                surfChannels = synopsisChannels,
                                 browsedChannel = browsed,
                                 onBrowse = { browsed = it },
                                 onTuneBrowsed = { ch ->
                                     scope.launch {
-                                        if (ch.id < 0L) liveVm.watchSportsFullscreen(ch, playbackZapChannels)
-                                        else liveVm.ensurePlayingByIdAsync(ch.id, playbackZapChannels)
+                                        if (ch.id < 0L) liveVm.watchSportsFullscreen(ch, synopsisChannels)
+                                        else liveVm.ensurePlayingByIdAsync(ch.id, synopsisChannels)
                                     }
                                 },
                                 onToggle = engine::togglePlayPause,

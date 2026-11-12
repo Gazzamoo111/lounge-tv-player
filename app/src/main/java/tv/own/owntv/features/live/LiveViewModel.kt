@@ -1556,6 +1556,21 @@ class LiveViewModel(
         ) else visible
     }
 
+    /**
+     * Synopsis LEFT/RIGHT always browses the tuned channel's own category.
+     * This read-only scope is separate from the armed CH+/- playback rail.
+     * Synthetic sports candidates are absent from Room, so they retain their
+     * current explicit match-candidate group when it contains the playing feed.
+     */
+    suspend fun synopsisChannelsFor(
+        channel: ChannelEntity,
+        playbackContext: List<ChannelEntity>,
+    ): List<ChannelEntity> = synopsisChannelScope(
+        channel = channel,
+        categoryChannels = if (channel.id < 0L) emptyList() else channelsAroundChannel(channel),
+        playbackContext = playbackContext,
+    )
+
     /** The profile's recently-watched channels and when each was watched, for the right-hand in-player
      *  history overlay. */
     suspend fun historyChannels(limit: Int = HISTORY_LIST_LIMIT): List<tv.own.owntv.core.database.dao.ChannelWithWatchedAt> {
