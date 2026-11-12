@@ -79,7 +79,7 @@ internal fun HomeLiveSportsRow(
                                 Text(sportEmoji(match.sport), style = stageText(52, 700), color = StageColors.Text)
                             } else {
                                 Crest(match.home?.team, 84)
-                                Text("VS", style = stageText(17, 800), color = StageColors.Muted)
+                                Text(stringResource(R.string.lounge_home_vs), style = stageText(17, 800), color = StageColors.Muted)
                                 Crest(match.away?.team, 84)
                             }
                         }
