@@ -21,7 +21,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "shared-epg"))
 from repair_missing import dt, fnv, short
 
 UTC = timezone.utc
-IGNORE_CATEGORIES = {"Streaming", "24/7", "PPV"}
+IGNORE_CATEGORIES = {"24/7", "PPV"}
+IGNORE_SUBCATEGORIES = {"CINEMANIA TV SHOWS", "Sky Store"}
 BAD_TITLE = re.compile(r"^(?:no (?:programme|program) (?:data|information)|to be announced|dummy|tba)$", re.I)
 QUALITY = re.compile(r"\b(?:8k|4k|uhd|fhd|hd|sd|hevc|h265|50fps|60fps)\b", re.I)
 MARKET = re.compile(r"^(?:US|UK|UK-NOWTV|NZ|AU|USA|AUS)\s*[|:]\s*", re.I)
@@ -65,14 +66,22 @@ def catalogue(path):
     for row in raw:
         country = region(row)
         tid = row.get("epgId")
-        if row.get("category") in IGNORE_CATEGORIES or country not in ("nz", "au", "uk", "us") or not tid:
+        if (row.get("category") in IGNORE_CATEGORIES
+            or row.get("subcategory") in IGNORE_SUBCATEGORIES
+            or country not in ("nz", "au", "uk", "us") or not tid):
+            continue
+        # Streaming aggregator/title rows are not ordinary broadcast channels.
+        # Only explicit country-qualified FAST identities are eligible.
+        if row.get("category") == "Streaming" and not re.search(r"\.(?:us|uk)$", tid, re.I):
             continue
         # Same EPG key cannot carry two different channel identities/markets.
         if len({(x[0], x[1]) for x in owners[tid]}) > 1:
             conflicts.add(tid)
             continue
         if tid not in targets:
-            targets[tid] = {"id": tid, "name": row["name"], "region": country}
+            targets[tid] = {"id": tid, "name": row["name"], "region": country,
+                            "category": row.get("category") or "",
+                            "subcategory": row.get("subcategory") or ""}
             duplicate_names[(country, norm(row["name"]))] += 1
     # Never name-match indistinguishable catalogue channels with distinct IDs.
     return targets, conflicts, duplicate_names
@@ -285,19 +294,32 @@ def build(manifest, existing, source_entries, out, now=None, minimum_days=3):
         before = actual_coverage(originals, subset, now, minimum_days)
         after = actual_coverage(root.findall("programme"), subset, now, minimum_days)
         by_region[r] = {"targets": len(subset), "before": before, "after": after}
+    by_subcategory = []
+    for region_code in ("us", "uk"):
+        labels = sorted({t["subcategory"] for t in targets.values() if t["region"] == region_code})
+        for sub in labels:
+            subset = {k: t for k, t in targets.items()
+                      if t["region"] == region_code and t["subcategory"] == sub}
+            cov = actual_coverage(root.findall("programme"), subset, now, minimum_days)
+            by_subcategory.append({"region": region_code, "subcategory": sub,
+                                   "targets": len(subset), **cov})
     report = {"generatedAtUtc": now.isoformat(), "minimumRealDays": minimum_days,
               "preferredDays": 7, "scope": "NZ/AU/US/UK with unambiguous identities",
               "manifestTargets": len(targets), "conflictingEpgIds": sorted(conflicts),
               "sources": health, "before": baseline, "after": updated, "byRegion": by_region,
+              "byUsUkSubcategory": by_subcategory,
               "addedProgrammes": added, "changedTargets": len(amended),
               "preservedProgrammes": before_count, "totalProgrammes": before_count + added,
               "selected": proven, "uncovered3day": [
-                  {"id": tid, "name": t["name"], "region": t["region"]}
+                  {"id": tid, "name": t["name"], "region": t["region"],
+                   "subcategory": t["subcategory"], "syntheticId": tid.startswith("live:")}
                   for tid, t in targets.items()
-                  if not any((dt(p.get("start")) or now) <= now < (dt(p.get("stop")) or now)
-                          for p in existing_by_id[tid])][:100]}
+                  if t["region"] in ("us", "uk") and
+                     not any((dt(p.get("start")) or now) <= now < (dt(p.get("stop")) or now)
+                          for p in existing_by_id[tid])][:150]}
     (out / "report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
-    print(json.dumps({k: v for k, v in report.items() if k not in ("selected", "uncovered3day")},
+    print(json.dumps({k: v for k, v in report.items()
+                      if k not in ("selected", "uncovered3day")},
                      ensure_ascii=False))
     return report
 
