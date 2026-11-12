@@ -30,6 +30,8 @@
     <string name="lounge_series_featured">Featured Series</string>
     <string name="lounge_series_new_releases">New Series</string>
     <string name="lounge_home_popular_series">Popular Series</string>
+    <string name="lounge_home_live_sports">Live Sports Now</string>
+    <string name="lounge_home_live_unavailable">No matching live stream is available for this event right now.</string>
     <string name="lounge_home_live_highlights">Live TV Highlights</string>
     <string name="lounge_epg_guide_name">Lounge TV Guide</string>
     <string name="lounge_epg_primary_name">Primary TV Guide</string>
