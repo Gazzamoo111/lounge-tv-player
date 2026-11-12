@@ -51,8 +51,13 @@ class EpgTargetedTest(unittest.TestCase):
             self.assertIsNotNone(match, name)
             self.assertEqual(match[2], "epgshare")
             self.assertEqual(match[3].casefold(), epg_id.casefold())
-        self.assertIsNone(select_feed(
+        mapped_501 = select_feed(
             {"name": "FOX SPORTS 501", "epgId": "FoxSports1.au"},
+            {"epgshare": index}, NOW, NOW + timedelta(days=7))
+        self.assertIsNotNone(mapped_501)
+        self.assertEqual(mapped_501[3], "FoxCricket.au")
+        self.assertIsNone(select_feed(
+            {"name": "FOX SPORTS 504", "epgId": "FoxSports4.au"},
             {"epgshare": index}, NOW, NOW + timedelta(days=7)))
 
     def test_three_real_days_accepted(self):
