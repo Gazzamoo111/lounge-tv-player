@@ -27,6 +27,15 @@ BAD_TITLE = re.compile(r"^(?:no (?:programme|program) (?:data|information)|to be
 QUALITY = re.compile(r"\b(?:8k|4k|uhd|fhd|hd|sd|hevc|h265|50fps|60fps)\b", re.I)
 MARKET = re.compile(r"^(?:US|UK|UK-NOWTV|NZ|AU|USA|AUS)\s*[|:]\s*", re.I)
 COUNTRIES = {"New Zealand": "nz", "Australia": "au"}
+# Reviewed identities that genuinely describe the same UK broadcast. These
+# are not time-shifted +1, East/West or other channel variants.
+REVIEWED_UK_SAME_BROADCAST = {
+    "DiscoveryHistory.uk": {"DISCOVERY HISTORY", "D+| DISCOVERY HISTORY"},
+    "DiscoveryScience.uk": {"DISCOVERY SCIENCE", "D+| DISCOVERY SCIENCE"},
+    "SkyPremiere.uk": {"SKY CINEMA PREMIER", "SKY CINEMA PREMIERE"},
+    "SkySportsNews.uk": {"SKY SPORTS NEWS", "SKY SPORTS NEWS HQ"},
+    "SkyArts.uk": {"SKY ARTS", "SKY ARTS 1"},
+}
 
 
 def norm(value):
@@ -75,9 +84,14 @@ def catalogue(path):
         if row.get("category") == "Streaming" and not re.search(r"\.(?:us|uk)$", tid, re.I):
             continue
         # Same EPG key cannot carry two different channel identities/markets.
-        if len({(x[0], x[1]) for x in owners[tid]}) > 1:
-            conflicts.add(tid)
-            continue
+        identities = {(name, market) for name, market, _ in owners[tid]}
+        if len(identities) > 1:
+            approved = REVIEWED_UK_SAME_BROADCAST.get(tid)
+            if not (approved
+                    and all(market == "uk" for _, market in identities)
+                    and {name for name, _ in identities} == {norm(n) for n in approved}):
+                conflicts.add(tid)
+                continue
         if tid not in targets:
             targets[tid] = {"id": tid, "name": row["name"], "region": country,
                             "category": row.get("category") or "",
