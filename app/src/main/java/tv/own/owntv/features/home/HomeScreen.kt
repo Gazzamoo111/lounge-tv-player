@@ -227,8 +227,9 @@ fun HomeScreen(
     val sportsHero = remember(featuredSports, sportsPreferences, sportsNow) {
         HomeSportsSelection.ranked(featuredSports, sportsPreferences, sportsNow)
     }
-    val liveNowEvents = remember(featuredSports, sportsNow) {
-        HomeSportsSelection.liveNow(featuredSports, sportsNow)
+    val liveEvents by sportsVm.liveHomeEvents.collectAsStateWithLifecycle()
+    val liveNowEvents = remember(liveEvents, sportsNow) {
+        HomeSportsSelection.liveNow(liveEvents, sportsNow)
     }
     val trendingUnavailableMessage = stringResource(R.string.home_trending_unavailable)
     val liveUnavailableMessage = stringResource(R.string.lounge_home_live_unavailable)
