@@ -29,6 +29,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -58,15 +59,13 @@ import tv.own.owntv.ui.theme.StageColors
 import tv.own.owntv.ui.theme.mpx
 import tv.own.owntv.ui.theme.stageAccent
 import tv.own.owntv.ui.theme.stageText
-import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.Locale
 
 /** Provider categories are inconsistent, so use a consistent customer-facing grouping. */
 internal enum class LoungeLiveCategory { SPORTS, ENTERTAINMENT, MOVIES, KIDS_FAMILY }
 
 internal fun loungeLiveCategory(name: String, categoryName: String): LoungeLiveCategory {
-    val label = categoryName + " " + name
+    val label = categoryName + '\n' + name
     if (Regex("(?i)kid|family|cartoon|disney|nick|junior|preschool|baby|boomerang").containsMatchIn(label))
         return LoungeLiveCategory.KIDS_FAMILY
     if (Regex("(?i)movie|cinema|\\bfilm\\b|sky store").containsMatchIn(label))
@@ -76,8 +75,9 @@ internal fun loungeLiveCategory(name: String, categoryName: String): LoungeLiveC
     return LoungeLiveCategory.ENTERTAINMENT
 }
 
-private fun loungeDate(ms: Long): String =
-    SimpleDateFormat("EEE d MMM · h:mm a", Locale.getDefault()).format(Date(ms))
+private fun loungeDate(context: android.content.Context, ms: Long, separator: String): String =
+    android.text.format.DateFormat.getMediumDateFormat(context).format(Date(ms)) +
+        separator + android.text.format.DateFormat.getTimeFormat(context).format(Date(ms))
 
 /** Read the actual profile's saved favourites and the two existing reminder sources. */
 @Composable
@@ -97,6 +97,8 @@ fun MyLoungeScreen(
     val reminderManager = koinInject<ReminderManager>()
     val fixtureScheduler = koinInject<FixtureReminderScheduler>()
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val separator = stringResource(R.string.content_epg_bits_separator)
     val lists by vm.favouriteLists.collectAsStateWithLifecycle()
     val programmeFlow = remember(profileId, reminderManager) { reminderManager.observe(profileId) }
     val fixtureFlow = remember(profileId, fixtureScheduler) { fixtureScheduler.observe(profileId) }
@@ -187,10 +189,10 @@ fun MyLoungeScreen(
                     LoungeHeading(stringResource(R.string.lounge_my_programmes))
                     if (validProgrammes.isEmpty()) MyLoungeEmpty(stringResource(R.string.lounge_my_guide_hint))
                 }
-                items(validProgrammes, key = { "programme-" + it.id }) { reminder ->
+                items(validProgrammes, key = { it.id }) { reminder ->
                     StageActionRow(
                         height = 86.mpx, focus = null, title = reminder.title,
-                        line = reminder.channelName + " · " + loungeDate(reminder.startMs),
+                        line = reminder.channelName + separator + loungeDate(context, reminder.startMs, separator),
                         onClick = onOpenLiveGuide,
                         leading = { OwnTVIcon(OwnTVIcon.BELL, StageColors.Muted, Modifier.size(29.mpx)) },
                         actions = listOf(RowAction(cancelLabel, OwnTVIcon.CLOSE) {
@@ -203,10 +205,10 @@ fun MyLoungeScreen(
                     LoungeHeading(stringResource(R.string.lounge_my_events))
                     if (validFixtures.isEmpty()) MyLoungeEmpty(stringResource(R.string.lounge_my_sport_hint))
                 }
-                items(validFixtures, key = { "fixture-" + it.fixtureId }) { fixture ->
+                items(validFixtures, key = { it.fixtureId }) { fixture ->
                     StageActionRow(
                         height = 86.mpx, focus = null, title = fixture.title,
-                        line = loungeDate(fixture.startMs),
+                        line = loungeDate(context, fixture.startMs, separator),
                         onClick = onOpenSports,
                         leading = { OwnTVIcon(OwnTVIcon.SPORTS, StageColors.Muted, Modifier.size(29.mpx)) },
                         actions = listOf(RowAction(cancelLabel, OwnTVIcon.CLOSE) {

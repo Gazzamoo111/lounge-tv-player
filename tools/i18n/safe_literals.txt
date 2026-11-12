@@ -2208,3 +2208,6 @@
 1	technical	app/src/main/java/tv/own/owntv/player/PremiumLivePanel.kt	live-synopsis-browser
 1	url	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-xtream-qa-next
 8	empty	app/src/main/java/tv/own/owntv/player/PlayerHud.kt	\0
+1	regex	app/src/main/java/tv/own/owntv/features/mylounge/MyLoungeScreen.kt	(?i)kid|family|cartoon|disney|nick|junior|preschool|baby|boomerang
+1	regex	app/src/main/java/tv/own/owntv/features/mylounge/MyLoungeScreen.kt	(?i)movie|cinema|\\bfilm\\b|sky store
+1	regex	app/src/main/java/tv/own/owntv/features/mylounge/MyLoungeScreen.kt	(?i)sport|rugby|cricket|football|soccer|\\bnba\\b|\\bnfl\\b|\\bmlb\\b|\\bnhl\\b|espn|\\bf1\\b|motorsport|ufc|wwe|racing|tennis|golf|\\bbein\\b
