@@ -1281,13 +1281,19 @@ fun OwnTVShell(
                                     }.getOrNull().orEmpty()
                                     // A delayed search must not open playback after leaving Home.
                                     if (selectedSection != MainSection.HOME || playerMode != PlayerMode.NONE) return@launch
-                                    val choice = candidates.firstOrNull()
+                                    // Do not automatically tune a generic broadcaster or a
+                                    // name-only guess: those can carry an entirely different game.
+                                    val attached = candidates.filter {
+                                        it.tier == tv.own.owntv.core.sports.WatchTier.GUIDE ||
+                                            it.tier == tv.own.owntv.core.sports.WatchTier.EVENT
+                                    }
+                                    val choice = attached.firstOrNull()
                                     if (choice == null) {
                                         unavailable()
                                     } else if (liveVm.ensurePlayingByIdAsync(
-                                            choice.channel.id, candidates.map { it.channel }
+                                            choice.channel.id, attached.map { it.channel }
                                         )) {
-                                        sportsWorkVm.playedFrom(match, candidates, choice.channel)
+                                        sportsWorkVm.playedFrom(match, attached, choice.channel)
                                         openFullscreen(MainSection.LIVE_TV, forceFullscreen = true)
                                     } else {
                                         unavailable()
