@@ -1,0 +1,81 @@
+name: Lounge TV EPG Hub | NZ AU US UK | 3-day QA
+on:
+  pull_request:
+    branches: [feature/lounge-tv-2.0]
+    paths:
+      - 'qa/epg-hub/**'
+      - 'qa/epg/seven_day_targeted.py'
+      - 'qa/epg/test_seven_day_targeted.py'
+      - '.github/workflows/epg-rolling7-au-247.yml'
+      - '.github/workflows/epg-hub-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lounge-epg-hub-qa
+  cancel-in-progress: true
+jobs:
+  source-pool:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout existing Lounge TV 2.0 EPG code
+        uses: actions/checkout@v4
+      - name: Checkout published guide as read-only input
+        uses: actions/checkout@v4
+        with:
+          ref: epg-data
+          path: published
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install lxml==5.4.0
+      - name: Run source-pool and three-day unit tests
+        run: |
+          python -m unittest discover -s qa/epg-hub -p 'test_*.py' -v
+          python -m unittest qa/epg/test_seven_day_targeted.py -v
+      - name: Fetch bounded regional XMLTV source pool
+        run: |
+          python qa/epg-hub/download.py --config qa/epg-hub/sources.json --dir feeds
+      - name: Build one candidate against the existing shared guide
+        run: |
+          python qa/epg-hub/hub.py \
+            --manifest qa/shared-epg/current-manifest.json \
+            --existing published/epg/guide.xml.gz \
+            --source-list feeds/source-list.json \
+            --out candidate
+      - name: Fail closed on lost guides or fake seven-day claims
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from datetime import datetime
+          from lxml import etree
+          import gzip
+          d=json.loads(Path('candidate/report.json').read_text())
+          assert d['minimumRealDays']==3 and d['preferredDays']==7
+          assert d['after']['now']>=d['before']['now']
+          assert d['after']['3day']>=d['before']['3day']
+          assert d['after']['7day']>=d['before']['7day']
+          assert d['totalProgrammes']==d['preservedProgrammes']+d['addedProgrammes']
+          assert d['manifestTargets']>900
+          assert sum(s['status']=='ok' for s in d['sources'])>=4
+          with gzip.open('candidate/guide.xml.gz','rb') as f:
+            tree=etree.parse(f,etree.XMLParser(no_network=True,resolve_entities=False,huge_tree=True))
+          assert len(tree.findall('programme'))==d['totalProgrammes']
+          assert Path('candidate/guide.xml.gz').stat().st_size < 100*1024*1024
+          print('EPG_HUB_QA_PASS',json.dumps({'before':d['before'],'after':d['after'],
+                                          'added':d['addedProgrammes'],
+                                          'changed':d['changedTargets'],
+                                          'sources_ok':sum(s['status']=='ok' for s in d['sources'])}))
+          PY
+      - name: Upload QA-only hub evidence, never publish
+        uses: actions/upload-artifact@v4
+        with:
+          name: epg-hub-3day-candidate
+          path: |
+            candidate/report.json
+            candidate/guide.xml.gz
+            candidate/short/
+            feeds/download-report.json
+          retention-days: 7
