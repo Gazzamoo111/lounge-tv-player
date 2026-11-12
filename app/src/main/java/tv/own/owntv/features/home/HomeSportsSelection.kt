@@ -18,4 +18,29 @@ internal object HomeSportsSelection {
                 (it.state == MatchState.PRE && it.startMs in now..(now + 72 * 60 * 60_000L))
         }.sortedWith(compareBy<Match>({ !it.isLive }, { !important(it) },
             { !PremiumSportsPresentation.follows(it, config) }, { it.startMs }, { it.key })).take(12)
+
+    /**
+     * Home's live rail is fixtures only, never guessed from channel titles.
+     * Mix sports in a stable round-robin order so one league cannot occupy every tile.
+     * A tile resolves its actual available feed on OK; never silently opens Sport Lounge.
+     */
+    fun liveNow(matches: List<Match>, now: Long, limit: Int = 10): List<Match> {
+        if (limit <= 0) return emptyList()
+        val groups = SportLoungeRules.dedupe(matches)
+            .filter { it.isLive && it.startMs <= now && it.startMs >= now - 18 * 60 * 60_000L }
+            .groupBy { it.sport }
+            .values
+            .map { group -> group.sortedWith(compareBy<Match>({ it.startMs }, { it.key })) }
+            .sortedWith(compareBy({ it.first().startMs }, { it.first().sport.name }))
+        val mixed = ArrayList<Match>(limit)
+        var index = 0
+        while (mixed.size < limit && groups.any { index < it.size }) {
+            for (group in groups) {
+                group.getOrNull(index)?.let { mixed.add(it) }
+                if (mixed.size == limit) break
+            }
+            index++
+        }
+        return mixed
+    }
 }
