@@ -9,13 +9,14 @@ class HomeRulesTest {
     @Test fun homeViewportShowsSixOfEightWithoutDiscardingTheOtherTitles() = assertEquals(6, loungeHomeVisiblePosterCount(8))
     @Test fun homeViewportHandlesShortRows() = assertEquals(2, loungeHomeVisiblePosterCount(2))
     @Test fun curatedHomeHasOnlyRequestedRowsInOrder() = assertEquals(
-        listOf(HomeRow.HERO, LoungeHomeRow.NEW_RELEASES, HomeRow.TRENDING,
-            LoungeHomeRow.FEATURED_MOVIES, LoungeHomeRow.POPULAR_SERIES),
+        listOf(LoungeHomeRow.SPORTS_HERO, HomeRow.HERO, LoungeHomeRow.NEW_RELEASES, HomeRow.TRENDING,
+            LoungeHomeRow.FEATURED_MOVIES, LoungeHomeRow.POPULAR_SERIES, LoungeHomeRow.LIVE_NOW),
         loungeCuratedHomeRows(emptySet()),
     )
 
     @Test fun curatedHomeHonoursHiddenKeepWatchingAndTrending() = assertEquals(
-        listOf(LoungeHomeRow.NEW_RELEASES, LoungeHomeRow.FEATURED_MOVIES, LoungeHomeRow.POPULAR_SERIES),
+        listOf(LoungeHomeRow.SPORTS_HERO, LoungeHomeRow.NEW_RELEASES, LoungeHomeRow.FEATURED_MOVIES,
+            LoungeHomeRow.POPULAR_SERIES, LoungeHomeRow.LIVE_NOW),
         loungeCuratedHomeRows(setOf(HomeRow.HERO, HomeRow.TRENDING)),
     )
 
