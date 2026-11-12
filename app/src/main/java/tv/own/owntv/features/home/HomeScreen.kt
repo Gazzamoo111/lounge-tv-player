@@ -496,8 +496,8 @@ fun HomeScreen(
                                 is HomeNewRelease.Series -> loungeVodTitle(it.series.canonicalTitle.ifBlank { it.series.name })
                             } },
                             poster = { when (it) {
-                                is HomeNewRelease.Movie -> it.movie.posterUrl
-                                is HomeNewRelease.Series -> it.series.posterUrl
+                                is HomeNewRelease.Movie -> state.moviePosterOverrides[it.movie.id] ?: it.movie.posterUrl
+                                is HomeNewRelease.Series -> state.seriesPosterOverrides[it.series.id] ?: it.series.posterUrl
                             } },
                             badges = { when (it) {
                                 is HomeNewRelease.Movie -> vodMoviePosterBadges(it.movie.rating, movieProgress[it.movie.id])
@@ -519,7 +519,7 @@ fun HomeScreen(
                             items = state.featuredMovies,
                             key = { it.id },
                             name = { loungeVodTitle(state.featuredMovieNames[it.id] ?: it.canonicalTitle.ifBlank { it.name }) },
-                            poster = { it.posterUrl },
+                            poster = { state.moviePosterOverrides[it.id] ?: it.posterUrl },
                             badges = { vodMoviePosterBadges(it.rating, movieProgress[it.id]) },
                             start = contentStart,
                             onItemClick = onOpenMovie,
@@ -534,7 +534,7 @@ fun HomeScreen(
                             items = state.popularSeries,
                             key = { it.id },
                             name = { loungeVodTitle(state.popularSeriesNames[it.id] ?: it.canonicalTitle.ifBlank { it.name }) },
-                            poster = { it.posterUrl },
+                            poster = { state.seriesPosterOverrides[it.id] ?: it.posterUrl },
                             badges = { vodSeriesPosterBadges(it.rating, seriesProgress[it.id]) },
                             start = contentStart,
                             onItemClick = onOpenSeries,
@@ -549,6 +549,10 @@ fun HomeScreen(
                         } else if (!fullBleed || trendingItem == null) {
                             posterItem?.let { FoldedHeroLine(it, contentStart, height = CompactHeroHeight + RowGap) }
                             TrendingPosterRow(
+                                poster = { item -> when (item) {
+                                    is TrendingHomeItem.Movie -> state.moviePosterOverrides[item.movie.id] ?: item.movie.posterUrl
+                                    is TrendingHomeItem.Series -> state.seriesPosterOverrides[item.series.id] ?: item.series.posterUrl
+                                } },
                                 badges = { item -> when (item) {
                                     is TrendingHomeItem.Movie -> vodMoviePosterBadges(item.movie.rating, movieProgress[item.movie.id])
                                     is TrendingHomeItem.Series -> vodSeriesPosterBadges(item.series.rating, seriesProgress[item.series.id])
@@ -1494,6 +1498,7 @@ private fun <T> FavoritePosterRow(
 private fun TrendingPosterRow(
     title: String,
     items: List<TrendingHomeItem>,
+    poster: (TrendingHomeItem) -> String?,
     badges: (TrendingHomeItem) -> VodPosterBadgeState,
     start: Dp,
     onItemClick: (TrendingHomeItem) -> Unit,
@@ -1539,10 +1544,7 @@ private fun TrendingPosterRow(
                             },
                     ) {
                         AsyncImage(
-                            model = when (item) {
-                                is TrendingHomeItem.Movie -> item.movie.posterUrl
-                                is TrendingHomeItem.Series -> item.series.posterUrl
-                            },
+                            model = poster(item),
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize(),
