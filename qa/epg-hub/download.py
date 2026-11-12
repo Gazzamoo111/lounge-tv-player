@@ -16,9 +16,13 @@ def fetch(row, target):
     parsed = urlparse(url)
     if parsed.scheme != "https" or not parsed.hostname or not re.fullmatch(r"[a-z0-9-]+", source_id):
         return {"id": source_id, "region": row["region"], "status": "rejected-url"}
-    # Large US national guide is isolated to one reviewed source. Other
-    # sources retain the 35 MiB compressed download cap.
-    cap = 110 if source_id == "us-iptv-epg-large" else 35
+    # The seven GitHub fixture URLs were checked against repository blob sizes.
+    # A narrowly scoped compressed-size allowance avoids lifting all caps.
+    reviewed_ferteque = {"ferteque-epg6", "ferteque-epg2", "ferteque-epg66",
+                        "ferteque-epg52", "ferteque-epg41", "ferteque-epg63",
+                        "ferteque-epg37"}
+    cap = (110 if source_id == "us-iptv-epg-large" else
+           48 if source_id in reviewed_ferteque else 35)
     size_limit = min(int(row.get("maxMb", 15)), cap) * 1024 * 1024
     suffix = ".xml.gz" if parsed.path.endswith(".gz") else ".xml"
     path = target / (source_id + suffix)
