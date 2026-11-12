@@ -169,6 +169,50 @@ class HubTests(unittest.TestCase):
         self.assertIn("SkyArts.uk", conflicts)
         self.assertNotIn("SkyArts.uk", targets)
 
+    def test_multi_region_exact_ids_match_without_cross_market_leakage(self):
+        self.add_source("seven", "multi", [
+            ("TNT.us", "TNT"),
+            ("BBCOne.uk", "BBC One"),
+            ("ABC.au", "ABC"),
+            ("mjh-tvnz-1", "TVNZ 1"),
+        ], 3)
+        result = self.run_build()
+        self.assertEqual(result["byRegion"]["us"]["after"]["3day"], 1)
+        self.assertEqual(result["byRegion"]["au"]["after"]["3day"], 1)
+        self.assertEqual(result["byRegion"]["nz"]["after"]["3day"], 1)
+        self.assertIn("seven", result["sourceContributions"])
+        # The 8-day UK guide must remain untouched.
+        self.assertEqual(result["byRegion"]["uk"]["after"]["7day"], 1)
+
+    def test_multi_region_unqualified_name_never_guessed(self):
+        self.add_source("seven", "multi", [
+            ("generic_ABC", "ABC"),
+            ("generic_TNT", "TNT"),
+            ("generic_Sky", "SKY SPORT 1 HD"),
+        ], 7)
+        result = self.run_build()
+        self.assertEqual(result["changedTargets"], 0)
+        self.assertEqual(result["after"]["3day"], 1)
+
+    def test_multi_region_explicit_country_name_accepted(self):
+        self.add_source("seven", "multi", [
+            ("US| TNT HD", "US| TNT HD"),
+            ("UK| BBC One", "UK| BBC One"),
+            ("AU| ABC", "AU| ABC"),
+        ], 7)
+        result = self.run_build()
+        self.assertEqual(result["byRegion"]["us"]["after"]["3day"], 1)
+        self.assertEqual(result["byRegion"]["au"]["after"]["3day"], 1)
+        self.assertEqual(result["byRegion"]["uk"]["after"]["7day"], 1)
+
+    def test_multi_region_conflicting_country_id_is_skipped(self):
+        self.add_source("seven", "multi", [
+            ("TNT.us", "UK| TNT"),
+            ("ABC.au", "US| ABC"),
+        ], 7)
+        result = self.run_build()
+        self.assertEqual(result["changedTargets"], 0)
+
     def test_normalisation_retains_variants(self):
         self.assertNotEqual(norm("Sky Sport 1 +1"), norm("Sky Sport 1"))
         self.assertNotEqual(norm("TNT West"), norm("TNT East"))
