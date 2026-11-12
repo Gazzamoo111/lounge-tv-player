@@ -37,7 +37,12 @@ import tv.own.owntv.player.OwnTVPlayer
 import tv.own.owntv.ui.components.OwnTVIcon
 import tv.own.owntv.ui.stage.StagePoster
 import tv.own.owntv.ui.theme.*
+import java.io.Closeable
 import java.io.File
+import java.io.RandomAccessFile
+import java.net.InetAddress
+import java.net.ServerSocket
+import java.net.SocketException
 
 /** Local synthetic AV and labelled UI fixtures. No BEST credentials or provider streams. */
 @RunWith(AndroidJUnit4::class)
@@ -109,6 +114,72 @@ class Milestone6UiTest {
             .put("max_input_to_idle_ms", ordered.last()).put("network_poster_fetches", 0))
         capture("08-vod-navigation-test-data")
     }
+    /**
+     * LivePreviewEngine uses an HTTP-only OkHttp data source. A bare file path is not a
+     * valid stream, so serve the same local synthetic MP4 over emulator loopback instead.
+     * No provider connection, CI-host service, or production playback behaviour is involved.
+     */
+    private class LoopbackMediaServer(private val media: File) : Closeable {
+        private val server = ServerSocket(0, 5, InetAddress.getByName("127.0.0.1"))
+        val url = "http://127.0.0.1:${server.localPort}/m6-local-av.mp4"
+        private val worker = Thread({
+            while (!server.isClosed) {
+                val socket = try {
+                    server.accept()
+                } catch (_: SocketException) {
+                    break
+                }
+                try {
+                    socket.use { client ->
+                        client.soTimeout = 10_000
+                        val input = client.getInputStream().bufferedReader()
+                        val method = input.readLine()?.substringBefore(' ') ?: return@use
+                        var range: String? = null
+                        while (true) {
+                            val line = input.readLine() ?: break
+                            if (line.isEmpty()) break
+                            if (line.startsWith("Range:", ignoreCase = true)) range = line.substringAfter(':').trim()
+                        }
+                        val total = media.length()
+                        val spec = range?.takeIf { it.startsWith("bytes=", ignoreCase = true) }?.substringAfter('=')
+                        val start = spec?.substringBefore('-')?.toLongOrNull() ?: 0L
+                        val end = (spec?.substringAfter('-', "")?.toLongOrNull() ?: (total - 1)).coerceAtMost(total - 1)
+                        val partial = spec != null
+                        val response = client.getOutputStream()
+                        if (start < 0 || start >= total || end < start) {
+                            response.write(("HTTP/1.1 416 Range Not Satisfiable\r\n" +
+                                "Content-Range: bytes */$total\r\nContent-Length: 0\r\nConnection: close\r\n\r\n").toByteArray())
+                            return@use
+                        }
+                        val count = end - start + 1
+                        response.write(((if (partial) "HTTP/1.1 206 Partial Content" else "HTTP/1.1 200 OK") +
+                            "\r\nContent-Type: video/mp4\r\nAccept-Ranges: bytes\r\nContent-Length: $count\r\n" +
+                            (if (partial) "Content-Range: bytes $start-$end/$total\r\n" else "") +
+                            "Connection: close\r\n\r\n").toByteArray(Charsets.US_ASCII))
+                        if (method != "HEAD") RandomAccessFile(media, "r").use { file ->
+                            file.seek(start)
+                            val buffer = ByteArray(8192)
+                            var remaining = count
+                            while (remaining > 0L) {
+                                val read = file.read(buffer, 0, minOf(buffer.size.toLong(), remaining).toInt())
+                                if (read <= 0) break
+                                response.write(buffer, 0, read)
+                                remaining -= read
+                            }
+                        }
+                        response.flush()
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.w("LoungeM6Performance", "Loopback fixture connection ended", e)
+                }
+            }
+        }, "lounge-m6-local-http").apply { isDaemon = true; start() }
+        override fun close() {
+            server.close()
+            worker.join(1000)
+        }
+    }
+
     @Test fun live_preview_fullscreen_moves_the_same_surface_without_reopening_playback() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val media = File(instrumentation.targetContext.cacheDir, "m6-surface-handoff.mp4")
@@ -130,9 +201,10 @@ class Milestone6UiTest {
                 }
             }
         } }
+        val fixture = LoopbackMediaServer(media)
         try {
-            // Exactly one play request: every later operation moves its existing view, not its stream.
-            compose.runOnIdle { engine.play(media.absolutePath, muted = false) }
+            // Exactly one HTTP play request: later operations move the view, not the stream.
+            compose.runOnIdle { engine.play(fixture.url, muted = false) }
             compose.waitUntil(30_000) { engine.error.value != null ||
                 (engine.isPlaying.value && engine.videoSize.value != null) }
             assertNull(engine.error.value)
@@ -150,7 +222,7 @@ class Milestone6UiTest {
                 assertSame("The existing decoder must retain its output surface", originalSurface, movedView.holder.surface)
                 Thread.sleep(350)
                 assertRenderedFrame(movedView)
-                assertEquals(media.absolutePath, engine.currentUrl)
+                assertEquals(fixture.url, engine.currentUrl)
                 assertNull(engine.error.value)
             }
             compose.runOnIdle {
@@ -161,7 +233,9 @@ class Milestone6UiTest {
                 .put("transitions", 4).put("play_requests", 1).put("same_surface_view", true)
                 .put("same_surface", true).put("video_pixels_verified", true)
                 .put("physical_fire_tv_acceptance", "required"))
-        } finally { compose.runOnIdle { engine.stop() } }
+        } finally {
+            try { compose.runOnIdle { engine.stop() } } finally { fixture.close() }
+        }
     }
 
     private fun liveSurfaceView(): android.view.SurfaceView {
