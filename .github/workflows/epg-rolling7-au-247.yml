@@ -12,7 +12,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: lounge-epg-publish-au-247
+  group: lounge-epg-shared-publish
   cancel-in-progress: false
 jobs:
   validate:
