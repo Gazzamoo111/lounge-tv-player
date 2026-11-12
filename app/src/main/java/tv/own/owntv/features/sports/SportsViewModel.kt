@@ -242,6 +242,18 @@ class SportsViewModel(
     }.flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /**
+     * Live Now uses the complete current sports board, not the 12-event hero shortlist.
+     * Otherwise a large basketball slate could crowd rugby, cricket and football out.
+     * This does not search channels until the user explicitly presses OK on a tile.
+     */
+    val liveHomeEvents: StateFlow<List<Match>> = combine(board, discoveryState) { board, discovery ->
+        tv.own.owntv.features.home.HomeSportsSelection.liveNow(
+            board.matches + discovery.first.matches, System.currentTimeMillis()
+        )
+    }.flowOn(Dispatchers.Default)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     // --- The match page ------------------------------------------------------------------------------
 
     private val openMatch = MutableStateFlow<Match?>(null)
