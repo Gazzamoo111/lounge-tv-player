@@ -37,6 +37,17 @@ jobs:
       - name: Fetch bounded regional XMLTV source pool
         run: |
           python qa/epg-hub/download.py --config qa/epg-hub/sources.json --dir feeds
+      - name: Report seven ferteque download statuses
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          rows=json.loads(Path('feeds/download-report.json').read_text())
+          seven=[x for x in rows if x['id'].startswith('ferteque-')]
+          assert len(seven)==7, 'All seven candidate feeds must be checked'
+          for s in seven:
+              print('FERTEQUE_FEED',s['id'],s['status'],s.get('bytes',0),s.get('error',''))
+          PY
       - name: Build one candidate against the existing shared guide
         run: |
           python qa/epg-hub/hub.py \
@@ -71,6 +82,9 @@ jobs:
                                           'added':d['addedProgrammes'],
                                           'changed':d['changedTargets'],
                                           'sources_ok':sum(s['status']=='ok' for s in d['sources'])}))
+          new={k:v for k,v in d['sourceContributions'].items() if k.startswith('ferteque-')}
+          print('FERTEQUE_INCREMENTAL_CONTRIBUTIONS',json.dumps(new,sort_keys=True))
+          print('US_UK_COVERAGE',json.dumps({r:d['byRegion'][r] for r in ('us','uk')}))
           PY
       - name: Upload QA-only hub evidence, never publish
         uses: actions/upload-artifact@v4
