@@ -130,7 +130,7 @@ internal const val LOUNGE_HOME_POSTERS_PER_ROW = 6
 internal fun loungeHomeVisiblePosterCount(total: Int): Int = minOf(total, LOUNGE_HOME_POSTERS_PER_ROW)
 
 /** Lounge TV's first-login rails use the existing card widgets, without altering OwnTV Core. */
-internal enum class LoungeHomeRow { SPORTS_HERO, NEW_RELEASES, FEATURED_MOVIES, POPULAR_SERIES, SPORTS_LINKS, SPORTS_FIXTURES }
+internal enum class LoungeHomeRow { SPORTS_HERO, NEW_RELEASES, FEATURED_MOVIES, POPULAR_SERIES, LIVE_NOW, SPORTS_LINKS, SPORTS_FIXTURES }
 
 private sealed interface HomeNewRelease {
     data class Movie(val movie: MovieEntity) : HomeNewRelease
@@ -138,11 +138,14 @@ private sealed interface HomeNewRelease {
 }
 
 internal fun loungeCuratedHomeRows(hidden: Set<HomeRow>): List<Any> = buildList<Any> {
+    // The Sports Event hero is the first Home feature. Keep Watching is a separate second row.
+    add(LoungeHomeRow.SPORTS_HERO)
     if (HomeRow.HERO !in hidden) add(HomeRow.HERO)
     add(LoungeHomeRow.NEW_RELEASES)
     if (HomeRow.TRENDING !in hidden) add(HomeRow.TRENDING)
     add(LoungeHomeRow.FEATURED_MOVIES)
     add(LoungeHomeRow.POPULAR_SERIES)
+    add(LoungeHomeRow.LIVE_NOW)
 }
 
 /** Quick links only: every destination already exists in the v5.2.2.11 app. */
@@ -193,6 +196,7 @@ fun HomeScreen(
     onEntryHook: (((() -> Boolean)?) -> Unit)? = null,
     /** Sports Hub: ▶ on a Live sports card opens its match page. */
     onOpenMatch: (tv.own.owntv.core.sports.model.Match) -> Unit = {},
+    onPlayLiveSport: (tv.own.owntv.core.sports.model.Match, () -> Unit) -> Unit = { _, _ -> },
     onSportsShortcut: (LoungeSportsShortcut) -> Unit = {},
     modifier: Modifier = Modifier,
     sportsVm: tv.own.owntv.features.sports.SportsViewModel = org.koin.androidx.compose.koinViewModel(),
@@ -223,7 +227,11 @@ fun HomeScreen(
     val sportsHero = remember(featuredSports, sportsPreferences, sportsNow) {
         HomeSportsSelection.ranked(featuredSports, sportsPreferences, sportsNow)
     }
+    val liveNowEvents = remember(featuredSports, sportsNow) {
+        HomeSportsSelection.liveNow(featuredSports, sportsNow)
+    }
     val trendingUnavailableMessage = stringResource(R.string.home_trending_unavailable)
+    val liveUnavailableMessage = stringResource(R.string.lounge_home_live_unavailable)
     val heroPreviewEngine = koinInject<HeroPreviewEngine>()
     val engineState by heroPreviewEngine.state.collectAsStateWithLifecycle()
     val isPreviewActive by vm.isPreviewActive.collectAsStateWithLifecycle()
@@ -253,7 +261,7 @@ fun HomeScreen(
     // A Keep watching card plays its preview only after 3 s of continuous focus (the dwell below).
     var previewIndex by remember { mutableStateOf(-1) }
     var focusedHeroIndex by remember { mutableStateOf(-1) }
-    // Exactly five Home shelves; old Continue and sports sections remain available elsewhere.
+    // Restored sports-event hero, all existing VOD shelves, and a live-only sports rail below Series.
     val orderedRows: List<Any> = loungeCuratedHomeRows(state.config.hidden)
     val newReleaseItems = remember(state.newMovies, state.newSeries) {
         buildList<HomeNewRelease> {
@@ -264,10 +272,20 @@ fun HomeScreen(
         }
     }
     val heroVisible = HomeRow.HERO in orderedRows
-    val hasNonHeroContent = orderedRows.any { it != HomeRow.HERO && rowHasData(it, state, sportsCards.size) }
+    val hasDataNow: (Any) -> Boolean = { row -> when (row) {
+        LoungeHomeRow.SPORTS_HERO -> sportsHero.isNotEmpty()
+        LoungeHomeRow.LIVE_NOW -> liveNowEvents.isNotEmpty()
+        else -> rowHasData(row, state, sportsCards.size)
+    } }
+    val hasNonHeroContent = orderedRows.any { it != HomeRow.HERO && hasDataNow(it) }
     val showHeroFallback = heroVisible && state.heroItems.isEmpty() && !hasNonHeroContent
-    val renderRows = orderedRows.filter { rowCanRender(it, state, showHeroFallback, sportsCards.size) }
-    val firstDataRow = renderRows.firstOrNull { it != HomeRow.HERO && rowHasData(it, state, sportsCards.size) }
+    val renderRows = orderedRows.filter { row ->
+        when (row) {
+            LoungeHomeRow.SPORTS_HERO, LoungeHomeRow.LIVE_NOW -> hasDataNow(row)
+            else -> rowCanRender(row, state, showHeroFallback, sportsCards.size)
+        }
+    }
+    val firstDataRow = renderRows.firstOrNull { it != HomeRow.HERO && hasDataNow(it) }
     val showAllHiddenState = orderedRows.isEmpty()
     val showEmptyState = orderedRows.isNotEmpty() && renderRows.isEmpty()
     // Trending is a third-row poster shelf, not a first-row full-bleed hero.
@@ -327,6 +345,18 @@ fun HomeScreen(
                     listState.scrollToItem(rowIndex)
                 }
             }
+        }
+    }
+
+    // D-pad navigation must return to the entire Keep Watching row, including its heading.
+    // Compose normally scrolls only the focused card and can leave the heading clipped.
+    val showKeepWatchingHeading: () -> Unit = {
+        val index = renderRows.indexOf(HomeRow.HERO)
+        if (index >= 0) homeScope.launch {
+            kotlinx.coroutines.delay(70L)
+            if (renderRows.getOrNull(index) == HomeRow.HERO &&
+                (listState.firstVisibleItemIndex != index || listState.firstVisibleItemScrollOffset != 0)
+            ) listState.scrollToItem(index)
         }
     }
 
@@ -458,7 +488,7 @@ fun HomeScreen(
                     // of the list remembers its focused child.
                     .focusGroup(),
                 state = listState,
-                contentPadding = PaddingValues(top = if (fullBleed || posterItem != null) 0.dp else NoHeroTop, bottom = 48.mpx),
+                contentPadding = PaddingValues(top = if (fullBleed || posterItem != null) 0.dp else NoHeroTop, bottom = 180.mpx),
                 verticalArrangement = Arrangement.spacedBy(RowGap),
             ) {
                 itemsIndexed(renderRows, key = { _, row -> row.toString() }) { _, row ->
@@ -543,6 +573,16 @@ fun HomeScreen(
                             start = contentStart,
                             onItemClick = onOpenSeries,
                             onFocus = onNonHeroFocused,
+                            firstItemFocusRequester = firstItemFocusRequester,
+                            track = track,
+                            modifier = rowModifier,
+                        )
+
+                        LoungeHomeRow.LIVE_NOW -> HomeLiveSportsRow(
+                            matches = liveNowEvents,
+                            start = contentStart,
+                            onPlay = { match -> onPlayLiveSport(match) { trendingToast.show(liveUnavailableMessage) } },
+                            onFocus = { onSportsRowFocused(LoungeHomeRow.LIVE_NOW) },
                             firstItemFocusRequester = firstItemFocusRequester,
                             track = track,
                             modifier = rowModifier,
@@ -660,6 +700,7 @@ fun HomeScreen(
                                         vm.onHeroUserNavigate(index)
                                         vm.setHeroFocused(true)
                                         onChildFocused()
+                                        showKeepWatchingHeading()
                                     } else if (focusedHeroIndex == index) {
                                         focusedHeroIndex = -1
                                     }
@@ -873,6 +914,7 @@ private fun LoungeSportsQuickLinks(
 
 private fun rowHasData(row: Any, state: HomeUiState, sportsCards: Int): Boolean = when (row) {
     LoungeHomeRow.SPORTS_HERO -> true
+    LoungeHomeRow.LIVE_NOW -> false // evaluated against the actual live fixtures in HomeScreen
     LoungeHomeRow.SPORTS_LINKS -> !state.isLoading
     LoungeHomeRow.SPORTS_FIXTURES -> sportsCards > 0
     LoungeHomeRow.NEW_RELEASES -> state.newMovies.isNotEmpty() || state.newSeries.isNotEmpty()
