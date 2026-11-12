@@ -26,4 +26,17 @@ class HomeSportsSelectionTest {
         assertEquals(listOf(major, followed, other), HomeSportsSelection.ranked(listOf(other, followed, major),
             SportsConfig(leagues = listOf("basketball/wnba")), now))
     }
+    @Test fun `live Home shelf excludes upcoming and ended events and mixes sports`() {
+        val nba1 = event("nba1", MatchState.IN, now - 120000)
+        val nba2 = event("nba2", MatchState.IN, now - 180000)
+        val rugby = Match("rugby", Sport.RUGBY, "rugby/super-rugby", "super-rugby", "Rugby",
+            now - 60000, MatchState.IN, "", "Test rugby")
+        val result = HomeSportsSelection.liveNow(listOf(nba1, nba2, rugby, nba1,
+            event("soon"), event("ended", MatchState.POST), event("old", MatchState.IN, now - 19 * 3600000L)), now)
+        assertEquals(listOf(nba2, rugby, nba1).toSet(), result.toSet())
+        assertEquals(3, result.size)
+        assertNotEquals(result[0].sport, result[1].sport)
+        assertEquals(2, HomeSportsSelection.liveNow(result, now, limit = 2).size)
+        assertTrue(HomeSportsSelection.liveNow(emptyList(), now).isEmpty())
+    }
 }
