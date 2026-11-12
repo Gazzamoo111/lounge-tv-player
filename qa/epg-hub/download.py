@@ -16,7 +16,10 @@ def fetch(row, target):
     parsed = urlparse(url)
     if parsed.scheme != "https" or not parsed.hostname or not re.fullmatch(r"[a-z0-9-]+", source_id):
         return {"id": source_id, "region": row["region"], "status": "rejected-url"}
-    size_limit = min(int(row.get("maxMb", 15)), 35) * 1024 * 1024
+    # Large US national guide is isolated to one reviewed source. Other
+    # sources retain the 35 MiB compressed download cap.
+    cap = 110 if source_id == "us-iptv-epg-large" else 35
+    size_limit = min(int(row.get("maxMb", 15)), cap) * 1024 * 1024
     suffix = ".xml.gz" if parsed.path.endswith(".gz") else ".xml"
     path = target / (source_id + suffix)
     temp = target / (source_id + ".part")
