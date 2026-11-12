@@ -219,6 +219,41 @@ def actual_coverage(programmes, targets, now, days):
             "7day": len({t for t in current if latest[t] >= now + timedelta(days=7)})}
 
 
+def uncovered_three_day(programmes_by_id, targets, now, minimum_days):
+    """Complete genuine US/UK three-day gap report, with no arbitrary item limit.
+
+    An on-air programme with a short remaining schedule is a gap as well;
+    rejecting fabricated 24/7 placeholders mirrors actual_coverage().
+    """
+    required = now + timedelta(days=minimum_days)
+    missing = []
+    for tid, target in sorted(targets.items()):
+        if target["region"] not in ("us", "uk"):
+            continue
+        current = False
+        latest = None
+        for p in programmes_by_id.get(tid, []):
+            start, stop = dt(p.get("start")), dt(p.get("stop"))
+            title = (p.findtext("title") or "").strip()
+            if (not start or not stop or stop <= start or not title
+                    or BAD_TITLE.fullmatch(title) or title.startswith("24/7 • ")):
+                continue
+            if start <= now < stop:
+                current = True
+            if latest is None or stop > latest:
+                latest = stop
+        if current and latest is not None and latest >= required:
+            continue
+        missing.append({
+            "id": tid, "name": target["name"], "region": target["region"],
+            "category": target["category"], "subcategory": target["subcategory"],
+            "syntheticId": tid.startswith("live:"),
+            "gapReason": "no-current-listing" if not current else "short-horizon",
+            "latestUtc": latest.isoformat() if latest else None,
+        })
+    return missing
+
+
 def build(manifest, existing, source_entries, out, now=None, minimum_days=3):
     now = now or datetime.now(UTC)
     if now.tzinfo is None or minimum_days < 1:
@@ -366,13 +401,7 @@ def build(manifest, existing, source_entries, out, now=None, minimum_days=3):
               "byUsUkSubcategory": by_subcategory,
               "addedProgrammes": added, "changedTargets": len(amended),
               "preservedProgrammes": before_count, "totalProgrammes": before_count + added,
-              "selected": proven, "uncovered3day": [
-                  {"id": tid, "name": t["name"], "region": t["region"],
-                   "subcategory": t["subcategory"], "syntheticId": tid.startswith("live:")}
-                  for tid, t in targets.items()
-                  if t["region"] in ("us", "uk") and
-                     not any((dt(p.get("start")) or now) <= now < (dt(p.get("stop")) or now)
-                          for p in existing_by_id[tid])][:150]}
+              "selected": proven, "uncovered3day": uncovered_three_day(existing_by_id, targets, now, minimum_days)}
     (out / "report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
     print(json.dumps({k: v for k, v in report.items()
                       if k not in ("selected", "uncovered3day")},

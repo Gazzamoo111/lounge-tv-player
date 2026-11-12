@@ -213,6 +213,33 @@ class HubTests(unittest.TestCase):
         result = self.run_build()
         self.assertEqual(result["changedTargets"], 0)
 
+    def test_complete_gap_report_includes_on_air_short_horizons(self):
+        # Existing TNT has real listings now but only for two days, so it MUST
+        # still appear in the missing-three-day report (not just missing-now).
+        with gzip.open(self.existing, "rb") as f:
+            existing = E.fromstring(f.read())
+        short = E.fromstring(xml([("TNT.us", "TNT")], 2))
+        for ch in short.findall("channel"):
+            existing.append(ch)
+        for prog in short.findall("programme"):
+            existing.append(prog)
+        with gzip.open(self.existing, "wb") as f:
+            f.write(E.tostring(existing))
+        self.add_source("nz", "nz", [("mjh-tvnz-1", "TVNZ 1")], 3)
+        report = self.run_build()
+        gaps = {entry["id"]: entry for entry in report["uncovered3day"]}
+        self.assertEqual(gaps["TNT.us"]["gapReason"], "short-horizon")
+        self.assertEqual(gaps["ABC.au"]["gapReason"] if "ABC.au" in gaps else "outside-uk-us", "outside-uk-us")
+        self.assertEqual(report["byRegion"]["us"]["after"]["3day"], 0)
+
+    def test_gap_report_is_not_truncated_to_150_channels(self):
+        from hub import uncovered_three_day
+        rows = {f"Missing{i}.us": {"name": f"Missing {i}", "region": "us",
+                 "category": "Entertainment", "subcategory": "US TV"} for i in range(201)}
+        gaps = uncovered_three_day({}, rows, NOW, 3)
+        self.assertEqual(len(gaps), 201)
+        self.assertTrue(all(x["gapReason"] == "no-current-listing" for x in gaps))
+
     def test_normalisation_retains_variants(self):
         self.assertNotEqual(norm("Sky Sport 1 +1"), norm("Sky Sport 1"))
         self.assertNotEqual(norm("TNT West"), norm("TNT East"))

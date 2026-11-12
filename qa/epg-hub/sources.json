@@ -213,6 +213,94 @@
       "provenance": "ferteque/Curated-M3U-Repository",
       "scope": "QA-only: exact ID and explicitly region-qualified name matches",
       "redistributionRights": "unverified"
+    },
+    {
+      "id": "ferteque-epg1",
+      "region": "multi",
+      "url": "https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg1.xml.gz",
+      "maxMb": 4,
+      "enabled": true,
+      "expectedCompressedBytes": 1275403,
+      "provenance": "ferteque/Curated-M3U-Repository",
+      "scope": "QA-only: exact ID and explicitly region-qualified name matches",
+      "redistributionRights": "unverified"
+    },
+    {
+      "id": "ferteque-epg14",
+      "region": "multi",
+      "url": "https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg14.xml.gz",
+      "maxMb": 7,
+      "enabled": true,
+      "expectedCompressedBytes": 4372082,
+      "provenance": "ferteque/Curated-M3U-Repository",
+      "scope": "QA-only: exact ID and explicitly region-qualified name matches",
+      "redistributionRights": "unverified"
+    },
+    {
+      "id": "ferteque-epg29",
+      "region": "multi",
+      "url": "https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg29.xml.gz",
+      "maxMb": 4,
+      "enabled": true,
+      "expectedCompressedBytes": 1582864,
+      "provenance": "ferteque/Curated-M3U-Repository",
+      "scope": "QA-only: exact ID and explicitly region-qualified name matches",
+      "redistributionRights": "unverified"
+    },
+    {
+      "id": "ferteque-epg31",
+      "region": "multi",
+      "url": "https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg31.xml.gz",
+      "maxMb": 5,
+      "enabled": true,
+      "expectedCompressedBytes": 2257367,
+      "provenance": "ferteque/Curated-M3U-Repository",
+      "scope": "QA-only: exact ID and explicitly region-qualified name matches",
+      "redistributionRights": "unverified"
+    },
+    {
+      "id": "ferteque-epg42",
+      "region": "multi",
+      "url": "https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg42.xml.gz",
+      "maxMb": 7,
+      "enabled": true,
+      "expectedCompressedBytes": 3723642,
+      "provenance": "ferteque/Curated-M3U-Repository",
+      "scope": "QA-only: exact ID and explicitly region-qualified name matches",
+      "redistributionRights": "unverified"
+    },
+    {
+      "id": "ferteque-epg47",
+      "region": "multi",
+      "url": "https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg47.xml.gz",
+      "maxMb": 3,
+      "enabled": true,
+      "expectedCompressedBytes": 918989,
+      "provenance": "ferteque/Curated-M3U-Repository",
+      "scope": "QA-only: exact ID and explicitly region-qualified name matches",
+      "redistributionRights": "unverified"
+    },
+    {
+      "id": "ferteque-epg50",
+      "region": "multi",
+      "url": "https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg50.xml.gz",
+      "maxMb": 5,
+      "enabled": true,
+      "expectedCompressedBytes": 2646046,
+      "provenance": "ferteque/Curated-M3U-Repository",
+      "scope": "QA-only: exact ID and explicitly region-qualified name matches",
+      "redistributionRights": "unverified"
+    },
+    {
+      "id": "ferteque-epg55",
+      "region": "multi",
+      "url": "https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg55.xml.gz",
+      "maxMb": 12,
+      "enabled": true,
+      "expectedCompressedBytes": 8149345,
+      "provenance": "ferteque/Curated-M3U-Repository",
+      "scope": "QA-only: exact ID and explicitly region-qualified name matches",
+      "redistributionRights": "unverified"
     }
   ],
   "deferred": [
