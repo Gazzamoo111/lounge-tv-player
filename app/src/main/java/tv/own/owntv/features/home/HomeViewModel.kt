@@ -105,6 +105,8 @@ data class HomeUiState(
     val favoriteSeries: List<SeriesEntity> = emptyList(),
     val newMovies: List<MovieEntity> = emptyList(),
     val newSeries: List<SeriesEntity> = emptyList(),
+    val moviePosterOverrides: Map<Long, String> = emptyMap(),
+    val seriesPosterOverrides: Map<Long, String> = emptyMap(),
     val featuredMovies: List<MovieEntity> = emptyList(),
     val popularSeries: List<SeriesEntity> = emptyList(),
     val featuredMovieNames: Map<Long, String> = emptyMap(),
@@ -490,6 +492,22 @@ class HomeViewModel(
                         featuredMovieNames = selection.movieNames,
                         popularSeriesNames = selection.seriesNames,
                     )
+                    // Reuse already cached TMDB posters where available: provider thumbnails can be tiny.
+                    // No additional network metadata work or playlist writes are needed.
+                    val posterMovies = (selection.newMovies + selection.movies +
+                        data.trendingItems.filterIsInstance<TrendingHomeItem.Movie>().map { it.movie })
+                        .distinctBy { it.id }
+                    val posterSeries = (selection.newSeries + selection.series +
+                        data.trendingItems.filterIsInstance<TrendingHomeItem.Series>().map { it.series })
+                        .distinctBy { it.id }
+                    val moviePosters = metadata.cachedMoviePosters(posterMovies)
+                    val seriesPosters = metadata.cachedSeriesPosters(posterSeries)
+                    if (currentProfileId() == profileId) {
+                        _uiState.value = _uiState.value.copy(
+                            moviePosterOverrides = moviePosters,
+                            seriesPosterOverrides = seriesPosters,
+                        )
+                    }
                 }
             } catch (cancelled: kotlinx.coroutines.CancellationException) {
                 throw cancelled
