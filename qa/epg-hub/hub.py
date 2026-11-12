@@ -267,7 +267,8 @@ def build(manifest, existing, source_entries, out, now=None, minimum_days=3):
     if len(root.findall("programme")) != before_count + added:
         raise AssertionError("Existing programmes were dropped")
     # We only append new programmes; no old programme is deleted or modified.
-    if any(root.findall("programme")[i] is not p for i, p in enumerate(originals)):
+    all_programmes = root.findall("programme")
+    if any(current is not old for current, old in zip(all_programmes, originals)):
         raise AssertionError("Original XMLTV record order was modified")
     out = Path(out)
     (out / "short").mkdir(parents=True, exist_ok=True)
@@ -291,9 +292,10 @@ def build(manifest, existing, source_entries, out, now=None, minimum_days=3):
               "addedProgrammes": added, "changedTargets": len(amended),
               "preservedProgrammes": before_count, "totalProgrammes": before_count + added,
               "selected": proven, "uncovered3day": [
-                  t["name"] for tid, t in targets.items() if
-                  not any((dt(p.get("start")) or now) <= now < (dt(p.get("stop")) or now)
-                          for p in existing_by_id[tid])][:80]}
+                  {"id": tid, "name": t["name"], "region": t["region"]}
+                  for tid, t in targets.items()
+                  if not any((dt(p.get("start")) or now) <= now < (dt(p.get("stop")) or now)
+                          for p in existing_by_id[tid])][:100]}
     (out / "report.json").write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n")
     print(json.dumps({k: v for k, v in report.items() if k not in ("selected", "uncovered3day")},
                      ensure_ascii=False))
