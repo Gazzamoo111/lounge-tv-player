@@ -32,6 +32,29 @@ class EpgTargetedTest(unittest.TestCase):
             {"primary": source_index(root, NOW, NOW + timedelta(days=7))},
             NOW, NOW + timedelta(days=7)))
 
+    def test_exact_au_fox_sports_ids_from_epgshare(self):
+        au = etree.Element("tv")
+        for cid in ("FoxCricket.au", "FoxSportsNews.au"):
+            ch = etree.SubElement(au, "channel", id=cid)
+            etree.SubElement(ch, "display-name").text = cid
+            for day in range(4):
+                start = NOW + timedelta(days=day)
+                p = etree.SubElement(au, "programme", channel=cid,
+                    start=start.strftime("%Y%m%d%H%M%S +0000"),
+                    stop=(start + timedelta(days=1)).strftime("%Y%m%d%H%M%S +0000"))
+                etree.SubElement(p, "title").text = "Verified programming"
+        index = source_index(au, NOW, NOW + timedelta(days=7))
+        for name, epg_id in (("FOX CRICKET", "FOXCricket.au"),
+                             ("Fox Sports News Australia", "FoxSportsNews.au")):
+            match = select_feed({"name": name, "epgId": epg_id},
+                {"epgshare": index}, NOW, NOW + timedelta(days=7))
+            self.assertIsNotNone(match, name)
+            self.assertEqual(match[2], "epgshare")
+            self.assertEqual(match[3], epg_id)
+        self.assertIsNone(select_feed(
+            {"name": "FOX SPORTS 501", "epgId": "FoxSports1.au"},
+            {"epgshare": index}, NOW, NOW + timedelta(days=7)))
+
     def test_three_real_days_accepted(self):
         au = etree.Element("tv")
         c = etree.SubElement(au, "channel", id="Channel9.au")
