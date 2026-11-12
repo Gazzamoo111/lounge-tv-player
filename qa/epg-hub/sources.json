@@ -40,6 +40,16 @@
       "enabled": true
     },
     {
+      "id": "au-mjh-foxtel",
+      "region": "au",
+      "url": "https://i.mjh.nz/Foxtel/epg.xml.gz",
+      "maxMb": 12,
+      "enabled": true,
+      "provenance": "i.mjh.nz/Foxtel",
+      "redistributionRights": "unverified",
+      "scope": "QA-only: match exact channel identities or unambiguous AU name matches; never invent sports schedules"
+    },
+    {
       "id": "au-iptv-epg",
       "region": "au",
       "url": "https://iptv-epg.org/files/epg-au.xml.gz",
