@@ -125,6 +125,9 @@ import java.util.Locale
 /** The row gap; the headings' design positions below already include it. */
 private val RowGap = 40.mpx
 
+internal const val LOUNGE_HOME_POSTERS_PER_ROW = 6
+internal fun <T> loungeHomePosterItems(items: List<T>): List<T> = items.take(LOUNGE_HOME_POSTERS_PER_ROW)
+
 /** Lounge TV's first-login rails use the existing card widgets, without altering OwnTV Core. */
 internal enum class LoungeHomeRow { SPORTS_HERO, NEW_RELEASES, FEATURED_MOVIES, POPULAR_SERIES, SPORTS_LINKS, SPORTS_FIXTURES }
 
@@ -1411,14 +1414,14 @@ private fun ContinuePosterRow(
     Column(modifier) {
         HomeRowHeader(title, small = items.size.toString(), start = start)
         BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val posterWidth = ((maxWidth - start - 64.mpx - 100.mpx) / 6).coerceAtLeast(150.mpx)
+            val posterWidth = ((maxWidth - start - 64.mpx - 5 * 20.mpx) / LOUNGE_HOME_POSTERS_PER_ROW).coerceAtLeast(1.dp)
             val posterHeight = posterWidth * 1.5f
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(20.mpx),
                 contentPadding = PaddingValues(start = start, end = 64.mpx),
                 modifier = Modifier.focusRestorer().focusGroup(),
             ) {
-                itemsIndexed(items, key = { _, item -> item.stableKey }) { index, item ->
+                itemsIndexed(loungeHomePosterItems(items), key = { _, item -> item.stableKey }) { index, item ->
                     val badge = badges(item)
                     StagePoster(
                         title = loungeVodTitle(item.title),
@@ -1460,14 +1463,14 @@ private fun <T> FavoritePosterRow(
     Column(modifier) {
         HomeRowHeader(title, small = items.size.toString(), start = start)
         BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val posterWidth = ((maxWidth - start - 64.mpx - 100.mpx) / 6).coerceAtLeast(150.mpx)
+            val posterWidth = ((maxWidth - start - 64.mpx - 5 * 20.mpx) / LOUNGE_HOME_POSTERS_PER_ROW).coerceAtLeast(1.dp)
             val posterHeight = posterWidth * 1.5f
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(20.mpx),
                 contentPadding = PaddingValues(start = start, end = 64.mpx),
                 modifier = Modifier.focusRestorer().focusGroup(),
             ) {
-                itemsIndexed(items, key = { _, item -> key(item) }) { index, item ->
+                itemsIndexed(loungeHomePosterItems(items), key = { _, item -> key(item) }) { index, item ->
                     val badge = badges(item)
                     StagePoster(
                         title = name(item),
@@ -1513,14 +1516,14 @@ private fun TrendingPosterRow(
         HomeRowHeader(title, small = null, start = start)
         Spacer(Modifier.height(headerGap))
         BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val posterWidth = ((maxWidth - start - 64.mpx - 100.mpx) / 6).coerceAtLeast(150.mpx)
+            val posterWidth = ((maxWidth - start - 64.mpx - 5 * 20.mpx) / LOUNGE_HOME_POSTERS_PER_ROW).coerceAtLeast(1.dp)
             val posterHeight = posterWidth * 1.5f
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(20.mpx),
                 contentPadding = PaddingValues(start = start, end = 64.mpx),
                 modifier = Modifier.focusRestorer().focusGroup(),
             ) {
-                itemsIndexed(items, key = { _, item -> item.stableKey }) { index, item ->
+                itemsIndexed(loungeHomePosterItems(items), key = { _, item -> item.stableKey }) { index, item ->
                     val badge = badges(item)
                     StagePoster(
                         title = when (item) {

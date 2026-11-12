@@ -6,6 +6,8 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 class HomeRulesTest {
+    @Test fun homePosterShelfNeverShowsEight() = assertEquals((1..6).toList(), loungeHomePosterItems((1..8).toList()))
+    @Test fun homePosterShelfRetainsShortLists() = assertEquals(listOf(1, 2), loungeHomePosterItems(listOf(1, 2)))
     @Test fun curatedHomeHasOnlyRequestedRowsInOrder() = assertEquals(
         listOf(HomeRow.HERO, LoungeHomeRow.NEW_RELEASES, HomeRow.TRENDING,
             LoungeHomeRow.FEATURED_MOVIES, LoungeHomeRow.POPULAR_SERIES),

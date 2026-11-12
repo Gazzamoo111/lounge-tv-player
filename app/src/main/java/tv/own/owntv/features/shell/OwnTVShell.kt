@@ -222,6 +222,7 @@ fun OwnTVShell(
     var guideEntry by remember { mutableStateOf<(() -> Boolean)?>(null) }
     var vodEntry by remember { mutableStateOf<(() -> Boolean)?>(null) }
     var downloadsEntry by remember { mutableStateOf<(() -> Boolean)?>(null) }
+    var myLoungeEntry by remember { mutableStateOf<(() -> Boolean)?>(null) }
     var moreEntry by remember { mutableStateOf<(() -> Boolean)?>(null) }
     var sportsEntry by remember { mutableStateOf<(() -> Boolean)?>(null) }
     // Home's Live sports row opens a match page through the same request the player's Match button uses.
@@ -777,7 +778,10 @@ fun OwnTVShell(
             RemoteShortcutAction.OPEN_MOVIES -> openShortcutSection(MainSection.MOVIES)
             RemoteShortcutAction.OPEN_SERIES -> openShortcutSection(MainSection.SERIES)
             RemoteShortcutAction.OPEN_DOWNLOADS -> openShortcutSection(MainSection.DOWNLOADS)
-            RemoteShortcutAction.OPEN_GUIDE -> openShortcutSection(MainSection.EPG)
+            RemoteShortcutAction.OPEN_GUIDE -> {
+                liveVm.setLiveView(tv.own.owntv.core.settings.SettingsRepository.LiveView.GUIDE)
+                openShortcutSection(MainSection.LIVE_TV)
+            }
             RemoteShortcutAction.OPEN_SEARCH -> openShortcutSection(MainSection.SEARCH)
             RemoteShortcutAction.OPEN_SETTINGS -> openShortcutSection(MainSection.SETTINGS)
             RemoteShortcutAction.OPEN_PROFILE_SWITCHER -> {
@@ -1372,10 +1376,38 @@ fun OwnTVShell(
                             modifier = Modifier.fillMaxSize(),
                         )
 
+                        selectedSection == MainSection.MY_LOUNGE -> tv.own.owntv.features.mylounge.MyLoungeScreen(
+                            profileId = activeProfileId ?: -1L,
+                            onPlayChannel = { id ->
+                                scope.launch { if (liveVm.ensurePlayingByIdAsync(id)) openFullscreen(MainSection.LIVE_TV) }
+                            },
+                            onOpenMovie = { movie ->
+                                movieVm.revealMovie(movie)
+                                restoreFocus = true
+                                onSelectSection(MainSection.MOVIES)
+                            },
+                            onOpenSeries = { series ->
+                                seriesVm.openSeries(series)
+                                restoreFocus = true
+                                onSelectSection(MainSection.SERIES)
+                            },
+                            onOpenLiveGuide = {
+                                liveVm.setLiveView(tv.own.owntv.core.settings.SettingsRepository.LiveView.GUIDE)
+                                onSelectSection(MainSection.LIVE_TV)
+                            },
+                            onOpenSports = { onSelectSection(MainSection.SPORTS) },
+                            onChildFocused = { focusedLayer = ShellLayer.CONTENT },
+                            onEntryHook = { myLoungeEntry = it },
+                            modifier = Modifier.fillMaxSize(),
+                        )
+
                         selectedSection == MainSection.DOWNLOADS -> DownloadsScreen(
                             onFullscreen = { openFullscreen() },
                             onChildFocused = { focusedLayer = ShellLayer.CONTENT },
-                            onOpenGuide = { onSelectSection(MainSection.EPG) },
+                            onOpenGuide = {
+                                liveVm.setLiveView(tv.own.owntv.core.settings.SettingsRepository.LiveView.GUIDE)
+                                onSelectSection(MainSection.LIVE_TV)
+                            },
                             restoreFocus = restoreFocus,
                             onRestored = { restoreFocus = false },
                             onEntryHook = { downloadsEntry = it },
@@ -1464,6 +1496,7 @@ fun OwnTVShell(
                     MainSection.HOME -> homeEntry
                     MainSection.EPG, MainSection.LIVE_TV -> guideEntry
                     MainSection.MOVIES, MainSection.SERIES -> vodEntry
+                    MainSection.MY_LOUNGE -> myLoungeEntry
                     MainSection.DOWNLOADS -> downloadsEntry
                     MainSection.MORE -> moreEntry
                     MainSection.SPORTS -> sportsEntry
@@ -1815,7 +1848,11 @@ fun OwnTVShell(
                                     }
                                 },
                                 onToggle = engine::togglePlayPause,
-                                onGuide = { exitPlayer(); onSelectSection(MainSection.EPG) },
+                                onGuide = {
+                                    exitPlayer()
+                                    liveVm.setLiveView(tv.own.owntv.core.settings.SettingsRepository.LiveView.GUIDE)
+                                    onSelectSection(MainSection.LIVE_TV)
+                                },
                                 onMore = more,
                                 onClose = close,
                             )
