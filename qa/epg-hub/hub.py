@@ -6,6 +6,7 @@ Input streams and channel catalogue are never changed.
 """
 from __future__ import annotations
 import argparse
+from bisect import bisect_left
 import gzip
 import json
 import re
@@ -215,21 +216,35 @@ def build(manifest, existing, source_entries, out, now=None, minimum_days=3):
     for tid in sorted(choices):
         target = targets[tid]
         current = existing_by_id[tid]
-        intervals = [(dt(p.get("start")), dt(p.get("stop"))) for p in current]
-        # Preserve all existing valid intervals: never replace somebody else's
-        # current/future programme just to increase the reported coverage.
+        intervals = sorted(
+            (a, b) for p in current
+            if (a := dt(p.get("start"))) and (b := dt(p.get("stop"))) and b > a)
+        # Coalesce existing overlapping intervals once. Query the sorted ranges
+        # by binary search rather than rescan every programme for each source.
+        merged = []
+        for a, b in intervals:
+            if merged and a <= merged[-1][1]:
+                merged[-1] = (merged[-1][0], max(merged[-1][1], b))
+            else:
+                merged.append((a, b))
+        intervals = merged
+        starts = [item[0] for item in intervals]
+        # Preserve all existing intervals: no new record may replace a programme.
         accepted_sources = []
         new_entries = []
         for _, _, label, candidate in sorted(choices[tid], key=lambda x: (x[0], x[1]), reverse=True):
             accepted_sources.append(label)
             count = 0
             for start, stop, xml in candidate["entries"]:
-                if any(a and b and start < b and stop > a for a, b in intervals):
+                idx = bisect_left(starts, start)
+                if ((idx > 0 and intervals[idx - 1][1] > start) or
+                    (idx < len(intervals) and intervals[idx][0] < stop)):
                     continue
                 item = E.fromstring(xml, E.XMLParser(resolve_entities=False, no_network=True))
                 item.set("channel", tid)
                 new_entries.append(item)
-                intervals.append((start, stop))
+                starts.insert(idx, start)
+                intervals.insert(idx, (start, stop))
                 count += 1
             if count:
                 proven.append({"epgId": tid, "channel": target["name"], "region": target["region"],
