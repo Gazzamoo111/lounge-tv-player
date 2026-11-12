@@ -1,5 +1,5 @@
 {
-  "generatedAtUtc": "2026-11-12T08:50:28.730979+00:00",
+  "generatedAtUtc": "2026-11-12T21:06:06.193079+00:00",
   "sources": [
     "all",
     "us2",
@@ -31,9 +31,9 @@
   "usEligible": 549,
   "usMatched": 291,
   "usRepaired": 291,
-  "usNewProgrammes": 33911,
-  "usRemovedOldProgrammes": 35037,
-  "preservedNonUsProgrammes": 44255,
+  "usNewProgrammes": 29850,
+  "usRemovedOldProgrammes": 38680,
+  "preservedNonUsProgrammes": 49947,
   "targetCategoryCounts": {
     "US TV": 95,
     "US FAST TV": 100,
@@ -48,8 +48,8 @@
   },
   "usUnmatchedReasons": {},
   "usLatestProgrammeUtc": "2026-11-19T11:00:00+00:00",
-  "usEarliestProgrammeUtc": "2026-11-11T21:00:00+00:00",
-  "guideProgrammeCount": 78166,
+  "usEarliestProgrammeUtc": "2026-11-12T10:00:00+00:00",
+  "guideProgrammeCount": 79797,
   "repairedIds": [
     "ACCNetwork.us",
     "ATTSportsNetPittsburgh.us",
@@ -350,7 +350,7 @@
       "sourceId": "I612.111905.schedulesdirect.org",
       "method": "unique-name-in-us-only-feed",
       "feed": "national",
-      "programmes": 112
+      "programmes": 102
     },
     {
       "id": "ATTSportsNetPittsburgh.us",
@@ -358,7 +358,7 @@
       "sourceId": "I428.49882.gracenote.com",
       "method": "unique-name-in-us-only-feed",
       "feed": "national",
-      "programmes": 191
+      "programmes": 174
     },
     {
       "id": "AXSTV.us",
@@ -366,7 +366,7 @@
       "sourceId": "I340.28506.schedulesdirect.org",
       "method": "unique-name-in-us-only-feed",
       "feed": "national",
-      "programmes": 215
+      "programmes": 197
     },
     {
       "id": "AandE.us",
@@ -374,7 +374,7 @@
       "sourceId": "I265.10035.schedulesdirect.org",
       "method": "unique-name-in-us-only-feed",
       "feed": "national",
-      "programmes": 245
+      "programmes": 222
     },
     {
       "id": "Accuweather.us",
@@ -382,7 +382,7 @@
       "sourceId": "I361.91994.schedulesdirect.org",
       "method": "unique-name-in-us-only-feed",
       "feed": "national",
-      "programmes": 39
+      "programmes": 35
     },
     {
       "id": "ActionMax.us",
@@ -390,7 +390,7 @@
       "sourceId": "I519.59948.schedulesdirect.org",
       "method": "unique-name-in-us-only-feed",
       "feed": "national",
-      "programmes": 90
+      "programmes": 83
     },
     {
       "id": "AltitudeSports.us",
@@ -398,7 +398,7 @@
       "sourceId": "I413.65596.gracenote.com",
       "method": "unique-name-in-us-only-feed",
       "feed": "national",
-      "programmes": 185
+      "programmes": 170
     },
     {
       "id": "AntennaTV.us",
@@ -406,7 +406,7 @@
       "sourceId": "Antenna.TV.us2",
       "method": "unique-name-in-us-only-feed",
       "feed": "all",
-      "programmes": 144
+      "programmes": 119
     },
     {
       "id": "AspireTV.us",
@@ -414,7 +414,7 @@
       "sourceId": "I381.97409.schedulesdirect.org",
       "method": "unique-name-in-us-only-feed",
       "feed": "national",
-      "programmes": 247
+      "programmes": 229
     },
     {
       "id": "BBCAmerica.us",
@@ -422,7 +422,7 @@
       "sourceId": "BBC.America.HD.us2",
       "method": "unique-name-in-us-only-feed",
       "feed": "all",
-      "programmes": 49
+      "programmes": 41
     },
     {
       "id": "BET.us",
@@ -430,7 +430,7 @@
       "sourceId": "BET.HD.us2",
       "method": "unique-name-in-us-only-feed",
       "feed": "us2",
-      "programmes": 99
+      "programmes": 76
     },
     {
       "id": "BETGospel.us",
@@ -438,7 +438,7 @@
       "sourceId": "I362.16484.gracenote.com",
       "method": "unique-name-in-us-only-feed",
       "feed": "national",
-      "programmes": 177
+      "programmes": 164
     },
     {
       "id": "BETSoul.us",
@@ -446,7 +446,7 @@
       "sourceId": "BET.Soul.us2",
       "method": "unique-name-in-us-only-feed",
       "feed": "all",
-      "programmes": 47
+      "programmes": 37
     },
     {
       "id": "BETjams.us",
@@ -454,7 +454,7 @@
       "sourceId": "BET.Jams.us2",
       "method": "unique-name-in-us-only-feed",
       "feed": "all",
-      "programmes": 70
+      "programmes": 57
     },
     {
       "id": "BigTenNetwork.us",
@@ -462,7 +462,7 @@
       "sourceId": "Big.Ten.Network.HD.us2",
       "method": "unique-name-in-us-only-feed",
       "feed": "all",
-      "programmes": 79
+      "programmes": 63
     },
     {
       "id": "BilliardsTV.kr",
@@ -470,7 +470,7 @@
       "sourceId": "Billiard.TV.us2",
       "method": "unique-name-in-us-only-feed",
       "feed": "us2",
-      "programmes": 50
+      "programmes": 42
     },
     {
       "id": "BlazeTV.us",
@@ -478,7 +478,7 @@
       "sourceId": "Blaze.TV.us2",
       "method": "unique-name-in-us-only-feed",
       "feed": "all",
-      "programmes": 50
+      "programmes": 42
     },
     {
       "id": "BounceTV.us",
@@ -486,7 +486,7 @@
       "sourceId": "Bounce.TV.us2",
       "method": "unique-name-in-us-only-feed",
       "feed": "all",
-      "programmes": 81
+      "programmes": 62
     },
     {
       "id": "Bravo.us",
@@ -494,7 +494,7 @@
       "sourceId": "Bravo.HD.us2",
       "method": "unique-name-in-us-only-feed",
       "feed": "us2",
-      "programmes": 58
+      "programmes": 45
     },
     {
       "id": "BuzzrTV.us",
@@ -502,7 +502,7 @@
       "sourceId": "plex.tv.BUZZR.plex",
       "method": "unique-name-in-us-only-feed",
       "feed": "all",
-      "programmes": 149
+      "programmes": 128
     },
     {
       "id": "CBSSportsGolazo.us",
@@ -510,7 +510,7 @@
       "sourceId": "CBS.Sports.Golazo.Network.us2",
       "method": "unique-name-in-us-only-feed",
       "feed": "all",
-      "programmes": 45
+      "programmes": 35
     },
     {
       "id": "CMDTVHD Comedy.TV HD",
@@ -518,7 +518,7 @@
       "sourceId": "I382.82470.schedulesdirect.org",
       "method": "unique-name-in-us-only-feed",
       "feed": "national",
-      "programmes": 296
+      "programmes": 273
     },
     {
       "id": "CMT.us",
@@ -526,7 +526,7 @@
       "sourceId": "CMT.HD.us2",
       "method": "unique-name-in-us-only-feed",
       "feed": "all",
-      "programmes": 91
+      "programmes": 71
     },
     {
       "id": "CNBCWorld.us",
@@ -534,7 +534,7 @@
       "sourceId": "I357.26849.schedulesdirect.org",
       "method": "unique-name-in-us-only-feed",
       "feed": "national",
-      "programmes": 217
+      "programmes": 195
     },
     {
       "id": "CatchyComedy.us",
@@ -542,7 +542,7 @@
       "sourceId": "Catchy.Comedy.us2",
       "method": "unique-name-in-us-only-feed",
       "feed": "all",
-      "programmes": 142
+      "programmes": 118
     },
     {
       "id": "ChargeTV.us",
@@ -550,7 +550,7 @@
       "sourceId": "CHARGE!.us2",
       "method": "unique-name-in-us-only-feed",
       "feed": "all",
-      "programmes": 84
+      "programmes": 66
     },
     {
       "id": "CleoTV.us",
@@ -558,7 +558,7 @@
       "sourceId": "I341.110289.schedulesdirect.org",
       "method": "unique-name-in-us-only-feed",
       "feed": "national",
-      "programmes": 331
+      "programmes": 306
     },
     {
       "id": "Comet.us",
@@ -566,7 +566,7 @@
       "sourceId": "Comet.us2",
       "method": "unique-name-in-us-only-feed",
       "feed": "all",
-      "programmes": 68
+      "programmes": 54
     },
     {
       "id": "CookingChannel.us",
@@ -574,7 +574,7 @@
       "sourceId": "Cooking.Channel.HD.us2",
       "method": "unique-name-in-us-only-feed",
       "feed": "all",
-      "programmes": 107
+      "programmes": 89
     },
     {
       "id": "DestinationAmerica.us",
@@ -582,8 +582,8 @@
       "sourceId": "Destination.America.HD.us2",
       "method": "unique-name-in-us-only-feed",
       "feed": "all",
-      "programmes": 118
+      "programmes": 98
     }
   ],
-  "previousGuideGitSha": "a1610d1ab8ff6cd9a636f7629cafbc2a3956863b"
+  "previousGuideGitSha": "fc6ee8d943877d423d60556ea3c8bb1ee272db15"
 }
