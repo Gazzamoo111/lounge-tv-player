@@ -95,6 +95,7 @@ data class HomeUiState(
     val heroItems: List<HeroItem> = emptyList(),
     val activeHeroIndex: Int = 0,
     val continueMovies: List<LauncherContinuationItem> = emptyList(),
+    val continuationMovieRatings: Map<Long, Double?> = emptyMap(),
     val continueSeries: List<LauncherContinuationItem> = emptyList(),
     val heroMetadata: Map<String, HomeHeroMetadata> = emptyMap(),
     val recentLive: List<ChannelEntity> = emptyList(),
@@ -163,6 +164,21 @@ class HomeViewModel(
     private val attemptedMissingTrending = java.util.Collections.synchronizedSet(mutableSetOf<Long>())
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    /** The same profile-scoped Room progress rows used by the VOD poster badges. */
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val movieProgress = settings.activeProfileId.flatMapLatest { pid ->
+        if (pid < 0) flowOf(emptyList()) else progressDao.observeMovieProgress(pid)
+    }.map { rows -> rows.associateBy { it.itemId } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val seriesProgress = settings.activeProfileId.flatMapLatest { pid ->
+        if (pid < 0) flowOf(emptyList()) else progressDao.observeLatestEpisodeProgressPerSeries(pid)
+    }.map { rows ->
+        rows.filter { it.durationMs > 0 && it.positionMs < (it.durationMs * 0.95f).toLong() }
+            .associate { it.seriesId to it.positionMs.toFloat() / it.durationMs }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     /**
      * Single entry point for "rebuild the Home rails". Every trigger goes through here rather than
@@ -423,6 +439,10 @@ class HomeViewModel(
             favoriteLive = rawData.favoriteLive.filterNot { it.categoryId in internalCategories },
             heroItems = rawData.heroItems.filterNot { it is HeroItem.LiveHero && it.channel.categoryId in internalCategories },
         )
+        val continuationMovieRatings = withContext(Dispatchers.IO) {
+            val movieIds = data.continueMovies.map { it.sourceItemId }.distinct()
+            if (movieIds.isEmpty()) emptyMap() else movieDao.getByIds(movieIds).associate { it.id to it.rating }
+        }
         discoveryLoadedAt = now
         _uiState.value = HomeUiState(
             trendingItems = HomeDiscoveryRotation.rotate(data.trendingItems, profileId, now),
@@ -434,6 +454,7 @@ class HomeViewModel(
             heroItems = data.heroItems,
             activeHeroIndex = 0,
             continueMovies = data.continueMovies,
+            continuationMovieRatings = continuationMovieRatings,
             continueSeries = data.continueSeries,
             heroMetadata = previous.heroMetadata.filterKeys { key -> data.heroItems.any { it.homeKey == key } },
             recentLive = data.recentLive,

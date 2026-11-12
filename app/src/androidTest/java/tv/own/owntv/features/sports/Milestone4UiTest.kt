@@ -5,7 +5,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.*
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.ui.input.InputMode
 import androidx.compose.ui.input.InputModeManager
 import androidx.compose.ui.platform.LocalInputModeManager
@@ -315,46 +317,70 @@ class Milestone4UiTest {
         override fun audioTracks() = emptyList<TrackOption>()
         override fun textTracks() = emptyList<TrackOption>()
     }
-    @Test fun hidden_live_hud_keeps_channel_list_on_left_and_history_on_right() {
+    @Test fun synopsis_back_consumes_one_complete_shell_key_gesture_and_preserves_hidden_live_navigation() {
         val engine = QuietEngine()
         var channelListOpens = 0
         var historyOpens = 0
+        var shellExits = 0
+        var hudExits = 0
+        var inputMode: InputModeManager? = null
+        compose.mainClock.autoAdvance = false
         compose.setContent { Theme {
-            PlayerHud(
-                engine,
-                onBack = {},
-                onOpenChannelList = { channelListOpens++ },
-                onOpenHistoryList = { historyOpens++ },
-                premiumLivePanel = { chips, focus, more, close ->
-                    PremiumLivePanel(
-                        "TEST channel",
-                        "7",
-                        null,
-                        null,
-                        null,
-                        chips,
-                        focus,
-                        onToggle = engine::togglePlayPause,
-                        onGuide = {},
-                        onMore = more,
-                        onClose = close,
-                    )
-                },
-            )
+            inputMode = LocalInputModeManager.current
+            val backDispatcher = LocalOnBackPressedDispatcherOwner.current!!.onBackPressedDispatcher
+            // The real shell turns an otherwise unhandled Back KeyUp into dispatcher.onBackPressed.
+            // Keep that parent boundary present: the former isolated onClose test missed the second
+            // action after the focused synopsis disappeared between KeyDown and KeyUp.
+            BackHandler { shellExits++ }
+            Box(Modifier.fillMaxSize().onKeyEvent { event ->
+                if (event.key != Key.Back) false else {
+                    if (event.type == KeyEventType.KeyUp && !event.nativeKeyEvent.isCanceled) backDispatcher.onBackPressed()
+                    true
+                }
+            }) {
+                PlayerHud(
+                    engine,
+                    onBack = { hudExits++ },
+                    onOpenChannelList = { channelListOpens++ },
+                    onOpenHistoryList = { historyOpens++ },
+                    premiumLivePanel = { chips, focus, more, close ->
+                        PremiumLivePanel(
+                            "TEST channel", "7", null, null, null, chips, focus,
+                            onToggle = engine::togglePlayPause, onGuide = {}, onMore = more, onClose = close,
+                        )
+                    },
+                )
+            }
         } }
-        remoteBack()
+        compose.mainClock.advanceTimeBy(64)
+        compose.runOnIdle { inputMode!!.requestInputMode(InputMode.Keyboard) }
+        compose.onNodeWithTag("live-synopsis-browser").performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.onNodeWithTag("live-synopsis-browser").assertIsFocused()
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val downTime = android.os.SystemClock.uptimeMillis()
+        fun backKey(action: Int, repeat: Int = 0) {
+            instrumentation.sendKeySync(android.view.KeyEvent(downTime, android.os.SystemClock.uptimeMillis(),
+                action, android.view.KeyEvent.KEYCODE_BACK, repeat))
+            compose.mainClock.advanceTimeBy(64)
+            compose.waitForIdle()
+        }
+        backKey(android.view.KeyEvent.ACTION_DOWN)
         compose.onNodeWithTag("live-synopsis-browser").assertDoesNotExist()
+        compose.runOnIdle { assertEquals(0, shellExits); assertEquals(0, hudExits); assertEquals(0, channelListOpens) }
+        // Repeat and release occur after the original focused panel has left composition.
+        backKey(android.view.KeyEvent.ACTION_DOWN, repeat = 1)
+        backKey(android.view.KeyEvent.ACTION_UP)
+        compose.runOnIdle { assertEquals(0, shellExits); assertEquals(0, hudExits); assertEquals(0, engine.commands) }
         compose.onRoot().performKeyInput { pressKey(Key.DirectionLeft) }
-        compose.runOnIdle {
-            assertEquals(1, channelListOpens)
-            assertEquals(0, historyOpens)
-        }
+        compose.mainClock.advanceTimeBy(32)
+        compose.runOnIdle { assertEquals(1, channelListOpens); assertEquals(0, historyOpens) }
         compose.onRoot().performKeyInput { pressKey(Key.DirectionRight) }
-        compose.runOnIdle {
-            assertEquals(1, channelListOpens)
-            assertEquals(1, historyOpens)
-        }
-        assertEquals(0, engine.commands)
+        compose.mainClock.advanceTimeBy(32)
+        compose.runOnIdle { assertEquals(1, channelListOpens); assertEquals(1, historyOpens) }
+        // The next intentional Back, with the synopsis already hidden, belongs to the shell.
+        remoteBack()
+        compose.mainClock.advanceTimeBy(64)
+        compose.runOnIdle { assertEquals(1, shellExits); assertEquals(0, hudExits); assertEquals(0, engine.commands) }
     }
 
     @Test fun actual_hud_tools_back_and_remount_issue_no_playback_commands() {

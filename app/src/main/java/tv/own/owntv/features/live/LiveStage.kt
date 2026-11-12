@@ -430,6 +430,15 @@ internal data class LiveCategoryEntry(
     val mark: PlaylistMark?,
 )
 
+/** Fixed top-level shortcuts retain their marks; every provider/custom subcategory is text-only. */
+internal fun liveCategoryEntryIcon(key: tv.own.owntv.core.live.LiveKey): OwnTVIcon? = when (key) {
+    tv.own.owntv.core.live.LiveKey.Favorites -> OwnTVIcon.FAVORITE
+    tv.own.owntv.core.live.LiveKey.History -> OwnTVIcon.HISTORY
+    tv.own.owntv.core.live.LiveKey.Catchup -> OwnTVIcon.REWIND
+    tv.own.owntv.core.live.LiveKey.All -> OwnTVIcon.LIVE_TV
+    else -> null
+}
+
 /**
  * Live TV's category list as the sheet and column draw it — the fixed entries with their icons, the
  * provider groups parsed into name and tags — and the "GROUPS · DE" heading above the groups. The TV
@@ -445,13 +454,7 @@ internal fun liveCategoryEntries(railItems: List<LiveRailItem>, railCounts: Map<
             item = item,
             label = parsed?.name ?: label,
             name = parsed,
-            icon = when (item.key) {
-                tv.own.owntv.core.live.LiveKey.Favorites -> OwnTVIcon.FAVORITE
-                tv.own.owntv.core.live.LiveKey.History -> OwnTVIcon.HISTORY
-                tv.own.owntv.core.live.LiveKey.Catchup -> OwnTVIcon.REWIND
-                tv.own.owntv.core.live.LiveKey.All -> OwnTVIcon.LIVE_TV
-                else -> LoungeEditorialOrder.categoryIcon(item.section, parsed?.name ?: label)
-            },
+            icon = liveCategoryEntryIcon(item.key),
             count = railCounts[item.key],
             mark = null,
         )

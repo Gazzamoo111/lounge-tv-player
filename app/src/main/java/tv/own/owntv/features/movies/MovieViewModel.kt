@@ -1006,7 +1006,7 @@ class MovieViewModel(
 
     /** ≥95% of duration watched = completed (mirrors SeriesViewModel.isEpisodeCompleted). */
     fun isMovieCompleted(p: PlaybackProgressEntity): Boolean =
-        p.durationMs > 0 && p.positionMs >= (p.durationMs * 0.95f).toLong()
+        tv.own.owntv.features.shell.components.vodMovieCompleted(p)
 
     /** Mark a movie as watched (shows ✓) without playing it — same synthetic 1ms/1ms sentinel trick used
      *  for episodes (satisfies the ≥95% completed rule while keeping Play restarting from ~0). */

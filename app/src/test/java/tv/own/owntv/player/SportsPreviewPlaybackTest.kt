@@ -109,4 +109,45 @@ class SportsPreviewPlaybackTest {
         controller.stop()
     }
 
+    @Test fun `unpersisted backend sports candidate promotes its existing preview and preserves candidates`() = runTest {
+        val engines = Engines()
+        val controller = LiveTuneController(backgroundScope, engines, Host(this))
+        val backend = channel(-(8_000_000_000L + 1234))
+        val candidates = listOf(backend, channel(-8_000_001_235L))
+        var allowed: ChannelEntity? = null
+        var watched: ChannelEntity? = null
+        var context: List<ChannelEntity>? = null
+        controller.preview(backend, muted = false); runCurrent()
+        val opened = tv.own.owntv.features.live.requestSportsFullscreen(backend, candidates,
+            visibleToProfile = { allowed = it; true },
+            watch = { selected, list ->
+                watched = selected
+                context = list
+                controller.expectPromotion(selected)
+                controller.tune(selected)
+            })
+        runCurrent()
+        assertTrue(opened)
+        assertSame(backend, allowed)
+        assertSame(backend, watched)
+        assertSame(candidates, context)
+        assertEquals(1, engines.opens.size)
+        assertTrue(controller.liveOnExo.value)
+        assertFalse(engines.muted)
+        controller.stop()
+    }
+
+    @Test fun `sports object route rejects a source or adult policy denial before playing`() = runTest {
+        val engines = Engines()
+        val controller = LiveTuneController(backgroundScope, engines, Host(this))
+        val backend = channel(-8_000_001_234L)
+        val opened = tv.own.owntv.features.live.requestSportsFullscreen(backend, listOf(backend),
+            visibleToProfile = { false }, watch = { selected, _ -> controller.tune(selected) })
+        runCurrent()
+        assertFalse(opened)
+        assertTrue(engines.opens.isEmpty())
+        assertFalse(controller.liveOnExo.value)
+        controller.stop()
+    }
+
 }

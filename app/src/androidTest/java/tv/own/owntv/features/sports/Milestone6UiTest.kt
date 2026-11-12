@@ -109,6 +109,93 @@ class Milestone6UiTest {
             .put("max_input_to_idle_ms", ordered.last()).put("network_poster_fetches", 0))
         capture("08-vod-navigation-test-data")
     }
+    @Test fun live_preview_fullscreen_moves_the_same_surface_without_reopening_playback() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        val media = File(instrumentation.targetContext.cacheDir, "m6-surface-handoff.mp4")
+        instrumentation.context.assets.open("m6-local-av.mp4").use { source ->
+            media.outputStream().use { source.copyTo(it) }
+        }
+        val engine = GlobalContext.get().get<tv.own.owntv.player.LivePreviewEngine>()
+        var fullscreen by mutableStateOf(false)
+        compose.setContent { Theme {
+            val shared = remember(engine) { tv.own.owntv.player.SharedLiveVideoSurface(engine) }
+            CompositionLocalProvider(tv.own.owntv.player.LocalSharedLiveVideoSurface provides shared) {
+                Box(Modifier.fillMaxSize().background(Color.Black)) {
+                    if (!fullscreen) Box(Modifier.width(500.mpx).height(280.mpx)) {
+                        tv.own.owntv.player.ExoPreviewSurface(engine, Modifier.fillMaxSize())
+                    }
+                    if (fullscreen) Box(Modifier.fillMaxSize()) {
+                        tv.own.owntv.player.ExoPreviewSurface(engine, Modifier.fillMaxSize(), keepAwake = true)
+                    }
+                }
+            }
+        } }
+        try {
+            // Exactly one play request: every later operation moves its existing view, not its stream.
+            compose.runOnIdle { engine.play(media.absolutePath, muted = false) }
+            compose.waitUntil(30_000) { engine.error.value != null ||
+                (engine.isPlaying.value && engine.videoSize.value != null) }
+            assertNull(engine.error.value)
+            Thread.sleep(350)
+            val originalView = liveSurfaceView()
+            val originalSurface = originalView.holder.surface
+            assertRenderedFrame(originalView)
+            var before = 0L
+            compose.runOnIdle { before = engine.livePositionMs() }
+            repeat(4) {
+                compose.runOnIdle { fullscreen = !fullscreen }
+                compose.waitForIdle()
+                val movedView = liveSurfaceView()
+                assertSame("Preview/fullscreen must retain the physical video view", originalView, movedView)
+                assertSame("The existing decoder must retain its output surface", originalSurface, movedView.holder.surface)
+                Thread.sleep(350)
+                assertRenderedFrame(movedView)
+                assertEquals(media.absolutePath, engine.currentUrl)
+                assertNull(engine.error.value)
+            }
+            compose.runOnIdle {
+                assertTrue("Playback must advance throughout both directions", engine.livePositionMs() > before + 800)
+            }
+            output("live-surface-handoff", JSONObject()
+                .put("environment", "Android emulator; local synthetic H264/AAC MP4")
+                .put("transitions", 4).put("play_requests", 1).put("same_surface_view", true)
+                .put("same_surface", true).put("video_pixels_verified", true)
+                .put("physical_fire_tv_acceptance", "required"))
+        } finally { compose.runOnIdle { engine.stop() } }
+    }
+
+    private fun liveSurfaceView(): android.view.SurfaceView {
+        var found: android.view.SurfaceView? = null
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            val activity = androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
+                .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED).first()
+            fun visit(view: android.view.View) {
+                if (view is android.view.SurfaceView) found = view
+                if (view is android.view.ViewGroup) for (i in 0 until view.childCount) visit(view.getChildAt(i))
+            }
+            visit(activity.window.decorView)
+        }
+        return requireNotNull(found) { "Live video must have a physical SurfaceView" }
+    }
+
+    private fun assertRenderedFrame(view: android.view.SurfaceView) {
+        val bitmap = Bitmap.createBitmap(80, 45, Bitmap.Config.ARGB_8888)
+        val finished = java.util.concurrent.CountDownLatch(1)
+        var status = android.view.PixelCopy.ERROR_UNKNOWN
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            android.view.PixelCopy.request(view, bitmap, { result -> status = result; finished.countDown() },
+                android.os.Handler(android.os.Looper.getMainLooper()))
+        }
+        assertTrue("PixelCopy must return", finished.await(5, java.util.concurrent.TimeUnit.SECONDS))
+        assertEquals(android.view.PixelCopy.SUCCESS, status)
+        val pixels = IntArray(bitmap.width * bitmap.height)
+        bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+        assertTrue("The actual video surface must contain the colour test pattern", pixels.any {
+            android.graphics.Color.red(it) > 40 || android.graphics.Color.green(it) > 40 || android.graphics.Color.blue(it) > 40
+        })
+        bitmap.recycle()
+    }
+
     @Test fun exo_local_vod_playback_seeking_and_overlay_preserve_session() = localVod(EnginePreference.EXO_ONLY)
     @Test fun mpv_local_vod_playback_seeking_and_overlay_preserve_session() = localVod(EnginePreference.MPV_ONLY)
     private fun localVod(engine: EnginePreference) {

@@ -283,6 +283,9 @@ def apply(root: Path, milestone3: bool = True, milestone6: bool = True) -> None:
             guide_patch = Path(__file__).resolve().parent / "patches/guide-interrupted-download.patch"
             subprocess.run(["git", "-C", str(root), "apply", "--check", str(guide_patch)], check=True)
             subprocess.run(["git", "-C", str(root), "apply", str(guide_patch)], check=True)
+            surface_patch = Path(__file__).resolve().parent / "patches/playback-surface-handoff.patch"
+            subprocess.run(["git", "-C", str(root), "apply", "--check", str(surface_patch)], check=True)
+            subprocess.run(["git", "-C", str(root), "apply", str(surface_patch)], check=True)
             settings_path = root / "core/src/main/java/tv/own/owntv/core/settings/SettingsRepository.kt"
             settings_text = settings_path.read_text()
             old_default = "it[Keys.LIVE_PREVIEW_AUDIO] ?: false"

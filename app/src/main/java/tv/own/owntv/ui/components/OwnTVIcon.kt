@@ -52,12 +52,6 @@ enum class OwnTVIcon {
     EQ,
     // The Sports Hub's trophy (rail, Settings → Sports).
     SPORTS, NZ_FERN, AU_ROO, RELAX_LEAF,
-    // Lounge TV category system. These use one shared 24x24 line language and deliberately avoid
-    // generic television/person glyphs for unrelated customer-facing categories.
-    ENTERTAINMENT_SPOTLIGHT, KIDS_KITE, DOCUMENTARY_COMPASS, LIFESTYLE_HOME,
-    CONTINUOUS_PLAY, EVENT_TICKET, US_SPORTS, UK_SPORTS,
-    RUGBY_UNION, RUGBY_LEAGUE, CRICKET, FOOTBALL, MOTORSPORT, MMA, WRESTLING,
-    BASKETBALL, AMERICAN_FOOTBALL, HOCKEY, BASEBALL, TENNIS, GOLF,
 }
 
 /** Parsed once: [StageGlyphPaths] in 24-unit coordinates. */

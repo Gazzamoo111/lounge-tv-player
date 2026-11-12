@@ -33,6 +33,7 @@ import tv.own.owntv.features.shell.components.VodSortMenu
 import tv.own.owntv.features.shell.components.VodSortTool
 import tv.own.owntv.features.shell.components.VodStepper
 import tv.own.owntv.features.shell.components.VodTitleInfo
+import tv.own.owntv.features.shell.components.vodMoviePosterBadges
 import tv.own.owntv.features.shell.components.cinematicQualityBadges
 import tv.own.owntv.features.shell.components.vodCategoryEntries
 import tv.own.owntv.features.shell.components.vodCount
@@ -763,13 +764,13 @@ fun MoviesScreen(
                                 items(count = movies.itemCount, key = movies.itemKey { it.id }, contentType = movies.itemContentType { "movie" }) { index ->
                                     val movie = movies[index] ?: return@items
                                     val prog = movieProgress[movie.id]
-                                    val done = prog?.let { vm.isMovieCompleted(it) } == true
+                                    val badges = vodMoviePosterBadges(movie.rating, prog)
                                     StagePoster(
                                         title = loungeVodTitle(movie.name),
-                                        rating = movie.rating?.takeIf { it > 0 }?.let(::vodRating),
+                                        rating = badges.rating,
                                         width = posterW, height = posterW * 1.5f,
-                                        progress = prog?.takeIf { it.durationMs > 0 }?.let { it.positionMs.toFloat() / it.durationMs },
-                                        watched = done,
+                                        progress = badges.progress,
+                                        watched = badges.watched,
                                         onClick = { startMovie(movie) },
                                         onLongClick = { openMenu(movie, index) },
                                         modifier = Modifier
@@ -1011,14 +1012,14 @@ fun MoviesScreen(
                             items(count = movies.itemCount, key = movies.itemKey { it.id }, contentType = movies.itemContentType { "movie" }) { index ->
                                 val movie = movies[index] ?: return@items
                                 val prog = movieProgress[movie.id]
-                                val done = prog?.let { vm.isMovieCompleted(it) } == true
+                                val badges = vodMoviePosterBadges(movie.rating, prog)
                                 StagePoster(
                                     title = loungeVodTitle(movie.name),
-                                    rating = movie.rating?.takeIf { it > 0 }?.let(::vodRating),
+                                    rating = badges.rating,
                                     width = posterW, height = posterW * 1.5f,
                                     compact = true,
-                                    progress = prog?.takeIf { it.durationMs > 0 }?.let { it.positionMs.toFloat() / it.durationMs },
-                                    watched = done,
+                                    progress = badges.progress,
+                                    watched = badges.watched,
                                     onClick = { startMovie(movie) },
                                     onLongClick = { openMenu(movie, index) },
                                     modifier = Modifier

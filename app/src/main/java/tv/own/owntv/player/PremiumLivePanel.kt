@@ -104,6 +104,8 @@ internal fun PremiumLivePanel(
                     Key.DirectionUp -> { onGuide(); true }
                     Key.DirectionDown -> { onMore(); true }
                     Key.MediaPlayPause -> { onToggle(); true }
+                    // PlayerHud owns the complete physical Back press in production. This is
+                    // the fallback for a standalone informational host without that HUD.
                     Key.Back -> { onClose(); true }
                     else -> false
                 }

@@ -1,5 +1,8 @@
 package tv.own.owntv.features.home
 
+import tv.own.owntv.features.shell.components.VodPosterBadgeState
+import tv.own.owntv.features.shell.components.vodMoviePosterBadges
+import tv.own.owntv.features.shell.components.vodSeriesPosterBadges
 import tv.own.owntv.ui.theme.stageTone
 import tv.own.owntv.ui.stage.backdropLeftWash
 import android.graphics.SurfaceTexture
@@ -178,6 +181,8 @@ fun HomeScreen(
     sportsVm: tv.own.owntv.features.sports.SportsViewModel = org.koin.androidx.compose.koinViewModel(),
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
+    val movieProgress by vm.movieProgress.collectAsStateWithLifecycle()
+    val seriesProgress by vm.seriesProgress.collectAsStateWithLifecycle()
     // Existing followed-sports row is unchanged. If it is not configured, show
     // live/soon fixtures as a small ADDITIONAL row at the very bottom of Home.
     val existingSportsRow = HomeRow.LIVE_SPORTS in state.config.visibleOrder
@@ -489,6 +494,7 @@ fun HomeScreen(
                             key = { it.id },
                             name = { loungeVodTitle(state.featuredMovieNames[it.id] ?: it.canonicalTitle.ifBlank { it.name }) },
                             poster = { it.posterUrl },
+                            badges = { vodMoviePosterBadges(it.rating, movieProgress[it.id]) },
                             start = contentStart,
                             onItemClick = onOpenMovie,
                             onFocus = onNonHeroFocused,
@@ -503,6 +509,7 @@ fun HomeScreen(
                             key = { it.id },
                             name = { loungeVodTitle(state.popularSeriesNames[it.id] ?: it.canonicalTitle.ifBlank { it.name }) },
                             poster = { it.posterUrl },
+                            badges = { vodSeriesPosterBadges(it.rating, seriesProgress[it.id]) },
                             start = contentStart,
                             onItemClick = onOpenSeries,
                             onFocus = onNonHeroFocused,
@@ -516,6 +523,10 @@ fun HomeScreen(
                         } else if (!fullBleed || trendingItem == null) {
                             posterItem?.let { FoldedHeroLine(it, contentStart, height = CompactHeroHeight + RowGap) }
                             TrendingPosterRow(
+                                badges = { item -> when (item) {
+                                    is TrendingHomeItem.Movie -> vodMoviePosterBadges(item.movie.rating, movieProgress[item.movie.id])
+                                    is TrendingHomeItem.Series -> vodSeriesPosterBadges(item.series.rating, seriesProgress[item.series.id])
+                                } },
                                 // Room for the focused poster's lift under the heading when the line sits above.
                                 headerGap = if (posterItem != null) 16.mpx else 0.dp,
                                 // Compose's one-line poster title is 10 px shorter than Chrome's (measured).
@@ -680,6 +691,7 @@ fun HomeScreen(
                             key = { it.id },
                             name = { loungeVodTitle(it.name) },
                             poster = { it.posterUrl },
+                            badges = { vodMoviePosterBadges(it.rating, movieProgress[it.id]) },
                             start = contentStart,
                             onItemClick = onOpenMovie,
                             onFocus = onNonHeroFocused,
@@ -694,6 +706,7 @@ fun HomeScreen(
                             key = { it.id },
                             name = { loungeVodTitle(it.name) },
                             poster = { it.posterUrl },
+                            badges = { vodSeriesPosterBadges(it.rating, seriesProgress[it.id]) },
                             start = contentStart,
                             onItemClick = onOpenSeries,
                             onFocus = onNonHeroFocused,
@@ -705,6 +718,7 @@ fun HomeScreen(
                         HomeRow.CONTINUE_MOVIES -> ContinuePosterRow(
                             title = (row as HomeRow).displayTitle(),
                             items = state.continueMovies,
+                            badges = { vodMoviePosterBadges(state.continuationMovieRatings[it.sourceItemId], movieProgress[it.sourceItemId]) },
                             start = contentStart,
                             onItemClick = { onPlayMovie(it.sourceItemId, it.positionMs) },
                             onFocus = onNonHeroFocused,
@@ -1353,6 +1367,9 @@ internal fun relativeLastWatchedLabel(lastEngagementAt: Long, nowMs: Long): Stri
 private fun ContinuePosterRow(
     title: String,
     items: List<LauncherContinuationItem>,
+    badges: (LauncherContinuationItem) -> VodPosterBadgeState = { item ->
+        vodSeriesPosterBadges(null, item.durationMs.takeIf { it > 0 }?.let { item.positionMs.toFloat() / it })
+    },
     start: Dp,
     onItemClick: (LauncherContinuationItem) -> Unit,
     onFocus: () -> Unit,
@@ -1368,8 +1385,12 @@ private fun ContinuePosterRow(
             modifier = Modifier.focusRestorer().focusGroup(),
         ) {
             itemsIndexed(items, key = { _, item -> item.stableKey }) { index, item ->
+                val badge = badges(item)
                 StagePoster(
                     title = loungeVodTitle(item.title),
+                    rating = badge.rating,
+                    watched = badge.watched,
+                    progress = badge.progress,
                     onClick = { onItemClick(item) },
                     width = 196.mpx,
                     height = 294.mpx,
@@ -1393,6 +1414,7 @@ private fun <T> FavoritePosterRow(
     key: (T) -> Long,
     name: (T) -> String,
     poster: (T) -> String?,
+    badges: (T) -> VodPosterBadgeState,
     start: Dp,
     onItemClick: (T) -> Unit,
     onFocus: () -> Unit,
@@ -1408,8 +1430,12 @@ private fun <T> FavoritePosterRow(
             modifier = Modifier.focusRestorer().focusGroup(),
         ) {
             itemsIndexed(items, key = { _, item -> key(item) }) { index, item ->
+                val badge = badges(item)
                 StagePoster(
                     title = name(item),
+                    rating = badge.rating,
+                    watched = badge.watched,
+                    progress = badge.progress,
                     onClick = { onItemClick(item) },
                     width = 196.mpx,
                     height = 294.mpx,
@@ -1433,6 +1459,7 @@ private fun <T> FavoritePosterRow(
 private fun TrendingPosterRow(
     title: String,
     items: List<TrendingHomeItem>,
+    badges: (TrendingHomeItem) -> VodPosterBadgeState,
     start: Dp,
     onItemClick: (TrendingHomeItem) -> Unit,
     onFocus: () -> Unit,
@@ -1451,6 +1478,7 @@ private fun TrendingPosterRow(
             modifier = Modifier.focusRestorer().focusGroup(),
         ) {
             itemsIndexed(items, key = { _, item -> item.stableKey }) { index, item ->
+                val badge = badges(item)
                 StagePoster(
                     title = when (item) {
                         is TrendingHomeItem.Movie -> loungeVodTitle(item.movie.name)
@@ -1459,7 +1487,9 @@ private fun TrendingPosterRow(
                     onClick = { onItemClick(item) },
                     width = 196.mpx,
                     height = 294.mpx,
-                    rating = item.snapshot.rating?.let(::ratingText),
+                    rating = badge.rating,
+                    watched = badge.watched,
+                    progress = badge.progress,
                     modifier = Modifier
                         .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
                         .tracked(track = track)

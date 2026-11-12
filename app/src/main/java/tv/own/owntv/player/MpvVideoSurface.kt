@@ -54,7 +54,7 @@ private class MpvSurfaceView(context: Context, private val player: OwnTVPlayer) 
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
-        player.detachSurface()
+        player.detachSurface(holder.surface)
     }
 }
 
@@ -171,6 +171,22 @@ fun ExoPreviewSurface(
      * once. It costs some GPU and gives up the hardware-overlay path, which is a fair trade for a
      * quarter-screen tile and a bad one for full screen — hence a parameter rather than a change.
      */
+    useTextureView: Boolean = false,
+) {
+    val shared = LocalSharedLiveVideoSurface.current
+    if (!useTextureView && shared != null && shared.engine === engine) {
+        shared.content(SharedLiveVideoSurface.Placement(modifier, keepAwake, autoFrameRate))
+    } else {
+        ExoPreviewSurfaceContent(engine, modifier, keepAwake, autoFrameRate, useTextureView)
+    }
+}
+
+@Composable
+internal fun ExoPreviewSurfaceContent(
+    engine: LivePreviewEngine,
+    modifier: Modifier,
+    keepAwake: Boolean,
+    autoFrameRate: Boolean,
     useTextureView: Boolean = false,
 ) {
     // Only the full-screen live player passes autoFrameRate = true — the in-pane preview must never

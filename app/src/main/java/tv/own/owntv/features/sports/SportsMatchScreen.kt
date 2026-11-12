@@ -152,15 +152,16 @@ fun SportsMatchScreen(
 
     // The focused channel plays in the box above after the focus settles, exactly as in Live TV.
     val previewOn by liveVm.livePreviewEnabled.collectAsStateWithLifecycle()
-    LaunchedEffect(focused?.channel?.id, previewOn) {
+    LaunchedEffect(focused?.channel?.id, previewOn, active) {
         val ch = focused?.channel ?: return@LaunchedEffect
-        if (!previewOn) return@LaunchedEffect
+        if (!previewOn || !active) return@LaunchedEffect
         kotlinx.coroutines.delay(700)
         liveVm.playPreview(ch)
     }
     // Focus follows the search: the tabs while there is no list (Find channels' button goes away while it
     // runs, and must not take focus with it), the first channel once there is one.
-    LaunchedEffect(state.search::class, state.list.shown.map { it.channel.id }) {
+    LaunchedEffect(active, state.search::class, state.list.shown.map { it.channel.id }) {
+        if (!active) return@LaunchedEffect
         kotlinx.coroutines.delay(60)
         runCatching { if (state.list.shown.isNotEmpty()) firstRow.requestFocus() else tabFocus.requestFocus() }
     }
@@ -265,7 +266,7 @@ fun SportsMatchScreen(
                         it.startsWith(FIXTURE_EVIDENCE_PREFIX) || it.startsWith(BACKEND_CONFIDENCE_PREFIX)
                     },
                     previewEngine = liveVm.previewEngine,
-                    showVideo = previewOn && focused != null,
+                    showVideo = active && previewOn && focused != null,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Row(Modifier.fillMaxWidth().padding(top = 18.mpx), verticalAlignment = Alignment.CenterVertically) {

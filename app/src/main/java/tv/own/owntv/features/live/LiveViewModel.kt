@@ -1639,6 +1639,13 @@ class LiveViewModel(
             .any { it !in customizations.hiddenCategories }
     }
 
+    /** Sports discovery may return a synthetic backend channel absent from Room. Validate its source
+     * and profile policy, then use the same object-based canonical tune that already plays its preview. */
+    suspend fun watchSportsFullscreen(channel: ChannelEntity, candidates: List<ChannelEntity>): Boolean =
+        requestSportsFullscreen(channel, candidates, ::isVisibleToActiveProfile) { selected, context ->
+            watchFullscreen(selected, context)
+        }
+
     /** Open a channel fullscreen, preserving the browse context it was launched from. The channel's
      *  provider category is metadata (used by [previewCategoryName]); it must not replace Favorites,
      *  History, All, a custom category, or the provider folder the user is actually browsing. */
