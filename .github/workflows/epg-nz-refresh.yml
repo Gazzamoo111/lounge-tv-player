@@ -1,0 +1,134 @@
+name: Lounge TV | NZ EPG refresh (verified, preserve other regions)
+on:
+  pull_request:
+    branches: [feature/lounge-tv-2.0]
+    paths:
+      - '.github/workflows/epg-nz-refresh.yml'
+      - 'qa/shared-epg/repair_nz.py'
+      - 'qa/shared-epg/test_repair_nz.py'
+  workflow_dispatch:
+  schedule:
+    - cron: '33 3,15 * * *'
+permissions:
+  contents: read
+concurrency:
+  group: lounge-epg-nz-refresh
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout candidate source
+        uses: actions/checkout@v4
+        with:
+          path: source
+      - name: Checkout frozen published shared guide
+        uses: actions/checkout@v4
+        with:
+          ref: epg-data
+          path: published
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install lxml==5.4.0
+      - name: Unit test conservative NZ matching
+        working-directory: source/qa/shared-epg
+        run: python -m unittest test_repair_nz test_repair_missing -v
+      - name: Fetch actual NZ listings
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir feeds
+          curl -fLsS --retry 3 --max-time 180 \
+            https://i.mjh.nz/nz/epg.xml.gz -o feeds/mjh.xml.gz
+          gzip -t feeds/mjh.xml.gz
+          if curl -fLsS --retry 2 --max-time 180 \
+             https://epgshare01.online/epgshare01/epg_ripper_NZ1.xml.gz \
+             -o feeds/nz1.xml.gz && gzip -t feeds/nz1.xml.gz; then
+            echo 'NZ1 source validated'
+          else
+            rm -f feeds/nz1.xml.gz
+            echo 'NZ1 unavailable: Freeview-only candidate'
+          fi
+      - name: Generate candidate from current published guide
+        shell: bash
+        run: |
+          set -euo pipefail
+          git -C published rev-parse HEAD > source-head.txt
+          args=(--source mjh=feeds/mjh.xml.gz)
+          if test -s feeds/nz1.xml.gz; then args+=(--source nz1=feeds/nz1.xml.gz); fi
+          python source/qa/shared-epg/repair_nz.py \
+            --manifest source/qa/shared-epg/current-manifest.json \
+            --existing published/epg/guide.xml.gz \
+            "${args[@]}" --out candidate
+      - name: Validate real NZ candidate and unchanged guide integrity
+        run: |
+          python - <<'PY'
+          import json,gzip
+          from pathlib import Path
+          from lxml import etree as E
+          r=json.loads(Path('candidate/report.json').read_text())
+          assert r['nzChannels']==14, 'manifest changed; review scope before publishing'
+          assert r['coreNowCovered']==5, 'all five Freeview schedules are mandatory'
+          assert r['matchedChannels']>=5
+          assert r['changedChannels']<=r['nzChannels']
+          assert len(list(Path('candidate/short').glob('*.json')))==r['changedChannels']
+          with gzip.open('candidate/guide.xml.gz','rb') as f: output=f.read()
+          assert output==Path('candidate/guide.xml').read_bytes()
+          E.fromstring(output,E.XMLParser(no_network=True,resolve_entities=False,huge_tree=True))
+          print('NZ_EPG_CANDIDATE_VALID',r['coreNowCovered'],r['matchedChannels'],r['sevenDayChannels'])
+          PY
+      - name: Retain QA report and candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: nz-epg-validated-candidate
+          path: |
+            candidate/report.json
+            candidate/guide.xml.gz
+            candidate/short/
+            source-head.txt
+          retention-days: 7
+  publish:
+    needs: validate
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: epg-data
+          path: published
+      - uses: actions/download-artifact@v4
+        with:
+          name: nz-epg-validated-candidate
+          path: reviewed
+      - name: Atomic NZ-only shared guide promotion
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s reviewed/report.json
+          test -s reviewed/guide.xml.gz
+          EXPECTED="$(cat reviewed/source-head.txt)"
+          CURRENT="$(git -C published rev-parse HEAD)"
+          REMOTE="$(git -C published ls-remote origin refs/heads/epg-data | cut -f1)"
+          if [ "$EXPECTED" != "$CURRENT" ] || [ "$CURRENT" != "$REMOTE" ]; then
+            echo 'Published guide changed since QA. Refusing stale replacement.'
+            exit 1
+          fi
+          cp reviewed/guide.xml.gz published/epg/guide.xml.gz
+          gzip -dc reviewed/guide.xml.gz > published/epg/guide.xml
+          mkdir -p published/epg/short
+          cp reviewed/short/*.json published/epg/short/ 2>/dev/null || true
+          cp reviewed/report.json published/epg/nz-refresh-report.json
+          git -C published config user.name 'Lounge TV EPG Automation'
+          git -C published config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C published add epg/guide.xml epg/guide.xml.gz epg/short epg/nz-refresh-report.json
+          if git -C published diff --cached --quiet; then
+            echo 'No NZ update required'
+            exit 0
+          fi
+          git -C published commit -m 'epg: refresh verified NZ channel schedules'
+          git -C published push origin HEAD:epg-data
