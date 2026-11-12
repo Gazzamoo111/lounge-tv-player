@@ -18,7 +18,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: lounge-epg-nz-refresh
+  group: lounge-epg-shared-publish
   cancel-in-progress: false
 jobs:
   validate:
@@ -119,8 +119,8 @@ jobs:
           test -s reviewed/guide.xml.gz
           EXPECTED="$(cat reviewed/source-head.txt)"
           CURRENT="$(git -C published rev-parse HEAD)"
-          REMOTE="$(git -C published ls-remote origin refs/heads/epg-data | cut -f1)"
-          if [ "$EXPECTED" != "$CURRENT" ] || [ "$CURRENT" != "$REMOTE" ]; then
+          # The non-force push itself rejects any concurrent remote change.
+          if [ "$EXPECTED" != "$CURRENT" ]; then
             echo 'Published guide changed since QA. Refusing stale replacement.'
             exit 1
           fi
