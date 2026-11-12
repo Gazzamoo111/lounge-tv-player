@@ -114,6 +114,23 @@ class HubTests(unittest.TestCase):
             self.run_build()
         self.assertFalse((self.home / "out/report.json").exists())
 
+    def test_us_uk_loops_not_reported_as_scheduled_broadcast_channels(self):
+        self.rows.extend([
+            {"category": "Entertainment", "subcategory": "CINEMANIA TV SHOWS",
+             "sourceName": "US| US TV", "name": "CHIPS", "epgId": "live:chips"},
+            {"category": "Movies", "subcategory": "Sky Store",
+             "sourceName": "UK| SKY STORE", "name": "Sky Store Premiere 1",
+             "epgId": "live:sky-store-premiere-1"},
+            {"category": "Streaming", "subcategory": "Pluto TV",
+             "name": "BLACK CINEMA", "epgId": "BlackCinema.us"},
+        ])
+        self.manifest.write_text(json.dumps({"rows": self.rows}))
+        targets, conflicts, _ = catalogue(self.manifest)
+        self.assertNotIn("live:chips", targets)
+        self.assertNotIn("live:sky-store-premiere-1", targets)
+        self.assertIn("BlackCinema.us", targets)
+        self.assertNotIn("live:netflix", targets)
+
     def test_normalisation_retains_variants(self):
         self.assertNotEqual(norm("Sky Sport 1 +1"), norm("Sky Sport 1"))
         self.assertNotEqual(norm("TNT West"), norm("TNT East"))
