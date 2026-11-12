@@ -101,11 +101,29 @@ def catalogue(path):
     return targets, conflicts, duplicate_names
 
 
+def explicit_source_region(channel_id, labels):
+    """Accept a market hint only when the source explicitly declares it.
+
+    Generic BBC/ABC/Discovery names can occur in several countries.
+    Never infer a country from an unqualified channel title.
+    """
+    markets = set()
+    for text in [channel_id, *labels]:
+        tail = re.search(r"\.(nz|au|us|uk)$", text or "", re.I)
+        lead = re.match(r"^(NZ|AU|US|UK)(?:-NOWTV)?\s*[|:]\s*", text or "", re.I)
+        if tail:
+            markets.add(tail.group(1).lower())
+        if lead:
+            markets.add(lead.group(1).lower())
+    return next(iter(markets)) if len(markets) == 1 else None
+
+
 def parse_source(path, region_code, targets, name_counts, now):
     opener = gzip.open if str(path).endswith(".gz") else open
     id_lookup = defaultdict(list)
     names = defaultdict(set)
     source_names = {}
+    source_labels = {}
     with opener(path, "rb") as f:
         for _, el in E.iterparse(f, events=("end",), tag=("channel", "programme"),
                                  resolve_entities=False, no_network=True, huge_tree=True):
@@ -113,6 +131,7 @@ def parse_source(path, region_code, targets, name_counts, now):
                 cid = el.get("id")
                 labels = [x.text.strip() for x in el.findall("display-name") if x.text]
                 source_names[cid] = labels[0] if labels else cid
+                source_labels[cid] = labels
                 id_lookup[cid.casefold()].append(cid)
                 for label in labels:
                     names[norm(label)].add(cid)
@@ -121,7 +140,8 @@ def parse_source(path, region_code, targets, name_counts, now):
                 del el.getparent()[0]
     target_map = defaultdict(list)
     for tid, target in targets.items():
-        if target["region"] != region_code:
+        market = target["region"]
+        if region_code != "multi" and market != region_code:
             continue
         exact = id_lookup.get(tid.casefold(), [])
         if len(exact) == 1:
@@ -129,13 +149,19 @@ def parse_source(path, region_code, targets, name_counts, now):
         else:
             key = norm(target["name"])
             matches = names.get(key, set())
+            if region_code == "multi":
+                # Cross-country feeds can only name-match explicitly
+                # country-identified channels, never generic BBC/ABC/Sky.
+                matches = {x for x in matches
+                           if explicit_source_region(x, source_labels.get(x, [])) == market}
             # No fuzzy aliases, no generic reused names, no cross-market guesses.
-            if len(matches) != 1 or name_counts[(region_code, key)] != 1:
+            if len(matches) != 1 or name_counts[(market, key)] != 1:
                 continue
             cid, method = next(iter(matches)), "unique-name"
-        # Feed IDs with an explicit conflicting country are never aliases.
-        id_country = re.search(r"\.(nz|au|uk|us)$", cid, re.I)
-        if id_country and id_country[1].lower() != region_code:
+        source_market = explicit_source_region(cid, source_labels.get(cid, []))
+        if source_market and source_market != market:
+            continue
+        if region_code == "multi" and method != "exact-id" and not source_market:
             continue
         if tid.startswith("mjh-") and method != "exact-id":
             continue
@@ -317,10 +343,26 @@ def build(manifest, existing, source_entries, out, now=None, minimum_days=3):
             cov = actual_coverage(root.findall("programme"), subset, now, minimum_days)
             by_subcategory.append({"region": region_code, "subcategory": sub,
                                    "targets": len(subset), **cov})
+    per_source = defaultdict(lambda: {"programmesAdded": 0, "channelIdsModified": set(),
+                                       "usProgrammes": 0, "ukProgrammes": 0})
+    for item in proven:
+        value = per_source[item["source"]]
+        value["programmesAdded"] += item["newProgrammes"]
+        value["channelIdsModified"].add(item["epgId"])
+        if item["region"] == "us":
+            value["usProgrammes"] += item["newProgrammes"]
+        if item["region"] == "uk":
+            value["ukProgrammes"] += item["newProgrammes"]
+    source_contributions = {
+        sid: {"programmesAdded": v["programmesAdded"],
+              "channelIdsModified": len(v["channelIdsModified"]),
+              "usProgrammes": v["usProgrammes"], "ukProgrammes": v["ukProgrammes"]}
+        for sid, v in sorted(per_source.items())}
     report = {"generatedAtUtc": now.isoformat(), "minimumRealDays": minimum_days,
               "preferredDays": 7, "scope": "NZ/AU/US/UK with unambiguous identities",
               "manifestTargets": len(targets), "conflictingEpgIds": sorted(conflicts),
-              "sources": health, "before": baseline, "after": updated, "byRegion": by_region,
+              "sources": health, "sourceContributions": source_contributions,
+              "before": baseline, "after": updated, "byRegion": by_region,
               "byUsUkSubcategory": by_subcategory,
               "addedProgrammes": added, "changedTargets": len(amended),
               "preservedProgrammes": before_count, "totalProgrammes": before_count + added,
