@@ -7,7 +7,7 @@ This work continues the existing Lounge TV platform. The active Xtream catalogue
 ## Durable internal staging
 
 - `lounge_core.live_catalogue_rebuild_20261113`: original category/name/IDs, proposed category/name/sort, counts of linked source statuses, classification QA flags, duplicate target and hold reasons. All **3,369** enabled taxonomy records preserved.
-- `lounge_core.live_rebuild_source_candidates_20261113`: provider inventory candidates, canonical target proposal, source artwork and EPG IDs, existing canonical target, probe and shortlist statuses. **241** source rows, **219** distinct proposed targets, **218** shortlisted provider source rows covering **206** target keys. None has been playback-verified by this rebuild.
+- `lounge_core.live_rebuild_source_candidates_20261113`: provider inventory candidates, canonical target proposal, source artwork and EPG IDs, existing canonical target, probe and shortlist statuses. **338** source rows, **316** distinct proposed targets, **218** shortlisted provider source rows covering **206** target keys. None has been playback-verified by this rebuild.
 - `lounge_core.live_rebuild_category_order_20261113`: editorial order for **nine top categories** and **54 intended subcategories**. All entries have `visible_on_qa=false` pending acceptance. Do not create empty folders in a release.
 
 At this checkpoint **2,979** existing entries are stage candidates, **390** held, **34** potential duplicates held, and **2,932** candidates have a category/subcategory change in the proposed plan. **1,474** candidate assignments require further classification review. These are *not published changes*.
@@ -35,7 +35,7 @@ No Canada customer category until tested regional streams. Event/PPV feeds remai
 - Australian beIN Sports 1–3 found with EPG IDs; **10 Shake** found as 8 city variants that must resolve to **one** station with preferred/backup source order.
 - Cinemania: **50** numbered Hollywood feeds, **10** Premiere feeds, **1** separator. Only the 60 actual provider entries are staged as candidates, not published.
 - Classic entertainment and movies: MeTV/MeTV Plus/Toons, Antenna TV, FETV, Catchy Comedy, Buzzr, BBC Brit, BBC Lifestyle, ScreenPix, MoviePlex, Sony Movie Channel, Dove Movies, Family Movie Channel, FMC Family Classics. Keep a single canonical record per brand/channel and provider variants as backups. BBC Brit's provider EPG ID requires review.
-- Streaming: discover Apple TV+, Disney+, Prime Video, Max, Paramount+, Hulu, Peacock, Netflix continuous-feed groups; never describe as official service account access. **Netflix cap:** 23 existing staged + 37 shortlisted new title feeds = 60; 23 extra numbered provider rows held from the shortlist.
+- Streaming: discover Apple TV+, Disney+, Prime Video, Max, Paramount+, Hulu, Peacock, Netflix continuous-feed groups; never describe as official service account access. **Netflix cap:** 23 existing staged + 37 editorially shortlisted new title feeds = 60; 23 extra numbered provider rows held from the shortlist. All 134 currently present Netflix-labelled ON AIR title feeds were inventoried, and the 37-title shortlist prioritises recognisable, varied series rather than arbitrary provider IDs.
 - 9Go!, 9Life and 9Rush were not recovered from current present AU-labelled BEST inventory. Do not fabricate.
 - Region/genre sorting is editorial, not based on current watch analytics.
 - The `US Major Leagues` top 10 is locked to: NFL Network, NFL RedZone, NBA TV, MLB Network, NHL Network, ESPN, ESPN2, FS1, FS2, CBS Sports Network.
