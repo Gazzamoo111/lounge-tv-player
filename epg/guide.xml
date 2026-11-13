@@ -1603535,4 +1603535,2396 @@ JML Presents the Chef O Matic, Double Door Oven. Teleshopping.</desc>
     <desc lang="en">Shop: Cruise &amp; Stay by Real Cruise People.</desc>
     <icon src="https://iptv-epg.org/images/vFCexIdWs7wVhin2adlgx0fzhxniPNWSlgGqP6WhxbORYzBFoxOi64B5S6Jf4cH0b2-gFksHwQ-Jbdtu81ZKb9_Hn8204UV6grGSDMMKqtuqVBs-TmvFuk9cOcl9Ti1vCDFBkuhA_Hp_cQ"/>
     <title lang="en">Shop: Cruise &amp; Stay by Real Cruise People</title>
+  </programme><programme start="20261121033000 +0000" stop="20261121040000 +0000" channel="mjh-te-reo">
+    <title>Hakapedia</title>
+    <desc>Renee and Wiremu try their best to take on Haka expert, Tiahuia. (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/hakapedia</url>
+    <episode-num system="xmltv_ns">1.5.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 03:30:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/HAKAPEDIA3-BG1-min.jpg</image>
+  </programme><programme start="20261121040000 +0000" stop="20261121043000 +0000" channel="mjh-te-reo">
+    <title>Hakapedia</title>
+    <desc>Gian and Johnny take on haka expert Tom. (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/hakapedia</url>
+    <episode-num system="xmltv_ns">1.6.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 04:00:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/HAKAPEDIA3-BG1-min.jpg</image>
+  </programme><programme start="20261121043000 +0000" stop="20261121050000 +0000" channel="mjh-te-reo">
+    <title>Hakapedia</title>
+    <desc>Miri and Aorangi take on our haka expert Tom, with the hopes of taking as much cash and haka mana as possible. (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/hakapedia</url>
+    <episode-num system="xmltv_ns">1.7.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 04:30:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/HAKAPEDIA3-BG1-min.jpg</image>
+  </programme><programme start="20261121050000 +0000" stop="20261121053000 +0000" channel="mjh-te-reo">
+    <title>Hakapedia</title>
+    <desc>Tyia and Tamihana do their best to test their haka knowledge up against haka expert Tom. (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/hakapedia</url>
+    <episode-num system="xmltv_ns">1.8.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 05:00:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/HAKAPEDIA3-BG1-min.jpg</image>
+  </programme><programme start="20261121053000 +0000" stop="20261121060000 +0000" channel="mjh-te-reo">
+    <title>Hakapedia</title>
+    <desc>Celebrity episode full of laughs and energy as Marcia and Luke of Lucky Dip go up against Tiahuia in the final episode. (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/hakapedia</url>
+    <episode-num system="xmltv_ns">1.9.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 05:30:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/HAKAPEDIA3-BG1-min.jpg</image>
+  </programme><programme start="20261121060000 +0000" stop="20261121063000 +0000" channel="mjh-te-reo">
+    <title>Hakapedia</title>
+    <desc>The ultimate game show where Haka freaks battle it out. Brother vs Sister - while one has the Yarns does the other have the Chops to outsmart both the Matanga and her brother? (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/hakapedia</url>
+    <episode-num system="xmltv_ns">2.0.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 06:00:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/HAKAPEDIA3-BG1-min.jpg</image>
+  </programme><programme start="20261121063000 +0000" stop="20261121070000 +0000" channel="mjh-te-reo">
+    <title>Hakapedia</title>
+    <desc>The ultimate game show where Haka freaks battle it out. Meet the Tumoana’s. Māmā and Pāpā have 60 years of collective Kapa Haka knowledge but will this be enough for them to take home the win?
+ (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/hakapedia</url>
+    <episode-num system="xmltv_ns">2.1.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 06:30:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/HAKAPEDIA3-BG1-min.jpg</image>
+  </programme><programme start="20261121070000 +0000" stop="20261121073000 +0000" channel="mjh-te-reo">
+    <title>Hakapedia</title>
+    <desc>The ultimate game show where Haka freaks battle it out. Toitū Te Tiriti - Muriwhenua vs Muriwhenua.
+ (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/hakapedia</url>
+    <episode-num system="xmltv_ns">2.2.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 07:00:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/HAKAPEDIA3-BG1-min.jpg</image>
+  </programme><programme start="20261121073000 +0000" stop="20261121080000 +0000" channel="mjh-te-reo">
+    <title>Hakapedia</title>
+    <desc>The ultimate game show where Haka freaks battle it out. OG Pūkana presenters Mātai Smith and Te Hamua Nikora battle it out for the Kura they are repping.
+ (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/hakapedia</url>
+    <episode-num system="xmltv_ns">2.3.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 07:30:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/HAKAPEDIA3-BG1-min.jpg</image>
+  </programme><programme start="20261121080000 +0000" stop="20261121083000 +0000" channel="mjh-te-reo">
+    <title>Hakapedia</title>
+    <desc>The ultimate game show where Haka freaks battle it out. HP Fans battle it out to take home the money. (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/hakapedia</url>
+    <episode-num system="xmltv_ns">2.4.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 08:00:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/HAKAPEDIA3-BG1-min.jpg</image>
+  </programme><programme start="20261121083000 +0000" stop="20261121090000 +0000" channel="mjh-te-reo">
+    <title>Hakapedia</title>
+    <desc>The ultimate game show where Haka freaks battle it out. Reporters Raniera Harrison vs Tumamao Harawira. They report on Hakas but do they have the knowledge to win on Hakapedia?
+ (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/hakapedia</url>
+    <episode-num system="xmltv_ns">2.5.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 08:30:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/HAKAPEDIA3-BG1-min.jpg</image>
+  </programme><programme start="20261121090000 +0000" stop="20261121093000 +0000" channel="mjh-te-reo">
+    <title>Hakapedia</title>
+    <desc>The ultimate game show where Haka freaks battle it out. Kapa Haka Power Couple Lincoln Savage vs Renae Savage. Do they still have it in them to win?
+ (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/hakapedia</url>
+    <episode-num system="xmltv_ns">2.6.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 09:00:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/HAKAPEDIA3-BG1-min.jpg</image>
+  </programme><programme start="20261121093000 +0000" stop="20261121095600 +0000" channel="mjh-te-reo">
+    <title>Hakapedia</title>
+    <desc>The ultimate game show where Haka freaks battle it out. You've met the Tumoana's now meet The Hopas. A brother and sister duo that live and breathe Kapa Haka.
+ (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/hakapedia</url>
+    <episode-num system="xmltv_ns">2.7.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 09:30:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/HakaPedia-thumbnail.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/HAKAPEDIA3-BG1-min.jpg</image>
+  </programme><programme start="20261121095600 +0000" stop="20261122033000 +0000" channel="mjh-te-reo">
+    <title>Te Reo</title>
+    <desc>This is a placeholder programme for this channel, as no airings could be found for this timeslot. For more information see https://nzxmltv.com.</desc>
+    <icon src="https://images.nzxmltv.com/posters/te-reo_tereo.jpg"/>
+    <previously-shown/>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/te-reo_tereo.jpg</image>
+  </programme><programme start="20261120203000 +0000" stop="20261120213000 +0000" channel="mjh-three">
+    <title>The Zoo: San Diego</title>
+    <sub-title>Abigail the Incredible</sub-title>
+    <desc>Abigail, the century-old Galapagos tortoise, preps for critical surgery. The staff introduces tufted deer Poppy and Honeysuckle to Draco, a potential mate.</desc>
+    <date>2019</date>
+    <category>Factual</category>
+    <orig-language>English</orig-language>
+    <icon src="https://images.skyone.co.nz/mac/479214/DAM/4738A123-CB51-4E1C-8EF42ADCBAA64ACA.jpg"/>
+    <url>https://www.threenow.co.nz/shows/the-zoo-san-diego/mac_sh_105841</url>
+    <country>United States of America</country>
+    <episode-num system="dd_progid">EPmac_sh_105841.mac_11756809</episode-num>
+    <episode-num system="xmltv_ns">1.8.0</episode-num>
+    <episode-num system="themoviedb.org">series/92187</episode-num>
+    <episode-num system="original-air-date">2026-11-20 20:30:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>PG</value>
+    </rating>
+    <star-rating>
+      <value>10.0/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/4738A123-CB51-4E1C-8EF42ADCBAA64ACA.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/6A85F27F-EB89-4F9C-8124D4D62E3628FA.jpg</image>
+    <image type="still" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/9841A7F1-9EDA-4555-9735EC4664941885.JPG</image>
+  </programme><programme start="20261120213000 +0000" stop="20261120223000 +0000" channel="mjh-three">
+    <title>The Zoo</title>
+    <sub-title>Cubs in Queens</sub-title>
+    <desc>A gorilla must undergo a critical root canal to fix his tooth problem. A red-crested turaco chick fledges the nest, and a pair of puma cubs travel to their new home at the Queens Zoo. Meanwhile, a warthog is trained to receive vaccines with ease.</desc>
+    <date>2021</date>
+    <category>Factual</category>
+    <orig-language>English</orig-language>
+    <icon src="https://images.skyone.co.nz/mac/479214/DAM/C0447B55-B07C-40EA-B113E7CA863A46EC.jpg"/>
+    <url>https://www.threenow.co.nz/shows/the-zoo/mac_sh_93694</url>
+    <country>Ireland</country>
+    <episode-num system="dd_progid">EPmac_sh_93694.mac_11922108</episode-num>
+    <episode-num system="xmltv_ns">4.2.0</episode-num>
+    <episode-num system="themoviedb.org">series/120693</episode-num>
+    <episode-num system="original-air-date">2026-11-20 21:30:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>PG</value>
+    </rating>
+    <star-rating>
+      <value>0.0/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/C0447B55-B07C-40EA-B113E7CA863A46EC.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/39B20BBE-7000-4742-87653AA65A940213.jpg</image>
+  </programme><programme start="20261120223000 +0000" stop="20261121002500 +0000" channel="mjh-three">
+    <title>Tournament of Champions</title>
+    <sub-title>And The Winner Is...</sub-title>
+    <desc>Guy Fieri welcomes the final four chefs for two high-stakes semi-finals, with the winners advancing to a championship showdown for the title and $150,000.</desc>
+    <date>2020</date>
+    <category>Reality</category>
+    <orig-language>English</orig-language>
+    <icon src="https://images.skyone.co.nz/mac/479214/DAM/8F4EE713-ED70-4D08-ABC33D9505E5C4C8.jpg"/>
+    <url>https://www.threenow.co.nz/shows/tournament-of-champions/1740348232181</url>
+    <country>United States of America</country>
+    <episode-num system="dd_progid">EPmac_sh_97085.mac_11965086</episode-num>
+    <episode-num system="xmltv_ns">6.7.0</episode-num>
+    <episode-num system="themoviedb.org">series/100095</episode-num>
+    <episode-num system="original-air-date">2026-11-20 22:30:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>PGL</value>
+    </rating>
+    <star-rating>
+      <value>8.0/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/8F4EE713-ED70-4D08-ABC33D9505E5C4C8.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/314F1C11-4740-4272-9E80CBFDB639ACAF.jpg</image>
+    <image type="still" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/171B6412-D791-4700-8BCDE571570FC33B.jpg</image>
+  </programme><programme start="20261121002500 +0000" stop="20261121012500 +0000" channel="mjh-three">
+    <title>Sweet Empire</title>
+    <sub-title>North Pole Animals</sub-title>
+    <desc>The bakers take on their biggest build, creating impressive North Pole animal showpieces packed with wintry charm and technical skill.</desc>
+    <date>2025</date>
+    <category>Reality</category>
+    <orig-language>English</orig-language>
+    <icon src="https://images.skyone.co.nz/mac/479214/DAM/F6DE6C10-AA02-40DA-9E4F6478C370DAB2.jpg"/>
+    <url>https://www.threenow.co.nz/shows/sweet-empire/mac_sh_183027</url>
+    <country>United States of America</country>
+    <episode-num system="dd_progid">EPmac_sh_183027.mac_11960338</episode-num>
+    <episode-num system="xmltv_ns">0.4.0</episode-num>
+    <episode-num system="themoviedb.org">series/305345</episode-num>
+    <episode-num system="original-air-date">2026-11-21 00:25:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>PGL</value>
+    </rating>
+    <star-rating>
+      <value>0.0/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/F6DE6C10-AA02-40DA-9E4F6478C370DAB2.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/A74E4E73-9EF6-483A-831340B8387BE9DF.jpg</image>
+    <image type="still" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/33B9D2C5-A821-44D9-AFE46C8AF8DD4FF1.jpg</image>
+  </programme><programme start="20261121012500 +0000" stop="20261121015500 +0000" channel="mjh-three">
+    <title>Treetop Cat Rescue</title>
+    <sub-title>Top Cats</sub-title>
+    <desc>Tom's late-night mission is to rescue Earl, a heavy-set cat who's been chased high up a tree by a neighbour's dog. In La Conner, Play-Play has managed to get stranded nearly 70 feet up a tree.</desc>
+    <date>2015</date>
+    <category>Factual</category>
+    <orig-language>English</orig-language>
+    <icon src="https://images.skyone.co.nz/mac/479214/DAM/51E418F9-B204-456D-B9B6A985E16A1ECB.jpg"/>
+    <url>https://www.threenow.co.nz/shows/treetop-cat-rescue/mac_sh_132138</url>
+    <country>United States of America</country>
+    <episode-num system="dd_progid">EPmac_sh_132138.mac_11964295</episode-num>
+    <episode-num system="xmltv_ns">0.3.0</episode-num>
+    <episode-num system="themoviedb.org">series/297252</episode-num>
+    <episode-num system="original-air-date">2026-11-21 01:25:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>0.0/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/51E418F9-B204-456D-B9B6A985E16A1ECB.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/48945720-5E18-4EAD-88ADFC47AAE75028.jpg</image>
+    <image type="still" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/0CD035E2-C7E5-4482-99DDA85343FE3386.jpg</image>
+  </programme><programme start="20261121015500 +0000" stop="20261121025500 +0000" channel="mjh-three">
+    <title>Nadia's Farm</title>
+    <sub-title>Season 1 Ep 4</sub-title>
+    <desc>The fate of Royalburn's lambing ambitions hang in nature's balance. Nadia goes wild cooking up foraged treasures, and later she and Carlos are offered a once-in-a-lifetime opportunity.</desc>
+    <date>2021</date>
+    <category>Local</category>
+    <orig-language>English</orig-language>
+    <icon src="https://images.skyone.co.nz/mac/479214/DAM/B8767F3E-701E-4EEF-AB1C2F5EDF934157.jpg"/>
+    <url>https://www.threenow.co.nz/shows/nadia's-farm/S4068-671</url>
+    <country>New Zealand</country>
+    <episode-num system="dd_progid">EPmac_sh_137653.mac_11921786</episode-num>
+    <episode-num system="xmltv_ns">0.3.0</episode-num>
+    <episode-num system="themoviedb.org">series/211247</episode-num>
+    <episode-num system="original-air-date">2026-11-21 01:55:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>PG</value>
+    </rating>
+    <star-rating>
+      <value>0.0/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/B8767F3E-701E-4EEF-AB1C2F5EDF934157.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/83F62B54-FFFD-48E8-8B13E11243CA63F7.jpg</image>
+    <image type="still" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/74F723EC-159C-4346-AC0F3105A039192E.jpg</image>
+  </programme><programme start="20261121025500 +0000" stop="20261121040000 +0000" channel="mjh-three">
+    <title>Wheel Of Fortune With Graham Norton</title>
+    <sub-title>Season 2 Ep 6</sub-title>
+    <desc>Graham Norton hosts "Wheel of Fortune" where contestants spin the wheel and solve word puzzles for a chance to win a possible 50,000 pounds.</desc>
+    <date>2025</date>
+    <category>Reality</category>
+    <icon src="https://images.skyone.co.nz/mac/479214/DAM/9FDD7E62-4818-46B7-A1A4ED26247D5031.jpg"/>
+    <url>https://www.threenow.co.nz/shows/wheel-of-fortune-with-graham-norton/1724708952317</url>
+    <episode-num system="dd_progid">EPmac_sh_161763.mac_11929085</episode-num>
+    <episode-num system="xmltv_ns">1.5.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 02:55:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/9FDD7E62-4818-46B7-A1A4ED26247D5031.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/ED72C66B-8E12-4970-B7D4A009DA2FD746.jpg</image>
+    <image type="still" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/FBCBD282-1298-4371-8398004287A5B666.jpg</image>
+  </programme><programme start="20261121040000 +0000" stop="20261121043000 +0000" channel="mjh-three">
+    <title>World's Bargain Dream Homes</title>
+    <sub-title>Galicia, Spain</sub-title>
+    <desc>On the northwest coast of Spain, a relocation expert guides a young couple searching for a dream bargain home in Galicia.</desc>
+    <category>Factual</category>
+    <icon src="https://images.skyone.co.nz/mac/479214/DAM/16F4E88C-DAC9-4D85-87BD8529516B66D4.jpg"/>
+    <url>https://www.threenow.co.nz/shows/world's-bargain-dream-homes/mac_sh_183046</url>
+    <episode-num system="dd_progid">EPmac_sh_183046.mac_11963355</episode-num>
+    <episode-num system="xmltv_ns">0.7.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 04:00:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/16F4E88C-DAC9-4D85-87BD8529516B66D4.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/31F7F3B2-7E40-40CE-A4BFB9BBAD2AC964.jpg</image>
+    <image type="still" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/848A4F90-8555-451A-80BBAD46E2F0DB5B.jpg</image>
+  </programme><programme start="20261121043000 +0000" stop="20261121050000 +0000" channel="mjh-three">
+    <title>Ocean Bounty</title>
+    <sub-title>Deepwater Scampi</sub-title>
+    <desc>Aurora Fisheries take delivery of their new factory Trawler “F.V. Takapo”. A close look at this state-of-the-art fishing vessel built in Turkey.</desc>
+    <date>2017</date>
+    <category>Local</category>
+    <orig-language>English</orig-language>
+    <icon src="https://images.skyone.co.nz/mac/479214/DAM/04615AC8-2460-4487-9650507EE3EC9B37.jpg"/>
+    <url>https://www.threenow.co.nz/shows/ocean-bounty/S1247-430</url>
+    <country>New Zealand</country>
+    <episode-num system="dd_progid">EPmac_sh_148337.mac_11965597</episode-num>
+    <episode-num system="xmltv_ns">7.11.0</episode-num>
+    <episode-num system="themoviedb.org">series/80310</episode-num>
+    <episode-num system="original-air-date">2026-11-21 04:30:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>0.0/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/04615AC8-2460-4487-9650507EE3EC9B37.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/39F2AA74-731F-47DF-9AF25A3315DD8E96.jpg</image>
+    <image type="still" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/DC41E190-9FA6-42A8-BDE1379982E676D3.jpg</image>
+  </programme><programme start="20261121050000 +0000" stop="20261121053000 +0000" channel="mjh-three">
+    <title>ThreeNews</title>
+    <sub-title>Saturday 21 November 2026</sub-title>
+    <desc>ThreeNews presents comprehensive coverage of global and local news.</desc>
+    <date>2026</date>
+    <category>Local</category>
+    <icon src="https://images.skyone.co.nz/mac/479214/DAM/52893C12-DC63-44E7-8FF7E794E4F55F8D.jpg"/>
+    <url>https://www.threenow.co.nz/shows/threenews/1717556442294</url>
+    <episode-num system="dd_progid">EPmac_sh_158959.mac_11932706</episode-num>
+    <episode-num system="xmltv_ns">2025.324.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 05:00:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <live/>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/52893C12-DC63-44E7-8FF7E794E4F55F8D.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/CA7C599B-9E7C-430E-983E3D5D73543984.jpg</image>
+    <image type="still" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/F41D9A29-4122-48FE-A8FF9093BE768A03.jpg</image>
+  </programme><programme start="20261121053000 +0000" stop="20261121060000 +0000" channel="mjh-three">
+    <title>Millionaire Hot Seat AU</title>
+    <sub-title>Episode 30</sub-title>
+    <desc>With life changing cash on the line, everyday Aussies will have the opportunity to walk away with cash prizes up to $1,000,000.</desc>
+    <date>2026</date>
+    <category>Reality</category>
+    <icon src="https://images.skyone.co.nz/mac/479214/DAM/AC0BBFAC-94A8-4938-B21D1A3304361FBA.jpg"/>
+    <url>https://www.threenow.co.nz/shows/millionaire-hot-seat-au/1774917246332</url>
+    <episode-num system="dd_progid">EPmac_sh_180193.mac_11934635</episode-num>
+    <episode-num system="xmltv_ns">0.29.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 05:30:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/AC0BBFAC-94A8-4938-B21D1A3304361FBA.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/24E35C8E-4CC6-45E6-815FCCA3874E61CA.jpg</image>
+    <image type="still" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/812D83B4-DE83-461D-963D7813EBF87FDB.jpg</image>
+  </programme><programme start="20261121060000 +0000" stop="20261121080500 +0000" channel="mjh-three">
+    <title>The Smurfs 2</title>
+    <desc>The Smurfs must team up with their human friends for a rescue mission when Smurfette is kidnapped by Gargamal as part of his evil plan to make his mischievous new creations into real Smurfs.</desc>
+    <credits>
+      <actor>Karim Babin</actor>
+    </credits>
+    <date>2013</date>
+    <category>Animated</category>
+    <category>Movie</category>
+    <orig-language>English</orig-language>
+    <icon src="https://images.skyone.co.nz/mac/479214/DAM/B649A690-B646-40DB-8BF09332C95840F5.jpg"/>
+    <url>https://www.skygo.co.nz/movie/mac_10441296</url>
+    <episode-num system="dd_progid">EPmac_10441296.mac_10441296</episode-num>
+    <episode-num system="themoviedb.org">movie/77931</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>PG</value>
+    </rating>
+    <star-rating>
+      <value>5.7/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/B649A690-B646-40DB-8BF09332C95840F5.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/48CD189A-3AB0-4D95-BC36DAFA52B5B0A0.jpg</image>
+  </programme><programme start="20261121080500 +0000" stop="20261121110500 +0000" channel="mjh-three">
+    <title>Blade Runner 2049</title>
+    <desc>A new blade runner unearths a secret that could plunge what's left of society into chaos and leads him on a quest to find Rick Deckard, a former blade runner who's been missing for 30 years.</desc>
+    <credits>
+      <actor>Edward James Olmos</actor>
+    </credits>
+    <date>2017</date>
+    <category>Drama</category>
+    <category>Movie</category>
+    <orig-language>English</orig-language>
+    <icon src="https://images.skyone.co.nz/mac/479214/DAM/47345F46-3DBF-4981-BDCD666AED73AA23.jpg"/>
+    <url>https://www.skygo.co.nz/movie/mac_11046356</url>
+    <episode-num system="dd_progid">EPmac_11046356.mac_11046356</episode-num>
+    <episode-num system="themoviedb.org">movie/335984</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>16VSL</value>
+    </rating>
+    <star-rating>
+      <value>7.6/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/47345F46-3DBF-4981-BDCD666AED73AA23.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/4354DC08-6BC6-49F7-B5CFF651B3DEE8CA.jpg</image>
+  </programme><programme start="20261121110500 +0000" stop="20261121120000 +0000" channel="mjh-three">
+    <title>FBI</title>
+    <sub-title>The Armorer's Faith</sub-title>
+    <desc>When an illegal arms broker turned informant is assassinated, OA assumes his identity and goes undercover with the help of Maggie and their former FBI instructor. Guest starring Billy Burke.</desc>
+    <credits>
+      <actor>Sela Ward</actor>
+    </credits>
+    <date>2018</date>
+    <category>Crime Drama</category>
+    <orig-language>English</orig-language>
+    <icon src="https://images.skyone.co.nz/mac/479214/DAM/F3A399DF-4B24-4B39-97EE9A937EFE8207.jpg"/>
+    <url>https://www.threenow.co.nz/shows/fbi/1768252028101</url>
+    <country>United States of America</country>
+    <episode-num system="dd_progid">EPmac_sh_88291.mac_11180902</episode-num>
+    <episode-num system="xmltv_ns">0.9.0</episode-num>
+    <episode-num system="themoviedb.org">series/80748</episode-num>
+    <episode-num system="original-air-date">2026-11-21 11:05:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>16VSC</value>
+    </rating>
+    <star-rating>
+      <value>7.9/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/F3A399DF-4B24-4B39-97EE9A937EFE8207.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/C8CBF849-1F6B-4EBA-8B15A3EFCB05409A.jpg</image>
+    <image type="still" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/56CA458A-D9EC-4400-BC4445B85E12B8C3.jpg</image>
+  </programme><programme start="20261120195300 +0000" stop="20261120202500 +0000" channel="mjh-maori-tv">
+    <title>Te Nūtube Haka</title>
+    <desc>A fusion of haka and tamariki awesome-ness with Te Nūtube stars Atareta and Te Haakura. (R)</desc>
+    <category>Informational/Educational/Scho</category>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/TeNutube%20TN.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/te-nutube</url>
+    <episode-num system="dd_progid">EPmac_sh_ptc65343603.mac_ptc1457575838</episode-num>
+    <episode-num system="xmltv_ns">0.7.0</episode-num>
+    <episode-num system="original-air-date">2026-11-20 19:53:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/TeNutube%20TN.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/TeNutubeHaka_POSTER.jpg</image>
+  </programme><programme start="20261120202500 +0000" stop="20261120220000 +0000" channel="mjh-maori-tv">
+    <title>Mosley</title>
+    <desc>In a world where elephant-like “thoriphants” are enslaved, Mosley is born different—destined to be an evolutionary leader. When his family risks losing him to servitude, Mosley embarks on a perilous journey to discover his true heritage and liberate his people.
+ (R)</desc>
+    <credits>
+      <director>Kirby Atkins</director>
+      <actor>Lucy Lawless</actor>
+    </credits>
+    <date>2019</date>
+    <category>Family/Comedy/Drama</category>
+    <category>Movie</category>
+    <orig-language>English</orig-language>
+    <icon src="https://image.tmdb.org/t/p/original/fc9O9QaGU0amISOD9XPCxJqRhen.jpg"/>
+    <url>https://www.maoriplus.co.nz/movie/mosley</url>
+    <episode-num system="dd_progid">EPmac_ptc723870597.mac_ptc723870597</episode-num>
+    <episode-num system="themoviedb.org">movie/610445</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>PG</value>
+    </rating>
+    <star-rating>
+      <value>6.8/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/fc9O9QaGU0amISOD9XPCxJqRhen.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/Mosley%20BG1920x1080.jpg</image>
+  </programme><programme start="20261120220000 +0000" stop="20261120223000 +0000" channel="mjh-maori-tv">
+    <title>Native Ride</title>
+    <desc>A handful of unforgettable Māori characters stride out on a 100-day quest to tame a totally wild Ruatahuna horse for a grand competition in this stunning and poignant series. (R)</desc>
+    <category>Documentary</category>
+    <icon src="https://images.skyone.co.nz/mac/479214/DAM/3D48D52C-1F76-48E2-B2C160E9A63A3E81.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/native-ride</url>
+    <episode-num system="dd_progid">EPmac_sh_ptc1618253073.mac_ptc1212575370</episode-num>
+    <episode-num system="xmltv_ns">0.3.0</episode-num>
+    <episode-num system="original-air-date">2026-11-20 22:00:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/3D48D52C-1F76-48E2-B2C160E9A63A3E81.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/native-ride_poster.jpg</image>
+    <image type="still" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/4B08AE09-D66B-4E2C-872640FDC2595ED5.jpg</image>
+  </programme><programme start="20261120223000 +0000" stop="20261120230000 +0000" channel="mjh-maori-tv">
+    <title>Poi Takitini</title>
+    <desc>It’s finale day and everything is at stake as the four 15s players and three Sevens players show their prowess on stage after a heart wrenching year on the field. (R)</desc>
+    <category>Cultural</category>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/Poi%20Takitini%20TN1920x1080.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/poi-takitini</url>
+    <episode-num system="dd_progid">EPmac_sh_ptc139209691.mac_ptc514956957</episode-num>
+    <episode-num system="xmltv_ns">0.6.0</episode-num>
+    <episode-num system="original-air-date">2026-11-20 22:30:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <new/>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/Poi%20Takitini%20TN1920x1080.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/Poi%20Takitini%20BG%201920x1080.jpg</image>
+  </programme><programme start="20261120230000 +0000" stop="20261121011600 +0000" channel="mjh-maori-tv">
+    <title>2025 NZSS Softball Nationals</title>
+    <desc>The 2025 NZSS Softball Nationals are being livestreamed from Fraser Park, Hutt. (R)</desc>
+    <category>Sports</category>
+    <icon src="https://images.nzxmltv.com/posters/2025-nzss-softball-nationals_maoritv.jpg"/>
+    <country> NZ</country>
+    <episode-num system="dd_progid">EPmac_sh_ptc27222740.mac_ptc729438260</episode-num>
+    <episode-num system="xmltv_ns">1.1.0</episode-num>
+    <episode-num system="original-air-date">2026-11-20 23:00:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/2025-nzss-softball-nationals_maoritv.jpg</image>
+  </programme><programme start="20261121011600 +0000" stop="20261121014200 +0000" channel="mjh-maori-tv">
+    <title>Nomad</title>
+    <desc>Follow Kahu as he gathers greenstone with his whānau and hikes the Hollyford Track, reconnecting Ngāi Tahu rangatahi with their whenua (R)</desc>
+    <date>2020</date>
+    <category>Documentary</category>
+    <orig-language>English</orig-language>
+    <icon src="https://image.tmdb.org/t/p/original/3Ycbj4XHymQfeFxiHKZEy1e0yGy.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/nomad</url>
+    <country>United States of America</country>
+    <episode-num system="dd_progid">EPmac_sh_ptc783592123.mac_ptc1587260854</episode-num>
+    <episode-num system="xmltv_ns">0.1.0</episode-num>
+    <episode-num system="themoviedb.org">series/222327</episode-num>
+    <episode-num system="original-air-date">2026-11-21 01:16:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>0.0/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/3Ycbj4XHymQfeFxiHKZEy1e0yGy.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/NOMAD_BTS2.jpg</image>
+  </programme><programme start="20261121014200 +0000" stop="20261121020900 +0000" channel="mjh-maori-tv">
+    <title>Hunt With Me</title>
+    <desc>Lifestyle series that celebrates the wide diversity of Māori hunters, fishers and gatherers from all around Aotearoa. (R)</desc>
+    <category>General</category>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/Hunt%20with%20Me.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/hunt-with-me</url>
+    <episode-num system="dd_progid">EPmac_sh_ptc913581694.mac_ptc1142993450</episode-num>
+    <episode-num system="xmltv_ns">0.1.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 01:42:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>PG</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/Hunt%20with%20Me.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/hunt-with-me-bg.jpg</image>
+  </programme><programme start="20261121020900 +0000" stop="20261121023500 +0000" channel="mjh-maori-tv">
+    <title>Hoiho Riding On</title>
+    <desc>A great horse adventure across Aotearoa, meeting our amazing horses and riders of Te Ao Māori. (R)</desc>
+    <category>General</category>
+    <icon src="https://images.skyone.co.nz/mac/479214/DAM/5476C323-1998-4AB4-A177EECFD0B58F20.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/hoiho-riding-on</url>
+    <episode-num system="dd_progid">EPmac_sh_ptc1043799684.mac_ptc1974605361</episode-num>
+    <episode-num system="xmltv_ns">0.1.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 02:09:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/5476C323-1998-4AB4-A177EECFD0B58F20.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/HOIHORIDING2-BG-min%20(1).jpg</image>
+    <image type="still" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/EE514783-9BF2-49FB-99E0BFA0E3DC3747.jpg</image>
+  </programme><programme start="20261121023500 +0000" stop="20261121030100 +0000" channel="mjh-maori-tv">
+    <title>The Drawing Board</title>
+    <desc>Tere Insley, Elisapeta Heta &amp; Raukura Turei are wahine toa incorporating an indigenous aesthetic which considers tikanga and mātauranga Māori, shaping spaces through a Māori lens.  (R)</desc>
+    <category>Documentary</category>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/the%20drawing%20board%202%20960x540.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/the-drawing-board</url>
+    <episode-num system="dd_progid">EPmac_sh_ptc168790688.mac_ptc1770780618</episode-num>
+    <episode-num system="xmltv_ns">0.6.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 02:35:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/the%20drawing%20board%202%20960x540.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/the%20drawing%20board%202%201920x1080%20(1).jpg</image>
+  </programme><programme start="20261121030100 +0000" stop="20261121033000 +0000" channel="mjh-maori-tv">
+    <title>Lucky Dip On The Road</title>
+    <desc>A family game show series with a heartland community feel. Hosts Luke Bird and Marcia Hopa take the show on the road. (R)</desc>
+    <category>Game Show/Quiz/Contest</category>
+    <icon src="https://img-store-prod.switch.tv/images/02eacfb9-6940-4a23-a062-b4e70b2f750d/image.jpg"/>
+    <episode-num system="dd_progid">EPmac_sh_ptc2040403799.mac_ptc1874085389</episode-num>
+    <episode-num system="xmltv_ns">1.3.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 03:01:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://img-store-prod.switch.tv/images/02eacfb9-6940-4a23-a062-b4e70b2f750d/image.jpg</image>
+  </programme><programme start="20261121033000 +0000" stop="20261121040000 +0000" channel="mjh-maori-tv">
+    <title>Waka To Worlds</title>
+    <desc>Following the lives of the New Zealand Waka Ama Elite Junior Men and Women's teams as they train their hearts out in the quest for gold at the 2022 IVF World Sprint Championships. (R)</desc>
+    <category>Cultural</category>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/Waka%20to%20Worlds%20Se02%20TN%20960x540.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/waka-to-worlds</url>
+    <episode-num system="dd_progid">EPmac_sh_ptc2055879264.mac_ptc1320786241</episode-num>
+    <episode-num system="xmltv_ns">0.0.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 03:30:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/Waka%20to%20Worlds%20Se02%20TN%20960x540.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/Waka%20to%20Worlds%20Se2%20BG.1%201920x1080.jpg</image>
+  </programme><programme start="20261121040000 +0000" stop="20261121043000 +0000" channel="mjh-maori-tv">
+    <title>End Of The Valley</title>
+    <desc>A Shared Devotion: Ngāhuia confirms her suspicions when an age-old vendetta resurfaces.
+ (R)</desc>
+    <credits>
+      <director>Carey Carter</director>
+    </credits>
+    <date>2025</date>
+    <category>Drama</category>
+    <orig-language>Maori</orig-language>
+    <icon src="https://image.tmdb.org/t/p/original/39wwgSFPf0nld4ViEBfwohR3jcL.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/end-of-the-valley</url>
+    <country>New Zealand</country>
+    <episode-num system="dd_progid">EPmac_sh_ptc1161108913.mac_ptc571275116</episode-num>
+    <episode-num system="xmltv_ns">0.1.0</episode-num>
+    <episode-num system="themoviedb.org">series/300720</episode-num>
+    <episode-num system="original-air-date">2026-11-21 04:00:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>PG</value>
+    </rating>
+    <star-rating>
+      <value>0.0/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/39wwgSFPf0nld4ViEBfwohR3jcL.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/EOTV%201920x1080%20BG%20(1).jpg</image>
+  </programme><programme start="20261121043000 +0000" stop="20261121050000 +0000" channel="mjh-maori-tv">
+    <title>Huiki Haere</title>
+    <desc>The Schmidt-Peke sisters and Maipi/Paenga whānau attempt to talk to animals, train a pack of dogs, and battle it out in a sheep-shearing competition. Will the animals come out on top? (R)</desc>
+    <category>Documentary</category>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/Huiki%20Haere%20TN%201920x1080-1.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/huiki-haere</url>
+    <episode-num system="dd_progid">EPmac_sh_ptc1409654360.mac_ptc157097251</episode-num>
+    <episode-num system="xmltv_ns">0.0.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 04:30:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>PG</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/Huiki%20Haere%20TN%201920x1080-1.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/Huiki%20Haere%20BG%201920x1080-1.jpg</image>
+  </programme><programme start="20261121050000 +0000" stop="20261121053000 +0000" channel="mjh-maori-tv">
+    <title>Kids Dont Come With A Manual</title>
+    <desc>Regina is struggling to get care support for her son Te Kaha, who has MECP2 Duplication Syndrome. How can Regina recharge herself when she gets overwhelmed? (R)</desc>
+    <category>Documentary</category>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/KidsDontComeWithaManualS2_TN.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/kids-dont-come-with-a-manual</url>
+    <episode-num system="dd_progid">EPmac_sh_ptc1922526736.mac_ptc207243950</episode-num>
+    <episode-num system="xmltv_ns">0.1.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 05:00:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>PG</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/KidsDontComeWithaManualS2_TN.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/kids-dont-come-with-a-manual_poster%20(2).jpg</image>
+  </programme><programme start="20261121053000 +0000" stop="20261121063000 +0000" channel="mjh-maori-tv">
+    <title>Great Barrier Reef</title>
+    <desc>The Great Barrier Reef is one of the natural wonders of the world and the largest living structure on our planet. (R)</desc>
+    <credits>
+      <director>James Brickell</director>
+      <actor>Monty Halls</actor>
+      <producer>James Brickell</producer>
+    </credits>
+    <date>2012</date>
+    <category>Documentary</category>
+    <orig-language>English</orig-language>
+    <icon src="https://image.tmdb.org/t/p/original/CYV2wJKRRf1MN7IfJIwAbqyt0U.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/the-great-barrier-reef</url>
+    <country>United Kingdom</country>
+    <episode-num system="dd_progid">EPmac_sh_ptc198215842.mac_ptc890696003</episode-num>
+    <episode-num system="xmltv_ns">0.1.0</episode-num>
+    <episode-num system="themoviedb.org">series/46516</episode-num>
+    <episode-num system="original-air-date">2026-11-21 05:30:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>PG</value>
+    </rating>
+    <star-rating>
+      <value>7.7/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/CYV2wJKRRf1MN7IfJIwAbqyt0U.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/2026-06-15-13-38-16-The%20Great%20Barrier%20Reef%20BG%201920x1080.jpg</image>
+  </programme><programme start="20261121063000 +0000" stop="20261121074700 +0000" channel="mjh-maori-tv">
+    <title>Valiant</title>
+    <desc>At the height of World War II, a tiny wood pigeon enlists in the elite Royal Homing Pigeon Service to serve Britain, as the fearsome General Von Talon (Tim Curry) and his deadly squadron of falcons patrol the English Channel. Is he a war-hero in the making? (R)</desc>
+    <credits>
+      <director>Gary Chapman</director>
+      <actor>Ewan McGregor</actor>
+    </credits>
+    <date>2005</date>
+    <category>Family/Comedy/Drama</category>
+    <category>Movie</category>
+    <orig-language>English</orig-language>
+    <icon src="https://image.tmdb.org/t/p/original/tSRO8wukDlGMlrkmRpqL2nWhgPs.jpg"/>
+    <url>https://www.maoriplus.co.nz/movie/valiant</url>
+    <episode-num system="dd_progid">EPmac_ptc589969919.mac_ptc589969919</episode-num>
+    <episode-num system="themoviedb.org">movie/14175</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>5.7/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/tSRO8wukDlGMlrkmRpqL2nWhgPs.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/2026-06-29-11-08-57-Valiant%20BG%201920x1080.jpg</image>
+  </programme><programme start="20261121074700 +0000" stop="20261121080000 +0000" channel="mjh-maori-tv">
+    <title>Someday Stories</title>
+    <desc>A series of short films, sustainability focused by young New Zealand film-makers. (R)</desc>
+    <category>Cultural</category>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/Someday%20Stories.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/someday-stories</url>
+    <episode-num system="dd_progid">EPmac_sh_ptc1719812645.mac_ptc358615629</episode-num>
+    <episode-num system="xmltv_ns">0.3.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 07:47:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>PG</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/Someday%20Stories.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/someday-stories-s7-bg%20(1).jpg</image>
+  </programme><programme start="20261121080000 +0000" stop="20261121094200 +0000" channel="mjh-maori-tv">
+    <title>An Honest Thief</title>
+    <desc>PREMIERE: When two FBI agents set up a professional bank robber on murder charges, he must now go on the run to clear his name and bring them to justice.</desc>
+    <category>Lifestyle</category>
+    <icon src="https://images.nzxmltv.com/posters/an-honest-thief_maoritv.jpg"/>
+    <episode-num system="dd_progid">EPmac_sh_ptc1851099885.mac_ptc15007159</episode-num>
+    <episode-num system="original-air-date">2026-11-21 08:00:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <new/>
+    <rating system="NZ">
+      <value>M</value>
+    </rating>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/an-honest-thief_maoritv.jpg</image>
+  </programme><programme start="20261121094200 +0000" stop="20261121100000 +0000" channel="mjh-maori-tv">
+    <title>Loading Docs 2022 - Power Of Emotion</title>
+    <desc>A passionate video gamer leads his team on a turbulent battle to be the first New Zealanders to compete in Esports in the Commonwealth Games. (R)</desc>
+    <category>Cultural</category>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/loading-docs_thumbnail.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/loading-docs</url>
+    <episode-num system="dd_progid">EPmac_sh_ptc566908786.mac_ptc519526150</episode-num>
+    <episode-num system="xmltv_ns">8.4.0</episode-num>
+    <episode-num system="original-air-date">2026-11-21 09:42:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/loading-docs_thumbnail.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/loading-docs_poster.jpg</image>
+  </programme><programme start="20261121100000 +0000" stop="20261121102600 +0000" channel="mjh-maori-tv">
+    <title>Rewind</title>
+    <desc>REWIND is a music video series with curated NZ and Reo Māori music. It also has old music videos updated with graphic factoids. (R)</desc>
+    <category>Soul / R &amp; B</category>
+    <orig-language>English</orig-language>
+    <icon src="https://images.skyone.co.nz/mac/479214/DAM/F42C2C52-FACB-47FA-8727EEF073B5A802.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/rewind</url>
+    <episode-num system="dd_progid">EPmac_sh_ptc1400454991.mac_ptc1689359137</episode-num>
+    <episode-num system="xmltv_ns">1.20.0</episode-num>
+    <episode-num system="themoviedb.org">series/45730</episode-num>
+    <episode-num system="original-air-date">2026-11-21 10:00:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>PG</value>
+    </rating>
+    <star-rating>
+      <value>0.0/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/F42C2C52-FACB-47FA-8727EEF073B5A802.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/2025-09-23-10-25-53-REWIND%20M%2B%20BG%20copy%20v2.jpg</image>
+    <image type="still" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/AA2A2110-1DA7-4A00-953325CA7E40C384.jpg</image>
+  </programme><programme start="20261121102600 +0000" stop="20261121110000 +0000" channel="mjh-maori-tv">
+    <title>Whakaata Maori</title>
+    <desc>Whakaata Maori specialises in the stories of Aotearoa. Be entertained and informed with news, current affairs, sports, drama, documentaries and more. Visit www.maoriplus.co.nz</desc>
+    <category>Advertisement/Shopping</category>
+    <icon src="https://images.nzxmltv.com/posters/whakaata-maori_maoritv.jpg"/>
+    <episode-num system="dd_progid">EPmac_sh_ptc1594670867.mac_ptc1321078870</episode-num>
+    <episode-num system="original-air-date">2026-11-21 10:26:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/whakaata-maori_maoritv.jpg</image>
+  </programme><programme start="20261121110000 +0000" stop="20261121173000 +0000" channel="mjh-maori-tv">
+    <title>Whakaata Maori</title>
+    <desc>Whakaata Maori specialises in the stories of Aotearoa. Be entertained and informed with news, current affairs, sports, drama, documentaries and more. Visit www.maoriplus.co.nz</desc>
+    <category>Advertisement/Shopping</category>
+    <icon src="https://images.nzxmltv.com/posters/whakaata-maori_maoritv.jpg"/>
+    <episode-num system="dd_progid">EPmac_sh_ptc1594670867.mac_ptc697131615</episode-num>
+    <episode-num system="original-air-date">2026-11-21 11:00:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/whakaata-maori_maoritv.jpg</image>
+  </programme><programme start="20261116002500 +0000" stop="20261116030000 +0000" channel="SkySport1.nz">
+    <title lang="en">Rugby League World Cup</title>
+    <sub-title lang="en">RLWC Final: Australia v Kiwis</sub-title>
+    <desc lang="en">Coverage from the Men's Rugby League World Cup Grand Final match between Australia and New Zealand at Suncorp Stadium, Brisbane.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116030000 +0000" stop="20261116050000 +0000" channel="SkySport1.nz">
+    <title lang="en">Rugby: Nations Championship</title>
+    <sub-title lang="en">NC: Scotland v Australia</sub-title>
+    <desc lang="en">Coverage from Round 5 of the Nations Championship between Scotland and Australia at Scottish Gas Murrayfield, Edinburgh.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116050000 +0000" stop="20261116060000 +0000" channel="SkySport1.nz">
+    <title lang="en">The Breakdown</title>
+    <desc lang="en">SUN 15 NOV - Fresh off the back of the weekend action, host Kirstie Stanway is joined by All Black legends Goldie and Mils to discuss and analyse all the hot topics.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116060000 +0000" stop="20261116063000 +0000" channel="SkySport1.nz">
+    <title lang="en">The Crowd Goes Wild</title>
+    <desc lang="en">MON 16 NOV - Join the team for an alternative dose of sports news, delivering the best (and worst) sporting moments the only way they know how, with a little cheek!</desc>
+    <category lang="en">Episode</category>
+    <category lang="en">Series</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116063000 +0000" stop="20261116070000 +0000" channel="SkySport1.nz">
+    <title lang="en">BLACKCAPS v India</title>
+    <sub-title lang="en">BLACKCAPS v India: 5th ODI Hls</sub-title>
+    <desc lang="en">Highlights of the fifth One Day International between the BLACKCAPS and India at Bay Oval, Tauranga.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116070000 +0000" stop="20261116073000 +0000" channel="SkySport1.nz">
+    <title lang="en">Intl Cricket: Australia v England</title>
+    <sub-title lang="en">Australia v England: 2nd ODI Hls</sub-title>
+    <desc lang="en">Highlights of the second One Day International between Australia and England at Adelaide Oval, Adelaide.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116073000 +0000" stop="20261116113000 +0000" channel="SkySport1.nz">
+    <title lang="en">Women's Big Bash League</title>
+    <sub-title lang="en">WBBL: Thunder v Stars</sub-title>
+    <desc lang="en">LIVE coverage from the Women's Big Bash League match 24 between the Sydney Thunder and Melbourne Stars at Drummoyne Oval, Sydney.</desc>
+    <category lang="en">Episode</category>
+    <category lang="en">Series</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116113000 +0000" stop="20261116120000 +0000" channel="SkySport1.nz">
+    <title lang="en">The Crowd Goes Wild</title>
+    <desc lang="en">MON 16 NOV - Join the team for an alternative dose of sports news, delivering the best (and worst) sporting moments the only way they know how, with a little cheek!</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116120000 +0000" stop="20261116143000 +0000" channel="SkySport1.nz">
+    <title lang="en">Rugby League World Cup</title>
+    <sub-title lang="en">RLWC Final: Australia v Kiwi Ferns</sub-title>
+    <desc lang="en">Coverage from the Women's Rugby League World Cup Grand Final match between Australia and New Zealand at Suncorp Stadium, Brisbane.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116143000 +0000" stop="20261116170000 +0000" channel="SkySport1.nz">
+    <title lang="en">Rugby League World Cup</title>
+    <sub-title lang="en">RLWC Final: Australia v Kiwis</sub-title>
+    <desc lang="en">Coverage from the Men's Rugby League World Cup Grand Final match between Australia and New Zealand at Suncorp Stadium, Brisbane.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116170000 +0000" stop="20261116171500 +0000" channel="SkySport1.nz">
+    <title lang="en">Women's Big Bash League</title>
+    <sub-title lang="en">WBBL: Sixers v Renegades Hls</sub-title>
+    <desc lang="en">Highlights from the Women's Big Bash League match 23 between the Sydney Sixers and Melbourne Renegades at North Sydney Oval, Sydney.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116171500 +0000" stop="20261116173000 +0000" channel="SkySport1.nz">
+    <title lang="en">Women's Big Bash League</title>
+    <sub-title lang="en">WBBL: Thunder v Stars Hls</sub-title>
+    <desc lang="en">Highlights from the Women's Big Bash League match 24 between the Sydney Thunder and Melbourne Stars at Drummoyne Oval, Sydney.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116173000 +0000" stop="20261116174500 +0000" channel="SkySport1.nz">
+    <title lang="en">Rugby League World Cup</title>
+    <sub-title lang="en">RLWC Final: Australia v Kiwi Ferns Hls</sub-title>
+    <desc lang="en">Highlights from the Women's Rugby League World Cup Grand Final match between Australia and New Zealand at Suncorp Stadium, Brisbane.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116174500 +0000" stop="20261116180000 +0000" channel="SkySport1.nz">
+    <title lang="en">Rugby League World Cup</title>
+    <sub-title lang="en">RLWC Final: Australia v Kiwis Hls</sub-title>
+    <desc lang="en">Highlights from the Men's Rugby League World Cup Grand Final match between Australia and New Zealand at Suncorp Stadium, Brisbane.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116180000 +0000" stop="20261116183000 +0000" channel="SkySport1.nz">
+    <title lang="en">The Crowd Goes Wild</title>
+    <desc lang="en">MON 16 NOV - Join the team for an alternative dose of sports news, delivering the best (and worst) sporting moments the only way they know how, with a little cheek!</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116183000 +0000" stop="20261116190000 +0000" channel="SkySport1.nz">
+    <title lang="en">BLACKCAPS v India</title>
+    <sub-title lang="en">BLACKCAPS v India: 5th ODI Hls</sub-title>
+    <desc lang="en">Highlights of the fifth One Day International between the BLACKCAPS and India at Bay Oval, Tauranga.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116190000 +0000" stop="20261116230000 +0000" channel="SkySport1.nz">
+    <title lang="en">Grand Slam Of Darts</title>
+    <sub-title lang="en">Grand Slam of Darts: D3</sub-title>
+    <desc lang="en">LIVE coverage of Grand Slam of Darts 2026, Day 3,  held at Aldersley Leisure Village, Wolverhampton.</desc>
+    <category lang="en">Episode</category>
+    <category lang="en">Series</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116230000 +0000" stop="20261117000000 +0000" channel="SkySport1.nz">
+    <title lang="en">Dubai International Baja</title>
+    <sub-title lang="en">Dubai International Baja Hls</sub-title>
+    <desc lang="en">The 2026 Dubai International Baja showcased thrilling off-road racing, spectacular desert landscapes and high-speed action, as competitors tackled challenging terrain and demanding dunes in an unforgettable celebration of rally sport.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116003000 +0000" stop="20261116010000 +0000" channel="SkySport2.nz">
+    <title lang="en">Intl Cricket: Australia v England</title>
+    <sub-title lang="en">Australia v England: 2nd ODI Hls</sub-title>
+    <desc lang="en">Highlights of the second One Day International between Australia and England at Adelaide Oval, Adelaide.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116010000 +0000" stop="20261116013000 +0000" channel="SkySport2.nz">
+    <title lang="en">BLACKCAPS v India</title>
+    <sub-title lang="en">BLACKCAPS v India: 5th ODI Hls</sub-title>
+    <desc lang="en">Highlights of the fifth One Day International between the BLACKCAPS and India at Bay Oval, Tauranga.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116013000 +0000" stop="20261116014500 +0000" channel="SkySport2.nz">
+    <title lang="en">Rugby: Nations Championship</title>
+    <sub-title lang="en">NC: Wales v All Blacks Hls</sub-title>
+    <desc lang="en">Highlights from Round 5 of the Nations Championship between Wales and the All Blacks at Principality Stadium, Cardiff.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116014500 +0000" stop="20261116020000 +0000" channel="SkySport2.nz">
+    <title lang="en">Rugby: Nations Championship</title>
+    <sub-title lang="en">NC: Scotland v Australia Hls</sub-title>
+    <desc lang="en">Highlights from Round 5 of the Nations Championship between Scotland and Australia at Scottish Gas Murrayfield, Edinburgh.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116020000 +0000" stop="20261116030000 +0000" channel="SkySport2.nz">
+    <title lang="en">The Breakdown</title>
+    <desc lang="en">SUN 15 NOV - Fresh off the back of the weekend action, host Kirstie Stanway is joined by All Black legends Goldie and Mils to discuss and analyse all the hot topics.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116030000 +0000" stop="20261116031500 +0000" channel="SkySport2.nz">
+    <title lang="en">Women's Big Bash League</title>
+    <sub-title lang="en">WBBL: Scorchers v Strikers Hls</sub-title>
+    <desc lang="en">Highlights from the Women's Big Bash League match 22 between the Perth Scorchers and Adelaide Strikers at the WACA Ground, Perth.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116031500 +0000" stop="20261116033000 +0000" channel="SkySport2.nz">
+    <title lang="en">Women's Big Bash League</title>
+    <sub-title lang="en">WBBL: Sixers v Renegades Hls</sub-title>
+    <desc lang="en">Highlights from the Women's Big Bash League match 23 between the Sydney Sixers and Melbourne Renegades at North Sydney Oval, Sydney.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116033000 +0000" stop="20261116040000 +0000" channel="SkySport2.nz">
+    <title lang="en">Intl Cricket: Australia v England</title>
+    <sub-title lang="en">Australia v England: 2nd ODI Hls</sub-title>
+    <desc lang="en">Highlights of the second One Day International between Australia and England at Adelaide Oval, Adelaide.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116040000 +0000" stop="20261116043000 +0000" channel="SkySport2.nz">
+    <title lang="en">BLACKCAPS v India</title>
+    <sub-title lang="en">BLACKCAPS v India: 5th ODI Hls</sub-title>
+    <desc lang="en">Highlights of the fifth One Day International between the BLACKCAPS and India at Bay Oval, Tauranga.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116043000 +0000" stop="20261116073000 +0000" channel="SkySport2.nz">
+    <title lang="en">Bowls New Zealand: India Test Series</title>
+    <sub-title lang="en">Bowls: NZ v India Day One</sub-title>
+    <desc lang="en">LIVE coverage of Bowls New Zealands India Test Series Day One pitting the Blackjacks against both India's Men and Women's teams. From Royal Oak Bowls, Auckland.</desc>
+    <category lang="en">Episode</category>
+    <category lang="en">Series</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116073000 +0000" stop="20261116074500 +0000" channel="SkySport2.nz">
+    <title lang="en">Rugby League World Cup</title>
+    <sub-title lang="en">RLWC Final: Australia v Kiwi Ferns Hls</sub-title>
+    <desc lang="en">Highlights from the Women's Rugby League World Cup Grand Final match between Australia and New Zealand at Suncorp Stadium, Brisbane.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116074500 +0000" stop="20261116080000 +0000" channel="SkySport2.nz">
+    <title lang="en">Rugby League World Cup</title>
+    <sub-title lang="en">RLWC Final: Australia v Kiwis Hls</sub-title>
+    <desc lang="en">Highlights from the Men's Rugby League World Cup Grand Final match between Australia and New Zealand at Suncorp Stadium, Brisbane.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116080000 +0000" stop="20261116101500 +0000" channel="SkySport2.nz">
+    <title lang="en">Rugby: Nations Championship</title>
+    <sub-title lang="en">NC: Wales v All Blacks</sub-title>
+    <desc lang="en">Coverage from Round 5 of the Nations Championship between Wales and the All Blacks at Principality Stadium, Cardiff.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116101500 +0000" stop="20261116103000 +0000" channel="SkySport2.nz">
+    <title lang="en">Rugby: Nations Cup</title>
+    <sub-title lang="en">NC: Georgia v Tonga Hls</sub-title>
+    <desc lang="en">Highlights from Round 5 of the Nations Cup between Georgia and Tonga at Avchala Stadium, Tbilisi.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116103000 +0000" stop="20261116104500 +0000" channel="SkySport2.nz">
+    <title lang="en">Rugby: Nations Cup</title>
+    <sub-title lang="en">NC: Romania v USA Hls</sub-title>
+    <desc lang="en">Highlights from Round 5 of the Nations Cup between Romania and the USA at Stadional National Arcul de Triumf, Bucharest.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116104500 +0000" stop="20261116110000 +0000" channel="SkySport2.nz">
+    <title lang="en">Rugby: Nations Cup</title>
+    <sub-title lang="en">NC: Hong Kong v Canada Hls</sub-title>
+    <desc lang="en">Highlights from Round 5 of the Nations Cup between Hong Kong and Canada at Stade Chambery Savoie, Chambery.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116110000 +0000" stop="20261116111500 +0000" channel="SkySport2.nz">
+    <title lang="en">Rugby: Nations Cup</title>
+    <sub-title lang="en">NC: Portugal v Samoa Hls</sub-title>
+    <desc lang="en">Highlights from Round 5 of the Nations Cup between Portugal and Samoa at Estadio Nacional, Lisbon.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116111500 +0000" stop="20261116113000 +0000" channel="SkySport2.nz">
+    <title lang="en">Rugby: Nations Cup</title>
+    <sub-title lang="en">NC: Spain v Chile Hls</sub-title>
+    <desc lang="en">Highlights from Round 5 of the Nations Cup between Spain and Chile at Estadio Ontime Butarque, Madrid.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116113000 +0000" stop="20261116114500 +0000" channel="SkySport2.nz">
+    <title lang="en">Rugby: Nations Cup</title>
+    <sub-title lang="en">NC: Zimbabwe v Uruguay Hls</sub-title>
+    <desc lang="en">Highlights from Round 5 of the Nations Cup between Zimbabwe and Uruguay at the Trailfinders Sports Ground, London.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116114500 +0000" stop="20261116144500 +0000" channel="SkySport2.nz">
+    <title lang="en">Bowls New Zealand: India Test Series</title>
+    <sub-title lang="en">Bowls: NZ v India Day One</sub-title>
+    <desc lang="en">Coverage of Bowls New Zealands India Test Series Day One pitting the Blackjacks against both India's Men and Women's teams. From Royal Oak Bowls, Auckland.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116144500 +0000" stop="20261116151500 +0000" channel="SkySport2.nz">
+    <title lang="en">The Crowd Goes Wild</title>
+    <desc lang="en">MON 16 NOV - Join the team for an alternative dose of sports news, delivering the best (and worst) sporting moments the only way they know how, with a little cheek!</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116151500 +0000" stop="20261116153000 +0000" channel="SkySport2.nz">
+    <title lang="en">Women's Big Bash League</title>
+    <sub-title lang="en">WBBL: Thunder v Stars Hls</sub-title>
+    <desc lang="en">Highlights from the Women's Big Bash League match 24 between the Sydney Thunder and Melbourne Stars at Drummoyne Oval, Sydney.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116153000 +0000" stop="20261116160000 +0000" channel="SkySport2.nz">
+    <title lang="en">LPGA</title>
+    <sub-title lang="en">LPGA: Round 4 Hls</sub-title>
+    <desc lang="en">Highlights of Round 4 of the ANNIKA Driven by Gainbridge at Pelican from Pelican Golf Club, Belleair, Florida.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116160000 +0000" stop="20261116163000 +0000" channel="SkySport2.nz">
+    <title lang="en">PGA Tour</title>
+    <sub-title lang="en">PGA Tour: Round 4 Hls</sub-title>
+    <desc lang="en">Highlights of Round 4 of the PGA Tour: Austin Championship held at Omni Barton Creek Resort &amp; Spa, Austin, USA.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116163000 +0000" stop="20261116170000 +0000" channel="SkySport2.nz">
+    <title lang="en">DP World Tour</title>
+    <sub-title lang="en">DP World Tour: Round 4 Hls</sub-title>
+    <desc lang="en">Highlights of Round 4 of the DP World Tour:  Dp World Tour Championship held at Jumeirah Golf Estates, Earth Course, Dubai, UAE.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116170000 +0000" stop="20261116201500 +0000" channel="SkySport2.nz">
+    <title lang="en">Women's Big Bash League</title>
+    <sub-title lang="en">WBBL: Thunder v Stars</sub-title>
+    <desc lang="en">Coverage from the Women's Big Bash League match 24 between theSydney Thunder and Melbourne Stars at Drummoyne Oval, Sydney.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116201500 +0000" stop="20261116204500 +0000" channel="SkySport2.nz">
+    <title lang="en">T100 Triathlon World Tour</title>
+    <sub-title lang="en">T100 Triathlon: Dubai Men Hls</sub-title>
+    <desc lang="en">Highlights of the men's race from the T100 Triathlon World Tour in Dubai, UAE.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116204500 +0000" stop="20261116214500 +0000" channel="SkySport2.nz">
+    <title lang="en">The Breakdown</title>
+    <desc lang="en">SUN 15 NOV - Fresh off the back of the weekend action, host Kirstie Stanway is joined by All Black legends Goldie and Mils to discuss and analyse all the hot topics.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116214500 +0000" stop="20261116221500 +0000" channel="SkySport2.nz">
+    <title lang="en">BLACKCAPS v India</title>
+    <sub-title lang="en">BLACKCAPS v India: 5th ODI Hls</sub-title>
+    <desc lang="en">Highlights of the fifth One Day International between the BLACKCAPS and India at Bay Oval, Tauranga.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116221500 +0000" stop="20261116224500 +0000" channel="SkySport2.nz">
+    <title lang="en">Intl Cricket: Australia v England</title>
+    <sub-title lang="en">Australia v England: 2nd ODI Hls</sub-title>
+    <desc lang="en">Highlights of the second One Day International between Australia and England at Adelaide Oval, Adelaide.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116224500 +0000" stop="20261117014500 +0000" channel="SkySport2.nz">
+    <title lang="en">Bowls New Zealand: India Test Series</title>
+    <sub-title lang="en">Bowls: NZ v India Day One</sub-title>
+    <desc lang="en">Coverage of Bowls New Zealands India Test Series Day One pitting the Blackjacks against both India's Men and Women's teams. From Royal Oak Bowls, Auckland.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116070000 +0000" stop="20261116071500 +0000" channel="SkySport3.nz">
+    <title lang="en">Women's Big Bash League</title>
+    <sub-title lang="en">WBBL: Scorchers v Strikers Hls</sub-title>
+    <desc lang="en">Highlights from the Women's Big Bash League match 22 between the Perth Scorchers and Adelaide Strikers at the WACA Ground, Perth.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116071500 +0000" stop="20261116073000 +0000" channel="SkySport3.nz">
+    <title lang="en">Women's Big Bash League</title>
+    <sub-title lang="en">WBBL: Sixers v Renegades Hls</sub-title>
+    <desc lang="en">Highlights from the Women's Big Bash League match 23 between the Sydney Sixers and Melbourne Renegades at North Sydney Oval, Sydney.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116073000 +0000" stop="20261116080000 +0000" channel="SkySport3.nz">
+    <title lang="en">The Crowd Goes Wild</title>
+    <desc lang="en">MON 16 NOV - Join the team for an alternative dose of sports news, delivering the best (and worst) sporting moments the only way they know how, with a little cheek!</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116080000 +0000" stop="20261116083000 +0000" channel="SkySport3.nz">
+    <title lang="en">T100 Triathlon World Tour</title>
+    <sub-title lang="en">T100 Triathlon: Dubai Men Hls</sub-title>
+    <desc lang="en">Highlights of the men's race from the T100 Triathlon World Tour in Dubai, UAE.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116083000 +0000" stop="20261116110000 +0000" channel="SkySport3.nz">
+    <title lang="en">Zuffa Boxing</title>
+    <sub-title lang="en">Zuffa Boxing 13: Main Card</sub-title>
+    <desc lang="en">Coverage of the Riyadh Season Zuffa Boxing 13 Main Card from The Venue, Riyadh, Saudi Arabia, featuring a stacked fight card and world-class boxing action headlined by Carlos Adames and Gerome Warburton.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>M</value>
+    </rating>
+  </programme><programme start="20261116110000 +0000" stop="20261116153000 +0000" channel="SkySport3.nz">
+    <title lang="en">T100 Triathlon World Tour</title>
+    <sub-title lang="en">T100 Triathlon: Dubai</sub-title>
+    <desc lang="en">Coverage of the T100 Triathlon World Tour in Al Mamzar, Dubai, UAE.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116153000 +0000" stop="20261116160000 +0000" channel="SkySport3.nz">
+    <title lang="en">BLACKCAPS v India</title>
+    <sub-title lang="en">BLACKCAPS v India: 5th ODI Hls</sub-title>
+    <desc lang="en">Highlights of the fifth One Day International between the BLACKCAPS and India at Bay Oval, Tauranga.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116160000 +0000" stop="20261116163000 +0000" channel="SkySport3.nz">
+    <title lang="en">Intl Cricket: Australia v England</title>
+    <sub-title lang="en">Australia v England: 2nd ODI Hls</sub-title>
+    <desc lang="en">Highlights of the second One Day International between Australia and England at Adelaide Oval, Adelaide.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116163000 +0000" stop="20261116164500 +0000" channel="SkySport3.nz">
+    <title lang="en">Rugby League World Cup</title>
+    <sub-title lang="en">RLWC Final: Australia v Kiwi Ferns Hls</sub-title>
+    <desc lang="en">Highlights from the Women's Rugby League World Cup Grand Final match between Australia and New Zealand at Suncorp Stadium, Brisbane.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116164500 +0000" stop="20261116170000 +0000" channel="SkySport3.nz">
+    <title lang="en">Rugby League World Cup</title>
+    <sub-title lang="en">RLWC Final: Australia v Kiwis Hls</sub-title>
+    <desc lang="en">Highlights from the Men's Rugby League World Cup Grand Final match between Australia and New Zealand at Suncorp Stadium, Brisbane.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116170000 +0000" stop="20261116173000 +0000" channel="SkySport3.nz">
+    <title lang="en">Intl Cricket: Australia v England</title>
+    <sub-title lang="en">Australia v England: 1st ODI Hls</sub-title>
+    <desc lang="en">Highlights of the first One Day International between Australia and England at Optus Stadium, Perth.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116173000 +0000" stop="20261116180000 +0000" channel="SkySport3.nz">
+    <title lang="en">Intl Cricket: Australia v England</title>
+    <sub-title lang="en">Australia v England: 2nd ODI Hls</sub-title>
+    <desc lang="en">Highlights of the second One Day International between Australia and England at Adelaide Oval, Adelaide.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116180000 +0000" stop="20261116190000 +0000" channel="SkySport3.nz">
+    <title lang="en">The Breakdown</title>
+    <desc lang="en">SUN 15 NOV - Fresh off the back of the weekend action, host Kirstie Stanway is joined by All Black legends Goldie and Mils to discuss and analyse all the hot topics.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116190000 +0000" stop="20261116210000 +0000" channel="SkySport3.nz">
+    <title lang="en">Rugby: Nations Championship</title>
+    <sub-title lang="en">NC: France v South Africa</sub-title>
+    <desc lang="en">Coverage from Round 5 of the Nations Championship between France and South Africa at Stade de France, Paris.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116210000 +0000" stop="20261116230000 +0000" channel="SkySport3.nz">
+    <title lang="en">Rugby: Nations Championship</title>
+    <sub-title lang="en">NC: Italy v Argentina</sub-title>
+    <desc lang="en">Coverage from Round 5 of the Nations Championship between Italy and Argentina at Stadium Comunale Luigi Ferraris, Genoa.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116230000 +0000" stop="20261117011500 +0000" channel="SkySport3.nz">
+    <title lang="en">Rugby: Nations Championship</title>
+    <sub-title lang="en">NC: Wales v All Blacks</sub-title>
+    <desc lang="en">Coverage from Round 5 of the Nations Championship between Wales and the All Blacks at Principality Stadium, Cardiff.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116000000 +0000" stop="20261116003000 +0000" channel="SkySport4.nz">
+    <title lang="en">Rugby League World Cup</title>
+    <sub-title lang="en">RLWC Final: Australia v Kiwis Hls</sub-title>
+    <desc lang="en">Highlights from the Men's Rugby League World Cup Grand Final match between Australia and New Zealand at Suncorp Stadium, Brisbane.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116003000 +0000" stop="20261116004500 +0000" channel="SkySport4.nz">
+    <title lang="en">Football: Women's Super League</title>
+    <sub-title lang="en">WSL: Aston Villa v Birmingham Hls</sub-title>
+    <desc lang="en">Highlights from the Women's Super League as Aston Villa take on Birmingham City at Villa Park, Birmingham.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116004500 +0000" stop="20261116010000 +0000" channel="SkySport4.nz">
+    <title lang="en">Football: Women's Super League</title>
+    <sub-title lang="en">WSL: Arsenal v London City Hls</sub-title>
+    <desc lang="en">Highlights from the Women's Super League as Arsenal take on London City Lionesses at the Emirates Stadium, London.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116010000 +0000" stop="20261116025500 +0000" channel="SkySport4.nz">
+    <title lang="en">Women's AFL</title>
+    <sub-title lang="en">AFLW: SF2 Carlton v Hawthorne</sub-title>
+    <desc lang="en">Coverage of the AFL Women's Semi Final 2 between Carlton and Hawthorn at IKON Park, Melbourne.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116025500 +0000" stop="20261116110000 +0000" channel="SkySport4.nz">
+    <title lang="en">Cricket: Marsh One Day Cup</title>
+    <sub-title lang="en">ODC: Victoria v W Australia</sub-title>
+    <desc lang="en">LIVE coverage of the One Day Cup match between Victoria and Western Australia at the Junction Oval, Melbourne.</desc>
+    <category lang="en">Episode</category>
+    <category lang="en">Series</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116110000 +0000" stop="20261116130000 +0000" channel="SkySport4.nz">
+    <title lang="en">Tauihi Basketball Aotearoa</title>
+    <sub-title lang="en">Tauihi: Hoiho v Whai</sub-title>
+    <desc lang="en">Coverage from Round 8 of Tauihi Basketball Aotearoa between the Southern Hoiho and Tauranga Whai at the Edgar Centre, Dunedin.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116130000 +0000" stop="20261116150000 +0000" channel="SkySport4.nz">
+    <title lang="en">Tauihi Basketball Aotearoa</title>
+    <sub-title lang="en">Tauihi: Pouakai v Kahu</sub-title>
+    <desc lang="en">Coverage from Round 8 of Tauihi Basketball Aotearoa between the Mainland Pouakai and Northern Kahu at the Parakiore Recreation and Sports Centre, Christchurch.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116150000 +0000" stop="20261116170000 +0000" channel="SkySport4.nz">
+    <title lang="en">Tauihi Basketball Aotearoa</title>
+    <sub-title lang="en">Tauihi: Queens v Whai</sub-title>
+    <desc lang="en">Coverage from Round 8 of Tauihi Basketball Aotearoa between the Tokomanawa Queens and Tauranga Whai at Te Rauparaha Arena, Porirua.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116170000 +0000" stop="20261116173000 +0000" channel="SkySport4.nz">
+    <title lang="en">The Outdoor Sports Show</title>
+    <sub-title lang="en">The Outdoor Sports Show Ep.11</sub-title>
+    <desc lang="en">The Outdoor Sports Show showcases a diverse array of outdoor sports in a range of world class races, as well as introduce the characters and athletes competing.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116173000 +0000" stop="20261116180000 +0000" channel="SkySport4.nz">
+    <title lang="en">Rugby: Nations Championship</title>
+    <sub-title lang="en">NC: Wales v All Blacks Ext. Hls</sub-title>
+    <desc lang="en">Extended highlights from Round 5 of the Nations Championship between Wales and the All Blacks at Principality Stadium, Cardiff.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116180000 +0000" stop="20261116183000 +0000" channel="SkySport4.nz">
+    <title lang="en">DP World Tour</title>
+    <sub-title lang="en">DP World Tour: Round 4 Hls</sub-title>
+    <desc lang="en">Highlights of Round 4 of the DP World Tour:  Dp World Tour Championship held at Jumeirah Golf Estates, Earth Course, Dubai, UAE.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116183000 +0000" stop="20261116190000 +0000" channel="SkySport4.nz">
+    <title lang="en">LPGA</title>
+    <sub-title lang="en">LPGA: Round 4 Hls</sub-title>
+    <desc lang="en">Highlights of Round 4 of the ANNIKA Driven by Gainbridge at Pelican from Pelican Golf Club, Belleair, Florida.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116190000 +0000" stop="20261116193000 +0000" channel="SkySport4.nz">
+    <title lang="en">PGA Tour</title>
+    <sub-title lang="en">PGA Tour: Round 4 Hls</sub-title>
+    <desc lang="en">Highlights of Round 4 of the PGA Tour: Austin Championship held at Omni Barton Creek Resort &amp; Spa, Austin, USA.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116193000 +0000" stop="20261116200000 +0000" channel="SkySport4.nz">
+    <title lang="en">The Crowd Goes Wild</title>
+    <desc lang="en">MON 16 NOV - Join the team for an alternative dose of sports news, delivering the best (and worst) sporting moments the only way they know how, with a little cheek!</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116200000 +0000" stop="20261116231500 +0000" channel="SkySport4.nz">
+    <title lang="en">Women's Big Bash League</title>
+    <sub-title lang="en">WBBL: Sixers v Renegades</sub-title>
+    <desc lang="en">Coverage from the Women's Big Bash League match 23  between the Sydney Sixers and Melbourne Renegades at North Sydney Oval, Sydney.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116231500 +0000" stop="20261117023000 +0000" channel="SkySport4.nz">
+    <title lang="en">Women's Big Bash League</title>
+    <sub-title lang="en">WBBL: Thunder v Stars</sub-title>
+    <desc lang="en">Coverage from the Women's Big Bash League match 24 between theSydney Thunder and Melbourne Stars at Drummoyne Oval, Sydney.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116080000 +0000" stop="20261116111500 +0000" channel="SkySport5.nz">
+    <title lang="en">Women's Big Bash League</title>
+    <sub-title lang="en">WBBL: Sixers v Renegades</sub-title>
+    <desc lang="en">Coverage from the Women's Big Bash League match 23  between the Sydney Sixers and Melbourne Renegades at North Sydney Oval, Sydney.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116111500 +0000" stop="20261116114500 +0000" channel="SkySport5.nz">
+    <title lang="en">LPGA</title>
+    <sub-title lang="en">LPGA: Round 4 Hls</sub-title>
+    <desc lang="en">Highlights of Round 4 of the ANNIKA Driven by Gainbridge at Pelican from Pelican Golf Club, Belleair, Florida.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116114500 +0000" stop="20261116121500 +0000" channel="SkySport5.nz">
+    <title lang="en">PGA Tour</title>
+    <sub-title lang="en">PGA Tour: Round 4 Hls</sub-title>
+    <desc lang="en">Highlights of Round 4 of the PGA Tour: Austin Championship held at Omni Barton Creek Resort &amp; Spa, Austin, USA.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116121500 +0000" stop="20261116124500 +0000" channel="SkySport5.nz">
+    <title lang="en">A-League: Women</title>
+    <sub-title lang="en">ALW: Melbourne City v Newcastle Hls</sub-title>
+    <desc lang="en">Extended highlights from Round 5 of the Women's A-League as Melbourne City take on Newcastle Jets at the ctrl:cyber Pitch, Melbourne.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116124500 +0000" stop="20261116131500 +0000" channel="SkySport5.nz">
+    <title lang="en">A-League: Women</title>
+    <sub-title lang="en">ALW: Melb Victory v Adelaide Utd Hls</sub-title>
+    <desc lang="en">Extended highlights from Round 5 of the Women's A-League as the Melbourne Victory take on Adelaide United at the Home of the Matildas, Melbourne.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116131500 +0000" stop="20261116134500 +0000" channel="SkySport5.nz">
+    <title lang="en">A-League: Women</title>
+    <sub-title lang="en">ALW: Mariners v Perth Glory Ext. Hls</sub-title>
+    <desc lang="en">Extended highlights from Round 5 of the Women's A-League as the Central Coast Mariners take on Perth Glory at polytec Stadium, Gosford.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116134500 +0000" stop="20261116141500 +0000" channel="SkySport5.nz">
+    <title lang="en">A-League: Women</title>
+    <sub-title lang="en">ALW: Wellington Phoenix v Sydney FC ExHl</sub-title>
+    <desc lang="en">Extended highlights from Round 5 of the Women's A-League as the Wellington Phoenix take on Sydney FC at Porirua Park.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116141500 +0000" stop="20261116144500 +0000" channel="SkySport5.nz">
+    <title lang="en">A-League: Women</title>
+    <sub-title lang="en">ALW: Canberra Utd v Brisbane Ext.HLs</sub-title>
+    <desc lang="en">Extended highlights from Round 5 of the Women's A-League as Canberra United take on Brisbane Roar at McKellar Park, Canberra.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116144500 +0000" stop="20261116150000 +0000" channel="SkySport5.nz">
+    <title lang="en">Football: Women's Super League</title>
+    <sub-title lang="en">WSL: Man United v Crystal Palace Hls</sub-title>
+    <desc lang="en">Highlights from the Women's Super League as Manchester United take on Crystal Palace at Progress with Unity Stadium, Manchester.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116150000 +0000" stop="20261116151500 +0000" channel="SkySport5.nz">
+    <title lang="en">Football: Women's Super League</title>
+    <sub-title lang="en">WSL: Chelsea v Man City Hls</sub-title>
+    <desc lang="en">Highlights from the Women's Super League as Chelsea take on Manchester City at Stamford Bridge, London.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116151500 +0000" stop="20261116153000 +0000" channel="SkySport5.nz">
+    <title lang="en">Football: Women's Super League</title>
+    <sub-title lang="en">WSL: West Ham v Charlton Hls</sub-title>
+    <desc lang="en">Highlights  from the Women's Super League as West Ham United take on Charlton Athletic at Chigwell Construction Stadium, Dagenham.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116153000 +0000" stop="20261116154500 +0000" channel="SkySport5.nz">
+    <title lang="en">Football: Women's Super League</title>
+    <sub-title lang="en">WSL: Brighton v Liverpool Hls</sub-title>
+    <desc lang="en">Highlights from the Women's Super League as Brighton &amp; Hove Albion take on Liverpool at the AmEx Stadium, East Sussex.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116154500 +0000" stop="20261116160000 +0000" channel="SkySport5.nz">
+    <title lang="en">Football: Women's Super League</title>
+    <sub-title lang="en">WSL: Aston Villa v Birmingham Hls</sub-title>
+    <desc lang="en">Highlights from the Women's Super League as Aston Villa take on Birmingham City at Villa Park, Birmingham.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116160000 +0000" stop="20261116170000 +0000" channel="SkySport5.nz">
+    <title lang="en">Dubai International Baja</title>
+    <sub-title lang="en">Dubai International Baja Hls</sub-title>
+    <desc lang="en">The 2026 Dubai International Baja showcased thrilling off-road racing, spectacular desert landscapes and high-speed action, as competitors tackled challenging terrain and demanding dunes in an unforgettable celebration of rally sport.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116170000 +0000" stop="20261117010000 +0000" channel="SkySport5.nz">
+    <title lang="en">BLACKCAPS v India</title>
+    <sub-title lang="en">BLACKCAPS v India: 5th ODI</sub-title>
+    <desc lang="en">Coverage of the fifth One Day International between the BLACKCAPS and India at Bay Oval, Tauranga.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116000000 +0000" stop="20261116010000 +0000" channel="SkySport6.nz">
+    <title lang="en">The Breakdown</title>
+    <desc lang="en">SUN 15 NOV - Fresh off the back of the weekend action, host Kirstie Stanway is joined by All Black legends Goldie and Mils to discuss and analyse all the hot topics.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116010000 +0000" stop="20261116011500 +0000" channel="SkySport6.nz">
+    <title lang="en">Rugby League World Cup</title>
+    <sub-title lang="en">RLWC Final: Australia v Kiwi Ferns Hls</sub-title>
+    <desc lang="en">Highlights from the Women's Rugby League World Cup Grand Final match between Australia and New Zealand at Suncorp Stadium, Brisbane.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116011500 +0000" stop="20261116013000 +0000" channel="SkySport6.nz">
+    <title lang="en">Rugby League World Cup</title>
+    <sub-title lang="en">RLWC Final: Australia v Kiwis Hls</sub-title>
+    <desc lang="en">Highlights from the Men's Rugby League World Cup Grand Final match between Australia and New Zealand at Suncorp Stadium, Brisbane.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116013000 +0000" stop="20261116020000 +0000" channel="SkySport6.nz">
+    <title lang="en">DP World Tour</title>
+    <sub-title lang="en">DP World Tour: Round 4 Hls</sub-title>
+    <desc lang="en">Highlights of Round 4 of the DP World Tour:  Dp World Tour Championship held at Jumeirah Golf Estates, Earth Course, Dubai, UAE.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116020000 +0000" stop="20261116023000 +0000" channel="SkySport6.nz">
+    <title lang="en">LPGA</title>
+    <sub-title lang="en">LPGA: Round 4 Hls</sub-title>
+    <desc lang="en">Highlights of Round 4 of the ANNIKA Driven by Gainbridge at Pelican from Pelican Golf Club, Belleair, Florida.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116023000 +0000" stop="20261116030000 +0000" channel="SkySport6.nz">
+    <title lang="en">PGA Tour</title>
+    <sub-title lang="en">PGA Tour: Round 4 Hls</sub-title>
+    <desc lang="en">Highlights of Round 4 of the PGA Tour: Austin Championship held at Omni Barton Creek Resort &amp; Spa, Austin, USA.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116030000 +0000" stop="20261116110000 +0000" channel="SkySport6.nz">
+    <title lang="en">BLACKCAPS v India</title>
+    <sub-title lang="en">BLACKCAPS v India: 5th ODI</sub-title>
+    <desc lang="en">Coverage of the fifth One Day International between the BLACKCAPS and India at Bay Oval, Tauranga.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116110000 +0000" stop="20261116150000 +0000" channel="SkySport6.nz">
+    <title lang="en">Champion Of Champions</title>
+    <sub-title lang="en">Champion of Champions: D7 Afternoon</sub-title>
+    <desc lang="en">Coverage of Champion of Champions Snooker Day 7 Afternoon Session held at the Mattioli Arena, Leicester.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116150000 +0000" stop="20261116180000 +0000" channel="SkySport6.nz">
+    <title lang="en">Champion Of Champions</title>
+    <sub-title lang="en">Champion of Champions: D7 Evening</sub-title>
+    <desc lang="en">Coverage of Champion of Champions Snooker Day 7 Evening Session held at the Mattioli Arena, Leicester.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116180000 +0000" stop="20261116183000 +0000" channel="SkySport6.nz">
+    <title lang="en">The Outdoor Sports Show</title>
+    <sub-title lang="en">The Outdoor Sports Show Ep.11</sub-title>
+    <desc lang="en">The Outdoor Sports Show showcases a diverse array of outdoor sports in a range of world class races, as well as introduce the characters and athletes competing.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116183000 +0000" stop="20261116190000 +0000" channel="SkySport6.nz">
+    <title lang="en">T100 Triathlon World Tour</title>
+    <sub-title lang="en">T100 Triathlon: Dubai Men Hls</sub-title>
+    <desc lang="en">Highlights of the men's race from the T100 Triathlon World Tour in Dubai, UAE.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116190000 +0000" stop="20261116210000 +0000" channel="SkySport6.nz">
+    <title lang="en">LPGA</title>
+    <sub-title lang="en">LPGA: Round 4</sub-title>
+    <desc lang="en">Coverage of Round 4 of the ANNIKA Driven by Gainbridge at Pelican from Pelican Golf Club, Belleair, Florida.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116210000 +0000" stop="20261116230000 +0000" channel="SkySport6.nz">
+    <title lang="en">PGA Champions Tour</title>
+    <sub-title lang="en">PGA Champions Tour: R4</sub-title>
+    <desc lang="en">Coverage of Round 4 of the PGA Champions Tour: Charles Schwab Cup Championship from Phoenix Country Club in Phoenix, Arizona.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116230000 +0000" stop="20261117010000 +0000" channel="SkySport6.nz">
+    <title lang="en">PGA Tour</title>
+    <sub-title lang="en">PGA Tour: Round 4</sub-title>
+    <desc lang="en">Coverage of Round 4 of the PGA Tour: Austin Championship held at Omni Barton Creek Resort &amp; Spa, Austin, USA.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116020000 +0000" stop="20261116054000 +0000" channel="SkySport7.nz">
+    <title lang="en">Grand Slam Of Darts</title>
+    <sub-title lang="en">Grand Slam of Darts: D2 Aft</sub-title>
+    <desc lang="en">Coverage of Grand Slam of Darts 2026, Day 2, afternoon session held at Aldersley Leisure Village, Wolverhampton.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116054000 +0000" stop="20261116092000 +0000" channel="SkySport7.nz">
+    <title lang="en">Grand Slam Of Darts</title>
+    <sub-title lang="en">Grand Slam of Darts: D2 Eve</sub-title>
+    <desc lang="en">Coverage of Grand Slam of Darts 2026, Day 2, evening session held at Aldersley Leisure Village, Wolverhampton.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116092000 +0000" stop="20261116111500 +0000" channel="SkySport7.nz">
+    <title lang="en">Football: Women's Super League</title>
+    <sub-title lang="en">WSL: Tottenham v Everton</sub-title>
+    <desc lang="en">Coverage from the Women's Super League as Tottenham Hotspur take on Everton at BetWright Stadium, London.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116111500 +0000" stop="20261116131000 +0000" channel="SkySport7.nz">
+    <title lang="en">Football: Women's Super League</title>
+    <sub-title lang="en">WSL: Brighton v Liverpool</sub-title>
+    <desc lang="en">Coverage from the Women's Super League as Brighton &amp; Hove Albion take on Liverpool at the AmEx Stadium, East Sussex.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116131000 +0000" stop="20261116150500 +0000" channel="SkySport7.nz">
+    <title lang="en">Football: Women's Super League</title>
+    <sub-title lang="en">WSL: Aston Villa v Birmingham</sub-title>
+    <desc lang="en">Coverage from the Women's Super League as Aston Villa take on Birmingham City at Villa Park, Birmingham.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116150500 +0000" stop="20261116170000 +0000" channel="SkySport7.nz">
+    <title lang="en">Football: Women's Super League</title>
+    <sub-title lang="en">WSL: Man United v Crystal Palace</sub-title>
+    <desc lang="en">Coverage from the Women's Super League as Manchester United take on Crystal Palace at Progress with Unity Stadium, Manchester.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116170000 +0000" stop="20261116190000 +0000" channel="SkySport7.nz">
+    <title lang="en">Football: Women's Super League</title>
+    <sub-title lang="en">WSL: West Ham v Charlton</sub-title>
+    <desc lang="en">Coverage from the Women's Super League as West Ham United take on Charlton Athletic at Chigwell Construction Stadium, Dagenham.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116190000 +0000" stop="20261116210000 +0000" channel="SkySport7.nz">
+    <title lang="en">A-League: Women</title>
+    <sub-title lang="en">ALW: Melbourne City v Newcastle Jets</sub-title>
+    <desc lang="en">Coverage from Round 5 of the Women's A-League as Melbourne City take on Newcastle Jets at the ctrl:cyber Pitch, Melbourne.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116210000 +0000" stop="20261116230000 +0000" channel="SkySport7.nz">
+    <title lang="en">A-League: Women</title>
+    <sub-title lang="en">ALW: Melb Victory v Adelaide Utd</sub-title>
+    <desc lang="en">Coverage from Round 5 of the Women's A-League as the Melbourne Victory take on Adelaide United at the Home of the Matildas, Melbourne.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116230000 +0000" stop="20261117010000 +0000" channel="SkySport7.nz">
+    <title lang="en">A-League: Women</title>
+    <sub-title lang="en">ALW: Mariners v Perth Glory</sub-title>
+    <desc lang="en">Coverage Round 5 of the Women's A-League as the Central Coast Mariners take on Perth Glory at polytec Stadium, Gosford.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116000000 +0000" stop="20261116003000 +0000" channel="SkySport8.nz">
+    <title lang="en">THE BIG INTERVIEW</title>
+    <desc lang="en">EP12: MARC GUEHI. Marc Guehi arrived at Manchester City as an FA Cup winner with Crystal Palace before winning the same trophy with his new club 12 months later. The centre-back sits down with The Big Interview to talk about becoming a key figure in Enzo.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116003000 +0000" stop="20261116010000 +0000" channel="SkySport8.nz">
+    <title lang="en">THE BIG INTERVIEW</title>
+    <desc lang="en">EP13:. Extended sit-downs and more informal  out and about  interview with the Premier League s biggest stars, providing players with a platform to tell their story in their own words.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116010000 +0000" stop="20261116013000 +0000" channel="SkySport8.nz">
+    <title lang="en">PL STORIES</title>
+    <desc lang="en">EP22: (Subbed) FABRICIO COLOCCINI. We head to Chile to catch up with former Newcastle United captain Fabricio Coloccini, where he is forging a new path in coaching. He reflects on life in the dugout and looks back on an unforgettable Premier League career.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116013000 +0000" stop="20261116033000 +0000" channel="SkySport8.nz">
+    <title lang="en">CLASSIC MATCH</title>
+    <desc lang="en">NEW v ARS. We delve into the Premier League archive to bring you a Classic Match from the 2010/2011 season.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116033000 +0000" stop="20261116040000 +0000" channel="SkySport8.nz">
+    <title lang="en">PL STORIES</title>
+    <desc lang="en">EP09: KEVIN KEEGAN. From fearless forward to one of English football's most inspirational figures, this is the story of Kevin Keegan. We chart his remarkable playing career with Liverpool, Hamburg and England before exploring his impact as a manager, wher.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116040000 +0000" stop="20261116050000 +0000" channel="SkySport8.nz">
+    <title lang="en">REVIEW</title>
+    <desc lang="en">MW10. An extensive recap of Matchweek 10, showcasing the thrills, spills and major talking points from each Premier League fixture.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116050000 +0000" stop="20261116060000 +0000" channel="SkySport8.nz">
+    <title lang="en">THE CATCH-UP SHOW</title>
+    <desc lang="en">EP12. The Catch-Up Show is your chance to relive the 'best bits'  from across the Premier League week with a compilation of all PLP content and programming.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116060000 +0000" stop="20261116070000 +0000" channel="SkySport8.nz">
+    <title lang="en">PL MOMENTS</title>
+    <desc lang="en">EP07: JIMMY FLOYD HASSELBAINK. Over a nine season spell in the Premier League, Jimmy Floyd Hasselbaink etched his name into footballing folklore as one of the most dynamic goalscorers in the competition's history. Fourth all time in Premier League goals f.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116070000 +0000" stop="20261116073000 +0000" channel="SkySport8.nz">
+    <title lang="en">PL STORIES</title>
+    <desc lang="en">EP14: PETR CECH. One of the Premier League s greatest-ever goalkeepers, Petr Cech s career was nearly changed forever by the horrific head injury he suffered in 2006. We sit down with him to discuss his remarkable recovery and journey back to the very top.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116073000 +0000" stop="20261116080000 +0000" channel="SkySport8.nz">
+    <title lang="en">PL STORIES</title>
+    <desc lang="en">EP20: THE EVOLUTION OF GOALKEEPERS. Once the last line of defence, today s goalkeeper is expected to be so much more. From sweeper-keepers to playing out under pressure, we explore the innovations, characters and changing demands that have revolutionised.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116080000 +0000" stop="20261116083000 +0000" channel="SkySport8.nz">
+    <title lang="en">NETBUSTERS</title>
+    <desc lang="en">MW10. A fast-paced music and commentary driven ISO angle highlights show featuring every game and every goal from each match round.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116083000 +0000" stop="20261116090000 +0000" channel="SkySport8.nz">
+    <title lang="en">Rewind</title>
+    <desc lang="en">EP10: MICHAEL OWEN: MY BREAKTHROUGH YEARS. Michael Owen burst onto the scene for Liverpool at just seventeen years of age, and in two consecutive seasons the teenage sensation won the Premier League Golden Boot. Owen recalls those campaigns for the Reds,.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116090000 +0000" stop="20261116093000 +0000" channel="SkySport8.nz">
+    <title lang="en">Rewind</title>
+    <desc lang="en">EP05: THEO WALCOTT: MY PREMIER LEAGUE YEARS. At just 16 years old, Theo Walcott attracted the attention of Arsene Wenger, who brought the electric youngster to Arsenal. The Englishman bagged over 100 goals for the Gunners, becoming one of their most proli.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116093000 +0000" stop="20261116100000 +0000" channel="SkySport8.nz">
+    <title lang="en">PL STORIES</title>
+    <desc lang="en">EP24: MIKEL ARTETA. We explore Mikel Arteta s impact at Arsenal and the managerial approach behind his success, reflecting on how his upbringing and football education in the Basque region shaped his thinking. We examine his tactics, how he develops playe.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116100000 +0000" stop="20261116103000 +0000" channel="SkySport8.nz">
+    <title lang="en">PL STORIES</title>
+    <desc lang="en">EP23: ASTON VILLA 92-93 - BEHIND THE FIRST SEASON. Aston Villa s 1992/93 season had all the ingredients of a defining football story. Through special behind-the-scenes footage, PL Stories takes viewers inside Ron Atkinson s Villa, revealing the characters.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116103000 +0000" stop="20261116113000 +0000" channel="SkySport8.nz">
+    <title lang="en">PL STORIES</title>
+    <desc lang="en">EP21: MARCUS STEWART - THE FIGHT OF MY LIFE. Ipswich Town legend and former Sunderland striker Marcus Stewart built a career on taking on some of football s toughest challenges. Now, he faces a very different battle; one that has changed his life beyond t.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116113000 +0000" stop="20261116120000 +0000" channel="SkySport8.nz">
+    <title lang="en">THE BIG INTERVIEW</title>
+    <desc lang="en">EP07: (Subbed) EMERSONN. Ipswich Town's first Brazilian, 22-year-old striker Emersonn, opens up on a fairytale arrival at Portman Road, reflecting on a goalscoring debut and an ambitious target that he's set himself. From rural coffee farms to a game-chan.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116120000 +0000" stop="20261116123000 +0000" channel="SkySport8.nz">
+    <title lang="en">THE BIG INTERVIEW</title>
+    <desc lang="en">EP12: MARC GUEHI. Marc Guehi arrived at Manchester City as an FA Cup winner with Crystal Palace before winning the same trophy with his new club 12 months later. The centre-back sits down with The Big Interview to talk about becoming a key figure in Enzo.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116123000 +0000" stop="20261116130000 +0000" channel="SkySport8.nz">
+    <title lang="en">THE BIG INTERVIEW</title>
+    <desc lang="en">EP13:. Extended sit-downs and more informal  out and about  interview with the Premier League s biggest stars, providing players with a platform to tell their story in their own words.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116130000 +0000" stop="20261116133000 +0000" channel="SkySport8.nz">
+    <title lang="en">PL STORIES</title>
+    <desc lang="en">EP22: (Subbed) FABRICIO COLOCCINI. We head to Chile to catch up with former Newcastle United captain Fabricio Coloccini, where he is forging a new path in coaching. He reflects on life in the dugout and looks back on an unforgettable Premier League career.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116133000 +0000" stop="20261116153000 +0000" channel="SkySport8.nz">
+    <title lang="en">CLASSIC MATCH</title>
+    <desc lang="en">NEW v ARS. We delve into the Premier League archive to bring you a Classic Match from the 2010/2011 season.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116153000 +0000" stop="20261116160000 +0000" channel="SkySport8.nz">
+    <title lang="en">PL STORIES</title>
+    <desc lang="en">EP09: KEVIN KEEGAN. From fearless forward to one of English football's most inspirational figures, this is the story of Kevin Keegan. We chart his remarkable playing career with Liverpool, Hamburg and England before exploring his impact as a manager, wher.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116160000 +0000" stop="20261116170000 +0000" channel="SkySport8.nz">
+    <title lang="en">REVIEW</title>
+    <desc lang="en">MW10. An extensive recap of Matchweek 10, showcasing the thrills, spills and major talking points from each Premier League fixture.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116170000 +0000" stop="20261116180000 +0000" channel="SkySport8.nz">
+    <title lang="en">THE CATCH-UP SHOW</title>
+    <desc lang="en">EP12. The Catch-Up Show is your chance to relive the 'best bits'  from across the Premier League week with a compilation of all PLP content and programming.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116180000 +0000" stop="20261116190000 +0000" channel="SkySport8.nz">
+    <title lang="en">PL MOMENTS</title>
+    <desc lang="en">EP07: JIMMY FLOYD HASSELBAINK. Over a nine season spell in the Premier League, Jimmy Floyd Hasselbaink etched his name into footballing folklore as one of the most dynamic goalscorers in the competition's history. Fourth all time in Premier League goals f.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116190000 +0000" stop="20261116193000 +0000" channel="SkySport8.nz">
+    <title lang="en">PL STORIES</title>
+    <desc lang="en">EP14: PETR CECH. One of the Premier League s greatest-ever goalkeepers, Petr Cech s career was nearly changed forever by the horrific head injury he suffered in 2006. We sit down with him to discuss his remarkable recovery and journey back to the very top.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116193000 +0000" stop="20261116200000 +0000" channel="SkySport8.nz">
+    <title lang="en">PL STORIES</title>
+    <desc lang="en">EP20: THE EVOLUTION OF GOALKEEPERS. Once the last line of defence, today s goalkeeper is expected to be so much more. From sweeper-keepers to playing out under pressure, we explore the innovations, characters and changing demands that have revolutionised.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116200000 +0000" stop="20261116203000 +0000" channel="SkySport8.nz">
+    <title lang="en">NETBUSTERS</title>
+    <desc lang="en">MW10. A fast-paced music and commentary driven ISO angle highlights show featuring every game and every goal from each match round.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116203000 +0000" stop="20261116210000 +0000" channel="SkySport8.nz">
+    <title lang="en">Rewind</title>
+    <desc lang="en">EP10: MICHAEL OWEN: MY BREAKTHROUGH YEARS. Michael Owen burst onto the scene for Liverpool at just seventeen years of age, and in two consecutive seasons the teenage sensation won the Premier League Golden Boot. Owen recalls those campaigns for the Reds,.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116210000 +0000" stop="20261116213000 +0000" channel="SkySport8.nz">
+    <title lang="en">Rewind</title>
+    <desc lang="en">EP05: THEO WALCOTT: MY PREMIER LEAGUE YEARS. At just 16 years old, Theo Walcott attracted the attention of Arsene Wenger, who brought the electric youngster to Arsenal. The Englishman bagged over 100 goals for the Gunners, becoming one of their most proli.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116213000 +0000" stop="20261116220000 +0000" channel="SkySport8.nz">
+    <title lang="en">PL STORIES</title>
+    <desc lang="en">EP24: MIKEL ARTETA. We explore Mikel Arteta s impact at Arsenal and the managerial approach behind his success, reflecting on how his upbringing and football education in the Basque region shaped his thinking. We examine his tactics, how he develops playe.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116220000 +0000" stop="20261117000000 +0000" channel="SkySport8.nz">
+    <title lang="en">REVIEW OF THE SEASON</title>
+    <desc lang="en">2016/2017 (CHE). A review of all the best goals, action and drama from Premier League seasons past.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116041500 +0000" stop="20261116101500 +0000" channel="SkySport9.nz">
+    <title lang="en">Nextgen Championship</title>
+    <sub-title lang="en">Nextgen Championship 2026 Rd1 Day1</sub-title>
+    <desc lang="en">Coverage of Nextgen NZ Championship 2026 Round 1 Day 1 held at Taupo International Motorsport Park in Taupo, New Zealand.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116101500 +0000" stop="20261116170000 +0000" channel="SkySport9.nz">
+    <title lang="en">Nextgen Championship</title>
+    <sub-title lang="en">Nextgen Championship 2026 Rd1 Day2</sub-title>
+    <desc lang="en">Coverage of Nextgen NZ Championship 2026 Round 1 Day 2 held at Taupo International Motorsport Park in Taupo, New Zealand.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116170000 +0000" stop="20261116190000 +0000" channel="SkySport9.nz">
+    <title lang="en">Tauihi Basketball Aotearoa</title>
+    <sub-title lang="en">Tauihi: Queens v Whai</sub-title>
+    <desc lang="en">Coverage from Round 8 of Tauihi Basketball Aotearoa between the Tokomanawa Queens and Tauranga Whai at Te Rauparaha Arena, Porirua.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
+  </programme><programme start="20261116190000 +0000" stop="20261116210000 +0000" channel="SkySport9.nz">
+    <title lang="en">Women's AFL</title>
+    <sub-title lang="en">AFLW: SF1 Geelong v Sydney</sub-title>
+    <desc lang="en">Coverage of the AFL Women's Semi Final 1 between the Geelong Cats and the Sydney Swans at GMHBA Stadium, Geelong.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116210000 +0000" stop="20261116230000 +0000" channel="SkySport9.nz">
+    <title lang="en">Women's AFL</title>
+    <sub-title lang="en">AFLW: SF2 Carlton v Hawthorne</sub-title>
+    <desc lang="en">Coverage of the AFL Women's Semi Final 2 between Carlton and Hawthorn at IKON Park, Melbourne.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>PG</value>
+    </rating>
+  </programme><programme start="20261116230000 +0000" stop="20261117013000 +0000" channel="SkySport9.nz">
+    <title lang="en">Tour de France Saitama Criterium</title>
+    <sub-title lang="en">Saitama Criterium: Tour de France</sub-title>
+    <desc lang="en">Coverage of the Saitama Criterium by Tour de France from Saitama, Japan.</desc>
+    <category lang="en">Episode</category>
+    <rating system="BSA">
+      <value>G</value>
+    </rating>
   </programme></tv>
