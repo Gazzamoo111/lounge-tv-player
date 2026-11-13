@@ -26,7 +26,7 @@ internal object Catalogue3252QaBootstrap {
     private fun eligible(url: String): Boolean {
         val lower = url.trim().lowercase()
         return lower.contains("connect.loungetv.nz") ||
-            lower.contains("lounge-core-xtream-qa-3252")
+            lower.contains("/functions/v1/lounge-core-xtream")
     }
 
     fun start(context: Context, scope: CoroutineScope) {
