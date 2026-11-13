@@ -1,104 +1,104 @@
 {
   "revision": "37f8cbb0948635d985b12abf7921b97e4d848c4e",
-  "generated_at": "2026-11-13T01:02:45.324979+00:00",
+  "generated_at": "2026-11-13T01:08:24.778579+00:00",
   "shards": [
     {
-      "file": "00.json",
+      "file": "00.json.gz",
       "sha256": "b0968aeec63b77b41897b95e7c06b8d5d822b5343247db5bb3c510857956b59c",
       "channels": 75,
       "bytes": 7509881
     },
     {
-      "file": "01.json",
-      "sha256": "65179d6f57bba9c2a4827ca75632c9970b86072b8d07d9febd48f5396b14ce3b",
+      "file": "01.json.gz",
+      "sha256": "38a15fb6691319ac10b546e90f47897db7d3e01e561f945370203174863dfd9b",
       "channels": 72,
-      "bytes": 7510595
+      "bytes": 7508361
     },
     {
-      "file": "02.json",
-      "sha256": "694ab4b271253f150990ea2751d0657cf6e2cbcd9a80ca2c38dd5bb09cf2ba48",
+      "file": "02.json.gz",
+      "sha256": "640b23b988e5808937acf2b534deb068967374de55892e0ed941a2f0c2990ee6",
       "channels": 80,
-      "bytes": 9858781
+      "bytes": 9857561
     },
     {
-      "file": "03.json",
+      "file": "03.json.gz",
       "sha256": "078d7a4b32571609e8c789eda80992dd20ac1697d48fac3635f351dda09a2203",
       "channels": 78,
       "bytes": 6149513
     },
     {
-      "file": "04.json",
+      "file": "04.json.gz",
       "sha256": "dddb31a908570ff8fc9b6415f8c09b42e1a6edab803e4df56627d659e460cae7",
       "channels": 75,
       "bytes": 6770902
     },
     {
-      "file": "05.json",
+      "file": "05.json.gz",
       "sha256": "cadbce0f04f8397eb746439af3d42ababf23de1e0a8fb6a1bce3b5bead08b403",
       "channels": 83,
       "bytes": 8460943
     },
     {
-      "file": "06.json",
-      "sha256": "ee19ec043f0bd55739bfa023236f10308a07b9af5d9913bb89cfd3fd5c9e960c",
+      "file": "06.json.gz",
+      "sha256": "2f0c6f0ab4a97e5f23f39f4aaef14917907b90c88e23e8b6b9ea642c1a230314",
       "channels": 84,
-      "bytes": 6613700
+      "bytes": 6609380
     },
     {
-      "file": "07.json",
+      "file": "07.json.gz",
       "sha256": "e343843253048b588ea6697ab8b4c6b694a67b04dc65fc05c993bd6cb93afeb0",
       "channels": 80,
       "bytes": 9155390
     },
     {
-      "file": "08.json",
+      "file": "08.json.gz",
       "sha256": "db192cee1a4e8f29aa2460f8ef99fa7fff98016e8b1d0cd17aec3dd0d3963fdd",
       "channels": 59,
       "bytes": 5084859
     },
     {
-      "file": "09.json",
+      "file": "09.json.gz",
       "sha256": "0891a0fa59e1c9670504542befa199f73dfac23b6214dd8e9679923b3b2ba5f2",
       "channels": 66,
       "bytes": 5868442
     },
     {
-      "file": "10.json",
-      "sha256": "bfd3fdf04ebde9f9842df840b3e6b5a6fd15c62f5590a13646e65e153c850f33",
+      "file": "10.json.gz",
+      "sha256": "585c7a7523c335d32ff60d6dbd0c5b2e4ec78bf5f2ec1f4a3c024089ab1936b4",
       "channels": 68,
-      "bytes": 8633144
+      "bytes": 8626851
     },
     {
-      "file": "11.json",
+      "file": "11.json.gz",
       "sha256": "57f0c821c94944f68270c0adb3276e173febe4b00addf15facb11ed9d2192b12",
       "channels": 71,
       "bytes": 7424922
     },
     {
-      "file": "12.json",
+      "file": "12.json.gz",
       "sha256": "7146226d6d80d83a68ca9c3beffa22afb2ed88416857e43a0b93ddf109b883f9",
       "channels": 77,
       "bytes": 7344261
     },
     {
-      "file": "13.json",
-      "sha256": "48e9ad6644e5eec172493f39efeb745216dcfcac87c0f1584a8688faddcadfbd",
+      "file": "13.json.gz",
+      "sha256": "1aac4ee356049b6589b53575512da5c96ef026b98717b21ebf5dfb962e9e1009",
       "channels": 73,
-      "bytes": 6149134
+      "bytes": 6147530
     },
     {
-      "file": "14.json",
+      "file": "14.json.gz",
       "sha256": "e8a45bbfc4de6d2b3758b1195bc8b66dda313851a7ce23f00f4847e3899dddb3",
       "channels": 79,
       "bytes": 7287953
     },
     {
-      "file": "15.json",
-      "sha256": "0aac493aba238829d16a5b4c01bc0c2e4427d27616403c6cc90997d94e294468",
+      "file": "15.json.gz",
+      "sha256": "7f6d91b1cdaea80604a7e37cda682c323cc8c92d4f226d2a50ccf64c110a85de",
       "channels": 77,
-      "bytes": 5955981
+      "bytes": 5954906
     }
   ],
   "channels": 1197,
-  "programmes": 80367
+  "programmes": 80358
 }
