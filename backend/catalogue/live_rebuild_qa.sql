@@ -32,8 +32,8 @@ released as (
 ),
 gates as (
   select 'original_taxonomy_3369_preserved' gate, st.total=3369 pass from stage st
-  union all select 'nine_categories_and_54_editorial_subfolders',
-    (select count(distinct category)=9 and count(*)=54 from lounge_core.live_rebuild_category_order_20261113)
+  union all select 'nine_categories_and_43_populated_editorial_subfolders',
+    (select count(distinct category)=9 and count(*)=43 from lounge_core.live_rebuild_category_order_20261113)
   union all select 'no_customer_shortlist_ppv', st.shortlisted_ppv=0 from stage st
   union all select 'no_customer_shortlist_irish', st.shortlisted_irish=0 from stage st
   union all select 'no_customer_shortlist_raw_labels', st.shortlisted_raw_labels=0 from stage st
@@ -46,6 +46,59 @@ gates as (
       group by 1,2,3 having count(*)>1
     ) duplicates)
   union all select 'complete_24_7_classification_review', st.pending_reviews=0 from stage st
+  union all select 'stage_total_3174_unique_channels',
+    (select count(*)=3174 from (
+      select canonical_key as k from lounge_core.live_catalogue_rebuild_20261113 where publish_candidate
+      union
+      select proposed_canonical_key as k from lounge_core.live_rebuild_source_candidates_20261113 where shortlist_for_probe
+    ) unique_keys)
+  union all select 'no_empty_editorial_subfolders',
+    not exists (
+      select 1 from lounge_core.live_rebuild_category_order_20261113 o
+      where not exists (
+        select 1 from lounge_core.live_catalogue_rebuild_20261113 x
+        where x.publish_candidate and x.proposed_category=o.category and x.proposed_subcategory=o.subcategory
+      ) and not exists (
+        select 1 from lounge_core.live_rebuild_source_candidates_20261113 x
+        where x.shortlist_for_probe and x.proposed_category=o.category and x.proposed_subcategory=o.subcategory
+      )
+    )
+  union all select 'all_retained_entries_in_planned_folders',
+    not exists (
+      select 1 from lounge_core.live_catalogue_rebuild_20261113 x
+      where x.publish_candidate and not exists(
+        select 1 from lounge_core.live_rebuild_category_order_20261113 o
+        where o.category=x.proposed_category and o.subcategory=x.proposed_subcategory
+      )
+    )
+  union all select 'all_added_targets_in_planned_folders',
+    not exists (
+      select 1 from lounge_core.live_rebuild_source_candidates_20261113 x
+      where x.shortlist_for_probe and not exists(
+        select 1 from lounge_core.live_rebuild_category_order_20261113 o
+        where o.category=x.proposed_category and o.subcategory=x.proposed_subcategory
+      )
+    )
+  union all select 'netflix_cap_60_respected',
+    (select count(*)=60 from (
+      select canonical_key as k from lounge_core.live_catalogue_rebuild_20261113
+      where publish_candidate and proposed_category='Streaming Channels' and proposed_subcategory='Netflix'
+      union
+      select proposed_canonical_key as k from lounge_core.live_rebuild_source_candidates_20261113
+      where shortlist_for_probe and proposed_category='Streaming Channels' and proposed_subcategory='Netflix'
+    ) netflix_keys)
+  union all select 'legacy_sports_networks_reconciled',
+    not exists (
+      select 1 from lounge_delivery.live_release_items li
+      where li.release_id=(select id from lounge_delivery.catalogue_releases where state='active' order by activated_at desc nulls last limit 1)
+        and li.admission='keep' and li.category='Sports' and li.subcategory in ('US Sports','UK Sports')
+        and not exists(
+          select 1 from lounge_core.live_catalogue_rebuild_20261113 x
+          where x.publish_candidate and x.proposed_category='Sports'
+            and lower(regexp_replace(x.proposed_name,'[^[:alnum:]]','','g'))=
+                lower(regexp_replace(li.display_name,'[^[:alnum:]]','','g'))
+        )
+    )
   union all select 'all_proposed_new_sources_verified', ss.unverified_source_rows=0 from source_stage ss
   union all select 'zero_ppv_in_published_live', rel.ppv_rows=0 from released rel
   union all select 'published_id_integrity', rel.live_rows=rel.distinct_live_rows from released rel
