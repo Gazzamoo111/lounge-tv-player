@@ -34,6 +34,11 @@ jobs:
         with:
           python-version: '3.12'
       - run: python -m pip install lxml==5.4.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify importer guards
+        run: node --test source/qa/shared-epg/test_database_sync.mjs
       - name: Export bounded database import shards
         shell: bash
         run: |
