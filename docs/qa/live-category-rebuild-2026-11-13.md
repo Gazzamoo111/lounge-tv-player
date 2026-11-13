@@ -4,13 +4,28 @@
 
 This work continues the existing Lounge TV platform. The active Xtream catalogue must be sourced from `lounge_delivery.catalogue_releases`, **not** directly from `lounge_core.live_customer_taxonomy`. Production's active release is `633c6458-0201-4a66-95f7-32455a1be086` (`ppv-curated-817-20261106-qa`), with **3,013** kept Live records, **825** of them in an ordinary Live `PPV` category. The active release passes database integrity checks but does not meet the new curation specification.
 
+## 14 November 2026 | Step 1 editorial cleanup completed (staging only)
+
+This checkpoint supersedes the **13 November draft counts below**, which are retained as history.
+
+- **3,174 unique planned customer Live channels:** 2,961 existing retained plus 213 net-new target channels (215 proposed targets, 2 canonical overlaps); of the 3,369 original stage records, 408 are excluded/held.
+- **1,470 outstanding review flags reduced to zero.** 1,463 assignments were editorially resolved in a controlled staging update, one additional Scream source was correctly placed in Movie Franchises, and six ambiguous OnePlay items were held from the customer shortlist.
+- **512 existing rows** had their category/subcategory corrected in the editorial update. Changes include 24/7 movie franchises, Movie Stars, Anime, Adult Animation, kids, factual, crime, comedy, Entertainment and Sports. 8 more duplicate 24/7 programme entries were held after the initial four duplicates.
+- **43** populated planned subcategories in **nine** top-level categories; no empty folder in the planned union of retained and new targets. The **Documentaries & Lifestyle** subfolders were merged into **Documentaries (32)** and **Lifestyle (13 including one not-yet-verified addition)**. The six empty Sports subfolders and two severely underfilled entertainment source-only subfolders were removed/merged.
+- Proposed sort orders were refreshed for **2,419** existing entries, then **91** changed again to reflect merged folders and final display labels. NZ/Australia flagships and the US Major Leagues feature list are front-loaded; the remaining entries are alphabetical.
+- All retained stage entries have a linked existing source record. **This is not evidence of playback**. All **249** shortlisted new source rows remain unprobed and many existing source statuses lack successful real-device playback evidence.
+- Existing *active* release remains **3,013** Live entries, including **825** PPV entries in normal Live. **No customer release has been staged/activated by this cleanup.**
+- **Important release-blocking regression check:** the currently delivered release has **233 Sports items** (including some event/temporary streams), while the new taxonomy has **55** in Sports plus **23** NZ/AU Sports items. Many legacy US/UK networks lack an explicit mapping to the new stage. Compare stable playable networks and required events by provider/source ID; import verified missing networks or document intentional removals **before** building/activating a release. Do not interpret the larger overall 3,174 count as proof that existing popular channels are preserved.
+
+**Step 1 editorial status: COMPLETED IN STAGING. Customer rollout status: NO-GO until source probes, active-network coverage reconciliation, and authenticated device tests.**
+
 ## Durable internal staging
 
 - `lounge_core.live_catalogue_rebuild_20261113`: original category/name/IDs, proposed category/name/sort, counts of linked source statuses, classification QA flags, duplicate target and hold reasons. All **3,369** enabled taxonomy records preserved.
 - `lounge_core.live_rebuild_source_candidates_20261113`: provider inventory candidates, canonical target proposal, source artwork and EPG IDs, existing canonical target, probe and shortlist statuses. **369** source rows, **325** distinct proposed targets, **249** shortlisted provider source rows covering **215** target keys. None has been playback-verified by this rebuild.
 - `lounge_core.live_rebuild_category_order_20261113`: editorial order for **nine top categories** and **54 intended subcategories**. All entries have `visible_on_qa=false` pending acceptance. Do not create empty folders in a release.
 
-At this checkpoint **2,979** existing entries are stage candidates, **390** held, **34** potential duplicates held, and **2,932** candidates have a category/subcategory change in the proposed plan. **1,474** candidate assignments require further classification review. These are *not published changes*.
+At the **13 November initial checkpoint**, **2,979** existing entries are stage candidates, **390** held, **34** potential duplicates held, and **2,932** candidates have a category/subcategory change in the proposed plan. **1,474** candidate assignments require further classification review. These are *not published changes*.
 
 ### Approved top-level editorial order
 
@@ -45,7 +60,7 @@ No Canada customer category until tested regional streams. Event/PPV feeds remai
 
 `lounge_core.refresh_live_customer_taxonomy()` rebuilds its table from core channel/source rules. Direct manual taxonomy updates would be overwritten. The *customer* Xtream endpoint in `lounge-core-xtream` v52 selects the active `lounge_delivery` release, using `live_release_items` with `admission='keep'` and primary source bindings. Before customer rollout:
 
-1. Review and correct the remaining 1,474 stage classification decisions, especially mixed 24/7 Shows, OnePlay, Movies & Series.
+1. The editorial classification queue was cleared in the 14 November staging pass. Re-audit any changed provider inventory or unidentified/held records, especially mixed 24/7 feeds.
 2. Probe shortlist sources, validate contents, logos, EPG, channel IDs, and region. Reject failures or misinformation. Do not silently attach UK/US feeds to NZ canonical keys.
 3. Resolve duplicate candidates with explicit stable-ID aliases/favourite migration or equivalent source consolidation. Keep provider source history.
 4. Build a **new draft** delivery release with canonical IDs, release item rows, primary source bindings, category and membership records. Preserve VOD and existing customer identity mapping.
@@ -53,4 +68,4 @@ No Canada customer category until tested regional streams. Event/PPV feeds remai
 6. Check category and subcategory counts from the **QA release**, require no empty/underfilled folders without a documented editorial reason, verify no PPV/Irish/US news or duplicated channels.
 7. Only after physical acceptance, use existing `lounge_delivery.activate_release(release_id)` process. Old active release must remain available for rollback. Verify published results and counts from authenticated customer endpoint after refresh. No production deployment has been approved in this staging pass.
 
-**Current QA verdict: NO-GO for customer rollout.** Database stage structure passes core exclusion and sorting gates; playback verification, 24/7 classification review and actual new release delivery are incomplete.
+**Current QA verdict: NO-GO for customer rollout.** Database stage structure passes core exclusion and sorting gates; playback verification, legacy Sports network coverage reconciliation, and actual new release delivery are incomplete.
