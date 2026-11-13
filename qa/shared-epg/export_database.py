@@ -27,8 +27,9 @@ def export(guide,revision,out,now=None):
  out=Path(out);out.mkdir(parents=True,exist_ok=True);files=[]
  for i,rows in enumerate(shards):
   data=json.dumps(dict(revision=revision,shard=i,channels=rows),separators=(',',':'),ensure_ascii=False).encode()
-  name=f'{i:02d}.json';(out/name).write_bytes(data);files.append(dict(file=name,sha256=hashlib.sha256(data).hexdigest(),channels=len(rows),bytes=len(data)))
+  name=f'{i:02d}.json.gz';(out/name).write_bytes(gzip.compress(data,mtime=0));files.append(dict(file=name,sha256=hashlib.sha256(data).hexdigest(),channels=len(rows),bytes=len(data)))
  manifest=dict(revision=revision,generated_at=now.isoformat(),shards=files,channels=sum(len(s)for s in shards),programmes=sum(r['programme_count']for s in shards for r in s))
+ for stale in out.glob('[0-9][0-9].json'):stale.unlink()
  (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n');return manifest
 if __name__=='__main__':
  p=argparse.ArgumentParser();p.add_argument('--guide',required=True);p.add_argument('--revision',required=True);p.add_argument('--out',required=True);a=p.parse_args();print(json.dumps(export(a.guide,a.revision,a.out),indent=2))

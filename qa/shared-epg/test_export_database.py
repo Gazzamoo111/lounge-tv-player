@@ -10,5 +10,5 @@ class ExportTests(unittest.TestCase):
    m=export(p/'guide.gz','a'*40,p/'out',datetime(2026,11,13,1,tzinfo=timezone.utc))
    self.assertEqual(m['channels'],1);self.assertEqual(m['programmes'],1);rows=[]
    for shard in m['shards']:
-    raw=(p/'out'/shard['file']).read_bytes();self.assertEqual(hashlib.sha256(raw).hexdigest(),shard['sha256']);rows+=json.loads(raw)['channels']
+    raw=gzip.decompress((p/'out'/shard['file']).read_bytes());self.assertEqual(hashlib.sha256(raw).hexdigest(),shard['sha256']);rows+=json.loads(raw)['channels']
    self.assertIn('Whānau &amp; Friends',rows[0]['xmltv']);self.assertEqual(len(rows[0]['listings']),1)

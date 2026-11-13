@@ -23,7 +23,7 @@ async function run({authorised=true,busy=false,cursor=0,corrupt=false,complete=f
  sql.json=value=>{assert.ok(Array.isArray(value));return value;};
  const shards=Array.from({length:16},(_,i)=>{
   const channels=Array.from({length:10},(_,j)=>({epg_id:`${i}-${j}.us`,xmltv:'<channel/>',listings:[{}],expires_at:'2026-11-20T00:00:00Z',programme_count:1}));
-  const text=JSON.stringify({revision,shard:i,channels});return {text,info:{file:String(i).padStart(2,'0')+'.json',sha256:hash(text),channels:10}};
+  const text=JSON.stringify({revision,shard:i,channels});return {text,info:{file:String(i).padStart(2,'0')+'.json.gz',sha256:hash(text),channels:10}};
  });
  const manifest={revision,channels:160,programmes:160,shards:shards.map(s=>s.info)};
  const oldFetch=globalThis.fetch;
@@ -31,7 +31,7 @@ async function run({authorised=true,busy=false,cursor=0,corrupt=false,complete=f
   if(url.includes('api.github.com'))return new Response(JSON.stringify({object:{sha:commit}}));
   assert.ok(url.includes('/'+commit+'/'),'data reads must use immutable commit');
   if(url.endsWith('manifest.json'))return new Response(JSON.stringify(manifest));
-  const index=Number(url.match(/\/(\d+)\.json$/)[1]);return new Response(corrupt?shards[index].text+' ':shards[index].text);
+  const index=Number(url.match(/\/(\d+)\.json\.gz$/)[1]);return new Response(corrupt?shards[index].text+' ':shards[index].text);
  };
  globalThis.__testPostgres=()=>sql;
  globalThis.__testDeno={env:{get:()=> 'postgres://postgres:placeholder@db.liqocisegeqzbyuqloql.supabase.co:5432/postgres'},serve:f=>handler=f};

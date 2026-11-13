@@ -7,7 +7,11 @@ const base="https://raw.githubusercontent.com/Gazzamoo111/lounge-tv-player";
 async function fetchJson(url:string){
  const r=await fetch(url,{signal:AbortSignal.timeout(20000)});
  if(!r.ok)throw Error("upstream_http_"+r.status);
- const text=await r.text();if(text.length>12_000_000)throw Error("oversized_shard");
+ const bytes=new Uint8Array(await r.arrayBuffer());
+ const text=bytes[0]===0x1f&&bytes[1]===0x8b
+  ?await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"))).text()
+  :new TextDecoder().decode(bytes);
+ if(text.length>12_000_000)throw Error("oversized_shard");
  return {text,body:JSON.parse(text)};
 }
 Deno.serve(async(req:Request)=>{
@@ -32,7 +36,7 @@ Deno.serve(async(req:Request)=>{
    if(state.revision===manifest.revision&&state.next_shard===0&&state.last_success_at)return {ok:true,unchanged:true,revision:manifest.revision};
    let cursor=state.revision===manifest.revision?state.next_shard:0;let channels=0;
    for(let batch=0;batch<4&&cursor<16;batch++,cursor++){
-    const info=manifest.shards[cursor];if(info.file!==String(cursor).padStart(2,"0")+".json")throw Error("invalid_shard_name");
+    const info=manifest.shards[cursor];if(info.file!==String(cursor).padStart(2,"0")+".json.gz")throw Error("invalid_shard_name");
     const {text,body}=await fetchJson(base+"/"+commit+"/epg/database/"+info.file);
     const digest=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(text));
     const sum=Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,"0")).join("");
