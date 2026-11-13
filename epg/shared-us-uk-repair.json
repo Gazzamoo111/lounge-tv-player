@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-13T09:30:41.082418+00:00",
+  "generatedAt": "2026-11-13T20:54:31.346156+00:00",
   "eligible": 817,
   "blockedConflictingIds": [
     "DiscoveryTurbo.uk",
@@ -10,7 +10,7 @@
       "source": "talk-us",
       "region": "us",
       "channels": 738,
-      "matched": 172
+      "matched": 173
     },
     {
       "source": "talk-uk",
@@ -58,7 +58,7 @@
       "source": "share-us",
       "region": "us",
       "channels": 792,
-      "matched": 217
+      "matched": 216
     },
     {
       "source": "share-uk",
@@ -67,13 +67,13 @@
       "matched": 79
     }
   ],
-  "modifiedTargets": 120,
+  "modifiedTargets": 94,
   "newlyCurrentTargets": 10,
-  "addedProgrammes": 5736,
-  "preservedProgrammes": 88614,
-  "inputProgrammes": 90053,
-  "prunedExpiredProgrammes": 1439,
-  "guideProgrammes": 94350,
+  "addedProgrammes": 4425,
+  "preservedProgrammes": 85245,
+  "inputProgrammes": 87240,
+  "prunedExpiredProgrammes": 1995,
+  "guideProgrammes": 89670,
   "repaired": [
     {
       "epgId": "live:jewelry-television",
@@ -566,6 +566,96 @@
       "newlyCurrent": false
     },
     {
+      "epgId": "SkySportsGolf.uk",
+      "name": "SKY SPORTS GOLF",
+      "region": "uk",
+      "source": "extra-uk",
+      "sourceId": "SkySportsGolf.uk",
+      "sourceName": "UK - Sky Sports Golf",
+      "newProgrammes": 15,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "SkySportsArena.uk",
+      "name": "SKY SPORTS +",
+      "region": "uk",
+      "source": "extra-uk",
+      "sourceId": "SkySportsPlus.uk",
+      "sourceName": "UK - Sky Sports +",
+      "newProgrammes": 14,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "SkySportsAction.uk",
+      "name": "SKY SPORTS ACTION",
+      "region": "uk",
+      "source": "extra-uk",
+      "sourceId": "SkySportsAction.uk",
+      "sourceName": "UK - Sky Sports Action",
+      "newProgrammes": 23,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "SkySportsCricket.uk",
+      "name": "SKY SPORTS CRICKET",
+      "region": "uk",
+      "source": "extra-uk",
+      "sourceId": "SkySportsCricket.uk",
+      "sourceName": "UK - Sky Sports Cricket",
+      "newProgrammes": 18,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "SkySportsFootball.uk",
+      "name": "SKY SPORTS FOOTBALL",
+      "region": "uk",
+      "source": "extra-uk",
+      "sourceId": "SkySportsFootball.uk",
+      "sourceName": "UK - Sky Sports Football",
+      "newProgrammes": 47,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "SkySportsMainEvent.uk",
+      "name": "SKY SPORTS MAIN EVENT",
+      "region": "uk",
+      "source": "extra-uk",
+      "sourceId": "SkySportsMainEvent.uk",
+      "sourceName": "UK - Sky Sports Main Event",
+      "newProgrammes": 8,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "SkySportsMix.uk",
+      "name": "SKY SPORTS MIX",
+      "region": "uk",
+      "source": "extra-uk",
+      "sourceId": "SkySportsMix.uk",
+      "sourceName": "UK - Sky Sports Mix",
+      "newProgrammes": 27,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "SkySportsNews.uk",
+      "name": "SKY SPORTS NEWS",
+      "region": "uk",
+      "source": "extra-uk",
+      "sourceId": "SkySportsNews.uk",
+      "sourceName": "UK - Sky Sports News",
+      "newProgrammes": 20,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "live:sky-sports-tennis",
+      "name": "SKY SPORTS TENNIS",
+      "region": "uk",
+      "source": "extra-uk",
+      "sourceId": "SkySportsTennis.uk",
+      "sourceName": "UK - Sky Sports Tennis",
+      "newProgrammes": 16,
+      "newlyCurrent": false
+    },
+    {
       "epgId": "IonMystery.us",
       "name": "ION MYSTERY",
       "region": "us",
@@ -586,393 +676,73 @@
       "newlyCurrent": false
     },
     {
-      "epgId": "NickJunior.uk",
-      "name": "NICK JR",
+      "epgId": "LiverpoolFCTV.uk",
+      "name": "LFC TV",
       "region": "uk",
       "source": "extra-uk",
-      "sourceId": "NickJr.uk",
-      "sourceName": "UK - Nick Jr.",
-      "newProgrammes": 103,
+      "sourceId": "LFCTV.uk",
+      "sourceName": "UK - LFC TV",
+      "newProgrammes": 30,
       "newlyCurrent": false
     },
     {
-      "epgId": "SkyCrime.uk",
-      "name": "SKY CRIME",
+      "epgId": "MUTV.uk",
+      "name": "MUTV",
       "region": "uk",
       "source": "extra-uk",
-      "sourceId": "SkyCrime.uk",
-      "sourceName": "UK - Sky Crime",
-      "newProgrammes": 26,
+      "sourceId": "MUTV.uk",
+      "sourceName": "UK - MUTV",
+      "newProgrammes": 48,
       "newlyCurrent": false
     },
     {
-      "epgId": "SkyDocumentaries.uk",
-      "name": "SKY DOCUMENTARIES",
+      "epgId": "TNT.Sports.1.HD.uk",
+      "name": "TNT SPORTS 1",
       "region": "uk",
       "source": "extra-uk",
-      "sourceId": "SkyDocumentaries.uk",
-      "sourceName": "UK - Sky Documentaries",
-      "newProgrammes": 21,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "SkyNature.uk",
-      "name": "SKY NATURE",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "SkyNature.uk",
-      "sourceName": "UK - Sky Nature",
-      "newProgrammes": 28,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "Boomerang.uk",
-      "name": "BOOMERANG",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "Boomerang.uk",
-      "sourceName": "UK - Boomerang",
-      "newProgrammes": 32,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "live:sky-kids",
-      "name": "SKY KIDS",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "SkyKids.uk",
-      "sourceName": "UK - Sky Kids",
-      "newProgrammes": 102,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "GreatRomance.uk",
-      "name": "GREAT! ROMANCE",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "GREAT!romance.uk",
-      "sourceName": "UK - GREAT! romance",
-      "newProgrammes": 35,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "Nicktoons.uk",
-      "name": "NICKTOONS",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "Nicktoons.uk",
-      "sourceName": "UK - Nicktoons",
-      "newProgrammes": 50,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "SkyArts.uk",
-      "name": "SKY ARTS 1",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "SkyArts.uk",
-      "sourceName": "UK - Sky Arts",
-      "newProgrammes": 28,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "live:sky-sci-fi",
-      "name": "SKY SCI-FI",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "SkySci-Fi.uk",
-      "sourceName": "UK - Sky Sci-Fi",
-      "newProgrammes": 26,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "SkyWitness.uk",
-      "name": "SKY WITNESS",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "SkyWitness.uk",
-      "sourceName": "UK - Sky Witness",
-      "newProgrammes": 31,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "BestDirect.uk",
-      "name": "BEST DIRECT",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "BestDirect.uk",
-      "sourceName": "UK - Best Direct",
-      "newProgrammes": 10,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "Blaze.uk",
-      "name": "BLAZE",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "Blaze.uk",
-      "sourceName": "UK - Blaze",
-      "newProgrammes": 31,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "Challenge.uk",
-      "name": "CHALLENGE",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "Challenge.uk",
-      "sourceName": "UK - Challenge",
-      "newProgrammes": 28,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "Channel5.uk",
-      "name": "CHANNEL 5",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "Channel5.uk",
-      "sourceName": "UK - Channel 5",
-      "newProgrammes": 41,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "uk.Channel 5+1",
-      "name": "CHANNEL 5 +1",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "Channel5+1.uk",
-      "sourceName": "UK - Channel 5 +1",
-      "newProgrammes": 41,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "ComedyCentral.uk",
-      "name": "COMEDY CENTRAL",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "ComedyCentral.uk",
-      "sourceName": "UK - Comedy Central",
-      "newProgrammes": 40,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "live:daystar",
-      "name": "DAYSTAR",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "DAYSTAR.uk",
-      "sourceName": "UK - DAYSTAR",
-      "newProgrammes": 41,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "GreatTV.uk",
-      "name": "GREAT! TV",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "GREAT!tv.uk",
-      "sourceName": "UK - GREAT! tv",
-      "newProgrammes": 31,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "HighStreet1.uk",
-      "name": "HIGH STREET TV 1",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "HighStreetTV1.uk",
-      "sourceName": "UK - High Street TV 1",
-      "newProgrammes": 47,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "HighStreet2.uk",
-      "name": "HIGH STREET TV 2",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "HighStreetTV2.uk",
-      "sourceName": "UK - High Street TV 2",
-      "newProgrammes": 47,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "HighStreet3.uk",
-      "name": "HIGH STREET TV 3",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "HighStreetTV3.uk",
-      "sourceName": "UK - High Street TV 3",
-      "newProgrammes": 47,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "HighStreet4.uk",
-      "name": "HIGH STREET TV 4",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "HighStreetTV4.uk",
-      "sourceName": "UK - High Street TV 4",
-      "newProgrammes": 29,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "PBSAmerica.uk",
-      "name": "PBS AMERICA",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "PBSAmerica.uk",
-      "sourceName": "UK - PBS America",
-      "newProgrammes": 20,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "uk.QVC Beauty",
-      "name": "QVC BEAUTY",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "QVCBeauty.uk",
-      "sourceName": "UK - QVC Beauty",
-      "newProgrammes": 24,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "uk.QVC Extra",
-      "name": "QVC EXTRA",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "QVCExtra.uk",
-      "sourceName": "UK - QVC Extra",
-      "newProgrammes": 24,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "uk.QVC Style",
-      "name": "QVC STYLE",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "QVCStyle.uk",
-      "sourceName": "UK - QVC Style",
-      "newProgrammes": 24,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "Really.uk",
-      "name": "REALLY",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "Really.uk",
-      "sourceName": "UK - Really",
+      "sourceId": "TNTSports1.uk",
+      "sourceName": "UK - TNT Sports 1",
       "newProgrammes": 23,
       "newlyCurrent": false
     },
     {
-      "epgId": "S4C.uk",
-      "name": "S4C",
+      "epgId": "TNT.Sports.2.HD.uk",
+      "name": "TNT SPORTS 2",
       "region": "uk",
       "source": "extra-uk",
-      "sourceId": "S4C.uk",
-      "sourceName": "UK - S4C",
-      "newProgrammes": 60,
+      "sourceId": "TNTSports2.uk",
+      "sourceName": "UK - TNT Sports 2",
+      "newProgrammes": 25,
       "newlyCurrent": false
     },
     {
-      "epgId": "SkyAtlantic.uk",
-      "name": "SKY ATLANTIC",
+      "epgId": "TNT.Sports.3.HD.uk",
+      "name": "TNT SPORTS 3",
       "region": "uk",
       "source": "extra-uk",
-      "sourceId": "SkyAtlantic.uk",
-      "sourceName": "UK - Sky Atlantic",
-      "newProgrammes": 22,
+      "sourceId": "TNTSports3.uk",
+      "sourceName": "UK - TNT Sports 3",
+      "newProgrammes": 21,
       "newlyCurrent": false
     },
     {
-      "epgId": "SkyComedy.uk",
-      "name": "SKY COMEDY",
+      "epgId": "TNT.Sports.4.HD.uk",
+      "name": "TNT SPORTS 4",
       "region": "uk",
       "source": "extra-uk",
-      "sourceId": "SkyComedy.uk",
-      "sourceName": "UK - Sky Comedy",
-      "newProgrammes": 40,
+      "sourceId": "TNTSports4.uk",
+      "sourceName": "UK - TNT Sports 4",
+      "newProgrammes": 21,
       "newlyCurrent": false
     },
     {
-      "epgId": "PickTV.uk",
-      "name": "SKY MIX",
+      "epgId": "TNT.Sports.5.HD.uk",
+      "name": "TNT SPORTS 5",
       "region": "uk",
       "source": "extra-uk",
-      "sourceId": "SkyMix.uk",
-      "sourceName": "UK - Sky Mix",
-      "newProgrammes": 35,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "TheJewelryChannel.uk",
-      "name": "TJC",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "TJC.uk",
-      "sourceName": "UK - TJC",
-      "newProgrammes": 24,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "TLC.uk",
-      "name": "TLC",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "TLC.uk",
-      "sourceName": "UK - TLC",
-      "newProgrammes": 41,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "TogetherTV.uk",
-      "name": "TOGETHER",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "TogetherTV.uk",
-      "sourceName": "UK - Together TV",
-      "newProgrammes": 26,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "TrueCrime.uk",
-      "name": "TRUE CRIME",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "TrueCrime.uk",
-      "sourceName": "UK - True Crime",
-      "newProgrammes": 36,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "live:true-crime-xtra",
-      "name": "TRUE CRIME XTRA",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "TrueCrimeXtra.uk",
-      "sourceName": "UK - True Crime Xtra",
-      "newProgrammes": 43,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "TVWarehouse.uk",
-      "name": "TV WAREHOUSE",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "TVWarehouse.uk",
-      "sourceName": "UK - TV Warehouse",
-      "newProgrammes": 47,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "Cartoonito.uk",
-      "name": "CARTOONITO",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "Cartoonito.uk",
-      "sourceName": "UK - Cartoonito",
-      "newProgrammes": 33,
+      "sourceId": "TNTSports5.uk",
+      "sourceName": "UK - TNT Sports 5",
+      "newProgrammes": 2,
       "newlyCurrent": false
     },
     {
@@ -982,7 +752,7 @@
       "source": "pluto-us",
       "sourceId": "5e8df4bc16e34700077e77d3",
       "sourceName": "Western TV",
-      "newProgrammes": 12,
+      "newProgrammes": 24,
       "newlyCurrent": false
     },
     {
@@ -992,7 +762,7 @@
       "source": "pluto-us",
       "sourceId": "6267352efcf21c0007c76642",
       "sourceName": "Let's Make A Deal",
-      "newProgrammes": 6,
+      "newProgrammes": 12,
       "newlyCurrent": false
     },
     {
@@ -1002,17 +772,7 @@
       "source": "pluto-us",
       "sourceId": "5f7791b8372da90007fd45e6",
       "sourceName": "The Price Is Right: The Barker Era",
-      "newProgrammes": 6,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "live:today-all-day",
-      "name": "TODAY ALL DAY",
-      "region": "us",
-      "source": "plex-us",
-      "sourceId": "6a1610bebdf296985fd95603-5fc70600598c41002da3dd39",
-      "sourceName": "TODAY All Day",
-      "newProgrammes": 42,
+      "newProgrammes": 12,
       "newlyCurrent": false
     },
     {
@@ -1022,7 +782,7 @@
       "source": "pluto-us",
       "sourceId": "68bb162bb3900870ec364cbe",
       "sourceName": "Beach Day",
-      "newProgrammes": 15,
+      "newProgrammes": 29,
       "newlyCurrent": false
     },
     {
@@ -1032,7 +792,7 @@
       "source": "pluto-us",
       "sourceId": "637413d8531e0c0007442d6d",
       "sourceName": "Dateline 24/7",
-      "newProgrammes": 5,
+      "newProgrammes": 11,
       "newlyCurrent": false
     },
     {
@@ -1042,7 +802,7 @@
       "source": "pluto-us",
       "sourceId": "5e9debf8c881310007d7bde1",
       "sourceName": "Deal or No Deal",
-      "newProgrammes": 6,
+      "newProgrammes": 11,
       "newlyCurrent": false
     },
     {
@@ -1052,7 +812,7 @@
       "source": "pluto-us",
       "sourceId": "6ad7a23d0f04c58afc0110ad",
       "sourceName": "I (Almost) Got Away With It",
-      "newProgrammes": 7,
+      "newProgrammes": 14,
       "newlyCurrent": false
     },
     {
@@ -1072,7 +832,7 @@
       "source": "samsung-us",
       "sourceId": "USBC4400016CL",
       "sourceName": "Jamie Oliver",
-      "newProgrammes": 9,
+      "newProgrammes": 8,
       "newlyCurrent": true
     },
     {
@@ -1082,7 +842,7 @@
       "source": "samsung-us",
       "sourceId": "US21000043S",
       "sourceName": "MeatEater",
-      "newProgrammes": 11,
+      "newProgrammes": 14,
       "newlyCurrent": true
     },
     {
@@ -1092,7 +852,7 @@
       "source": "samsung-us",
       "sourceId": "USBC39000204J",
       "sourceName": "Military Heroes",
-      "newProgrammes": 7,
+      "newProgrammes": 5,
       "newlyCurrent": true
     },
     {
@@ -1102,7 +862,7 @@
       "source": "samsung-us",
       "sourceId": "US3300011V9",
       "sourceName": "The First 48",
-      "newProgrammes": 6,
+      "newProgrammes": 7,
       "newlyCurrent": true
     },
     {
@@ -1122,7 +882,7 @@
       "source": "samsung-us",
       "sourceId": "USAJ3504714A",
       "sourceName": "Cheddar News",
-      "newProgrammes": 10,
+      "newProgrammes": 12,
       "newlyCurrent": true
     },
     {
@@ -1142,7 +902,7 @@
       "source": "samsung-us",
       "sourceId": "USBC390002256",
       "sourceName": "Cold Case Files",
-      "newProgrammes": 6,
+      "newProgrammes": 7,
       "newlyCurrent": true
     },
     {
@@ -1152,18 +912,8 @@
       "source": "samsung-us",
       "sourceId": "USBB52000246M",
       "sourceName": "Deal Zone",
-      "newProgrammes": 6,
+      "newProgrammes": 7,
       "newlyCurrent": true
-    },
-    {
-      "epgId": "NickJrToo.uk",
-      "name": "NICK JUNIOR TOO",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "NickJrToo.uk",
-      "sourceName": "UK - Nick Jr Too",
-      "newProgrammes": 192,
-      "newlyCurrent": false
     },
     {
       "epgId": "Pop.uk",
@@ -1176,23 +926,63 @@
       "newlyCurrent": false
     },
     {
-      "epgId": "Nickelodeon.uk",
-      "name": "NICKELODEON",
+      "epgId": "SkySportsF1.uk",
+      "name": "SKY SPORTS F1",
       "region": "uk",
       "source": "extra-uk",
-      "sourceId": "Nickelodeon.uk",
-      "sourceName": "UK - Nickelodeon",
-      "newProgrammes": 51,
+      "sourceId": "SkySportsF1.uk",
+      "sourceName": "UK - Sky Sports F1",
+      "newProgrammes": 32,
       "newlyCurrent": false
     },
     {
-      "epgId": "ComedyCentralExtra.uk",
-      "name": "COMEDY CENT XTRA+1",
+      "epgId": "live:dazn-1",
+      "name": "DAZN 1",
       "region": "uk",
       "source": "extra-uk",
-      "sourceId": "ComedyCentralExtra.uk",
-      "sourceName": "UK - Comedy Central Extra",
-      "newProgrammes": 43,
+      "sourceId": "DAZN1.uk",
+      "sourceName": "UK - DAZN 1",
+      "newProgrammes": 13,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "uk.Sky Sports Premier League",
+      "name": "SKY SPORTS PREMIER LEAGUE",
+      "region": "uk",
+      "source": "extra-uk",
+      "sourceId": "SkySportsPremierLeague.uk",
+      "sourceName": "UK - Sky Sports Premier League",
+      "newProgrammes": 38,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "TNTSports1.uk",
+      "name": "TNT SPORT 1",
+      "region": "uk",
+      "source": "extra-uk",
+      "sourceId": "TNTSports1.uk",
+      "sourceName": "UK - TNT Sports 1",
+      "newProgrammes": 23,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "TNTSports2.uk",
+      "name": "TNT SPORT 2",
+      "region": "uk",
+      "source": "extra-uk",
+      "sourceId": "TNTSports2.uk",
+      "sourceName": "UK - TNT Sports 2",
+      "newProgrammes": 25,
+      "newlyCurrent": false
+    },
+    {
+      "epgId": "TNTSports3.uk",
+      "name": "TNT SPORT 3",
+      "region": "uk",
+      "source": "extra-uk",
+      "sourceId": "TNTSports3.uk",
+      "sourceName": "UK - TNT Sports 3",
+      "newProgrammes": 21,
       "newlyCurrent": false
     },
     {
@@ -1206,16 +996,6 @@
       "newlyCurrent": false
     },
     {
-      "epgId": "FoodNetwork.uk",
-      "name": "D+| FOOD NETWORK",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "FoodNetwork.uk",
-      "sourceName": "UK - Food Network",
-      "newProgrammes": 29,
-      "newlyCurrent": false
-    },
-    {
       "epgId": "HGTV.uk",
       "name": "D+| HGTV",
       "region": "uk",
@@ -1226,36 +1006,6 @@
       "newlyCurrent": false
     },
     {
-      "epgId": "GemsTV.uk",
-      "name": "GEMS TV",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "GemsTV.uk",
-      "sourceName": "UK - Gems TV",
-      "newProgrammes": 4,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "IdealWorld.uk",
-      "name": "IDEAL WORLD",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "IdealWorld.uk",
-      "sourceName": "UK - Ideal World",
-      "newProgrammes": 24,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "QVC.uk",
-      "name": "QVC UK.",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "QVC.uk",
-      "sourceName": "UK - QVC",
-      "newProgrammes": 23,
-      "newlyCurrent": false
-    },
-    {
       "epgId": "SkyShowcase.uk",
       "name": "SKY SHOWCASE",
       "region": "uk",
@@ -1263,16 +1013,6 @@
       "sourceId": "SkyShowcase.uk",
       "sourceName": "UK - Sky Showcase",
       "newProgrammes": 8,
-      "newlyCurrent": false
-    },
-    {
-      "epgId": "live:that-s-tv",
-      "name": "THAT'S TV",
-      "region": "uk",
-      "source": "extra-uk",
-      "sourceId": "ThatsTV.uk",
-      "sourceName": "UK - That`s TV",
-      "newProgrammes": 37,
       "newlyCurrent": false
     }
   ]
