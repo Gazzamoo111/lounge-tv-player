@@ -1349,8 +1349,10 @@ class LiveViewModel(
      */
     private fun loungeNzPlaybackChannel(channel: ChannelEntity): ChannelEntity {
         val source = sourceById[channel.sourceId] ?: return channel
+        val isLoungeQa3252 = tv.own.owntv.BuildConfig.LOUNGE_TV_2 &&
+            source.url.contains("/lounge-core-xtream-qa-3252")
         if (source.type != SourceType.XTREAM ||
-            !tv.own.owntv.features.setup.isLoungeXtream(source.type, source.url)
+            (!isLoungeQa3252 && !tv.own.owntv.features.setup.isLoungeXtream(source.type, source.url))
         ) return channel
 
         val key = java.text.Normalizer.normalize(channel.name, java.text.Normalizer.Form.NFKD)
