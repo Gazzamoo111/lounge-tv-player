@@ -119,6 +119,9 @@ class OwnTVApp : Application(), SingletonImageLoader.Factory, androidx.work.Conf
             modules(coreModule, appModule, databaseModule, dataModule, playerModule)
         }
         Perf.stamp("koin-started")
+        // The isolated v2qa app may test the unactivated 3,252-channel backend.
+        // Customer package builds cannot enter this gated QA bootstrap.
+        tv.own.owntv.qa.Catalogue3252QaBootstrap.start(this, appScope)
         // A chosen icon colour ("Later", the first-run pick, a restore) reaches the launcher when the app
         // is next in the background, never while it is on screen.
         tv.own.owntv.core.brand.AppIconSwitcher.start(this, GlobalContext.get().get())
