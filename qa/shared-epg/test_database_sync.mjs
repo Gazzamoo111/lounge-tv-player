@@ -5,6 +5,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {createHash} from 'node:crypto';
+import {gzipSync} from 'node:zlib';
 const hash=x=>createHash('sha256').update(x).digest('hex');
 const revision='a'.repeat(40),commit='b'.repeat(40);
 const template=await readFile(new URL('../../backend/supabase/functions/lounge-shared-epg-sync/index.ts',import.meta.url),'utf8');
@@ -31,7 +32,7 @@ async function run({authorised=true,busy=false,cursor=0,corrupt=false,complete=f
   if(url.includes('api.github.com'))return new Response(JSON.stringify({object:{sha:commit}}));
   assert.ok(url.includes('/'+commit+'/'),'data reads must use immutable commit');
   if(url.endsWith('manifest.json'))return new Response(JSON.stringify(manifest));
-  const index=Number(url.match(/\/(\d+)\.json\.gz$/)[1]);return new Response(corrupt?shards[index].text+' ':shards[index].text);
+  const index=Number(url.match(/\/(\d+)\.json\.gz$/)[1]);return new Response(gzipSync(corrupt?shards[index].text+' ':shards[index].text));
  };
  globalThis.__testPostgres=()=>sql;
  globalThis.__testDeno={env:{get:()=> 'postgres://postgres:placeholder@db.liqocisegeqzbyuqloql.supabase.co:5432/postgres'},serve:f=>handler=f};
