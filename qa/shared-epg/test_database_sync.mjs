@@ -20,6 +20,7 @@ async function run({authorised=true,busy=false,cursor=0,corrupt=false,complete=f
   return [];
  };
  sql.begin=async f=>f(sql);
+ sql.json=value=>{assert.ok(Array.isArray(value));return value;};
  const shards=Array.from({length:16},(_,i)=>{
   const channels=Array.from({length:10},(_,j)=>({epg_id:`${i}-${j}.us`,xmltv:'<channel/>',listings:[{}],expires_at:'2026-11-20T00:00:00Z',programme_count:1}));
   const text=JSON.stringify({revision,shard:i,channels});return {text,info:{file:String(i).padStart(2,'0')+'.json',sha256:hash(text),channels:10}};

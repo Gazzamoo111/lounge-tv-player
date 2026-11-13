@@ -40,7 +40,7 @@ Deno.serve(async(req:Request)=>{
     for(const row of body.channels){
      if(!row.epg_id||!Array.isArray(row.listings)||row.listings.length!==row.programme_count||!Number.isFinite(Date.parse(row.expires_at)))throw Error("invalid_channel");
      await tx`insert into lounge_delivery.shared_epg_channels(epg_id,xmltv,listings,expires_at,programme_count,source_revision,synced_at)
-      values(${row.epg_id},${row.xmltv},${JSON.stringify(row.listings)}::jsonb,${row.expires_at}::timestamptz,${row.programme_count},${manifest.revision},now())
+      values(${row.epg_id},${row.xmltv},${sql.json(row.listings)},${row.expires_at}::timestamptz,${row.programme_count},${manifest.revision},now())
       on conflict(epg_id) do update set xmltv=excluded.xmltv,listings=excluded.listings,expires_at=excluded.expires_at,programme_count=excluded.programme_count,source_revision=excluded.source_revision,synced_at=now()`;
      channels++;
     }
