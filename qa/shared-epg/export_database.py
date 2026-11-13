@@ -9,6 +9,10 @@ SHARDS=16
 
 def export(guide,revision,out,now=None):
  now=now or datetime.now(timezone.utc)
+ source_revision=revision
+ # An export's time window can change even while the source guide stays the same.
+ # Every immutable export therefore has its own revision for resumable imports.
+ revision=hashlib.sha1((source_revision+':'+now.isoformat()).encode()).hexdigest()
  root=E.parse(gzip.open(guide),E.XMLParser(no_network=True,resolve_entities=False,huge_tree=True)).getroot()
  channels={c.get('id'):E.tostring(c,encoding='unicode',with_tail=False) for c in root.findall('channel')}
  groups=defaultdict(list)
@@ -28,7 +32,7 @@ def export(guide,revision,out,now=None):
  for i,rows in enumerate(shards):
   data=json.dumps(dict(revision=revision,shard=i,channels=rows),separators=(',',':'),ensure_ascii=False).encode()
   name=f'{i:02d}.json.gz';(out/name).write_bytes(gzip.compress(data,mtime=0));files.append(dict(file=name,sha256=hashlib.sha256(data).hexdigest(),channels=len(rows),bytes=len(data)))
- manifest=dict(revision=revision,generated_at=now.isoformat(),shards=files,channels=sum(len(s)for s in shards),programmes=sum(r['programme_count']for s in shards for r in s))
+ manifest=dict(revision=revision,source_guide_revision=source_revision,generated_at=now.isoformat(),shards=files,channels=sum(len(s)for s in shards),programmes=sum(r['programme_count']for s in shards for r in s))
  for stale in out.glob('[0-9][0-9].json'):stale.unlink()
  (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n');return manifest
 if __name__=='__main__':
