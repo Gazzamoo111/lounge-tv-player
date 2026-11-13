@@ -51,6 +51,11 @@ jobs:
             'talk-uk':'https://raw.githubusercontent.com/acidjesuz/EPGTalk/master/UK_guide.xml.gz',
             'share-us':'https://epgshare01.online/epgshare01/epg_ripper_US2.xml.gz',
             'share-uk':'https://epgshare01.online/epgshare01/epg_ripper_UK1.xml.gz',
+            'all':'https://m3u-edit.com/epg-source.php?file=ALL_SOURCES1.xml.gz',
+            'pluto-us':'https://i.mjh.nz/PlutoTV/us.xml.gz',
+            'samsung-us':'https://i.mjh.nz/SamsungTVPlus/us.xml.gz',
+            'plex-us':'https://i.mjh.nz/Plex/us.xml.gz',
+            'extra-uk':'https://iptv-epg.org/files/epg-gb.xml.gz',
           }
           def get(item):
             key,url=item
@@ -62,13 +67,20 @@ jobs:
               print(key,len(data))
             except Exception as error:print(key,type(error).__name__)
           with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:list(pool.map(get,jobs.items()))
-          assert pathlib.Path('feeds/talk-us.gz').exists() and pathlib.Path('feeds/talk-uk.gz').exists()
+          assert any(pathlib.Path('feeds',k+'.gz').exists() for k in jobs), 'All free sources unavailable'
           PY
       - name: Build additive candidate against frozen published guide
         shell: bash
         run: |
           set -euo pipefail
-          args=(--source talk-us:us=feeds/talk-us.gz --source talk-uk:uk=feeds/talk-uk.gz)
+          args=()
+          if test -s feeds/talk-us.gz; then args+=(--source talk-us:us=feeds/talk-us.gz); fi
+          if test -s feeds/talk-uk.gz; then args+=(--source talk-uk:uk=feeds/talk-uk.gz); fi
+          if test -s feeds/all.gz; then args+=(--source all-us:us=feeds/all.gz --source all-uk:uk=feeds/all.gz); fi
+          for label in pluto-us samsung-us plex-us; do
+            if test -s "feeds/$label.gz"; then args+=(--source "$label:us=feeds/$label.gz"); fi
+          done
+          if test -s feeds/extra-uk.gz; then args+=(--source extra-uk:uk=feeds/extra-uk.gz); fi
           if test -s feeds/share-us.gz; then args+=(--source share-us:us=feeds/share-us.gz); fi
           if test -s feeds/share-uk.gz; then args+=(--source share-uk:uk=feeds/share-uk.gz); fi
           python source/qa/shared-epg/repair_missing.py \
