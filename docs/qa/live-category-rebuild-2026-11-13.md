@@ -8,7 +8,7 @@ This work continues the existing Lounge TV platform. The active Xtream catalogue
 
 **Inactive QA release `live-3252-20261114-qa-draft` (ID `53a5174a-3247-42b6-9384-1a83ff4d29f7`) built successfully.** Contains 3,252 distinct Live channels, 5,142 unchanged movies and 3,395 unchanged series. PPV in ordinary QA Live: zero. One primary source each, 34 verified-transport backups, 327/327 probed source IDs bound. 800 existing Live customer IDs preserved. Official `lounge_delivery.validate_release` returns `ok=true` with zero integrity issues.
 
-Secure read-only QA API returned 43 unique category IDs, correct sample channel lists and guide data, with HTTP 401 for unauthorised requests. **24 PASS / 1 BLOCK** on the new draft release gates; the only marked blocker is actual Firestick playback and DRM/device acceptance, which has not occurred. Customer active release remains unchanged and still contains ordinary-Live PPV.
+Secure read-only QA API returned 43 unique category IDs, correct sample channel lists and guide data, with HTTP 401 for unauthorised requests. **24 PASS / 1 BLOCK** on the new draft release gates; the only marked blocker is actual Firestick playback and DRM/device acceptance, which has not occurred. Customer active release remains unchanged and still contains 824 kept ordinary-Live PPV entries.
 
 [Step 3 release QA report](live-release-build-2026-11-14.md) and [read-only acceptance script](../../backend/catalogue/live_release_acceptance_20261114.sql).
 
