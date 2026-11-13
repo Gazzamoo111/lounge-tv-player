@@ -30,3 +30,15 @@ class RepairTests(unittest.TestCase):
   self.assertFalse(eligible(dict(sourceName='US| DISCOVERY CHANNEL WEST',region='us',name='Discovery Channel West',category='Entertainment',subcategory='US TV',epg_id='DiscoveryTurbo.uk')))
  def test_quality_alias_keeps_delay(self):self.assertNotEqual(key('Sky Sports +'),key('Sky Sports'));self.assertEqual(key('TNT (Pacific)'),key('TNT West'))
 if __name__=='__main__':unittest.main()
+
+class FreeSourceTests(unittest.TestCase):
+ def test_multicountry_source_requires_matching_country(self):
+  from repair_missing import source_scope
+  self.assertTrue(source_scope('AMC.HD.us2','us','all-us'))
+  self.assertFalse(source_scope('AMC.HD.uk','us','all-us'))
+  self.assertFalse(source_scope('Tennis.Dummy.us','us','all-us'))
+  self.assertFalse(source_scope('AMC.plex','us','all-us'))
+ def test_real_pluto_channels_eligible_but_private_streaming_slots_excluded(self):
+  row=dict(name='TBN',category='Streaming',subcategory='Pluto TV',region='us',epg_id='TBN.us')
+  self.assertTrue(eligible(row))
+  row['subcategory']='Netflix';self.assertFalse(eligible(row))

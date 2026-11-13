@@ -9,3 +9,12 @@ Tests: `python -m unittest test_repair_missing -v` (requires lxml==5.4.0). Actua
 History older than 48 hours is pruned only for targets with a validated replacement source. Other channels and all current/future intervals are preserved.
 
 Original provider country prefixes are included as evidence for channels whose public category omits country. Conflicting declared guide-country IDs are blocked across all rows sharing the identifier. Shared East/West or +1/base identifiers are never automatically populated until their identity is corrected.
+
+
+## Free source expansion and central database
+
+The repair also uses public Pluto TV, Samsung TV Plus and Plex US feeds, an additional UK guide and a country-scoped all-source fallback. Dummy source IDs are rejected. Real Pluto channels are eligible; private streaming and PPV slots are not assigned invented schedules. Source failures leave existing guide intervals intact; a surviving region can still receive additive updates.
+
+`export_database.py` exports the customer guide into 16 SHA-256-checked shards. The database export workflow follows successful regional publishers and runs hourly as recovery. `lounge-shared-epg-sync` imports four shards per authenticated call, with a transaction lock, an immutable Git revision, batch rollback and a resumable cursor. A completed, count-verified revision removes obsolete rows. Customer short-guide requests prefer the shared database, retaining the existing file fallback.
+
+The database stores XMLTV and short-guide listings by the exact customer EPG ID, including channels without a legacy core record. Continuous 24/7 labels remain labels, not evidence of programme schedule coverage. No paid EPG subscription is used.

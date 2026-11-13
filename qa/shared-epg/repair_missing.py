@@ -34,7 +34,11 @@ def region(c):
 def eligible(c):
  explicit=re.search(r'\.(us|uk)$',c.get('epg_id') or '',re.I)
  if explicit and region(c) and explicit[1].lower()!=region(c):return False
- return c['category'] not in ('24/7','Streaming','PPV','New Zealand','Australia') and c['subcategory'] not in ('CINEMANIA TV SHOWS','Sky Store') and region(c) in ('us','uk')
+ return c['category'] not in ('24/7','PPV','New Zealand','Australia') and (c['category']!='Streaming' or c['subcategory']=='Pluto TV') and c['subcategory'] not in ('CINEMANIA TV SHOWS','Sky Store') and region(c) in ('us','uk')
+
+def source_scope(cid,reg,label):
+ # Multi-country sources require explicit country evidence for every channel.
+ return not re.search(r'(?:^|[.\s_-])dummy(?:$|[.\s_-])',cid,re.I) and (not label.startswith('all-') or bool(re.search(r'\.'+reg+r'(?:\d+)?$',cid,re.I)))
 
 def scoped_name(name,reg,label):
  # EPGTalk UK includes some non-UK stations. Generic unqualified names are unsafe.
@@ -74,17 +78,18 @@ def make(manifest,existing,sources,out,now=None):
  options=defaultdict(list);health=[]
  for label,reg,path in sources:
   channels={};programmes=defaultdict(list)
+  wanted={key(c['name']) for cs in targets.values() for c in cs if region(c)==reg}
   with gzip.open(path,'rb')as f:
    for _,n in E.iterparse(f,events=['end'],tag=['channel','programme'],huge_tree=True,resolve_entities=False,no_network=True):
     if n.tag=='channel':channels[n.get('id')]=n.findtext('display-name','')
-    else:
+    elif source_scope(n.get('channel',''),reg,label) and (n.get('channel') in targets or source_key(channels.get(n.get('channel'),''),reg) in wanted):
      a,b=dt(n.get('start')),dt(n.get('stop'));title=n.findtext('title','').strip()
      if a and b and now<b and a<end and b>a and title and not re.search(r'no (?:programme|program) (?:data|information)|to be announced|dummy',title,re.I):programmes[n.get('channel')].append((a,b,title,E.tostring(n,with_tail=False)))
     n.clear()
     while n.getprevious()is not None:del n.getparent()[0]
   by_name=defaultdict(list)
   for cid,name in channels.items():
-   if programmes.get(cid) and scoped_name(name,reg,label):by_name[source_key(name,reg)].append(cid)
+   if programmes.get(cid) and source_scope(cid,reg,label) and scoped_name(name,reg,label):by_name[source_key(name,reg)].append(cid)
   matched=0
   for target,cs in targets.items():
    if any(region(c)!=reg for c in cs):continue

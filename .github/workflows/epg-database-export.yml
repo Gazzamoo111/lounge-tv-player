@@ -1,0 +1,50 @@
+name: Lounge TV shared EPG database export
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '51 * * * *'
+  workflow_run:
+    workflows:
+      - Lounge TV shared US UK guide gap repair
+      - Lounge TV scheduled US EPG refresh, other regions protected
+      - Lounge TV scheduled AU EPG | 3-day minimum and honest 24-7
+      - Lounge TV | NZ EPG refresh (verified, preserve other regions)
+    types: [completed]
+permissions:
+  contents: read
+concurrency:
+  group: lounge-shared-epg-database-export
+  cancel-in-progress: false
+jobs:
+  export:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: source
+          ref: main
+      - uses: actions/checkout@v4
+        with:
+          path: published
+          ref: epg-data
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install lxml==5.4.0
+      - name: Export bounded database import shards
+        shell: bash
+        run: |
+          set -euo pipefail
+          python source/qa/shared-epg/export_database.py \
+            --guide published/epg/guide.xml.gz \
+            --revision "$(git -C published log -1 --format=%H -- epg/guide.xml.gz)" \
+            --out published/epg/database
+          git -C published config user.name 'Lounge TV EPG Automation'
+          git -C published config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git -C published add epg/database
+          git -C published diff --cached --quiet && exit 0
+          git -C published commit -m 'epg: export shared customer guide for database sync'
+          git -C published push origin HEAD:epg-data
