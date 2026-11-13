@@ -1,5 +1,11 @@
 name: Lounge TV | NZ EPG refresh (verified, preserve other regions)
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/epg-nz-refresh.yml'
+      - 'qa/shared-epg/repair_nz.py'
+      - 'qa/shared-epg/test_repair_nz.py'
   pull_request:
     branches: [feature/lounge-tv-2.0]
     paths:
@@ -12,7 +18,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: lounge-epg-nz-refresh
+  group: lounge-epg-shared-publish
   cancel-in-progress: false
 jobs:
   validate:
@@ -109,12 +115,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Artifact ZIP contains candidate/{report.json,guide.xml.gz,short/}.
+          # actions/download-artifact preserves that prefix.
+          test -s reviewed/candidate/report.json
+          test -s reviewed/candidate/guide.xml.gz
+          cp -a reviewed/candidate/. reviewed/
           test -s reviewed/report.json
           test -s reviewed/guide.xml.gz
           EXPECTED="$(cat reviewed/source-head.txt)"
           CURRENT="$(git -C published rev-parse HEAD)"
-          REMOTE="$(git -C published ls-remote origin refs/heads/epg-data | cut -f1)"
-          if [ "$EXPECTED" != "$CURRENT" ] || [ "$CURRENT" != "$REMOTE" ]; then
+          # The non-force push itself rejects any concurrent remote change.
+          if [ "$EXPECTED" != "$CURRENT" ]; then
             echo 'Published guide changed since QA. Refusing stale replacement.'
             exit 1
           fi

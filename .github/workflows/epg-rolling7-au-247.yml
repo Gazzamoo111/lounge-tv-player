@@ -12,7 +12,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: lounge-epg-publish-au-247
+  group: lounge-epg-shared-publish
   cancel-in-progress: false
 jobs:
   validate:
@@ -53,6 +53,10 @@ jobs:
           curl --fail --location --retry 3 --connect-timeout 30 --max-time 300 \
             https://xmltv.net/xml_files/Sydney.xml \
             -o /tmp/lounge-epg7/au-xmltv-net.xml || true
+          # Optional, AU-specific programme source with verified Fox Cricket and Fox Sports News IDs.
+          curl --fail --location --retry 3 --connect-timeout 30 --max-time 300 \
+            https://epgshare01.online/epgshare01/epg_ripper_AU1.xml.gz \
+            -o /tmp/lounge-epg7/au-epgshare.xml.gz || true
           test -s /tmp/lounge-epg7/existing.xml.gz
       - name: Build three-day-minimum AU guide and seven-day 24/7 labels
         run: |
@@ -62,6 +66,7 @@ jobs:
             --au primary=/tmp/lounge-epg7/au-primary.xml.gz \
             --au sydney=/tmp/lounge-epg7/au-sydney.xml.gz \
             --au xmltv-net=/tmp/lounge-epg7/au-xmltv-net.xml \
+            --au epgshare=/tmp/lounge-epg7/au-epgshare.xml.gz \
             --out qa/epg/rolling7-out
       - name: Enforce publication gate
         run: |
