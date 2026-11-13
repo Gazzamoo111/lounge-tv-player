@@ -4,6 +4,14 @@
 
 This work continues the existing Lounge TV platform. The active Xtream catalogue must be sourced from `lounge_delivery.catalogue_releases`, **not** directly from `lounge_core.live_customer_taxonomy`. Production's active release is `633c6458-0201-4a66-95f7-32455a1be086` (`ppv-curated-817-20261106-qa`), with **3,013** kept Live records, **825** of them in an ordinary Live `PPV` category. The active release passes database integrity checks but does not meet the new curation specification.
 
+## 14 November 2026 | Step 2 source transport QA (latest)
+
+**Current staged plan: 3,252 unique Live channel targets.** All **327 of 327** shortlisted source IDs passed real HTTP/MPEG-TS first-response transport probes (0 transport failures; 970 ms mean, 1,497 ms p95). This includes **78 recovered stable sports networks** (68 US/UK and 10 specialty sports) that the initial classification would have omitted. Australia 9Go!/9Life/9Rush programme-guide mappings were linked to existing shared listings; three demonstrably wrong EPG mappings were removed.
+
+**Read-only QA: 20 PASS / 2 BLOCK.** The active customer catalogue is **unchanged (3,013 Live entries, 825 ordinary PPV)**. Two blockers are real-device/decoder acceptance and publishing a release without ordinary-Live PPV. Do not mislabel source transport as end-to-end customer playback.
+
+Detailed evidence, classifications and rollout gates: [Step 2 source validation](live-source-validation-2026-11-14.md).
+
 ## 14 November 2026 | Step 1 editorial cleanup completed (staging only)
 
 This checkpoint supersedes the **13 November draft counts below**, which are retained as history.
