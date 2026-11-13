@@ -4,7 +4,15 @@
 
 This work continues the existing Lounge TV platform. The active Xtream catalogue must be sourced from `lounge_delivery.catalogue_releases`, **not** directly from `lounge_core.live_customer_taxonomy`. Production's active release is `633c6458-0201-4a66-95f7-32455a1be086` (`ppv-curated-817-20261106-qa`), with **3,013** kept Live records, **825** of them in an ordinary Live `PPV` category. The active release passes database integrity checks but does not meet the new curation specification.
 
-## 14 November 2026 | Step 2 source transport QA (latest)
+## 14 November 2026 | Step 3 QA release built and validated (latest)
+
+**Inactive QA release `live-3252-20261114-qa-draft` (ID `53a5174a-3247-42b6-9384-1a83ff4d29f7`) built successfully.** Contains 3,252 distinct Live channels, 5,142 unchanged movies and 3,395 unchanged series. PPV in ordinary QA Live: zero. One primary source each, 34 verified-transport backups, 327/327 probed source IDs bound. 800 existing Live customer IDs preserved. Official `lounge_delivery.validate_release` returns `ok=true` with zero integrity issues.
+
+Secure read-only QA API returned 43 unique category IDs, correct sample channel lists and guide data, with HTTP 401 for unauthorised requests. **24 PASS / 1 BLOCK** on the new draft release gates; the only marked blocker is actual Firestick playback and DRM/device acceptance, which has not occurred. Customer active release remains unchanged and still contains ordinary-Live PPV.
+
+[Step 3 release QA report](live-release-build-2026-11-14.md) and [read-only acceptance script](../../backend/catalogue/live_release_acceptance_20261114.sql).
+
+## 14 November 2026 | Step 2 source transport QA (superseded by Step 3)
 
 **Current staged plan: 3,252 unique Live channel targets.** All **327 of 327** shortlisted source IDs passed real HTTP/MPEG-TS first-response transport probes (0 transport failures; 970 ms mean, 1,497 ms p95). This includes **78 recovered stable sports networks** (68 US/UK and 10 specialty sports) that the initial classification would have omitted. Australia 9Go!/9Life/9Rush programme-guide mappings were linked to existing shared listings; three demonstrably wrong EPG mappings were removed.
 
