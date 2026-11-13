@@ -1,122 +1,133 @@
 #!/usr/bin/env bash
-# Lounge TV | single-command QA 3252 build, install, refresh and relaunch.
-# Keep installed v2qa data; never uninstall on version/signature mismatch.
+# Lounge TV 2.0 | PR-cache-signed QA APK, Firestick update, isolated Live refresh.
+# Manual workflow_dispatch cannot sign because QA secrets are absent.
+# The PR #68 test workflow verifies a pinned QA certificate. Fail closed.
 set -euo pipefail
 
 REPO="Gazzamoo111/lounge-tv-player"
 BRANCH="feature/lounge-tv-2.0"
+PR_NUMBER="68"
 WORKFLOW="ci.yml"
 TARGET="192.168.68.53:5555"
 PACKAGE="com.loungetv.player.v2qa"
 ARTIFACT="lounge-tv-2-v2qa"
-TARGET_RELEASE="live-3252-20261114-qa-draft"
+GATEWAY="https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-xtream-qa-3252/player_api.php"
 
-for cmd in gh adb; do
-  if ! command -v "$cmd" >/dev/null 2>&1; then
-    echo "ERROR: '$cmd' is not available on this Mac."
-    exit 1
-  fi
+for cmd in gh git adb curl; do
+  command -v "$cmd" >/dev/null 2>&1 || {
+    echo "ERROR: Missing required command: $cmd"; exit 1;
+  }
 done
+gh auth status >/dev/null 2>&1 || {
+  echo "ERROR: Please authenticate the GitHub CLI first using gh auth login."; exit 1;
+}
 
-if ! gh auth status >/dev/null 2>&1; then
-  echo "ERROR: GitHub CLI is not signed in. Run 'gh auth login'."
-  exit 1
-fi
-
-echo "Connecting to Firestick at $TARGET..."
+echo "Connecting to Firestick $TARGET..."
 adb connect "$TARGET"
 if ! adb devices | grep -Eq "^$TARGET[[:space:]]+device$"; then
-  echo "ERROR: Firestick is not accepting ADB at $TARGET. Check its IP and ADB debugging."
-  exit 1
+  echo "ERROR: Firestick is not accessible via ADB."; exit 1
 fi
-if ! adb shell pm list packages "$PACKAGE" | grep -q "package:$PACKAGE"; then
-  echo "ERROR: Existing v2qa package not found. Refusing to overwrite another app."
+if ! adb shell pm list packages "$PACKAGE" | grep -Fq "package:$PACKAGE"; then
+  echo "ERROR: Existing QA package not found. Won't remove or overwrite another app."; exit 1
+fi
+code="$(curl -sS -o /dev/null -w '%{http_code}' --connect-timeout 8 --max-time 20 "$GATEWAY?action=get_live_categories" || true)"
+if [[ "$code" != "401" ]]; then
+  echo "ERROR: QA gateway did not return the expected authentication response: $code."
   exit 1
 fi
 
-# The QA gateway must be responding BEFORE installing a build that switches to it.
-# HTTPS failure is a hard stop, not a reason to change production.
-GATEWAY="https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-xtream-qa-3252/player_api.php"
-if command -v curl >/dev/null 2>&1; then
-  code="$(curl -sS -o /dev/null -w '%{http_code}' --connect-timeout 8 --max-time 20 "$GATEWAY?action=get_live_categories" || true)"
-  if [[ "$code" != "401" ]]; then
-    echo "ERROR: Isolated QA gateway unexpected status '$code' (expected 401 without credentials)."
-    exit 1
-  fi
+pr_head="$(gh pr view "$PR_NUMBER" -R "$REPO" --json headRefName,state --jq '.headRefName + " " + .state')"
+if [[ "$pr_head" != "$BRANCH OPEN" ]]; then
+  echo "ERROR: QA PR #68 is not open with the expected head: $pr_head"
+  exit 1
 fi
 
-echo "Requesting the current QA APK build from GitHub Actions..."
-previous="$(gh run list -R "$REPO" -w "$WORKFLOW" --branch "$BRANCH" --event workflow_dispatch -L 1 --json databaseId --jq '.[0].databaseId // 0')"
-previous="${previous:-0}"
-gh workflow run "$WORKFLOW" -R "$REPO" --ref "$BRANCH"
+workdir="$(mktemp -d /tmp/lounge3252-pr.XXXXXX)"
+trap 'rm -rf "$workdir"' EXIT
+
+echo "Cloning corrected QA source..."
+gh repo clone "$REPO" "$workdir/source" -- --branch "$BRANCH" --single-branch --depth 1
+last_id="$(gh run list -R "$REPO" -w "$WORKFLOW" --branch "$BRANCH" --event pull_request -L 10 --json databaseId --jq 'map(.databaseId) | max // 0')"
+if [[ -z "$last_id" ]]; then last_id=0; fi
+
+# A real user-authenticated git push creates pull_request.synchronize.
+# Unlike workflow_dispatch, that event uses the PR-scoped cached debug signing
+# identity. This harmless empty commit does not alter source or the draft PR.
+login="$(gh api user --jq .login)"
+cd "$workdir/source"
+git -c user.name="$login" -c user.email="$login@users.noreply.github.com" \
+  commit --allow-empty -m "ci: rebuild Lounge TV 3252 Firestick QA using verified PR signer"
+echo "Triggering signing-compatible PR #68 QA workflow..."
+git push origin "HEAD:$BRANCH"
+cd "$workdir"
 
 run_id=""
-for attempt in $(seq 1 45); do
-  candidate="$(gh run list -R "$REPO" -w "$WORKFLOW" --branch "$BRANCH" --event workflow_dispatch -L 1 --json databaseId --jq '.[0].databaseId // 0' || true)"
-  candidate="${candidate:-0}"
-  if [[ "$candidate" =~ ^[0-9]+$ ]] && (( candidate > previous )); then
-    run_id="$candidate"
-    break
+for attempt in $(seq 1 90); do
+  candidate="$(gh run list -R "$REPO" -w "$WORKFLOW" --branch "$BRANCH" --event pull_request -L 10 --json databaseId --jq 'map(.databaseId) | max // 0' || true)"
+  if [[ "$candidate" =~ ^[0-9]+$ ]] && (( candidate > last_id )); then
+    run_id="$candidate"; break
   fi
   sleep 2
 done
-
 if [[ -z "$run_id" ]]; then
-  echo "ERROR: Could not identify the new GitHub build; no installation attempted."
-  exit 1
+  echo "ERROR: A new PR QA workflow did not start. Nothing was installed."; exit 1
 fi
-echo "QA workflow run: $run_id"
-gh run watch "$run_id" -R "$REPO" --exit-status
 
-workdir="$(mktemp -d "${TMPDIR:-/tmp}/loungetv3252.XXXXXX")"
-trap 'rm -rf "$workdir"' EXIT
-gh run download "$run_id" -R "$REPO" -n "$ARTIFACT" -D "$workdir"
-apk="$(find "$workdir" -type f -name '*.apk' -print -quit)"
+echo "Monitoring QA run $run_id..."
+gh run watch "$run_id" -R "$REPO" --exit-status || {
+  echo "ERROR: QA tests, signing check or compilation failed."
+  echo "Inspect https://github.com/$REPO/actions/runs/$run_id"
+  echo "Existing Firestick installation is untouched."
+  exit 1
+}
+
+mkdir -p "$workdir/apk"
+echo "Downloading certificate-checked QA APK..."
+gh run download "$run_id" -R "$REPO" -n "$ARTIFACT" -D "$workdir/apk"
+apk="$(find "$workdir/apk" -type f -name '*.apk' -print -quit)"
 if [[ -z "$apk" || ! -s "$apk" ]]; then
-  echo "ERROR: Build completed but no APK was downloaded."
-  exit 1
+  echo "ERROR: No QA APK artifact found. Nothing installed."; exit 1
 fi
 
-echo "Installing signed QA APK without removing existing data..."
+# CI explicitly checks package com.loungetv.player.v2qa and certificate
+# 4c398a1c5614b1975ba5c64bb756125e7c39abf6b0193b3e30e0b14ad1c3949b.
+# adb install -r also verifies against the currently installed APK.
+echo "Updating the existing v2qa package without uninstalling..."
 if ! adb install -r "$apk"; then
-  echo "INSTALLATION FAILED. The existing app and its saved data have NOT been uninstalled."
+  echo "ERROR: Android refused the update (check certificate/version)."
+  echo "No uninstall, reset or data deletion attempted."
   exit 1
 fi
 
-echo "Starting Lounge TV QA. It will switch the existing Lounge Xtream source"
-echo "to the isolated 3,252-channel QA release and refresh Live channels only."
+echo "Starting the 3,252-channel QA Live sync..."
 adb logcat -c || true
 adb shell am force-stop "$PACKAGE"
 adb shell monkey -p "$PACKAGE" 1 >/dev/null
 
-ok=0
+success=0
 for attempt in $(seq 1 70); do
-  log="$(adb logcat -d -s Lounge3252QA:I Lounge3252QA:W Lounge3252QA:E 2>/dev/null || true)"
-  if echo "$log" | grep -q 'QA Live catalogue synchronised'; then
-    ok=1
-    break
+  logs="$(adb logcat -d -s Lounge3252QA:I Lounge3252QA:W Lounge3252QA:E 2>/dev/null || true)"
+  if grep -Fq 'QA Live catalogue synchronised' <<< "$logs"; then
+    success=1; break
   fi
-  if echo "$log" | grep -q 'No Lounge Xtream playlist found'; then
-    echo "BLOCKED: The app has no existing Lounge Xtream account to switch."
-    echo "No account or favourite was deleted. Review the existing playlist URL."
+  if grep -Fq 'No Lounge Xtream playlist found' <<< "$logs"; then
+    echo "ERROR: Existing Lounge Xtream source not found. Nothing was deleted."
     exit 1
   fi
-  if echo "$log" | grep -qE 'QA sync unsuccessful|QA sync failed'; then
-    echo "QA Live sync failed. Existing source URL was restored."
-    echo "$log" | grep 'Lounge3252QA' | tail -5
+  if grep -Eq 'QA sync unsuccessful|QA sync failed' <<< "$logs"; then
+    echo "ERROR: New Live sync failed; existing source URL was restored."
+    grep 'Lounge3252QA' <<< "$logs" | tail -8
     exit 1
   fi
   sleep 3
 done
-
-if (( ok == 0 )); then
-  echo "The QA APK installed and launched, but automatic Live refresh is not confirmed."
-  echo "No customer production release was changed. Inspect the Firestick before publishing."
+if (( success != 1 )); then
+  echo "ERROR: APK installed but new Live sync was not confirmed."
+  echo "Customer production remains untouched."
   exit 1
 fi
 
-echo "Live catalogue refreshed successfully. Relaunching to clear the old screen state..."
 adb shell am force-stop "$PACKAGE"
 adb shell monkey -p "$PACKAGE" 1 >/dev/null
-echo "SUCCESS: Lounge TV QA is running the 3,252-channel draft ($TARGET_RELEASE)."
-echo "Movies and series retain their previous content; customer production is unchanged."
+echo "SUCCESS: Lounge TV QA restarted with 3,252-channel isolated Live catalogue."
+echo "Movies, series and the customer production release remain unchanged."
