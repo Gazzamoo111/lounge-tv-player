@@ -54,7 +54,7 @@ New Supabase Edge Function: `lounge-live-release-qa`.
 - BLOCK: **Real Firestick playback**. The connected cloud environment cannot reach the user's private LAN / Firestick ADB endpoint, and no Firestick installation, control, decoder test, audio test or app-navigation test actually occurred.
 - Source transport tests from Step 2 are separate: 327/327 MPEG-TS first-packet checks passed, but first packet is not proof of correct programme, codec, audio, lip-sync, sustained playback or the Firestick's Widevine capability.
 - Most continuous 24/7 and streaming-labelled channels do not have programme-level EPG IDs. Do not create invented programme titles. Australian beIN 2 and a few US channels also need EPG acceptance against customer playback.
-- Current active release has 825 PPV items in ordinary Live. The draft removes them, but production will not change until deliberately activated. Retain the old release ID for rollback.
+- Current active release has **824 kept PPV items** in ordinary Live (857 PPV-labelled rows including 21 dropped and 12 held). This was recounted from the active release on 14 November; earlier checkpoint reports had stated 825. The draft removes them, but production will not change until deliberately activated. Retain the old release ID for rollback.
 
 ## Release decision
 
