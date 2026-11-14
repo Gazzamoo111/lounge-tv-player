@@ -52,6 +52,7 @@ android {
 
     defaultConfig {
         applicationId = "com.loungetv.player"
+        manifestPlaceholders["loungeAppName"] = "@string/app_name"
         minSdk = 26
         targetSdk = 36
         // Release CI always injects both values. The fallback belongs to local QA builds only and is
@@ -62,6 +63,7 @@ android {
 
         // Experimental TV experience is off in every normal and production build.
         buildConfigField("boolean", "LOUNGE_TV_2", "false")
+        buildConfigField("boolean", "LOUNGE_ON_DEMAND", "false")
 
         // Opt-in local diagnostic APKs keep the rolling playback trace enabled even when they are
         // release-signed (so they can update an installed production build without changing its data).
@@ -225,8 +227,13 @@ android {
             // Keep debug builds isolated from production (different signing keys and data).
             // Draft PR builds install alongside production and stable QA, never over either.
             val loungeTv2 = System.getenv("LOUNGE_TV_2_QA") == "true"
+            val onDemandQa = System.getenv("LOUNGE_TV_ON_DEMAND_QA") == "true"
+            require(!(loungeTv2 && onDemandQa)) { "Select only one isolated Lounge TV QA variant" }
             buildConfigField("boolean", "LOUNGE_TV_2", loungeTv2.toString())
+            buildConfigField("boolean", "LOUNGE_ON_DEMAND", onDemandQa.toString())
+            if (onDemandQa) manifestPlaceholders["loungeAppName"] = "Lounge TV On Demand QA"
             applicationIdSuffix = when {
+                onDemandQa -> ".ondemandqa"
                 loungeTv2 -> ".v2qa"
                 System.getenv("RELIABILITY_AUDIT_QA") == "true" -> ".auditqa"
                 System.getenv("PLAYBACK_HOTFIX_QA") == "true" -> ".playbackqa"
