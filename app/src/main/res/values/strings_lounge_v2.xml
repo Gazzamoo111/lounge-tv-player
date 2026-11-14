@@ -27,4 +27,5 @@
     <string name="lounge_settings_advanced">Advanced Settings</string>
     <string name="lounge_settings_show_advanced">Show technical controls</string>
     <string name="lounge_settings_hide_advanced">Hide technical controls</string>
+    <string name="lounge_on_demand_more_info">More info</string>
 </resources>
