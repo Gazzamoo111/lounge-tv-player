@@ -1422,6 +1422,11 @@
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	▲▼
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	⚽
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	⚽ ${it.players.firstOrNull().orEmpty().substringAfterLast(' ')} ${it.minute}
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsNbaFeedPolicy.kt	NBA FAST CHANNEL
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsNbaFeedPolicy.kt	NBA FEED
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsNbaFeedPolicy.kt	NBA TEAM
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsNbaFeedPolicy.kt	NBA TV
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsNbaFeedPolicy.kt	SPORTSNET LA LAKERS
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsNbaFeedPolicy.kt	nba
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsParts.kt	EEE
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsParts.kt	EEEd
@@ -1488,6 +1493,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsViewModel.kt	$startMs|$title
 1	url	app/src/main/java/tv/own/owntv/features/sports/SportsViewModel.kt	/lounge-core-xtream-qa-3252
 1	url	app/src/main/java/tv/own/owntv/features/sports/SportsViewModel.kt	https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-sports-calendar
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsViewModel.kt	nba
 1	file-path	app/src/main/java/tv/own/owntv/features/sports/SportsViewModel.kt	sport-lounge/events-v1.json
 1	preference-key	app/src/main/java/tv/own/owntv/features/sports/data/FixtureReminderScheduler.kt	$profile|$fixture
 1	json	app/src/main/java/tv/own/owntv/features/sports/data/FixtureReminderScheduler.kt	[]
