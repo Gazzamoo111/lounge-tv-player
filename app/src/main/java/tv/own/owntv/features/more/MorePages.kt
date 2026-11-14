@@ -540,7 +540,7 @@ internal fun HistoryPage(
                 options = order.map { kind -> when (kind) {
                     MediaType.LIVE -> counted(R.string.common_nav_live_tv, counts.live)
                     MediaType.MOVIE -> counted(R.string.common_nav_movies, counts.movies)
-                    MediaType.SERIES -> counted(R.string.common_nav_series, counts.series)
+                    MediaType.SERIES, MediaType.EPISODE -> counted(R.string.common_nav_series, counts.series)
                 } },
                 selected = order.indexOf(type),
                 onSelect = { tab = order[it] },
