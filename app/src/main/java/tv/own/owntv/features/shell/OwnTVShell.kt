@@ -758,7 +758,9 @@ fun OwnTVShell(
         }
         Unit
     }
-    val openShortcutSection: (MainSection) -> Unit = { section ->
+    val openShortcutSection: (MainSection) -> Unit = onDemandShortcut@{ section ->
+        if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND &&
+            section in setOf(MainSection.LIVE_TV, MainSection.SPORTS, MainSection.EPG)) return@onDemandShortcut
         if (playerMode == PlayerMode.FULLSCREEN) dockPlayer()
         if (section == MainSection.SEARCH) {
             searchVm.setQuery("")
