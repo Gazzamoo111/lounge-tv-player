@@ -701,7 +701,7 @@ private fun SeriesGrid(
         val screenW = maxWidth
         fun fx(px: Int) = screenW * (px / 1920f)
         if (cinematic) {
-            val showcaseActive = displayFeatured || displayNewReleases
+            val showcaseActive = displayFeatured || displayNewReleases || displayRecentlyAdded
             val heroH = if (showcaseActive) minOf(maxHeight * 0.325f, 350.mpx)
                 else if (panelShares != null) maxHeight * (cinematicDetailsPct / 100f)
                 else 464.mpx

@@ -643,7 +643,7 @@ fun MoviesScreen(
         if (cinematic) {
             // A pinned, readable hero stays above the scrolling highlight rails.
             // 226px leaves room for a complete focused portrait card AND its heading.
-            val showcaseActive = displayFeatured || displayNewReleases
+            val showcaseActive = displayFeatured || displayNewReleases || displayRecentlyAdded
             val heroH = if (showcaseActive) minOf(maxHeight * 0.325f, 350.mpx)
                 else if (panelShares != null) maxHeight * (cinematicDetailsPct / 100f)
                 else 464.mpx

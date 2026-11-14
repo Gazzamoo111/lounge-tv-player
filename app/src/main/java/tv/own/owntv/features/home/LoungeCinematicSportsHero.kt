@@ -175,6 +175,12 @@ internal fun LoungeCinematicSportsHeroCard(
                         style = stageText(21, 800), color = LoungePremiumTokens.Body)
                     HomeSportSide(match.away?.team, Modifier.weight(1f))
                 }
+            } else {
+                // Racing sessions and individual events have no two-team pairing.
+                // Keep the focal space useful without inventing crests or a matchup.
+                Text(match.title, style = stageText(37, 800),
+                    color = LoungePremiumTokens.Text, maxLines = 2,
+                    overflow = TextOverflow.Ellipsis)
             }
             Column(verticalArrangement = Arrangement.spacedBy(5.mpx)) {
                 Text(match.title, style = stageText(27, 800), color = LoungePremiumTokens.Text,
