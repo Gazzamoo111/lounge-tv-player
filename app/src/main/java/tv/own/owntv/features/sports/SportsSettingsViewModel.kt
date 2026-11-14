@@ -58,8 +58,26 @@ class SportsSettingsViewModel(
     /** The app's language, which ranks first until the user picks commentary languages. */
     val appLanguage: String get() = Locale.getDefault().language
 
-    fun update(transform: (SportsConfig) -> SportsConfig) = viewModelScope.launch {
-        settings.updateSportsConfig(settings.activeProfileIdNow(), transform)
+    val profileId = settings.activeProfileId.stateIn(viewModelScope, SharingStarted.Eagerly, -1L)
+
+    fun update(transform: (SportsConfig) -> SportsConfig): kotlinx.coroutines.Job {
+        val expected = profileId.value
+        return viewModelScope.launch {
+            if (expected >= 0 && settings.activeProfileIdNow() == expected)
+                settings.updateSportsConfig(expected, transform)
+        }
+    }
+
+    suspend fun teamsForLeague(key: String): List<Team> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        val league = SportsCatalog.league(key) ?: return@withContext emptyList()
+        kotlinx.coroutines.withTimeout(10_000) { source.teams(league) }
+    }
+
+    fun moveFollowedTeam(key: String, delta: Int) = update { c ->
+        c.copy(teams = PremiumSportsPresentation.move(c.teams, c.teams.indexOfFirst { it.key == key }, delta))
+    }
+    fun moveFollowedLeague(key: String, delta: Int) = update { c ->
+        c.copy(leagues = PremiumSportsPresentation.move(c.leagues, c.leagues.indexOf(key), delta))
     }
 
     fun setShownInMenu(on: Boolean) = viewModelScope.launch {
@@ -89,16 +107,20 @@ class SportsSettingsViewModel(
 
     /** Teams of the followed leagues, fetched once per page visit, for the My teams search. */
     private var teamIndex: List<Pair<FollowedTeam, String>>? = null
+    private var teamIndexKey: Pair<Long, Set<String>>? = null
 
     suspend fun searchTeams(query: String): List<FollowedTeam> {
         if (query.trim().length < 2) return emptyList()
-        val index = teamIndex ?: buildList {
+        val cacheKey = profileId.value to config.value.followedLeagues()
+        val index = teamIndex?.takeIf { teamIndexKey == cacheKey } ?: buildList {
             for (key in config.value.followedLeagues()) {
                 val league = SportsCatalog.league(key) ?: continue
-                val teams: List<Team> = runCatching { source.teams(league) }.getOrDefault(emptyList())
+                val teams: List<Team> = try { teamsForLeague(key) }
+                catch (cancel: kotlinx.coroutines.CancellationException) { throw cancel }
+                catch (_: Exception) { emptyList() }
                 teams.forEach { t -> add(FollowedTeam(league.sport, t.id, t.name, t.abbreviation) to t.name) }
             }
-        }.distinctBy { it.first.key }.also { teamIndex = it }
+        }.distinctBy { it.first.key }.also { teamIndex = it; teamIndexKey = cacheKey }
         val q = query.trim().lowercase()
         return index.filter { (_, name) -> name.lowercase().contains(q) }.map { it.first }.take(30)
     }

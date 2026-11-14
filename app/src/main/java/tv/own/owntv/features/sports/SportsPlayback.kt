@@ -41,6 +41,7 @@ data class SportsSession(val match: Match, val options: List<WatchOption>)
 class SportsPlayback(
     private val settings: SettingsRepository,
     private val sourceDao: SourceDao,
+    private val candidateResolver: SportsCandidateResolver,
     private val repository: SportsRepository,
     private val watchReader: WatchReader,
 ) {
@@ -60,7 +61,26 @@ class SportsPlayback(
     /** The channel last played from a match page, so its row takes focus again on return. */
     var lastPlayedChannelId: Long? = null
 
-    fun start(match: Match, options: List<WatchOption>) { _session.value = SportsSession(match, options) }
+    private var uncorrectedSession: SportsSession? = null
+
+    fun start(match: Match, options: List<WatchOption>) {
+        val session = SportsSession(match, options)
+        uncorrectedSession = session
+        _session.value = session
+    }
+
+    suspend fun refreshCorrections(match: Match) {
+        if (!tv.own.owntv.BuildConfig.LOUNGE_TV_2) return
+        val original = uncorrectedSession ?: return
+        if (original.match.key != match.key || original.match.startMs != match.startMs) return
+        val pid = settings.activeProfileIdNow()
+        val rejected = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            candidateResolver.rejected(pid, match)
+        }
+        if (uncorrectedSession === original) {
+            _session.value = original.copy(options = original.options.filterNot { candidateResolver.key(it.channel) in rejected })
+        }
+    }
 
     /** [match] as it stands now, refreshed while collected (`Demand.PlayerScore`: that one league, 30 s live). */
     fun score(match: Match): Flow<Match> =
@@ -97,6 +117,6 @@ class SportsPlayback(
         val config = settings.activeSportsConfig.first()
         val options = watchReader.found(match) { SportsMemory.rememberedFor(config, it) } ?: return emptyList()
         val liveSources = activeProfileSources(settings, sourceDao).first().liveSourceIds
-        return WatchList.of(options, WatchFilter.from(config, Locale.getDefault().language, liveSources)).shown
+        return WatchList.of(candidateResolver.resolve(match, options), WatchFilter.from(config, Locale.getDefault().language, liveSources)).shown
     }
 }

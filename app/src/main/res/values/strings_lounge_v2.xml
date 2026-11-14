@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="lounge_v2_full_schedule">Full channel schedule</string>
+    <string name="lounge_v2_loading">Loading schedule…</string>
+    <string name="lounge_v2_empty">No programme information for this day</string>
+    <string name="lounge_v2_schedule_error">Schedule could not load. Choose the day again to retry.</string>
+    <string name="lounge_v2_previous_day">Previous day</string>
+    <string name="lounge_v2_next_day">Next day</string>
+    <string name="lounge_v2_artwork_credit">Programme artwork from TMDB</string>
+    <string name="lounge_v2_sports_event_evidence">Event-name match · content unverified</string>
+    <string name="lounge_v2_sports_network_evidence">Broadcaster suggestion · content unverified</string>
+    <string name="lounge_v2_sports_unverified">Unverified suggestion</string>
+    <string name="lounge_v2_sports_epg_evidence">EPG match · content unverified</string>
+    <string name="lounge_v2_sports_correction_hint">A wrong-feed report hides this channel for this fixture and profile. You can restore it on the match page.</string>
+    <string name="lounge_v2_sports_report_wrong">Wrong event on this feed</string>
+    <string name="lounge_v2_sports_remember_channel">Use this channel for this competition</string>
+    <string name="lounge_v2_sports_restore_feeds">Restore reported feeds</string>
+    <string name="lounge_v2_sports_correction_error">Could not save this change. Please try again.</string>
+    <string name="lounge_v2_sports_saved_evidence">Your saved channel choice · content unverified</string>
+    <string name="lounge_v2_favourite_folders">Favourite folders</string>
+    <string name="lounge_v2_save_favourite_folder">Save to favourite folder</string>
+    <string name="lounge_v2_new_favourite_folder">Create favourite folder</string>
+    <string name="lounge_v2_favourite_folder_description">Choose a folder. The channel stays in its original category.</string>
+    <string name="lounge_v2_favourite_folder_name_hint">Folder name, e.g. Rugby or Family</string>
+    <string name="lounge_vod_recently_added">Recently Added</string>
+    <string name="lounge_settings_essential">Essential Settings</string>
+    <string name="lounge_settings_advanced">Advanced Settings</string>
+    <string name="lounge_settings_show_advanced">Show technical controls</string>
+    <string name="lounge_settings_hide_advanced">Hide technical controls</string>
+</resources>

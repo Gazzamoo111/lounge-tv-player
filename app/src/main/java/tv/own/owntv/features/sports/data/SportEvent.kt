@@ -21,6 +21,7 @@ data class SportEventCompetitor(
     val crestUrl: String?,
     val home: Boolean,
     val score: String?,
+    val color: String? = null,
 )
 
 data class SportEventBroadcast(
@@ -80,6 +81,7 @@ data class SportEvent(
                         .put("shortName", side.shortName)
                         .put("abbreviation", side.abbreviation)
                         .put("crestUrl", side.crestUrl)
+                        .put("color", side.color)
                         .put("home", side.home)
                         .put("score", side.score),
                 )
@@ -103,7 +105,7 @@ data class SportEvent(
             broadcasts = broadcasts.map { Broadcast(it.name, it.market) },
             competitors = competitors.map { side ->
                 Competitor(
-                    team = Team(side.id, side.name, side.shortName, side.abbreviation, logoUrl = side.crestUrl),
+                    team = Team(side.id, side.name, side.shortName, side.abbreviation, logoUrl = side.crestUrl, color = side.color),
                     home = side.home,
                     winner = null,
                     score = side.score?.let { Score(it, it.toIntOrNull()) },
@@ -136,6 +138,7 @@ data class SportEvent(
                     shortName = side.team.shortName,
                     abbreviation = side.team.abbreviation,
                     crestUrl = side.team.logoUrl,
+                    color = side.team.color,
                     home = side.home,
                     score = side.score?.text,
                 )
@@ -181,6 +184,7 @@ data class SportEvent(
                         shortName = side.getString("shortName"),
                         abbreviation = side.optString("abbreviation"),
                         crestUrl = side.optString("crestUrl").takeIf { !side.isNull("crestUrl") },
+                        color = side.optString("color").takeIf { !side.isNull("color") },
                         home = side.getBoolean("home"),
                         score = side.optString("score").takeIf { !side.isNull("score") },
                     )

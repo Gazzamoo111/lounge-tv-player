@@ -247,6 +247,7 @@ internal fun LiveStagePane(
     scheduleFocus: FocusRequester,
     onOpenProgramme: (XtEpgEntry) -> Unit,
     onBackToList: () -> Unit,
+    onFullSchedule: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val previewState by previewEngine.state.collectAsStateWithLifecycle()
@@ -312,7 +313,19 @@ internal fun LiveStagePane(
         val now = nowNext?.now
         Column(Modifier.fillMaxWidth().padding(start = 4.mpx, end = 4.mpx, top = 34.mpx)) {
             if (now != null) {
-                Text(now.title, style = stageText(42, 800, (-0.5).mpxSp), color = StageColors.Text, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Row(horizontalArrangement = Arrangement.spacedBy(18.mpx), verticalAlignment = Alignment.CenterVertically) {
+                    if (tv.own.owntv.BuildConfig.LOUNGE_TV_2) {
+                        val programme = remember(now.title, now.startMs, nowNext.nowDetails) {
+                            tv.own.owntv.core.database.entity.EpgProgrammeEntity(
+                                sourceId = channel?.sourceId ?: 0, epgChannelId = channel?.epgChannelId.orEmpty(),
+                                title = now.title, description = now.description, startMs = now.startMs, stopMs = now.stopMs,
+                                year = nowNext.nowDetails?.year, episode = nowNext.nowDetails?.episode,
+                            )
+                        }
+                        ProgrammeArtwork(programme, channel?.displayLogoUrl, Modifier.width(76.mpx).height(112.mpx), channelName = channel?.name)
+                    }
+                    Text(now.title, style = stageText(42, 800, (-0.5).mpxSp), color = StageColors.Text, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                }
                 Text(
                     detailsLine(now, nowNext.nowDetails),
                     style = stageText(19, 400), color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -330,9 +343,20 @@ internal fun LiveStagePane(
                     )
                 }
             }
+            if (tv.own.owntv.BuildConfig.LOUNGE_TV_2 && channel != null) {
+                tv.own.owntv.ui.stage.StageButton(
+                    text = stringResource(R.string.lounge_v2_full_schedule),
+                    onClick = onFullSchedule,
+                    modifier = Modifier.padding(top = 16.mpx).focusRequester(scheduleFocus)
+                        .onPreviewKeyEvent { e ->
+                            if (e.type == KeyEventType.KeyDown && e.key == Key.DirectionLeft) { onBackToList(); true } else false
+                        },
+                    height = 48.mpx, textSize = 18,
+                )
+            }
             val next = nowNext?.next
             val later = nowNext?.upcoming?.firstOrNull()
-            if (next != null) {
+            if (next != null && !tv.own.owntv.BuildConfig.LOUNGE_TV_2) {
                 Row(
                     Modifier
                         .padding(top = 22.mpx)
@@ -344,7 +368,7 @@ internal fun LiveStagePane(
                     // ◀ from next goes back to the channel it belongs to, not to whatever lies to the left.
                     LiveScheduleItem(
                         next, accentTime = true, onClick = { onOpenProgramme(next) },
-                        modifier = Modifier.focusRequester(scheduleFocus).onPreviewKeyEvent { e ->
+                        modifier = Modifier.then(if (tv.own.owntv.BuildConfig.LOUNGE_TV_2) Modifier else Modifier.focusRequester(scheduleFocus)).onPreviewKeyEvent { e ->
                             if (e.type == KeyEventType.KeyDown && e.key == Key.DirectionLeft) { onBackToList(); true } else false
                         },
                     )
@@ -406,6 +430,15 @@ internal data class LiveCategoryEntry(
     val mark: PlaylistMark?,
 )
 
+/** Fixed top-level shortcuts retain their marks; every provider/custom subcategory is text-only. */
+internal fun liveCategoryEntryIcon(key: tv.own.owntv.core.live.LiveKey): OwnTVIcon? = when (key) {
+    tv.own.owntv.core.live.LiveKey.Favorites -> OwnTVIcon.FAVORITE
+    tv.own.owntv.core.live.LiveKey.History -> OwnTVIcon.HISTORY
+    tv.own.owntv.core.live.LiveKey.Catchup -> OwnTVIcon.REWIND
+    tv.own.owntv.core.live.LiveKey.All -> OwnTVIcon.LIVE_TV
+    else -> null
+}
+
 /**
  * Live TV's category list as the sheet and column draw it — the fixed entries with their icons, the
  * provider groups parsed into name and tags — and the "GROUPS · DE" heading above the groups. The TV
@@ -421,13 +454,7 @@ internal fun liveCategoryEntries(railItems: List<LiveRailItem>, railCounts: Map<
             item = item,
             label = parsed?.name ?: label,
             name = parsed,
-            icon = when (item.key) {
-                tv.own.owntv.core.live.LiveKey.Favorites -> OwnTVIcon.FAVORITE
-                tv.own.owntv.core.live.LiveKey.History -> OwnTVIcon.HISTORY
-                tv.own.owntv.core.live.LiveKey.Catchup -> OwnTVIcon.REWIND
-                tv.own.owntv.core.live.LiveKey.All -> OwnTVIcon.LIVE_TV
-                else -> null
-            },
+            icon = liveCategoryEntryIcon(item.key),
             count = railCounts[item.key],
             mark = null,
         )
@@ -693,9 +720,10 @@ internal fun LiveCategories(
                                 onClick = {
                                     expandedSection = if (isOpen) null else section
                                 },
-                                icon = if (isOpen) OwnTVIcon.CHEVRON_DOWN else OwnTVIcon.CHEVRON,
+                                icon = LoungeEditorialOrder.icon(section),
                                 count = liveSectionFolderCount(sections, section).toString(),
                                 selected = isOpen,
+                                emphasized = true,
                                 modifier = Modifier
                                     .focusRequester(headerFocusers.getValue(section))
                                     .onFocusChanged {

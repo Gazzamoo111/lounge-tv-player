@@ -115,20 +115,53 @@ fun SportsMatchScreen(
     var tab by remember { mutableStateOf(MatchTab.TIMELINE) }
     var revealed by remember(m.key) { mutableStateOf(false) }
     var focused by remember { mutableStateOf<WatchOption?>(null) }
+    var correctionError by remember(m.key) { mutableStateOf(false) }
+    var correctionOption by remember(m.key) { mutableStateOf<WatchOption?>(null) }
+    correctionOption?.let { option ->
+        val reportFocus = remember { FocusRequester() }
+        LaunchedEffect(Unit) { androidx.compose.runtime.withFrameNanos { }; runCatching { reportFocus.requestFocus() } }
+        tv.own.owntv.ui.stage.StagePopup(
+            title = option.channel.name,
+            body = stringResource(if (correctionError) R.string.lounge_v2_sports_correction_error else R.string.lounge_v2_sports_correction_hint),
+            onDismiss = { correctionOption = null },
+        ) {
+            tv.own.owntv.ui.stage.StagePopupOption(
+                title = stringResource(R.string.lounge_v2_sports_report_wrong),
+                onClick = {
+                    correctionError = false
+                    vm.rejectFixtureChannel(m, option.channel) { saved ->
+                        correctionError = !saved
+                        if (saved) {
+                            if (liveVm.previewChannel.value?.id == option.channel.id) liveVm.stopPreview()
+                            focused = null; correctionOption = null
+                        }
+                    }
+                }, modifier = Modifier.focusRequester(reportFocus),
+            )
+            tv.own.owntv.ui.stage.StagePopupOption(
+                title = stringResource(R.string.lounge_v2_sports_remember_channel),
+                onClick = { vm.rememberChannel(m, option.channel); correctionOption = null },
+            )
+            tv.own.owntv.ui.stage.StagePopupOption(
+                title = stringResource(R.string.content_close), onClick = { correctionOption = null },
+            )
+        }
+    }
     val firstRow = remember { FocusRequester() }
     val tabFocus = remember { FocusRequester() }
 
     // The focused channel plays in the box above after the focus settles, exactly as in Live TV.
     val previewOn by liveVm.livePreviewEnabled.collectAsStateWithLifecycle()
-    LaunchedEffect(focused?.channel?.id, previewOn) {
+    LaunchedEffect(focused?.channel?.id, previewOn, active) {
         val ch = focused?.channel ?: return@LaunchedEffect
-        if (!previewOn) return@LaunchedEffect
+        if (!previewOn || !active) return@LaunchedEffect
         kotlinx.coroutines.delay(700)
         liveVm.playPreview(ch)
     }
     // Focus follows the search: the tabs while there is no list (Find channels' button goes away while it
     // runs, and must not take focus with it), the first channel once there is one.
-    LaunchedEffect(state.search::class, state.list.shown.isNotEmpty()) {
+    LaunchedEffect(active, state.search::class, state.list.shown.map { it.channel.id }) {
+        if (!active) return@LaunchedEffect
         kotlinx.coroutines.delay(60)
         runCatching { if (state.list.shown.isNotEmpty()) firstRow.requestFocus() else tabFocus.requestFocus() }
     }
@@ -207,6 +240,11 @@ fun SportsMatchScreen(
                     NoPlaylistNote(onAddPlaylist)
                     return@Column
                 }
+                if (state.hasRejectedFeeds) {
+                    StageButton(stringResource(R.string.lounge_v2_sports_restore_feeds),
+                        onClick = { vm.restoreFixtureChannels(m) { correctionError = !it } }, height = 48.mpx, textSize = 17)
+                    if (correctionError) Text(stringResource(R.string.lounge_v2_sports_correction_error), color = StageColors.Danger)
+                }
                 when (val s = state.search) {
                     is ChannelSearch.Found -> Unit
                     is ChannelSearch.Closed -> { ClosedNote(s.window); return@Column }
@@ -221,14 +259,25 @@ fun SportsMatchScreen(
                     return@Column
                 }
                 val video = focused ?: shown.firstOrNull()
+                // Make the preview itself a remote-focusable fullscreen control.
+                // The selected feed is the exact same option used by its channel row.
+                StageSurface(
+                    onClick = { video?.let(play) },
+                    radius = 18.mpx,
+                    focusStyle = StageFocus.FX,
+                    modifier = Modifier.fillMaxWidth(),
+                ) { _ ->
                 GuideVideo(
                     channel = video?.channel,
                     channelLine = video?.channel?.let { listOfNotNull(it.number?.toString(), ProviderTags.parse(it.name).name).joinToString(sep) },
-                    nowTitle = video?.guideTitle,
+                    nowTitle = video?.guideTitle?.takeUnless {
+                        it.startsWith(FIXTURE_EVIDENCE_PREFIX) || it.startsWith(BACKEND_CONFIDENCE_PREFIX)
+                    },
                     previewEngine = liveVm.previewEngine,
-                    showVideo = previewOn && focused != null,
+                    showVideo = active && previewOn && focused != null,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                }
                 Row(Modifier.fillMaxWidth().padding(top = 18.mpx), verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         pluralStringResource(R.plurals.sports_watch_live_count, state.list.total, state.list.total),
@@ -245,7 +294,10 @@ fun SportsMatchScreen(
                         ChannelRow(
                             o, m,
                             onClick = { play(o) },
-                            onHold = { vm.rememberChannel(m, o.channel) },
+                            onHold = {
+                                if (tv.own.owntv.BuildConfig.LOUNGE_TV_2) { correctionError = false; correctionOption = o }
+                                else vm.rememberChannel(m, o.channel)
+                            },
                             modifier = Modifier
                                 .then(if (o === focusTarget) Modifier.focusRequester(firstRow) else Modifier)
                                 .onFocusChanged { if (it.isFocused) focused = o },
@@ -393,7 +445,7 @@ private fun ScoreHeader(m: Match, summary: MatchSummary?, hidden: Boolean, onRev
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     val score = when {
                         m.competitors.size < 2 -> m.title
-                        m.state == MatchState.PRE -> timeText(m.startMs)
+                        m.state == MatchState.PRE -> PremiumSportsPresentation.nzKickoffTime(m.startMs)
                         hidden -> "– : –"
                         // Tennis reads set by set ("6–1 4–6 5–3"); one score a side reads "2 – 1".
                         m.sport == tv.own.owntv.core.sports.model.Sport.TENNIS && !home?.score?.periods.isNullOrEmpty() ->
@@ -405,7 +457,7 @@ private fun ScoreHeader(m: Match, summary: MatchSummary?, hidden: Boolean, onRev
                     if (m.isLive) LiveMark(stringResource(R.string.player_live) + stringResource(R.string.content_epg_bits_separator) + clockText(m))
                     else Text(
                         // Before kick-off ESPN's text is US-styled ("10/16 - 9:00 PM EDT"); the day in the user's own words instead.
-                        if (m.state == MatchState.PRE) dayOf(m.startMs, LocalConfiguration.current.locales[0]) ?: stringResource(R.string.content_epg_today) else m.statusText,
+                        if (m.state == MatchState.PRE) PremiumSportsPresentation.nzKickoffDay(m.startMs) ?: stringResource(R.string.content_epg_today) else m.statusText,
                         style = stageText(17, 700), color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis,
                     )
                 }
@@ -415,7 +467,7 @@ private fun ScoreHeader(m: Match, summary: MatchSummary?, hidden: Boolean, onRev
             val locale = LocalConfiguration.current.locales[0]
             val info = listOfNotNull(
                 // Before kick-off the big number already says the day and time.
-                ((dayOf(m.startMs, locale) ?: stringResource(R.string.content_epg_today)) + " " + timeText(m.startMs)).takeIf { m.state != MatchState.PRE },
+                ((PremiumSportsPresentation.nzKickoffDay(m.startMs) ?: stringResource(R.string.content_epg_today)) + " " + PremiumSportsPresentation.nzKickoffTime(m.startMs)).takeIf { m.state != MatchState.PRE },
                 m.subtitle,
                 m.venue,
             ).joinToString(stringResource(R.string.content_epg_bits_separator))
@@ -586,6 +638,29 @@ internal fun ChannelRow(o: WatchOption, m: Match, onClick: () -> Unit, onHold: (
                 ?.removePrefix(BACKEND_CONFIDENCE_PREFIX)
             val (color, icon, text) = when {
                 playing -> Triple(StageColors.Muted, null, stringResource(R.string.sports_playing_now))
+                tv.own.owntv.BuildConfig.LOUNGE_TV_2 && o.tier == WatchTier.REMEMBERED ->
+                    Triple(TierPick, OwnTVIcon.STAR, stringResource(R.string.lounge_v2_sports_saved_evidence))
+                tv.own.owntv.BuildConfig.LOUNGE_TV_2 && o.guideTitle?.startsWith(FIXTURE_EVIDENCE_PREFIX) == true -> {
+                    val evidence = o.guideTitle.orEmpty().removePrefix(FIXTURE_EVIDENCE_PREFIX)
+                    val label = when (evidence) {
+                        FixtureEvidence.Level.GUIDE.name -> R.string.lounge_v2_sports_epg_evidence
+                        FixtureEvidence.Level.EVENT_NAME.name -> R.string.lounge_v2_sports_event_evidence
+                        FixtureEvidence.Level.BROADCASTER.name -> R.string.lounge_v2_sports_network_evidence
+                        else -> R.string.lounge_v2_sports_unverified
+                    }
+                    Triple(if (evidence == FixtureEvidence.Level.GUIDE.name) TierGuide else StageColors.Muted,
+                        OwnTVIcon.EPG, stringResource(label))
+                }
+                tv.own.owntv.BuildConfig.LOUNGE_TV_2 && backendConfidence != null -> {
+                    val label = when (backendCandidateEvidence(backendConfidence)) {
+                        SportsCandidateEvidence.EVENT_NAME -> R.string.lounge_v2_sports_event_evidence
+                        SportsCandidateEvidence.BROADCASTER -> R.string.lounge_v2_sports_network_evidence
+                        SportsCandidateEvidence.UNVERIFIED -> R.string.lounge_v2_sports_unverified
+                    }
+                    Triple(StageColors.Muted, OwnTVIcon.LIVE_TV, stringResource(label))
+                }
+                tv.own.owntv.BuildConfig.LOUNGE_TV_2 && o.tier == WatchTier.GUIDE ->
+                    Triple(TierGuide, OwnTVIcon.EPG, stringResource(R.string.lounge_v2_sports_epg_evidence))
                 backendConfidence == "definite" -> Triple(TierGuide, OwnTVIcon.LIVE_TV, stringResource(R.string.sport_backend_definite))
                 backendConfidence == "likely" -> Triple(TierEvent, OwnTVIcon.LIVE_TV, stringResource(R.string.sport_backend_likely))
                 backendConfidence == "maybe" -> Triple(StageColors.Muted, null, stringResource(R.string.sport_backend_maybe))
@@ -629,7 +704,7 @@ private fun ClosedNote(window: tv.own.owntv.core.sports.WatchWindow) {
     val locale = LocalConfiguration.current.locales[0]
     val text = when (window) {
         is tv.own.owntv.core.sports.WatchWindow.TooEarly ->
-            stringResource(R.string.sports_find_channels_from, (dayOf(window.opensAt, locale) ?: stringResource(R.string.content_epg_today)) + " " + timeText(window.opensAt))
+            stringResource(R.string.sports_find_channels_from, (PremiumSportsPresentation.nzKickoffDay(window.opensAt) ?: stringResource(R.string.content_epg_today)) + " " + PremiumSportsPresentation.nzKickoffTime(window.opensAt))
         else -> stringResource(R.string.sports_find_channels_ended)
     }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.mpx)) {

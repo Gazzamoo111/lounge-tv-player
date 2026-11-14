@@ -51,7 +51,7 @@ enum class OwnTVIcon {
     // Audio mode's equaliser mark (the bar at rest, the rail's Now playing item).
     EQ,
     // The Sports Hub's trophy (rail, Settings → Sports).
-    SPORTS,
+    SPORTS, NZ_FERN, AU_ROO, RELAX_LEAF,
 }
 
 /** Parsed once: [StageGlyphPaths] in 24-unit coordinates. */

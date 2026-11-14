@@ -1,0 +1,25 @@
+--- a/core/src/main/java/tv/own/owntv/core/database/dao/ChannelDao.kt
++++ b/core/src/main/java/tv/own/owntv/core/database/dao/ChannelDao.kt
+@@ -321,6 +321,13 @@
+     )
+     suspend fun snapshotFavoritesManual(profileId: Long, contextKey: String, sourceIds: List<Long>, limit: Int): List<ChannelEntity>
+ 
++    /** Optional editorial tiers, with the existing manual-position override and stable fallback sort. */
++    @Query("SELECT c.* FROM channels c LEFT JOIN content_order o ON o.itemId=c.id AND o.profileId=:profileId AND o.mediaType='LIVE' AND o.contextKey=:contextKey WHERE c.categoryId=:categoryId ORDER BY (o.position IS NULL), o.position, " + ChannelEditorialSql.TIER + ", CASE WHEN :alpha THEN c.name END, c.sortOrder, c.name, c.id")
++    fun pagingByCategoryEditorial(categoryId: Long, profileId: Long, contextKey: String, alpha: Boolean, nowMs: Long): PagingSource<Int, ChannelEntity>
++
++    @Query("SELECT c.* FROM channels c LEFT JOIN content_order o ON o.itemId=c.id AND o.profileId=:profileId AND o.mediaType='LIVE' AND o.contextKey=:contextKey WHERE c.categoryId=:categoryId ORDER BY (o.position IS NULL), o.position, " + ChannelEditorialSql.TIER + ", CASE WHEN :alpha THEN c.name END, c.sortOrder, c.name, c.id LIMIT :limit")
++    suspend fun snapshotByCategoryEditorial(categoryId: Long, profileId: Long, contextKey: String, alpha: Boolean, nowMs: Long, limit: Int): List<ChannelEntity>
++
+     // --- Counts ---
+     @Query("SELECT COUNT(*) FROM channels WHERE categoryId = :categoryId")
+     fun countByCategory(categoryId: Long): Flow<Int>
+--- /dev/null
++++ b/core/src/main/java/tv/own/owntv/core/database/dao/ChannelEditorialSql.kt
+@@ -0,0 +1,6 @@
++package tv.own.owntv.core.database.dao
++
++/** Shared SQL for paged browsing, guide parity and playback snapshots. Explicit moves sort first. */
++object ChannelEditorialSql {
++    const val TIER = "CASE WHEN UPPER(c.name) LIKE '% BACKUP%' OR UPPER(c.name) LIKE '%(BK)%' THEN 4 WHEN UPPER(TRIM(c.name)) IN ('DISNEY+ CLASSIC','DISNEY+PIXAR','PIXAR CHANNEL') THEN 0 WHEN c.name LIKE '24/7%' OR c.name LIKE '24-7%' THEN 3 WHEN EXISTS(SELECT 1 FROM epg_programmes e WHERE e.epgChannelId=LOWER(TRIM(c.epgChannelId)) AND e.startMs<=:nowMs AND e.stopMs>:nowMs) THEN 1 ELSE 2 END"
++}

@@ -1,0 +1,32 @@
+--- a/player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt
++++ b/player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt
+@@ -928,7 +928,7 @@
+                 // Audio-plays-no-video: a video track exists but has never rendered a single frame, even
+                 // though we're not in the total-freeze case above (position/audio clock IS advancing). Only
+                 // fires once per load so the VM's one-shot mpv fallback isn't retriggered after it acts.
+-                if (!_audioOnly.value && !tune.noVideoTriggered && hasVideo && !tune.everRendered && now - tune.readySinceMs >= NO_VIDEO_TIMEOUT_MS) {
++                if (surface != null && !_audioOnly.value && !tune.noVideoTriggered && hasVideo && !tune.everRendered && now - tune.readySinceMs >= NO_VIDEO_TIMEOUT_MS) {
+                     tune.noVideoTriggered = true
+                     if (tunneledNow) { tunnelingFailed("no picture after ${now - tune.readySinceMs}ms"); return }
+                     LiveDiagnosticsLog.event("progressWatchdog: no video frame after ${now - tune.readySinceMs}ms (pos=$pos advancing, video track present)")
+@@ -948,7 +948,7 @@
+                 // sits still — that's expected, not a frozen picture. Skip the frame-based freeze check;
+                 // the position/no-progress backstop above still catches a genuinely dead feed.
+                 // A tunneled decoder never calls the frame hook: there the position backstop is all.
+-                val framesStuck = !tunneledNow && !_audioOnly.value && tune.everRendered && hasVideo && frames == tune.lastFrameCount
++                val framesStuck = surface != null && !tunneledNow && !_audioOnly.value && tune.everRendered && hasVideo && frames == tune.lastFrameCount
+                 tune.lastFrameCount = frames
+                 if (framesStuck) {
+                     if (++tune.frozenChecks >= FROZEN_LIMIT) {
+@@ -1510,6 +1510,11 @@
+         // in the export, with the surface's identity to tell a replacement from a re-attach.
+         val previous = surface
+         if (s !== previous) {
++            // Moving an existing session between preview/fullscreen is not a frozen decoder.
++            // Give a replacement output its own observation window; position/audio health stays live.
++            tune.frozenChecks = 0
++            tune.lastFrameCount = frameCounter.get()
++            tune.readySinceMs = android.os.SystemClock.elapsedRealtime()
+             val id = { x: Surface -> Integer.toHexString(System.identityHashCode(x)) }
+             LiveDiagnosticsLog.event(
+                 when {

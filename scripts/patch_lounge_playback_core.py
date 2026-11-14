@@ -180,7 +180,7 @@ PATCHES = {
   ]
 }
 
-def apply(root: Path) -> None:
+def apply(root: Path, milestone3: bool = True, milestone6: bool = True) -> None:
     actual = subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"], text=True).strip()
     if actual != PIN:
         raise SystemExit(f"Core revision mismatch: expected {PIN}, got {actual}")
@@ -257,9 +257,97 @@ def apply(root: Path) -> None:
     manifest.write_text("\n".join(rows[:header_end] + body) + "\n", encoding="utf-8")
     print("Refreshed sports fixture regex safe literal")
 
+    if milestone3:
+        patch = Path(__file__).resolve().parent / "patches/playback-milestone3.patch"
+        subprocess.run(["git", "-C", str(root), "apply", "--check", str(patch)], check=True)
+        subprocess.run(["git", "-C", str(root), "apply", str(patch)], check=True)
+        print("Applied milestone 3 continuity, cancellation and recovery improvements")
+        colours = Path(__file__).resolve().parent / "patches/sports-milestone4-colours.patch"
+        subprocess.run(["git", "-C", str(root), "apply", "--check", str(colours)], check=True)
+        subprocess.run(["git", "-C", str(root), "apply", str(colours)], check=True)
+        print("Preserved source team colours in fixture parsing and cache")
+        if milestone6:
+            recovery = Path(__file__).resolve().parent / "patches/playback-milestone6.patch"
+            subprocess.run(["git", "-C", str(root), "apply", "--check", str(recovery)], check=True)
+            subprocess.run(["git", "-C", str(root), "apply", str(recovery)], check=True)
+            print("Applied isolated preview ownership and English poster policy")
+            editorial_patch = Path(__file__).resolve().parent / "patches/channel-editorial-order.patch"
+            subprocess.run(["git", "-C", str(root), "apply", "--check", str(editorial_patch)], check=True)
+            subprocess.run(["git", "-C", str(root), "apply", str(editorial_patch)], check=True)
+            guide_order_patch = Path(__file__).resolve().parent / "patches/guide-order-parity.patch"
+            subprocess.run(["git", "-C", str(root), "apply", "--check", str(guide_order_patch)], check=True)
+            subprocess.run(["git", "-C", str(root), "apply", str(guide_order_patch)], check=True)
+            sports_patch = Path(__file__).resolve().parent / "patches/sports-competition-phrases.patch"
+            subprocess.run(["git", "-C", str(root), "apply", "--check", str(sports_patch)], check=True)
+            subprocess.run(["git", "-C", str(root), "apply", str(sports_patch)], check=True)
+            guide_patch = Path(__file__).resolve().parent / "patches/guide-interrupted-download.patch"
+            subprocess.run(["git", "-C", str(root), "apply", "--check", str(guide_patch)], check=True)
+            subprocess.run(["git", "-C", str(root), "apply", str(guide_patch)], check=True)
+            surface_patch = Path(__file__).resolve().parent / "patches/playback-surface-handoff.patch"
+            subprocess.run(["git", "-C", str(root), "apply", "--check", str(surface_patch)], check=True)
+            subprocess.run(["git", "-C", str(root), "apply", str(surface_patch)], check=True)
+            settings_path = root / "core/src/main/java/tv/own/owntv/core/settings/SettingsRepository.kt"
+            settings_text = settings_path.read_text()
+            old_default = "it[Keys.LIVE_PREVIEW_AUDIO] ?: false"
+            if settings_text.count(old_default) != 1:
+                raise SystemExit("Unexpected preview audio default")
+            vod_previous = (
+                "            ?: if (prefs[Keys.VOD_PREFER_EXO] == true) tv.own.owntv.core.player.EnginePreference.EXO_FIRST\n"
+                "            else tv.own.owntv.core.player.EnginePreference.MPV_FIRST"
+            )
+            vod_default = (
+                "            ?: prefs[Keys.VOD_PREFER_EXO]?.let { if (it) "
+                "tv.own.owntv.core.player.EnginePreference.EXO_FIRST else "
+                "tv.own.owntv.core.player.EnginePreference.MPV_FIRST }\n"
+                "            ?: tv.own.owntv.core.player.EnginePreference.EXO_FIRST"
+            )
+            if settings_text.count(vod_previous) != 1:
+                raise SystemExit("Unexpected pinned VOD engine default")
+            settings_text = settings_text.replace(old_default, "it[Keys.LIVE_PREVIEW_AUDIO] ?: true")
+            settings_text = settings_text.replace(vod_previous, vod_default)
+            settings_path.write_text(settings_text)
+            # Keep the Guide reachable inside Live TV; My Lounge replaces its rail entry.
+            nav_path = root / "core/src/main/java/tv/own/owntv/core/nav/MainSection.kt"
+            nav_text = nav_path.read_text(encoding="utf-8")
+            nav_changes = [
+                ("    DOWNLOADS(R.string.common_nav_downloads),",
+                 "    MY_LOUNGE(R.string.common_nav_my_lounge),\n    DOWNLOADS(R.string.common_nav_downloads),"),
+                ("listOf(HOME, LIVE_TV, SPORTS, MOVIES, SERIES, DOWNLOADS, EPG)",
+                 "listOf(HOME, LIVE_TV, SPORTS, MOVIES, SERIES, MY_LOUNGE, DOWNLOADS)"),
+                ("            add(SPORTS)\n            if (hasLive) { add(LIVE_TV); add(EPG) }",
+                 "            add(SPORTS)\n            add(MY_LOUNGE)\n            if (hasLive) add(LIVE_TV)"),
+            ]
+            for before, after in nav_changes:
+                if nav_text.count(before) != 1:
+                    raise SystemExit("Unexpected pinned core navigation: " + before)
+                nav_text = nav_text.replace(before, after)
+            nav_path.write_text(nav_text, encoding="utf-8")
+            strings_path = root / "core/src/main/res/values/strings.xml"
+            strings_text = strings_path.read_text(encoding="utf-8")
+            old_label = '<string name="common_nav_downloads">Downloads</string>'
+            if strings_text.count(old_label) != 1:
+                raise SystemExit("Unexpected pinned core nav strings")
+            strings_path.write_text(strings_text.replace(old_label,
+                '<string name="common_nav_my_lounge">My Lounge</string>\n    ' + old_label), encoding="utf-8")
+            nav_test_path = root / "core/src/test/java/tv/own/owntv/core/nav/MainSectionTest.kt"
+            nav_test_text = nav_test_path.read_text(encoding="utf-8")
+            old_expected = 'setOf(MainSection.HOME, MainSection.SPORTS)'
+            if nav_test_text.count(old_expected) != 1:
+                raise SystemExit("Unexpected pinned core nav test")
+            nav_test_path.write_text(nav_test_text.replace(old_expected,
+                'setOf(MainSection.HOME, MainSection.SPORTS, MainSection.MY_LOUNGE)'), encoding="utf-8")
+            finishing_literals = Path(__file__).resolve().parent / "patches/finishing-core-safe-literals.txt"
+            with manifest.open("a", encoding="utf-8") as output:
+                output.write(finishing_literals.read_text(encoding="utf-8"))
+            print("Ported OwnTV 991118af interrupted XMLTV handling and audible preview default")
+            benchmark = Path(__file__).resolve().parent / "benchmarks/Milestone6OwnershipComparisonTest.kt"
+            target = root / "player-core/src/test/java/tv/own/owntv/player/Milestone6OwnershipComparisonTest.kt"
+            target.write_text(benchmark.read_text(), encoding="utf-8")
+
+
     print(f"Playback core patch applied to pinned commit {PIN}")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        raise SystemExit("Usage: patch_lounge_playback_core.py path/to/OwnTV_Core")
-    apply(Path(sys.argv[1]).resolve())
+    if len(sys.argv) not in (2, 3) or (len(sys.argv) == 3 and sys.argv[2] not in ("--baseline", "--milestone5")):
+        raise SystemExit("Usage: patch_lounge_playback_core.py path/to/OwnTV_Core [--baseline|--milestone5]")
+    apply(Path(sys.argv[1]).resolve(), milestone3=len(sys.argv) == 2 or sys.argv[2] == "--milestone5", milestone6=len(sys.argv) == 2)

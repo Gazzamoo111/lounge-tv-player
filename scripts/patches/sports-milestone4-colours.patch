@@ -1,0 +1,80 @@
+diff --git a/core/src/main/java/tv/own/owntv/core/sports/EspnParser.kt b/core/src/main/java/tv/own/owntv/core/sports/EspnParser.kt
+--- a/core/src/main/java/tv/own/owntv/core/sports/EspnParser.kt
++++ b/core/src/main/java/tv/own/owntv/core/sports/EspnParser.kt
+@@ -373,6 +373,7 @@
+         abbreviation = t.optString("abbreviation"),
+         location = t.optString("location").takeIf { it.isNotEmpty() },
+         logoUrl = logo(t.optString("logo").ifEmpty { t.optJSONArray("logos")?.optJSONObject(0)?.optString("href").orEmpty() }),
++        color = t.optString("color").takeIf { value -> value.length == 6 && value.all { it in '0'..'9' || it.lowercaseChar() in 'a'..'f' } },
+     )
+ 
+     private fun athlete(a: JSONObject, fallbackId: String): Team {
+diff --git a/core/src/main/java/tv/own/owntv/core/sports/SportsCacheJson.kt b/core/src/main/java/tv/own/owntv/core/sports/SportsCacheJson.kt
+--- a/core/src/main/java/tv/own/owntv/core/sports/SportsCacheJson.kt
++++ b/core/src/main/java/tv/own/owntv/core/sports/SportsCacheJson.kt
+@@ -222,7 +222,7 @@
+ 
+     private fun team(t: Team) = JSONObject()
+         .put("id", t.id).put("n", t.name).put("sn", t.shortName).put("ab", t.abbreviation)
+-        .putOpt("lo", t.location).putOpt("img", t.logoUrl).put("at", t.isAthlete).putOpt("co", t.country)
++        .putOpt("lo", t.location).putOpt("img", t.logoUrl).put("at", t.isAthlete).putOpt("co", t.country).putOpt("bc", t.color)
+ 
+     private fun team(o: JSONObject) = Team(
+         id = o.getString("id"),
+@@ -233,6 +233,7 @@
+         logoUrl = o.optStringOrNull("img"),
+         isAthlete = o.optBoolean("at"),
+         country = o.optStringOrNull("co"),
++        color = o.optStringOrNull("bc"),
+     )
+ 
+     private fun event(e: MatchEvent) = JSONObject()
+diff --git a/core/src/main/java/tv/own/owntv/core/sports/model/Match.kt b/core/src/main/java/tv/own/owntv/core/sports/model/Match.kt
+--- a/core/src/main/java/tv/own/owntv/core/sports/model/Match.kt
++++ b/core/src/main/java/tv/own/owntv/core/sports/model/Match.kt
+@@ -16,6 +16,8 @@
+     val logoUrl: String? = null,
+     val isAthlete: Boolean = false,
+     val country: String? = null,
++    /** Official RGB colour supplied by the fixture source; absent means use the application palette. */
++    val color: String? = null,
+ )
+ 
+ /** One period's score: a quarter's points, a set's games (with the tie-break points when one was played). */
+diff --git a/tools/i18n/safe_literals.txt b/tools/i18n/safe_literals.txt
+--- a/tools/i18n/safe_literals.txt
++++ b/tools/i18n/safe_literals.txt
+@@ -6483,3 +6483,5 @@
+ 1	log	player-core/src/main/java/tv/own/owntv/player/VolumeBoost.kt	volume boost failed: ${it.javaClass.simpleName}
+ 1	log	player-core/src/main/java/tv/own/owntv/player/VolumeBoost.kt	volume boost unavailable: ${it.javaClass.simpleName}
+ 1	log	player-core/src/main/java/tv/own/owntv/player/ZapTiming.kt	(zap key press to first frame ${it}ms)
++1	json	core/src/main/java/tv/own/owntv/core/sports/EspnParser.kt	color
++2	json	core/src/main/java/tv/own/owntv/core/sports/SportsCacheJson.kt	bc
+diff --git a/core/src/test/java/tv/own/owntv/core/sports/SportsBrandColorTest.kt b/core/src/test/java/tv/own/owntv/core/sports/SportsBrandColorTest.kt
+new file mode 100644
+--- /dev/null
++++ b/core/src/test/java/tv/own/owntv/core/sports/SportsBrandColorTest.kt
+@@ -0,0 +1,23 @@
++package tv.own.owntv.core.sports
++
++import org.junit.Test
++import org.junit.Assert.*
++import tv.own.owntv.core.sports.model.*
++
++class SportsBrandColorTest {
++    private fun teams(color: String) = EspnParser.teams("""{"sports":[{"leagues":[{"teams":[{"team":{"id":"1","displayName":"TEST club","color":"$color"}}]}]}]}""")
++    @Test fun `source colour is retained without inventing a palette`() {
++        assertEquals("E31837", teams("E31837").single().color)
++        assertNull(teams("").single().color)
++    }
++    @Test fun `invalid source colours are discarded`() {
++        for (invalid in listOf("red", "#E31837", "GG0000", "1234567")) assertNull(teams(invalid).single().color)
++    }
++    @Test fun `colour and team identity survive stored fixture round trip`() {
++        val team = teams("E31837").single()
++        val match = Match("test", Sport.SOCCER, "soccer/eng.1", "eng.1", "TEST competition", 1000, MatchState.PRE, "", "TEST fixture",
++            competitors = listOf(Competitor(team, true, null, null)))
++        val board = SportsBoard(today = mapOf("soccer/eng.1" to listOf(match)))
++        assertEquals(team, SportsCacheJson.read(SportsCacheJson.write(board))!!.matches.single().competitors.single().team)
++    }
++}

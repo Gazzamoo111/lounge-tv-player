@@ -93,10 +93,10 @@ enum class RailState {
  */
 data class NowPlayingRail(val logoUrl: String?, val audioMode: Boolean, val playing: Boolean)
 
-/** The rail order: Search first, Sports then the Guide right after Live TV, More last. */
+/** My Lounge above Downloads, Guide available from Live TV instead of a duplicate sidebar entry. */
 private val StageRailOrder = listOf(
-    MainSection.SEARCH, MainSection.HOME, MainSection.LIVE_TV, MainSection.SPORTS, MainSection.EPG,
-    MainSection.MOVIES, MainSection.SERIES, MainSection.DOWNLOADS,
+    MainSection.SEARCH, MainSection.HOME, MainSection.LIVE_TV, MainSection.SPORTS,
+    MainSection.MOVIES, MainSection.SERIES, MainSection.MY_LOUNGE, MainSection.DOWNLOADS,
 )
 
 /** The rail's width with names: Normal 280 · Wide 340 · Extra wide 400; Compact is the 84 capsule. */
@@ -283,6 +283,7 @@ private val MainSection.stageIcon: OwnTVIcon
         MainSection.SPORTS -> OwnTVIcon.SPORTS
         MainSection.MOVIES -> OwnTVIcon.MOVIES
         MainSection.SERIES -> OwnTVIcon.SERIES
+        MainSection.MY_LOUNGE -> OwnTVIcon.FAVORITE
         MainSection.DOWNLOADS -> OwnTVIcon.DOWNLOADS
         MainSection.MORE, MainSection.SETTINGS -> OwnTVIcon.TILES
     }
