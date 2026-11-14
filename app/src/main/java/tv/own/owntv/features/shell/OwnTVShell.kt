@@ -471,7 +471,7 @@ fun OwnTVShell(
     val resumeSettings = koinInject<tv.own.owntv.core.settings.SettingsRepository>()
     val startupChannelUnavailable = androidx.compose.ui.res.stringResource(tv.own.owntv.R.string.settings_startup_channel_unavailable)
     LaunchedEffect(Unit) {
-        if (playerMode != PlayerMode.NONE) return@LaunchedEffect
+        if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND || playerMode != PlayerMode.NONE) return@LaunchedEffect
         val pid = resumeSettings.activeProfileId.first()
         when (resumeSettings.startupMode(pid).first()) {
             tv.own.owntv.core.settings.StartupMode.LAST_CHANNEL -> {
@@ -536,7 +536,9 @@ fun OwnTVShell(
     // and is skipped if the user is already on EPG.)
     LaunchedEffect(Unit) {
         kotlinx.coroutines.delay(1_200)
-        if (selectedSection != MainSection.EPG) { tv.own.owntv.core.util.Perf.stamp("epg-preload"); epgVm.load() }
+        if (!tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND && selectedSection != MainSection.EPG) {
+            tv.own.owntv.core.util.Perf.stamp("epg-preload"); epgVm.load()
+        }
     }
 
     // Opening content from a browse screen goes fullscreen — UNLESS the player is already docked as a
@@ -741,7 +743,8 @@ fun OwnTVShell(
     }
 
     val continueLastWatched = {
-        continueTarget?.let { target ->
+        continueTarget?.takeIf { !tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND ||
+            it.kind != tv.own.owntv.features.home.ContinueKind.LIVE }?.let { target ->
             scope.launch {
                 when (target.kind) {
                     tv.own.owntv.features.home.ContinueKind.LIVE ->
@@ -828,6 +831,11 @@ fun OwnTVShell(
 
     LaunchedEffect(pendingDeepLink, activeProfileId) {
         val deepLink = pendingDeepLink ?: return@LaunchedEffect
+        if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND &&
+            (deepLink is LauncherDeepLink.Live || deepLink == LauncherDeepLink.OpenLiveSection)) {
+            onDeepLinkConsumed()
+            return@LaunchedEffect
+        }
         val pid = activeProfileId ?: return@LaunchedEffect
         if (pid < 0) return@LaunchedEffect
         when (deepLink) {
@@ -1263,6 +1271,7 @@ fun OwnTVShell(
                                 restoreTrendingSearchFocus = false
                             },
                             previewEnabled = playerMode == PlayerMode.NONE,
+                            onDemandOnly = tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND,
                             firstRowFocusRequester = homeFirstRowFocus,
                             // Beside the resting capsule; a docked rail already reserves its own width.
                             onEntryHook = { homeEntry = it },
@@ -1475,7 +1484,8 @@ fun OwnTVShell(
             }
           }
             if (selectedSection != MainSection.SPORTS) tv.own.owntv.features.shell.components.StageStatusCluster(
-                continuePill = continueTarget?.let { target ->
+                continuePill = continueTarget?.takeIf { !tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND ||
+                    it.kind != tv.own.owntv.features.home.ContinueKind.LIVE }?.let { target ->
                     val live = target.kind == tv.own.owntv.features.home.ContinueKind.LIVE
                     tv.own.owntv.features.shell.components.ContinuePill(
                         icon = if (live) OwnTVIcon.LIVE_TV else OwnTVIcon.PLAY,
