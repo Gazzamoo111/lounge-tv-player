@@ -311,7 +311,7 @@ fun HomeScreen(
             )
         }
         LoungeHomeHeroSource.RECENT -> buildList {
-            state.newMovies.take(8).forEach { movie ->
+            state.recentMovies.take(8).forEach { movie ->
                 add(LoungeVodHeroFeature(
                     key = "new-movie-${movie.id}",
                     title = loungeVodTitle(movie.canonicalTitle.ifBlank { movie.name }),
@@ -321,7 +321,7 @@ fun HomeScreen(
                     onPlay = { onPlayMovie(movie.id, 0L) },
                 ))
             }
-            state.newSeries.take(8).forEach { series ->
+            state.recentSeries.take(8).forEach { series ->
                 add(LoungeVodHeroFeature(
                     key = "new-series-${series.id}",
                     title = loungeVodTitle(series.canonicalTitle.ifBlank { series.name }),
