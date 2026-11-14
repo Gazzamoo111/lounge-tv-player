@@ -145,6 +145,7 @@ internal fun PremiumSportsScreen(vm: SportsViewModel, liveVm: LiveViewModel,
                         else chooseFeed = true
                     } }, previewFocus = previewFocus,
                     onFullScreen = { o -> if (active && m != null) { vm.playedFrom(m, options, o.channel); onPlayChannel(o.channel, options.map { it.channel }) } },
+                    previewingChannelId = playing?.id,
                     compact = compact,
                     notice = when {
                         valid && finding -> stringResource(R.string.m4_finding_for_preview)
@@ -440,16 +441,20 @@ internal fun PremiumEventCard(m: Match, spoilerFree: Boolean, featured: Boolean,
 internal fun SportsPreviewPanel(match: Match?, options: List<WatchOption>, playingName: String?, matching: Boolean,
     onOpen: () -> Unit, onPreview: (WatchOption) -> Unit, onFullScreen: (WatchOption) -> Unit, notice: String?,
     compact: Boolean = false, preview: @Composable () -> Unit,
-    onFind: () -> Unit = {}, finding: Boolean = false, searched: Boolean = false, previewFocus: FocusRequester? = null) {
+    onFind: () -> Unit = {}, finding: Boolean = false, searched: Boolean = false,
+    previewFocus: FocusRequester? = null, previewingChannelId: Long? = null) {
     Column(Modifier.fillMaxWidth().then(if (compact) Modifier else Modifier.fillMaxHeight()),
         verticalArrangement = Arrangement.spacedBy(14.mpx)) {
         // Keep the decoder's surface outside the scrollable feed details. D-pad navigation to a
         // lower action never scrolls away the preview or replaces its playback owner.
         StageSurface(onClick = {
-            val option = options.firstOrNull()
+            // OK on an already playing preview enters fullscreen on the SAME feed.
+            // Never substitute the first suggested channel for the selected playback.
+            val previewOption = options.firstOrNull { it.channel.id == previewingChannelId }
+            val option = previewOption ?: options.firstOrNull()
             when {
                 option == null -> if (!finding) onFind()
-                matching -> onFullScreen(option)
+                previewOption != null || matching -> onFullScreen(option)
                 else -> onPreview(option)
             }
         }, radius = 24.mpx, focusStyle = StageFocus.FX,
