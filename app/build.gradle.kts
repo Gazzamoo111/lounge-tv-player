@@ -232,7 +232,7 @@ android {
             // On Demand reuses the finished 2.0 Movies/Series UI, not the old legacy path.
             buildConfigField("boolean", "LOUNGE_TV_2", (loungeTv2 || onDemandQa).toString())
             buildConfigField("boolean", "LOUNGE_ON_DEMAND", onDemandQa.toString())
-            if (onDemandQa) manifestPlaceholders["loungeAppName"] = "Lounge TV On Demand QA"
+            if (onDemandQa) manifestPlaceholders["loungeAppName"] = "@string/lounge_on_demand_app_name"
             applicationIdSuffix = when {
                 onDemandQa -> ".ondemandqa"
                 loungeTv2 -> ".v2qa"
