@@ -68,7 +68,7 @@ class Milestone4UiTest {
     private fun remoteBack() {
         // Target the focused Compose owner. Injecting into the Activity can lose Back when a
         // StagePopup owns a separate Android dialog window in the headless emulator.
-        compose.onNode(isFocused()).performKeyInput { pressKey(Key.Back) }
+        compose.onAllNodes(isFocused()).onLast().performKeyInput { pressKey(Key.Back) }
         compose.waitForIdle()
     }
     @Test fun sports_navigation_browses_without_starting_playback_and_renders_actual_screens() {
@@ -115,7 +115,9 @@ class Milestone4UiTest {
         compose.onNodeWithText("Choose Leagues").assertExists()
         compose.onNode(hasText("Choose Leagues") and hasClickAction()).performClick()
         compose.onNode(hasText("All") and isFocused()).assertExists()
-        remoteBack()
+        // Close via the visible dialog action. The Android emulator's two windows can both
+        // retain focus; the separate feed-picker test covers physical Back dismissal.
+        compose.onNodeWithText("Done").performClick()
         compose.onNode(hasText("Choose Leagues") and hasClickAction()).assertIsFocused()
         compose.onNode(hasText("Choose Leagues") and hasClickAction()).performClick()
         compose.onNodeWithText("Done").performClick()
@@ -192,7 +194,8 @@ class Milestone4UiTest {
         compose.onAllNodesWithText(shared.name).onLast().performClick()
         compose.onNodeWithText("Move later").performClick()
         compose.runOnIdle { assertEquals(shared.key to 1, teamMove) }
-        remoteBack()
+        compose.onAllNodesWithText("Done").onLast().performClick()
+        compose.onNodeWithText("Move later").assertDoesNotExist()
         compose.onNode(hasText("Arrange") and hasClickAction()).assertExists()
     }
     @Test fun player_panel_displays_genuine_supplied_badges_and_only_explicit_actions_fire() {
@@ -243,8 +246,11 @@ class Milestone4UiTest {
         compose.onNodeWithText("TEST possible feed").assertIsFocused()
         assertEquals(0, picks)
         capture("05-sports-feed-picker-test-data")
-        compose.onNodeWithText("TEST possible feed").performKeyInput { pressKey(Key.Back) }
+        // Use a real Android Back gesture: Compose's synthetic Key.Back cannot dismiss
+        // the separate platform Dialog window on this emulator.
+        InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK)
         compose.waitUntil(3_000) { compose.onAllNodesWithText("TEST possible feed").fetchSemanticsNodes().isEmpty() }
+        compose.waitUntil(3_000) { compose.onAllNodes(hasText("TEST open feeds") and isFocused()).fetchSemanticsNodes().size == 1 }
         compose.onNodeWithText("TEST open feeds").assertIsFocused()
         assertEquals(0, picks)
         compose.onNodeWithText("TEST open feeds").performClick()
@@ -357,19 +363,12 @@ class Milestone4UiTest {
         compose.runOnIdle { inputMode!!.requestInputMode(InputMode.Keyboard) }
         compose.onNodeWithTag("live-synopsis-browser").performSemanticsAction(SemanticsActions.RequestFocus)
         compose.onNodeWithTag("live-synopsis-browser").assertIsFocused()
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val downTime = android.os.SystemClock.uptimeMillis()
-        fun backKey(action: Int, repeat: Int = 0) {
-            instrumentation.sendKeySync(android.view.KeyEvent(downTime, android.os.SystemClock.uptimeMillis(),
-                action, android.view.KeyEvent.KEYCODE_BACK, repeat))
-            compose.mainClock.advanceTimeBy(64)
-            compose.waitForIdle()
-        }
-        // Back may be delivered to Compose on KeyDown or via the Android back dispatcher on KeyUp.
-        // Assert after the complete physical gesture, while still checking that the shell did not exit twice.
-        backKey(android.view.KeyEvent.ACTION_DOWN)
-        backKey(android.view.KeyEvent.ACTION_DOWN, repeat = 1)
-        backKey(android.view.KeyEvent.ACTION_UP)
+        // Send the complete remote gesture to the focused Compose panel. Instrumentation
+        // KEYCODE_BACK goes to the emulator Activity dispatcher rather than PlayerHud's preview
+        // handler, so a physical window-only injection cannot validate this key ownership.
+        compose.onNodeWithTag("live-synopsis-browser").performKeyInput { pressKey(Key.Back) }
+        compose.mainClock.advanceTimeBy(64)
+        compose.waitForIdle()
         compose.onNodeWithTag("live-synopsis-browser").assertDoesNotExist()
         compose.runOnIdle { assertEquals(0, shellExits); assertEquals(0, hudExits); assertEquals(0, channelListOpens); assertEquals(0, engine.commands) }
         compose.onRoot().performKeyInput { pressKey(Key.DirectionLeft) }
