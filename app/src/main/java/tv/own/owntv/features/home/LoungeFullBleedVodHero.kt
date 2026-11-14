@@ -139,7 +139,7 @@ internal fun LoungeFullBleedVodHero(
                         maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 item.rating?.takeIf { it > 0.0 }?.let { score ->
-                    StageTag(String.format(java.util.Locale.getDefault(), "★ %.1f", score))
+                    StageTag(stringResource(R.string.lounge_pref_rating_number, score))
                 }
                 StageButton(
                     text = stringResource(R.string.home_trending_play),
