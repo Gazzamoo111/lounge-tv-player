@@ -229,7 +229,8 @@ android {
             val loungeTv2 = System.getenv("LOUNGE_TV_2_QA") == "true"
             val onDemandQa = System.getenv("LOUNGE_TV_ON_DEMAND_QA") == "true"
             require(!(loungeTv2 && onDemandQa)) { "Select only one isolated Lounge TV QA variant" }
-            buildConfigField("boolean", "LOUNGE_TV_2", loungeTv2.toString())
+            // On Demand reuses the finished 2.0 Movies/Series UI, not the old legacy path.
+            buildConfigField("boolean", "LOUNGE_TV_2", (loungeTv2 || onDemandQa).toString())
             buildConfigField("boolean", "LOUNGE_ON_DEMAND", onDemandQa.toString())
             if (onDemandQa) manifestPlaceholders["loungeAppName"] = "Lounge TV On Demand QA"
             applicationIdSuffix = when {
