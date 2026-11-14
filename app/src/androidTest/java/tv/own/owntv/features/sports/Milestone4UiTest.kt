@@ -113,13 +113,13 @@ class Milestone4UiTest {
         compose.onNodeWithText("All Events").assertIsFocused()
         compose.onNodeWithText("All Events").performKeyInput { pressKey(Key.DirectionCenter) }
         compose.onNodeWithText("Choose Leagues").assertExists()
-        compose.onNodeWithText("Choose Leagues").performClick()
+        compose.onNode(hasText("Choose Leagues") and hasClickAction()).performClick()
         compose.onNode(hasText("All") and isFocused()).assertExists()
         remoteBack()
-        compose.onNodeWithText("Choose Leagues").assertIsFocused()
-        compose.onNodeWithText("Choose Leagues").performClick()
+        compose.onNode(hasText("Choose Leagues") and hasClickAction()).assertIsFocused()
+        compose.onNode(hasText("Choose Leagues") and hasClickAction()).performClick()
         compose.onNodeWithText("Done").performClick()
-        compose.onNodeWithText("Choose Leagues").assertIsFocused()
+        compose.onNode(hasText("Choose Leagues") and hasClickAction()).assertIsFocused()
         compose.onNodeWithText("Choose Leagues").performKeyInput { pressKey(Key.DirectionDown) }
         compose.waitUntil(2_000) {
             compose.onAllNodes(hasText("TEST competition") and isFocused()).fetchSemanticsNodes().size == 1
@@ -193,7 +193,7 @@ class Milestone4UiTest {
         compose.onNodeWithText("Move later").performClick()
         compose.runOnIdle { assertEquals(shared.key to 1, teamMove) }
         remoteBack()
-        compose.onNodeWithText("Arrange").assertExists()
+        compose.onNode(hasText("Arrange") and hasClickAction()).assertExists()
     }
     @Test fun player_panel_displays_genuine_supplied_badges_and_only_explicit_actions_fire() {
         var toggles = 0; var guide = 0; var tools = 0; var tunes = 0
@@ -243,7 +243,8 @@ class Milestone4UiTest {
         compose.onNodeWithText("TEST possible feed").assertIsFocused()
         assertEquals(0, picks)
         capture("05-sports-feed-picker-test-data")
-        remoteBack()
+        compose.onNodeWithText("TEST possible feed").performKeyInput { pressKey(Key.Back) }
+        compose.waitUntil(3_000) { compose.onAllNodesWithText("TEST possible feed").fetchSemanticsNodes().isEmpty() }
         compose.onNodeWithText("TEST open feeds").assertIsFocused()
         assertEquals(0, picks)
         compose.onNodeWithText("TEST open feeds").performClick()
@@ -364,13 +365,13 @@ class Milestone4UiTest {
             compose.mainClock.advanceTimeBy(64)
             compose.waitForIdle()
         }
+        // Back may be delivered to Compose on KeyDown or via the Android back dispatcher on KeyUp.
+        // Assert after the complete physical gesture, while still checking that the shell did not exit twice.
         backKey(android.view.KeyEvent.ACTION_DOWN)
-        compose.onNodeWithTag("live-synopsis-browser").assertDoesNotExist()
-        compose.runOnIdle { assertEquals(0, shellExits); assertEquals(0, hudExits); assertEquals(0, channelListOpens) }
-        // Repeat and release occur after the original focused panel has left composition.
         backKey(android.view.KeyEvent.ACTION_DOWN, repeat = 1)
         backKey(android.view.KeyEvent.ACTION_UP)
-        compose.runOnIdle { assertEquals(0, shellExits); assertEquals(0, hudExits); assertEquals(0, engine.commands) }
+        compose.onNodeWithTag("live-synopsis-browser").assertDoesNotExist()
+        compose.runOnIdle { assertEquals(0, shellExits); assertEquals(0, hudExits); assertEquals(0, channelListOpens); assertEquals(0, engine.commands) }
         compose.onRoot().performKeyInput { pressKey(Key.DirectionLeft) }
         compose.mainClock.advanceTimeBy(32)
         compose.runOnIdle { assertEquals(1, channelListOpens); assertEquals(0, historyOpens) }
@@ -402,7 +403,7 @@ class Milestone4UiTest {
         compose.onNodeWithTag("live-synopsis-browser").performKeyInput { pressKey(Key.DirectionDown) }
         compose.mainClock.advanceTimeBy(64)
         compose.onNodeWithTag("live-synopsis-browser").assertDoesNotExist()
-        remoteBack()
+        compose.onNode(isFocused()).performKeyInput { pressKey(Key.Back) }
         compose.mainClock.advanceTimeBy(64)
         compose.onNodeWithTag("live-synopsis-browser").assertExists()
         repeat(3) {
