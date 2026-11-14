@@ -740,7 +740,7 @@ fun MoviesScreen(
                                         )
                                     }
                                 }
-if (displayRecentlyAdded) {
+                                if (displayRecentlyAdded) {
                                     item(key = Long.MIN_VALUE + 3L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
                                         Text(
                                             text = stringResource(R.string.lounge_vod_recently_added),
@@ -769,7 +769,7 @@ if (displayRecentlyAdded) {
                                         )
                                     }
                                 }
-if (displayFeatured) {
+                                if (displayFeatured) {
                                     item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
                                         Text(
                                             text = stringResource(R.string.lounge_home_featured_movies),
@@ -1017,7 +1017,7 @@ if (displayFeatured) {
                                     )
                                 }
                             }
-if (displayRecentlyAdded) {
+                            if (displayRecentlyAdded) {
                                 item(key = Long.MIN_VALUE + 3L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
                                     Text(
                                         text = stringResource(R.string.lounge_vod_recently_added),
@@ -1046,7 +1046,7 @@ if (displayRecentlyAdded) {
                                     )
                                 }
                             }
-if (displayFeatured) {
+                            if (displayFeatured) {
                                 item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
                                     Text(
                                         text = stringResource(R.string.lounge_home_featured_movies),
