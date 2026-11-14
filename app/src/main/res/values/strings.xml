@@ -84,4 +84,6 @@
     <string name="lounge_pref_match_details">Match details</string>
     <string name="lounge_pref_live_mark">LIVE</string>
     <string name="lounge_pref_upcoming_mark">UPCOMING</string>
+    <string name="lounge_pref_selected">✓</string>
+    <string name="lounge_pref_rating_number">★ %1$.1f</string>
 </resources>
