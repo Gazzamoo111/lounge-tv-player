@@ -292,12 +292,15 @@ class MovieViewModel(
 
     // A UTC day bucket keeps highlights stable during browsing. An hourly tick also rotates
     // the actual titles if the television stays running across midnight.
-    private val highlightDay = flow {
-        while (currentCoroutineContext().isActive) {
-            emit(System.currentTimeMillis() / 86_400_000L)
-            delay(3_600_000L)
-        }
-    }.distinctUntilChanged()
+    private val highlightDay = combine(
+        flow {
+            while (currentCoroutineContext().isActive) {
+                emit(System.currentTimeMillis() / 86_400_000L)
+                delay(3_600_000L)
+            }
+        }.distinctUntilChanged(),
+        highlightDatabase.invalidationTracker.createFlow("movies"),
+    ) { day, _ -> day }
 
     internal val categoryHighlights: StateFlow<MovieCategoryHighlights> = combine(
         _selected, ctx, custom, hiddenCategoryIds, highlightDay,

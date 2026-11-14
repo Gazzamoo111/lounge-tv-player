@@ -296,12 +296,15 @@ class SeriesViewModel(
         val day: Long,
     )
 
-    private val highlightDay = flow {
-        while (currentCoroutineContext().isActive) {
-            emit(System.currentTimeMillis() / 86_400_000L)
-            delay(3_600_000L)
-        }
-    }.distinctUntilChanged()
+    private val highlightDay = combine(
+        flow {
+            while (currentCoroutineContext().isActive) {
+                emit(System.currentTimeMillis() / 86_400_000L)
+                delay(3_600_000L)
+            }
+        }.distinctUntilChanged(),
+        highlightDatabase.invalidationTracker.createFlow("series"),
+    ) { day, _ -> day }
 
     internal val categoryHighlights: StateFlow<SeriesCategoryHighlights> = combine(
         _selected, ctx, custom, hiddenCategoryIds, highlightDay,
