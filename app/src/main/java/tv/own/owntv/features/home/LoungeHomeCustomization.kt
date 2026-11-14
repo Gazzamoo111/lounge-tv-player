@@ -198,7 +198,7 @@ private fun PreferenceAction(title: String, checked: Boolean, onClick: () -> Uni
         Row(Modifier.fillMaxWidth().padding(horizontal = 20.mpx, vertical = 14.mpx),
             horizontalArrangement = Arrangement.SpaceBetween) {
             Text(title, style = stageText(22, 600), color = Color.White)
-            if (checked) Text("✓", style = stageText(24, 800), color = stageAccent.accent)
+            if (checked) Text(stringResource(R.string.lounge_pref_selected), style = stageText(24, 800), color = stageAccent.accent)
         }
     }
 }
