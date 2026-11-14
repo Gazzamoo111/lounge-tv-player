@@ -97,6 +97,14 @@ if [[ "$count" != 3290 ]]; then
   exit 1
 fi
 
+teams="$(sqlite3 "$tmp/owntv.db" "SELECT count(*) FROM channels WHERE sourceId IN (SELECT id FROM sources WHERE url LIKE '%/lounge-core-xtream-qa-3252%') AND name LIKE 'NBA TEAM | %';")"
+gamefeeds="$(sqlite3 "$tmp/owntv.db" "SELECT count(*) FROM channels WHERE sourceId IN (SELECT id FROM sources WHERE url LIKE '%/lounge-core-xtream-qa-3252%') AND name LIKE 'NBA Feed %';")"
+if [[ "$teams" != 30 || "$gamefeeds" != 8 ]]; then
+  echo "ERROR: NBA restore incomplete on Firestick: $teams teams, $gamefeeds numbered feeds."
+  echo "No user data was cleared. Check Live sync."
+  exit 1
+fi
+
 adb -s "$DEVICE" shell am force-stop "$PACKAGE"
 adb -s "$DEVICE" shell monkey -p "$PACKAGE" 1 >/dev/null
 echo "SUCCESS: Restored NBA Teams (30) and NBA Game Feeds (8)."
