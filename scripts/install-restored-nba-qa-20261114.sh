@@ -14,6 +14,15 @@ for tool in gh adb sqlite3; do
   command -v "$tool" >/dev/null 2>&1 || { echo "ERROR: $tool not found"; exit 1; }
 done
 
+# Follow the already-running PR validation; do not dispatch another build.
+status="$(gh run view "$RUN_ID" -R "$REPO" --json status --jq '.status')"
+if [[ "$status" != "completed" ]]; then
+  echo "Verifying the restored NBA QA build $RUN_ID..."
+  gh run watch "$RUN_ID" -R "$REPO" --exit-status || {
+    echo "ERROR: QA test build failed; nothing installed."
+    exit 1
+  }
+fi
 meta="$(gh run view "$RUN_ID" -R "$REPO" --json headSha,event,status,conclusion \
   --jq '[.headSha,.event,.status,.conclusion] | join(" ")')"
 if [[ "$meta" != "$EXPECTED_SHA pull_request completed success" ]]; then
