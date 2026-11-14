@@ -315,6 +315,7 @@ fun HomeScreen(
                 logoUrl = state.trendingExtras[title.stableKey]?.logoUrl,
                 metadata = title.snapshot.year?.toString().orEmpty(),
                 rating = title.snapshot.rating,
+                synopsis = title.snapshot.overview,
                 onPlay = {
                     onActivateTrending(title) {
                         trendingToast.show(trendingUnavailableMessage)
@@ -331,6 +332,8 @@ fun HomeScreen(
                     backdropUrl = movie.backdropUrl,
                     metadata = movie.year?.toString().orEmpty(),
                     rating = movie.rating,
+                    synopsis = movie.plot,
+                    onDetails = { onOpenMovie(movie) },
                     onPlay = { onPlayMovie(movie.id, 0L) },
                 ))
             }
@@ -341,6 +344,8 @@ fun HomeScreen(
                     backdropUrl = series.backdropUrl,
                     metadata = series.year?.toString().orEmpty(),
                     rating = series.rating,
+                    synopsis = series.plot,
+                    onDetails = { onOpenSeries(series) },
                     onPlay = { onOpenSeries(series) },
                 ))
             }
@@ -353,6 +358,8 @@ fun HomeScreen(
                     backdropUrl = item.movie.backdropUrl,
                     metadata = item.movie.year?.toString().orEmpty(),
                     rating = item.movie.rating,
+                    synopsis = item.movie.plot,
+                    onDetails = { onOpenMovie(item.movie) },
                     onPlay = { onPlayMovie(item.movie.id, item.positionMs) },
                 )
                 is HeroItem.SeriesHero -> LoungeVodHeroFeature(
@@ -361,6 +368,8 @@ fun HomeScreen(
                     backdropUrl = item.series.backdropUrl,
                     metadata = item.series.year?.toString().orEmpty(),
                     rating = item.series.rating,
+                    synopsis = item.series.plot,
+                    onDetails = { onOpenSeries(item.series) },
                     onPlay = { onPlayEpisode(item.series.id, item.episode.id, item.positionMs) },
                 )
                 is HeroItem.LiveHero -> null
@@ -374,6 +383,8 @@ fun HomeScreen(
                     backdropUrl = movie.backdropUrl,
                     metadata = movie.year?.toString().orEmpty(),
                     rating = movie.rating,
+                    synopsis = movie.plot,
+                    onDetails = { onOpenMovie(movie) },
                     onPlay = { onPlayMovie(movie.id, 0L) },
                 ))
             }
@@ -384,6 +395,8 @@ fun HomeScreen(
                     backdropUrl = series.backdropUrl,
                     metadata = series.year?.toString().orEmpty(),
                     rating = series.rating,
+                    synopsis = series.plot,
+                    onDetails = { onOpenSeries(series) },
                     onPlay = { onOpenSeries(series) },
                 ))
             }
