@@ -723,7 +723,9 @@ internal fun LiveCategories(
                                 icon = LoungeEditorialOrder.icon(section),
                                 count = liveSectionFolderCount(sections, section).toString(),
                                 selected = isOpen,
+                                emphasized = true,
                                 modifier = Modifier
+                                    .loungePremiumLiveSectionHeading(section)
                                     .focusRequester(headerFocusers.getValue(section))
                                     .onFocusChanged {
                                         if (it.hasFocus) {
