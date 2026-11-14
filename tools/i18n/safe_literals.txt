@@ -19,6 +19,7 @@
 # category protocol: Stable protocol or comparison identifier.
 # category technical: Reviewed non-user-facing technical literal.
 
+# Lounge category and synopsis browser technical literals
 1	log	app/src/main/java/tv/own/owntv/MainActivity.kt	BgImage
 1	log	app/src/main/java/tv/own/owntv/MainActivity.kt	OwnTVHome
 1	compiler	app/src/main/java/tv/own/owntv/MainActivity.kt	RememberReturnType
@@ -1261,6 +1262,7 @@
 1	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	eventId
 2	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	home
 1	url	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-xtream
+1	url	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-xtream-qa-3252
 1	url	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-xtream-qa-next
 1	url	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-sports-candidates
 1	url	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-sports-candidates-qa
@@ -1270,6 +1272,7 @@
 2	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	logoUrl
 2	protocol	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	maybe
 1	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	name
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	nba
 1	json	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	providerItemId
 1	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	scheduledStartUtc
 1	uri	app/src/main/java/tv/own/owntv/features/sports/BackendSportsCandidates.kt	sport
@@ -1419,6 +1422,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	▲▼
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	⚽
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	⚽ ${it.players.firstOrNull().orEmpty().substringAfterLast(' ')} ${it.minute}
+1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsNbaFeedPolicy.kt	nba
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsParts.kt	EEE
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsParts.kt	EEEd
 2	technical	app/src/main/java/tv/own/owntv/features/sports/SportsParts.kt	\0
@@ -1482,6 +1486,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsSettingsScreen.kt	cricket/all
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsTable.kt	#
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsViewModel.kt	$startMs|$title
+1	url	app/src/main/java/tv/own/owntv/features/sports/SportsViewModel.kt	/lounge-core-xtream-qa-3252
 1	url	app/src/main/java/tv/own/owntv/features/sports/SportsViewModel.kt	https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-sports-calendar
 1	file-path	app/src/main/java/tv/own/owntv/features/sports/SportsViewModel.kt	sport-lounge/events-v1.json
 1	preference-key	app/src/main/java/tv/own/owntv/features/sports/data/FixtureReminderScheduler.kt	$profile|$fixture
@@ -2221,4 +2226,3 @@
 1	technical	app/src/main/java/tv/own/owntv/ui/theme/Glass.kt	glassPosition
 2	empty	app/src/main/java/tv/own/owntv/ui/theme/OwnTVColors.kt	\0
 2	empty	app/src/main/java/tv/own/owntv/ui/theme/Theme.kt	\0
-# Lounge category and synopsis browser technical literals

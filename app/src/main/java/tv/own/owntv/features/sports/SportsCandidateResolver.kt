@@ -34,7 +34,7 @@ class SportsCandidateResolver(
         val assessed = reader.assess(match, deduplicateFixtureOptions(options), custom, settings.epgOffsetMinutes.first())
         // Never hand a previous profile's candidate set to a newly selected profile.
         if (settings.activeProfileIdNow() != pid) return emptyList()
-        return assessed
+        return assessed.filter { nbaEventCandidateAllowed(match, it) }
     }
 
     fun rejected(profile: Long, match: Match): Set<String> =

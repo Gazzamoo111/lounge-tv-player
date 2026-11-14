@@ -461,7 +461,10 @@ class SportsViewModel(
         val profile = settings.activeProfileIdNow()
         val loungeSource = activeProfileSources(settings, sourceDao).first().sources.firstOrNull { source ->
             source.syncLive &&
-                tv.own.owntv.features.setup.isLoungeXtream(source.type, source.url) &&
+                (tv.own.owntv.features.setup.isLoungeXtream(source.type, source.url) ||
+                    (tv.own.owntv.BuildConfig.LOUNGE_TV_2 &&
+                        source.type == tv.own.owntv.core.model.SourceType.XTREAM &&
+                        source.url.contains("/lounge-core-xtream-qa-3252"))) &&
                 !source.username.isNullOrBlank() &&
                 !source.password.isNullOrBlank()
         }
