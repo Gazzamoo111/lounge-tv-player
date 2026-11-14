@@ -62,7 +62,7 @@ class Milestone6UiTest {
         val dir = File(InstrumentationRegistry.getInstrumentation().targetContext.filesDir, "m6-results").apply { mkdirs() }
         File(dir, "$name.png").outputStream().use { image.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
-    @Test fun sports_first_home_carousel_uses_real_fixture_actions_and_local_time() {
+    @Test fun sports_fullscreen_home_hero_uses_real_fixture_actions_and_local_time() {
         val now = System.currentTimeMillis()
         fun match(id: String, state: MatchState, start: Long) = Match(id, Sport.RUGBY, "rugby/164205", "164205",
             "TEST international rugby", start, state, "TEST status", "TEST fixture $id", competitors = listOf(
@@ -75,12 +75,13 @@ class Milestone6UiTest {
                 LoungeSportsHomeHero(matches, 40.mpx, null, {}, { opened = it }, { reminded = it }, active = false)
             }
         } }
-        compose.onNodeWithText("Featured live sport").assertExists()
-        compose.onNodeWithText("View event & feeds").performClick()
+        // Approved full-screen Home no longer has the old heading or Next/Reminder button row.
+        // Its prominent event title, verified league badge and Match details action must render.
+        compose.onNodeWithText("TEST FIXTURE LIVE").assertExists()
+        compose.onNodeWithText("TEST international rugby").assertExists()
+        compose.onNodeWithText("Match details").performClick()
         assertEquals("live", opened?.id)
-        compose.onNodeWithText("Next event").performClick()
-        compose.onNodeWithText("Set reminder").performClick()
-        assertEquals("soon", reminded?.id)
+        assertNull(reminded)
         capture("07-home-sport-lounge-test-data")
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         assertEquals("Sport Lounge", context.getString(tv.own.owntv.R.string.sports_title))
