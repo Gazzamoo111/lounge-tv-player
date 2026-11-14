@@ -56,6 +56,8 @@ internal data class LoungeVodHeroFeature(
     val logoUrl: String? = null,
     val metadata: String = "",
     val rating: Double? = null,
+    val synopsis: String? = null,
+    val onDetails: (() -> Unit)? = null,
     val onPlay: () -> Unit,
 )
 
@@ -110,28 +112,33 @@ internal fun LoungeFullBleedVodHero(
                 0.73f to Color(0xFF04070C).copy(alpha = 0.50f),
                 1f to Color(0xFF04070C).copy(alpha = 0.96f),
             )))
+            Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(
+                0f to Color(0xFF03060D).copy(alpha = 0.96f),
+                0.38f to Color(0xFF03060D).copy(alpha = 0.68f),
+                0.80f to Color.Transparent,
+            )))
             Column(
-                Modifier.align(Alignment.BottomCenter).fillMaxWidth()
-                    .padding(start = 175.mpx, end = 60.mpx, bottom = 32.mpx),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(13.mpx),
+                Modifier.align(Alignment.CenterStart).fillMaxWidth(0.63f)
+                    .padding(start = 175.mpx, top = 120.mpx, bottom = 40.mpx),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.spacedBy(16.mpx),
             ) {
                 if (!item.logoUrl.isNullOrBlank() && !logoFailed) {
                     StageTitleArt(
                         url = item.logoUrl,
                         contentDescription = item.title,
                         onFailed = { logoFailed = true },
-                        modifier = Modifier.widthIn(max = 760.mpx).height(145.mpx),
+                        modifier = Modifier.widthIn(max = 570.mpx).height(118.mpx),
                     )
                 } else {
                     Text(
-                        item.title.uppercase(),
-                        style = stageText(66, 900),
+                        item.title,
+                        style = stageText(64, 850),
                         color = Color.White,
-                        textAlign = TextAlign.Center,
+                        textAlign = TextAlign.Start,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.widthIn(max = 1250.mpx),
+                        modifier = Modifier.widthIn(max = 880.mpx),
                     )
                 }
                 if (item.metadata.isNotBlank()) {
@@ -141,10 +148,18 @@ internal fun LoungeFullBleedVodHero(
                 item.rating?.takeIf { it > 0.0 }?.let { score ->
                     StageTag(stringResource(R.string.lounge_pref_rating_number, score))
                 }
-                StageButton(
-                    text = stringResource(R.string.home_trending_play),
-                    onClick = item.onPlay,
-                )
+                item.synopsis?.takeIf { it.isNotBlank() }?.let { summary ->
+                    Text(summary, style = stageText(22, 430), color = Color.White.copy(alpha = 0.86f),
+                        maxLines = 3, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.widthIn(max = 730.mpx))
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(14.mpx),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    StageButton(text = stringResource(R.string.home_trending_play), onClick = item.onPlay)
+                    item.onDetails?.let { open ->
+                        StageButton(text = stringResource(R.string.lounge_on_demand_more_info), onClick = open)
+                    }
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(9.mpx),
                     verticalAlignment = Alignment.CenterVertically) {
                     for (dot in items.indices.take(10)) {
