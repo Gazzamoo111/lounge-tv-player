@@ -46,7 +46,7 @@ class LoungeCinematicSportsHeroTest {
     }
 
     @Test fun sportsGetDistinctFallbackPalettesWithoutASecondNetworkRequest() {
-        assertFalse(homeSportBackdropColor("rugby") == homeSportBackdropColor("basketball"))
-        assertEquals(LoungePremiumTokens.Elevated, homeSportBackdropColor("unknown"))
+        assertFalse(homeSportBackdropColor(Sport.RUGBY) == homeSportBackdropColor(Sport.BASKETBALL))
+        assertEquals(LoungePremiumTokens.Elevated, homeSportBackdropColor(Sport.LACROSSE))
     }
 }

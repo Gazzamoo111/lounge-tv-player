@@ -20,6 +20,7 @@
 # category technical: Reviewed non-user-facing technical literal.
 
 # Lounge category and synopsis browser technical literals
+
 1	log	app/src/main/java/tv/own/owntv/MainActivity.kt	BgImage
 1	log	app/src/main/java/tv/own/owntv/MainActivity.kt	OwnTVHome
 1	compiler	app/src/main/java/tv/own/owntv/MainActivity.kt	RememberReturnType
@@ -584,6 +585,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/more/MoreScreen.kt	DEV
 1	technical	app/src/main/java/tv/own/owntv/features/more/MoreScreen.kt	Developer
 1	technical	app/src/main/java/tv/own/owntv/features/more/MoreScreen.kt	▶
+1	sql	app/src/main/java/tv/own/owntv/features/movies/MovieCategoryHighlights.kt	 AND m.addedAt BETWEEN ? AND ?
 1	sql	app/src/main/java/tv/own/owntv/features/movies/MovieCategoryHighlights.kt	) AND m.posterUrl IS NOT NULL AND TRIM(m.posterUrl) <> ''
 1	sql	app/src/main/java/tv/own/owntv/features/movies/MovieCategoryHighlights.kt	))
 2	sql	app/src/main/java/tv/own/owntv/features/movies/MovieCategoryHighlights.kt	,
@@ -602,6 +604,7 @@
 1	assertion	app/src/main/java/tv/own/owntv/features/movies/MovieCategoryHighlights.kt	Unsupported category query parameter
 1	sql	app/src/main/java/tv/own/owntv/features/movies/MovieCategoryHighlights.kt	WHERE m.sourceId IN (
 2	empty	app/src/main/java/tv/own/owntv/features/movies/MovieCategoryHighlights.kt	\0
+1	sql	app/src/main/java/tv/own/owntv/features/movies/MovieCategoryHighlights.kt	m.addedAt DESC, m.sortOrder DESC, m.id DESC
 1	technical	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	${StorageAccess.sanitize(movie.name)}.${movie.containerExt ?: StorageAccess.extOf(movie.streamUrl)}
 1	log	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	Category highlights unavailable
 1	log	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	LoungeMovieHighlights
@@ -609,6 +612,7 @@
 1	log	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	OwnTVHome
 5	empty	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	\0
 2	log	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	external play history record failed movieId=${movie.id} profile=$pid
+1	room-schema	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	movies
 1	log	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	play history record failed movieId=${movie.id} profile=$pid
 1	log	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	play movieId=${movie.id} -> external player
 1	log	app/src/main/java/tv/own/owntv/features/movies/MovieViewModel.kt	play movieId=${movie.id} profile=$pid startPositionMs=$startPositionMs
@@ -662,6 +666,7 @@
 2	empty	app/src/main/java/tv/own/owntv/features/search/SearchViewModel.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/search/SearchViewModel.kt	m${item.id}
 1	technical	app/src/main/java/tv/own/owntv/features/search/SearchViewModel.kt	s${item.id}
+1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	 AND m.addedAt BETWEEN ? AND ?
 1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	) AND m.posterUrl IS NOT NULL AND TRIM(m.posterUrl) <> ''
 1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	))
 2	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	,
@@ -680,6 +685,7 @@
 1	assertion	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	Unsupported category query parameter
 1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	WHERE m.sourceId IN (
 2	empty	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	\0
+1	sql	app/src/main/java/tv/own/owntv/features/series/SeriesCategoryHighlights.kt	m.addedAt DESC, m.sortOrder DESC, m.id DESC
 1	technical	app/src/main/java/tv/own/owntv/features/series/SeriesScreen.kt	,
 1	empty	app/src/main/java/tv/own/owntv/features/series/SeriesScreen.kt	\0
 2	preference-key	app/src/main/java/tv/own/owntv/features/series/SeriesScreen.kt	delete_subtitles
@@ -723,6 +729,7 @@
 1	log	app/src/main/java/tv/own/owntv/features/series/SeriesViewModel.kt	playEpisodeQueue seriesId=${show.id} episodeId=${episode.id} profile=$pid queue=${queue.size} startIndex=$startIndex startPositionMs=$startPositionMs
 1	log	app/src/main/java/tv/own/owntv/features/series/SeriesViewModel.kt	saveEpisodeProgressNow episodeId=${ep.id} profile=$pid positionMs=$pos durationMs=$dur
 1	log	app/src/main/java/tv/own/owntv/features/series/SeriesViewModel.kt	saveEpisodeProgressNow progress save failed episodeId=${ep.id} profile=$pid
+1	room-schema	app/src/main/java/tv/own/owntv/features/series/SeriesViewModel.kt	series
 1	log	app/src/main/java/tv/own/owntv/features/series/SeriesViewModel.kt	stalker resolve failed episodeId=${episode.id}
 4	technical	app/src/main/java/tv/own/owntv/features/settings/AccentPopup.kt	#
 1	technical	app/src/main/java/tv/own/owntv/features/settings/AccentPopup.kt	4E952A

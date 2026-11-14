@@ -55,18 +55,19 @@ internal fun verifiedHomeSportSynopsis(match: Match): String? =
     match.subtitle?.trim()?.takeIf { it.isNotBlank() && it != match.title.trim() }
 
 /** Conservative sport-specific art direction, used only if there is no verified event image. */
-internal fun homeSportBackdropColor(sportPath: String): Color = when (sportPath) {
-    "rugby", "rugby-league" -> Color(0xFF175047)
-    "soccer" -> Color(0xFF254B58)
-    "cricket" -> Color(0xFF2E594F)
-    "basketball" -> Color(0xFF70442F)
-    "football" -> Color(0xFF36526C)
-    "racing" -> Color(0xFF45476A)
-    "mma" -> Color(0xFF71404F)
-    "tennis" -> Color(0xFF536141)
-    "hockey" -> Color(0xFF325B75)
-    "baseball" -> Color(0xFF425779)
-    "golf" -> Color(0xFF35634C)
+internal fun homeSportBackdropColor(sport: tv.own.owntv.core.sports.model.Sport): Color = when (sport) {
+    tv.own.owntv.core.sports.model.Sport.RUGBY,
+    tv.own.owntv.core.sports.model.Sport.RUGBY_LEAGUE -> Color(0xFF175047)
+    tv.own.owntv.core.sports.model.Sport.SOCCER -> Color(0xFF254B58)
+    tv.own.owntv.core.sports.model.Sport.CRICKET -> Color(0xFF2E594F)
+    tv.own.owntv.core.sports.model.Sport.BASKETBALL -> Color(0xFF70442F)
+    tv.own.owntv.core.sports.model.Sport.FOOTBALL -> Color(0xFF36526C)
+    tv.own.owntv.core.sports.model.Sport.RACING -> Color(0xFF45476A)
+    tv.own.owntv.core.sports.model.Sport.MMA -> Color(0xFF71404F)
+    tv.own.owntv.core.sports.model.Sport.TENNIS -> Color(0xFF536141)
+    tv.own.owntv.core.sports.model.Sport.HOCKEY -> Color(0xFF325B75)
+    tv.own.owntv.core.sports.model.Sport.BASEBALL -> Color(0xFF425779)
+    tv.own.owntv.core.sports.model.Sport.GOLF -> Color(0xFF35634C)
     else -> LoungePremiumTokens.Elevated
 }
 
@@ -75,7 +76,7 @@ private fun BoxScope.HomeSportBackdrop(
     match: Match,
     verifiedEventArtworkUrl: String?,
 ) {
-    val base = homeSportBackdropColor(match.sport.path)
+    val base = homeSportBackdropColor(match.sport)
     val home = teamTint(match.home?.team) ?: base
     val away = teamTint(match.away?.team) ?: LoungePremiumTokens.DeepNavy
     Box(Modifier.matchParentSize().background(Brush.horizontalGradient(
