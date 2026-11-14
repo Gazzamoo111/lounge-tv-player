@@ -199,6 +199,7 @@ fun HomeScreen(
     restoreTrendingSearchFocus: Boolean = false,
     onRestored: () -> Unit = {},
     previewEnabled: Boolean = true,
+    onDemandOnly: Boolean = false,
     firstRowFocusRequester: FocusRequester? = null,
     /** The content's left edge: beside the resting capsule (150), or 64 inside a docked rail's reserve. */
     contentStart: Dp = 150.mpx,
@@ -291,8 +292,20 @@ fun HomeScreen(
     var previewIndex by remember { mutableStateOf(-1) }
     var focusedHeroIndex by remember { mutableStateOf(-1) }
     // Profile-customisable shelves; core playback config and playlist filters remain untouched.
-    val orderedRows: List<Any> = loungeCuratedHomeRows(state.config.hidden, homePreferences)
-    val heroFeatures: List<LoungeVodHeroFeature> = when (homePreferences.source) {
+    val orderedRows: List<Any> = if (onDemandOnly) listOf(
+        LoungeHomeRow.SPORTS_HERO, HomeRow.HERO, LoungeHomeRow.NEW_RELEASES,
+        LoungeHomeRow.FEATURED_MOVIES, LoungeHomeRow.POPULAR_SERIES,
+        HomeRow.TRENDING, HomeRow.FAVORITE_MOVIES, HomeRow.FAVORITE_SERIES,
+    ) else loungeCuratedHomeRows(state.config.hidden, homePreferences)
+    // Use only real catalogue titles; VOD never selects the sports hero or live shelves.
+    val heroSource = if (onDemandOnly) when {
+        state.recentMovies.any { !it.backdropUrl.isNullOrBlank() } ||
+            state.recentSeries.any { !it.backdropUrl.isNullOrBlank() } -> LoungeHomeHeroSource.RECENT
+        state.trendingItems.isNotEmpty() -> LoungeHomeHeroSource.TRENDING
+        state.heroItems.any { it is HeroItem.MovieHero || it is HeroItem.SeriesHero } -> LoungeHomeHeroSource.CONTINUE
+        else -> LoungeHomeHeroSource.WATCHLIST
+    } else homePreferences.source
+    val heroFeatures: List<LoungeVodHeroFeature> = when (heroSource) {
         LoungeHomeHeroSource.SPORTS -> emptyList()
         LoungeHomeHeroSource.TRENDING -> state.trendingItems.take(12).map { title ->
             LoungeVodHeroFeature(
@@ -386,7 +399,7 @@ fun HomeScreen(
     }
     val heroVisible = HomeRow.HERO in orderedRows
     val hasDataNow: (Any) -> Boolean = { row -> when (row) {
-        LoungeHomeRow.SPORTS_HERO -> if (homePreferences.source == LoungeHomeHeroSource.SPORTS)
+        LoungeHomeRow.SPORTS_HERO -> if (!onDemandOnly && heroSource == LoungeHomeHeroSource.SPORTS)
             sportsHero.isNotEmpty() else heroFeatures.isNotEmpty()
         LoungeHomeRow.CUSTOMIZE -> true
         LoungeHomeRow.LIVE_NOW -> liveNowEvents.isNotEmpty()
@@ -614,7 +627,7 @@ fun HomeScreen(
                     val rowModifier = if (row == firstRowUnderHero) unfoldOnUp else Modifier
                     when (row) {
                         LoungeHomeRow.SPORTS_HERO -> {
-                            if (homePreferences.source == LoungeHomeHeroSource.SPORTS) {
+                            if (!onDemandOnly && heroSource == LoungeHomeHeroSource.SPORTS) {
                                 LoungeSportsHomeHero(
                                     sportsHero, contentStart, firstItemFocusRequester,
                                     onFocus = { onSportsRowFocused(LoungeHomeRow.SPORTS_HERO) },
