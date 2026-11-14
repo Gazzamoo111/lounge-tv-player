@@ -43,6 +43,7 @@ import tv.own.owntv.features.profiles.ProfileGateSessionViewModel
 import tv.own.owntv.features.profiles.ProfilesViewModel
 import tv.own.owntv.features.setup.Onboarding
 import tv.own.owntv.features.shell.OwnTVShell
+import tv.own.owntv.core.nav.MainSection
 import tv.own.owntv.features.shell.ShellViewModel
 import tv.own.owntv.ui.theme.BlurredBackdrop
 import tv.own.owntv.ui.theme.LocalBackground
@@ -243,6 +244,14 @@ open class MainActivity : ComponentActivity() {
             val weatherFahrenheit by viewModel.weatherFahrenheit.collectAsStateWithLifecycle()
             val selectedSection by viewModel.selectedSection.collectAsStateWithLifecycle()
             val visibleSections by viewModel.visibleSections.collectAsStateWithLifecycle()
+            // VOD QA installs as its own app and never exposes Live or Sports destinations.
+            val onDemandSections = setOf(MainSection.HOME, MainSection.SEARCH, MainSection.MOVIES,
+                MainSection.SERIES, MainSection.MY_LOUNGE, MainSection.DOWNLOADS)
+            val onDemandAllowed = onDemandSections + setOf(MainSection.MORE, MainSection.SETTINGS)
+            val displaySection = if (BuildConfig.LOUNGE_ON_DEMAND && selectedSection !in onDemandAllowed)
+                MainSection.HOME else selectedSection
+            val displaySections = if (BuildConfig.LOUNGE_ON_DEMAND) visibleSections.intersect(onDemandSections)
+                else visibleSections
             val activeProfileId by viewModel.activeProfileId.collectAsStateWithLifecycle()
             val isOnline by viewModel.isOnline.collectAsStateWithLifecycle()
 
@@ -409,9 +418,11 @@ open class MainActivity : ComponentActivity() {
                                 modifier = Modifier.fillMaxSize(),
                             )
                             shellReady -> OwnTVShell(
-                                selectedSection = selectedSection,
-                                visibleSections = visibleSections,
-                                onSelectSection = viewModel::selectSection,
+                                selectedSection = displaySection,
+                                visibleSections = displaySections,
+                                onSelectSection = { section ->
+                                    if (!BuildConfig.LOUNGE_ON_DEMAND || section in onDemandAllowed) viewModel.selectSection(section)
+                                },
                                 themeMode = themeMode,
                                 uiZoomPercent = uiZoomPercent,
                                 onSetZoom = viewModel::setUiZoom,
