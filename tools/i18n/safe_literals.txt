@@ -1422,11 +1422,8 @@
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	▲▼
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	⚽
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsMatchScreen.kt	⚽ ${it.players.firstOrNull().orEmpty().substringAfterLast(' ')} ${it.minute}
-1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsNbaFeedPolicy.kt	NBA FAST CHANNEL
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsNbaFeedPolicy.kt	NBA FEED
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsNbaFeedPolicy.kt	NBA TEAM
-1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsNbaFeedPolicy.kt	NBA TV
-1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsNbaFeedPolicy.kt	SPORTSNET LA LAKERS
 1	protocol	app/src/main/java/tv/own/owntv/features/sports/SportsNbaFeedPolicy.kt	nba
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsParts.kt	EEE
 1	technical	app/src/main/java/tv/own/owntv/features/sports/SportsParts.kt	EEEd
