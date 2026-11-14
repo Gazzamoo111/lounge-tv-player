@@ -66,9 +66,9 @@ class Milestone4UiTest {
         android.util.Log.i("LoungeM4Screens", "Rendered ${output.absolutePath} (${output.length()} bytes)")
     }
     private fun remoteBack() {
-        // Fire remotes send KEYCODE_BACK to the currently focused WINDOW. Espresso's root picker
-        // can instead wait on the unfocused host Activity behind an Android dialog.
-        InstrumentationRegistry.getInstrumentation().sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK)
+        // Target the focused Compose owner. Injecting into the Activity can lose Back when a
+        // StagePopup owns a separate Android dialog window in the headless emulator.
+        compose.onNode(isFocused()).performKeyInput { pressKey(Key.Back) }
         compose.waitForIdle()
     }
     @Test fun sports_navigation_browses_without_starting_playback_and_renders_actual_screens() {
