@@ -3,8 +3,8 @@
 # Installs only the exact signed PR artifact, resyncs Live and verifies 3290 rows.
 set -euo pipefail
 REPO="Gazzamoo111/lounge-tv-player"
-RUN_ID=43544097479
-EXPECTED_SHA="e6f81ae0a5629df7f5f18b07bc5e3c1d5d65770c"
+RUN_ID=43544808565
+EXPECTED_SHA="0794608763fa7ea45b311a6c88edd94fde8b28d6"
 DEVICE="192.168.68.53:5555"
 PACKAGE="com.loungetv.player.v2qa"
 ARTIFACT="lounge-tv-2-v2qa"
