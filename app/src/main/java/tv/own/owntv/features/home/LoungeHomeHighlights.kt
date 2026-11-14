@@ -31,6 +31,8 @@ internal data class LoungeHomeHighlights(
     val movieNames: Map<Long, String> = emptyMap(),
     val newMovies: List<MovieEntity> = emptyList(),
     val newSeries: List<SeriesEntity> = emptyList(),
+    val recentMovies: List<MovieEntity> = emptyList(),
+    val recentSeries: List<SeriesEntity> = emptyList(),
     val seriesNames: Map<Long, String> = emptyMap(),
 )
 
@@ -79,21 +81,23 @@ internal class LoungeHomeHighlightsReader(
         )
 
         // Same release/eligibility/visibility logic as the Movies and Series browsers.
-        val movieReleases = MovieCategoryHighlightsReader(database, movies).load(
+        val movieHighlights = MovieCategoryHighlightsReader(database, movies).load(
             key = LiveKey.All, profileId = profileId, sourceIds = movieIds,
             hiddenCategories = movieVisibility.hiddenCategories,
             customization = customizations.observe(profileId, MediaType.MOVIE).first(),
             folderContextKey = null, day = nowMs / 86_400_000L,
-        ).newReleases.take(6)
-        val seriesReleases = SeriesCategoryHighlightsReader(database, series).load(
+        )
+        val seriesHighlights = SeriesCategoryHighlightsReader(database, series).load(
             key = LiveKey.All, profileId = profileId, sourceIds = seriesIds,
             hiddenCategories = seriesVisibility.hiddenCategories,
             customization = customizations.observe(profileId, MediaType.SERIES).first(),
             folderContextKey = null, day = nowMs / 86_400_000L,
-        ).newReleases.take(6)
+        )
         return LoungeHomeHighlights(
-            newMovies = movieReleases,
-            newSeries = seriesReleases,
+            newMovies = movieHighlights.newReleases.take(6),
+            newSeries = seriesHighlights.newReleases.take(6),
+            recentMovies = movieHighlights.recentlyAdded.take(10),
+            recentSeries = seriesHighlights.recentlyAdded.take(10),
             movies = moviePicks.map { it.first },
             series = seriesPicks.map { it.first },
             movieNames = moviePicks.associate { it.first.id to it.second },
