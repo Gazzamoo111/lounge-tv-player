@@ -48,7 +48,7 @@ internal object Catalogue3252QaBootstrap {
                     Log.w(TAG, "No Lounge Xtream playlist found; existing playlists unchanged")
                 }
                 for (original in sources) {
-                    val marker = "synced_source_" + original.id
+                    val marker = "synced_source_" + original.id + "_nba_package_restore"
                     if (original.url == URL && flags.getBoolean(marker, false)) continue
 
                     // Preserve the login and all user settings. Only swap the

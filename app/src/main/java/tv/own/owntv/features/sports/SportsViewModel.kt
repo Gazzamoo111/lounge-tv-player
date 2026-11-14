@@ -468,8 +468,13 @@ class SportsViewModel(
                 !source.username.isNullOrBlank() &&
                 !source.password.isNullOrBlank()
         }
+        val nbaWithRestoredLocalFeeds = tv.own.owntv.BuildConfig.LOUNGE_TV_2 &&
+            match.sport == Sport.BASKETBALL && match.leagueSlug.equals("nba", ignoreCase = true)
         val backend = async(Dispatchers.IO) {
-            loungeSource?.let { backendSportsCandidates.options(match, it) }.orEmpty()
+            // BEST provider inventory is stale (HTTP 451). Do not let remote
+            // generic NBA suggestions replace the restored local NBA package.
+            if (nbaWithRestoredLocalFeeds) emptyList()
+            else loungeSource?.let { backendSportsCandidates.options(match, it) }.orEmpty()
         }
         val local = async(Dispatchers.Default) {
             watchReader.found(match) { SportsMemory.rememberedFor(config, it) }

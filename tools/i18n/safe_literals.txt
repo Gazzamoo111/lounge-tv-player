@@ -1611,6 +1611,7 @@
 1	log	app/src/main/java/tv/own/owntv/qa/Catalogue3252QaBootstrap.kt	QA bootstrap did not run; existing source unchanged
 1	log	app/src/main/java/tv/own/owntv/qa/Catalogue3252QaBootstrap.kt	QA sync failed; previous source URL restored
 1	log	app/src/main/java/tv/own/owntv/qa/Catalogue3252QaBootstrap.kt	QA sync unsuccessful; previous source URL restored
+1	preference-key	app/src/main/java/tv/own/owntv/qa/Catalogue3252QaBootstrap.kt	_nba_package_restore
 1	url	app/src/main/java/tv/own/owntv/qa/Catalogue3252QaBootstrap.kt	connect.loungetv.nz
 1	url	app/src/main/java/tv/own/owntv/qa/Catalogue3252QaBootstrap.kt	https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-core-xtream-qa-3252
 1	preference-key	app/src/main/java/tv/own/owntv/qa/Catalogue3252QaBootstrap.kt	loungetv_qa_catalogue_3252
