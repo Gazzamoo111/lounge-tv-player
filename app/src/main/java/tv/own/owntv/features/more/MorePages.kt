@@ -3,6 +3,8 @@ package tv.own.owntv.features.more
 import tv.own.owntv.ui.theme.stageTone
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusGroup
@@ -219,50 +221,128 @@ private val SettingsCards = listOf(
     SettingsGroupCard(OwnTVIcon.INFO, R.string.settings_group_app, R.string.settings_card_app, 10),
 )
 
-/** The card last opened, so Back from its group lands on it again rather than on the search field. */
-private var lastOpenedCard: Int? = null
+/** The card last opened, so Back from /**
+ * The overview has two levels only. The original SettingsGroup ordinals, all existing settings
+ * pages, deep links and global search are deliberately unchanged. Returning from an advanced
+ * group reopens that tier so the original group card is still focusable.
+ */
+private val EssentialSettingsGroups = listOf(0, 1, 3, 6, 8, 11)
+private val AdvancedSettingsGroups = listOf(2, 4, 5, 7, 9, 10)
+
+/** The old cards, at their ORIGINAL indexes, so no navigation mapping is ever rewritten. */
+@Composable
+private fun SettingsCardGrid(
+    indices: List<Int>,
+    back: Int?,
+    entry: FocusRequester,
+    pinned: Int,
+    profiles: Int,
+    onOpenGroup: (Int) -> Unit,
+) {
+    indices.chunked(3).forEach { row ->
+        // The same measured card geometry and focus callback as the original twelve-card grid.
+        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+            horizontalArrangement = Arrangement.spacedBy(20.mpx)) {
+            row.forEach { index ->
+                val card = SettingsCards[index]
+                StageTile(
+                    modifier = Modifier.weight(1f).heightIn(min = 150.mpx).fillMaxHeight()
+                        .then(if (index == back) Modifier.focusRequester(entry) else Modifier),
+                    onClick = { lastOpenedCard = index; onOpenGroup(index) },
+                    padding = 0.mpx,
+                ) { focused ->
+                    Column(Modifier.padding(horizontal = 26.mpx, vertical = 24.mpx)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            OwnTVIcon(card.icon,
+                                if (focused) StageColors.Text else StageColors.Muted, Modifier.size(28.mpx))
+                            Spacer(Modifier.weight(1f))
+                            Text((if (index == 1) profiles else card.count ?: pinned).toString(),
+                                style = stageText(17, 700), color = StageColors.Dim)
+                        }
+                        Text(stringResource(card.nameRes), style = stageText(24, 800),
+                            color = StageColors.Text, maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = 14.mpx))
+                        Text(stringResource(card.summaryRes), style = stageText(16, 500),
+                            color = StageColors.Muted, maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = 4.mpx))
+                    }
+                }
+            }
+        }
+    }
+}
 
 @Composable
 internal fun SettingsPage(entry: FocusRequester, pinned: Int, onOpenGroup: (Int) -> Unit, onSearch: () -> Unit) {
     val back = lastOpenedCard
     val profiles = tv.own.owntv.features.settings.profileCount()
+    val advancedVisible = rememberSaveable(back) {
+        mutableStateOf(back != null && back in AdvancedSettingsGroups)
+    }
     Column(Modifier.fillMaxSize().focusGroup()) {
         PageHead(stringResource(R.string.common_nav_settings)) {
             Spacer(Modifier.weight(1f))
-            Text(stringResource(R.string.more_settings_pin_hint), style = stageText(17, 500), color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(stringResource(R.string.more_settings_pin_hint), style = stageText(17, 500),
+                color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         StageSurface(
             onClick = { lastOpenedCard = null; onSearch() }, radius = 18.mpx,
-            modifier = Modifier.padding(top = 26.mpx).fillMaxWidth().height(60.mpx).then(if (back == null) Modifier.focusRequester(entry) else Modifier),
+            modifier = Modifier.padding(top = 26.mpx).fillMaxWidth().height(60.mpx)
+                .then(if (back == null) Modifier.focusRequester(entry) else Modifier),
             focusStyle = StageFocus.FX,
             idle = Modifier.background(StageColors.ControlFill, RoundedCornerShape(18.mpx)),
         ) { focused ->
-            Row(Modifier.padding(horizontal = 20.mpx), horizontalArrangement = Arrangement.spacedBy(14.mpx), verticalAlignment = Alignment.CenterVertically) {
-                OwnTVIcon(OwnTVIcon.SEARCH, if (focused) StageColors.Text else StageColors.Dim, Modifier.size(19.mpx))
-                Text(stringResource(R.string.more_settings_search), style = stageText(19, 500), color = if (focused) StageColors.Text else StageColors.Dim, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Row(Modifier.padding(horizontal = 20.mpx),
+                horizontalArrangement = Arrangement.spacedBy(14.mpx),
+                verticalAlignment = Alignment.CenterVertically) {
+                OwnTVIcon(OwnTVIcon.SEARCH,
+                    if (focused) StageColors.Text else StageColors.Dim, Modifier.size(19.mpx))
+                Text(stringResource(R.string.more_settings_search), style = stageText(19, 500),
+                    color = if (focused) StageColors.Text else StageColors.Dim,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
-        Column(Modifier.padding(top = 22.mpx), verticalArrangement = Arrangement.spacedBy(20.mpx)) {
-            SettingsCards.chunked(3).forEach { row ->
-                // 150 at the default font; a larger app font grows the row rather than cutting the
-                // summary, and the row's cards keep one height.
-                Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(20.mpx)) {
-                    row.forEach { card ->
-                        val index = SettingsCards.indexOf(card)
-                        StageTile(
-                            modifier = Modifier.weight(1f).heightIn(min = 150.mpx).fillMaxHeight().then(if (index == back) Modifier.focusRequester(entry) else Modifier),
-                            onClick = { lastOpenedCard = index; onOpenGroup(index) },
-                            padding = 0.mpx,
-                        ) { focused ->
-                            Column(Modifier.padding(horizontal = 26.mpx, vertical = 24.mpx)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    OwnTVIcon(card.icon, if (focused) StageColors.Text else StageColors.Muted, Modifier.size(28.mpx))
-                                    Spacer(Modifier.weight(1f))
-                                    Text((if (index == 1) profiles else card.count ?: pinned).toString(), style = stageText(17, 700), color = StageColors.Dim)
-                                }
-                                Text(stringResource(card.nameRes), style = stageText(24, 800), color = StageColors.Text, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 14.mpx))
-                                Text(stringResource(card.summaryRes), style = stageText(16, 500), color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.mpx))
-                            }
+        Column(
+            Modifier.padding(top = 22.mpx).weight(1f)
+                .verticalScroll(rememberScrollState()).padding(bottom = 40.mpx),
+            verticalArrangement = Arrangement.spacedBy(20.mpx),
+        ) {
+            Text(stringResource(R.string.lounge_settings_essential),
+                style = stageText(27, 800), color = StageColors.Text)
+            SettingsCardGrid(EssentialSettingsGroups, back, entry, pinned, profiles, onOpenGroup)
+            StageSurface(
+                onClick = { advancedVisible.value = !advancedVisible.value },
+                radius = 18.mpx,
+                modifier = Modifier.fillMaxWidth().height(68.mpx),
+                idle = Modifier.background(StageColors.ControlFill, RoundedCornerShape(18.mpx)),
+                focusStyle = StageFocus.FX,
+            ) { focused ->
+                Row(Modifier.fillMaxWidth().padding(horizontal = 22.mpx),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.mpx)) {
+                    OwnTVIcon(OwnTVIcon.SETTINGS,
+                        if (focused) StageColors.Text else StageColors.Muted, Modifier.size(26.mpx))
+                    Text(stringResource(R.string.lounge_settings_advanced),
+                        modifier = Modifier.weight(1f), style = stageText(23, 800),
+                        color = StageColors.Text, maxLines = 1,
+                        overflow = TextOverflow.Ellipsis)
+                    Text(stringResource(if (advancedVisible.value)
+                        R.string.lounge_settings_hide_advanced else R.string.lounge_settings_show_advanced),
+                        style = stageText(16, 600), color = StageColors.Muted,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    OwnTVIcon(OwnTVIcon.CHEVRON, StageColors.Muted, Modifier.size(20.mpx))
+                }
+            }
+            if (advancedVisible.value) {
+                SettingsCardGrid(AdvancedSettingsGroups, back, entry, pinned, profiles, onOpenGroup)
+            }
+        }
+    }
+}
+
+    }
                         }
                     }
                 }
