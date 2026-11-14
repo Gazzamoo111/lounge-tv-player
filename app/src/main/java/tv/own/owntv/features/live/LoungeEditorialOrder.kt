@@ -6,12 +6,19 @@ internal object LoungeEditorialOrder {
     fun icon(section: LoungeLiveSection): tv.own.owntv.ui.components.OwnTVIcon = when (section) {
         LoungeLiveSection.NEW_ZEALAND -> tv.own.owntv.ui.components.OwnTVIcon.NZ_FERN
         LoungeLiveSection.AUSTRALIA -> tv.own.owntv.ui.components.OwnTVIcon.AU_ROO
-        LoungeLiveSection.SPORTS, LoungeLiveSection.PPV -> tv.own.owntv.ui.components.OwnTVIcon.SPORTS
+        LoungeLiveSection.SPORTS -> tv.own.owntv.ui.components.OwnTVIcon.SPORTS
+        LoungeLiveSection.ENTERTAINMENT -> tv.own.owntv.ui.components.OwnTVIcon.SPARKLE
+        LoungeLiveSection.STREAMING -> tv.own.owntv.ui.components.OwnTVIcon.PLAY_CIRCLE
         LoungeLiveSection.MOVIES -> tv.own.owntv.ui.components.OwnTVIcon.MOVIES
-        LoungeLiveSection.KIDS -> tv.own.owntv.ui.components.OwnTVIcon.PERSON
-        LoungeLiveSection.DOCUMENTARIES -> tv.own.owntv.ui.components.OwnTVIcon.LANGUAGE
+        LoungeLiveSection.DOCUMENTARIES -> tv.own.owntv.ui.components.OwnTVIcon.IMAGE
+        LoungeLiveSection.KIDS -> tv.own.owntv.ui.components.OwnTVIcon.SUN
         LoungeLiveSection.SEASONAL -> tv.own.owntv.ui.components.OwnTVIcon.CLOCK
-        else -> tv.own.owntv.ui.components.OwnTVIcon.LIVE_TV
+        LoungeLiveSection.US_UK -> tv.own.owntv.ui.components.OwnTVIcon.LIVE_TV
+        LoungeLiveSection.MUSIC -> tv.own.owntv.ui.components.OwnTVIcon.AUDIO
+        LoungeLiveSection.PPV -> tv.own.owntv.ui.components.OwnTVIcon.REC
+        LoungeLiveSection.INTERNATIONAL -> tv.own.owntv.ui.components.OwnTVIcon.LANGUAGE
+        LoungeLiveSection.MY_CATEGORIES -> tv.own.owntv.ui.components.OwnTVIcon.FOLDER
+        LoungeLiveSection.FAVOURITE_FOLDERS -> tv.own.owntv.ui.components.OwnTVIcon.FAVORITE
     }
     /** Only selected editorial shelves; other categories keep provider/A-Z behavior. */
     fun channelsEnabled(category: String?): Boolean = category != null &&
