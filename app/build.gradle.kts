@@ -233,6 +233,7 @@ android {
             buildConfigField("boolean", "LOUNGE_TV_2", (loungeTv2 || onDemandQa).toString())
             buildConfigField("boolean", "LOUNGE_ON_DEMAND", onDemandQa.toString())
             if (onDemandQa) manifestPlaceholders["loungeAppName"] = "@string/lounge_on_demand_app_name"
+            manifestPlaceholders["loungeDebugAppName"] = if (onDemandQa) "@string/lounge_on_demand_app_name" else "@string/lounge_recovery_qa_app_name"
             applicationIdSuffix = when {
                 onDemandQa -> ".ondemandqa"
                 loungeTv2 -> ".v2qa"
