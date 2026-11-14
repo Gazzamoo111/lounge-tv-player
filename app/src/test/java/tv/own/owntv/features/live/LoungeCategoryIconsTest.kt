@@ -12,9 +12,18 @@ class LoungeCategoryIconsTest {
         assertEquals(OwnTVIcon.AU_ROO, LoungeEditorialOrder.icon(LoungeLiveSection.AUSTRALIA))
         assertEquals(OwnTVIcon.SPORTS, LoungeEditorialOrder.icon(LoungeLiveSection.SPORTS))
         assertEquals(OwnTVIcon.MOVIES, LoungeEditorialOrder.icon(LoungeLiveSection.MOVIES))
-        assertEquals(OwnTVIcon.PERSON, LoungeEditorialOrder.icon(LoungeLiveSection.KIDS))
-        assertEquals(OwnTVIcon.LANGUAGE, LoungeEditorialOrder.icon(LoungeLiveSection.DOCUMENTARIES))
+        assertEquals(OwnTVIcon.SUN, LoungeEditorialOrder.icon(LoungeLiveSection.KIDS))
+        assertEquals(OwnTVIcon.IMAGE, LoungeEditorialOrder.icon(LoungeLiveSection.DOCUMENTARIES))
         assertEquals(OwnTVIcon.CLOCK, LoungeEditorialOrder.icon(LoungeLiveSection.SEASONAL))
+        assertEquals(OwnTVIcon.SPARKLE, LoungeEditorialOrder.icon(LoungeLiveSection.ENTERTAINMENT))
+        assertEquals(OwnTVIcon.PLAY_CIRCLE, LoungeEditorialOrder.icon(LoungeLiveSection.STREAMING))
+        val major = listOf(
+            LoungeLiveSection.NEW_ZEALAND, LoungeLiveSection.AUSTRALIA,
+            LoungeLiveSection.SPORTS, LoungeLiveSection.ENTERTAINMENT,
+            LoungeLiveSection.STREAMING, LoungeLiveSection.MOVIES,
+            LoungeLiveSection.DOCUMENTARIES, LoungeLiveSection.KIDS, LoungeLiveSection.SEASONAL,
+        )
+        assertEquals(major.size, major.map(LoungeEditorialOrder::icon).distinct().size)
     }
 
     @Test fun allProviderAndCustomSubcategoriesAreTextOnly() {
