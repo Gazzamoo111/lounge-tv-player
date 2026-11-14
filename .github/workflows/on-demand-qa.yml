@@ -1,0 +1,78 @@
+name: Lounge TV On Demand QA
+on:
+  push:
+    branches: [feature/lounge-tv-on-demand]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lounge-on-demand-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      LOUNGE_TV_ON_DEMAND_QA: 'true'
+      QA_SIGNING_REQUIRED: 'false'
+      PRODUCTION_SIGNING_REQUIRED: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout pinned OwnTV core
+        uses: actions/checkout@v4
+        with:
+          repository: ahXN00/OwnTV_Core
+          ref: 1de78b1e2690c22b50c060e986bce221454bf880
+          path: shared-core
+          persist-credentials: false
+      - name: Apply reviewed Lounge playback patches
+        run: python3 scripts/patch_lounge_playback_core.py shared-core
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Cache stable On Demand debug signing identity
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: lounge-on-demand-debug-signing-v1
+      - name: Render branded resources
+        run: |
+          python3 -m pip install --disable-pip-version-check Pillow
+          python3 scripts/generate_loungetv_brand_assets.py
+      - name: Run repository tests and VOD-only build
+        run: |
+          set -euo pipefail
+          python3 scripts/check_branding.py
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/tests -p 'test_*.py'
+          echo "VERSION_CODE=$(python3 scripts/qa_version_code.py "$GITHUB_RUN_NUMBER" "$GITHUB_RUN_ATTEMPT")" >> "$GITHUB_ENV"
+          echo "VERSION_NAME=5.2.3.1-ondemand-ci.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
+      - name: Compile and test Kotlin Android app
+        run: |
+          set -euo pipefail
+          ./gradlew :app:verifyI18nLiterals :app:testStandardDebugUnitTest :app:assembleStandardDebug \
+            -Powntv.corePath="$GITHUB_WORKSPACE/shared-core" --stacktrace
+      - name: Confirm distinct VOD app identity and signed artifact
+        run: |
+          set -euo pipefail
+          APK=$(find app/build/outputs/apk/standard/debug -maxdepth 1 -name '*.apk' -print -quit)
+          test -n "$APK"
+          AAPT=$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)
+          APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)
+          "$AAPT" dump badging "$APK" > /tmp/vod-badging.txt
+          grep -F "package: name='com.loungetv.player.ondemandqa'" /tmp/vod-badging.txt
+          grep -F "application-label:'Lounge TV On Demand QA'" /tmp/vod-badging.txt
+          "$APKSIGNER" verify --print-certs "$APK"
+      - name: Upload On Demand QA APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: lounge-tv-on-demand-qa
+          path: app/build/outputs/apk/standard/debug/*.apk
+          if-no-files-found: error
