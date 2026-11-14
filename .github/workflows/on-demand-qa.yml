@@ -70,6 +70,7 @@ jobs:
           APKSIGNER=$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)
           "$AAPT" dump badging "$APK" > /tmp/vod-badging.txt
           grep -F "package: name='com.loungetv.player.ondemandqa'" /tmp/vod-badging.txt
+          grep "^application-label" /tmp/vod-badging.txt
           grep -F "application-label:'Lounge TV On Demand QA'" /tmp/vod-badging.txt
           "$APKSIGNER" verify --print-certs "$APK"
       - name: Upload On Demand QA APK
