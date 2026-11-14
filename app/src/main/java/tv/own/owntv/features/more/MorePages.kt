@@ -374,7 +374,7 @@ internal fun FavouritesPage(
         if (menu == null && move == null) returnTo?.let { withFrameNanos { }; runCatching { it.requestFocus() }; returnTo = null }
     }
 
-    val showLive = filter == FavFilter.ALL || filter == FavFilter.LIVE
+    val showLive = !tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND && (filter == FavFilter.ALL || filter == FavFilter.LIVE)
     val vodShown = when (filter) {
         FavFilter.ALL -> lists.movies.map { MediaType.MOVIE to it } + lists.series.map { MediaType.SERIES to it }
         FavFilter.MOVIES -> lists.movies.map { MediaType.MOVIE to it }
@@ -507,12 +507,12 @@ internal fun HistoryPage(
     val lists by vm.historyLists.collectAsStateWithLifecycle()
     // Opens on the type watched most recently.
     val latest = listOfNotNull(
-        lists.live.firstOrNull()?.let { MediaType.LIVE to it.watchedAt },
+        lists.live.firstOrNull()?.takeUnless { tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND }?.let { MediaType.LIVE to it.watchedAt },
         lists.movies.firstOrNull()?.let { MediaType.MOVIE to it.watchedAt },
         lists.series.firstOrNull()?.let { MediaType.SERIES to it.watchedAt },
     ).maxByOrNull { it.second }?.first ?: MediaType.MOVIE
     var tab by rememberSaveable { mutableStateOf<MediaType?>(null) }
-    val type = tab ?: latest
+    val type = if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND && tab == MediaType.LIVE) MediaType.MOVIE else tab ?: latest
     val rows = when (type) { MediaType.LIVE -> lists.live; MediaType.MOVIE -> lists.movies; else -> lists.series }
     var showClear by remember { mutableStateOf(false) }
     val clearFocus = remember { FocusRequester() }
@@ -533,9 +533,15 @@ internal fun HistoryPage(
 
     Column(Modifier.fillMaxSize().focusGroup()) {
         PageHead(stringResource(R.string.content_category_history)) {
-            val order = listOf(MediaType.LIVE, MediaType.MOVIE, MediaType.SERIES)
+            val order = if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND)
+                listOf(MediaType.MOVIE, MediaType.SERIES)
+                else listOf(MediaType.LIVE, MediaType.MOVIE, MediaType.SERIES)
             StageSegmented(
-                options = listOf(counted(R.string.common_nav_live_tv, counts.live), counted(R.string.common_nav_movies, counts.movies), counted(R.string.common_nav_series, counts.series)),
+                options = order.map { kind -> when (kind) {
+                    MediaType.LIVE -> counted(R.string.common_nav_live_tv, counts.live)
+                    MediaType.MOVIE -> counted(R.string.common_nav_movies, counts.movies)
+                    MediaType.SERIES -> counted(R.string.common_nav_series, counts.series)
+                } },
                 selected = order.indexOf(type),
                 onSelect = { tab = order[it] },
                 modifier = Modifier.focusRequester(segFocus),
