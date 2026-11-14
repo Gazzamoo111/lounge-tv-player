@@ -71,6 +71,10 @@ internal fun homeSportBackdropColor(sport: tv.own.owntv.core.sports.model.Sport)
     else -> LoungePremiumTokens.Elevated
 }
 
+/**
+ * A broadcast-led fallback, not an unrelated sports photograph. Exact-event art
+ * can replace this when an approved image is tied to the fixture identity.
+ */
 @Composable
 private fun BoxScope.HomeSportBackdrop(
     match: Match,
@@ -80,9 +84,8 @@ private fun BoxScope.HomeSportBackdrop(
     val home = teamTint(match.home?.team) ?: base
     val away = teamTint(match.away?.team) ?: LoungePremiumTokens.DeepNavy
     Box(Modifier.matchParentSize().background(Brush.horizontalGradient(
-        listOf(home.copy(alpha = 0.86f), base, away.copy(alpha = 0.76f)),
+        listOf(LoungePremiumTokens.Ink, base.copy(alpha = 0.94f), LoungePremiumTokens.DeepNavy),
     ))) {
-        // No fetch occurs when the event has no verified exact-match image.
         if (!verifiedEventArtworkUrl.isNullOrBlank()) {
             AsyncImage(
                 model = verifiedEventArtworkUrl,
@@ -90,15 +93,37 @@ private fun BoxScope.HomeSportBackdrop(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.matchParentSize(),
             )
+        } else {
+            // Soft broadcast light falls on the two crests; the left remains legible.
+            Box(Modifier.matchParentSize().background(Brush.radialGradient(
+                listOf(home.copy(alpha = 0.55f), away.copy(alpha = 0.20f), Color.Transparent),
+                radius = 950f,
+            )))
+            Box(Modifier.matchParentSize().background(Brush.horizontalGradient(
+                listOf(LoungePremiumTokens.Ink.copy(alpha = 0.90f),
+                    LoungePremiumTokens.Ink.copy(alpha = 0.72f),
+                    LoungePremiumTokens.Ink.copy(alpha = 0.16f)),
+            )))
         }
-        Box(Modifier.matchParentSize().background(Brush.horizontalGradient(
-            listOf(LoungePremiumTokens.Ink.copy(alpha = 0.82f),
-                LoungePremiumTokens.Ink.copy(alpha = 0.22f),
-                LoungePremiumTokens.Ink.copy(alpha = 0.68f)),
-        )))
         Box(Modifier.matchParentSize().background(Brush.verticalGradient(
-            listOf(Color.Transparent, LoungePremiumTokens.Ink.copy(alpha = 0.76f)),
+            listOf(LoungePremiumTokens.Ink.copy(alpha = 0.08f), Color.Transparent,
+                LoungePremiumTokens.Ink.copy(alpha = 0.63f)),
         )))
+    }
+}
+
+@Composable
+private fun HomeSportBadge(label: String, tint: Color) {
+    val shape = RoundedCornerShape(22.mpx)
+    Box(
+        Modifier.clip(shape)
+            .background(tint.copy(alpha = 0.22f))
+            .border(1.mpx, tint.copy(alpha = 0.84f), shape)
+            .padding(horizontal = 16.mpx, vertical = 8.mpx),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(label, style = stageText(16, 850), color = LoungePremiumTokens.Text,
+            maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -109,17 +134,17 @@ private fun HomeSportSide(team: Team?, modifier: Modifier = Modifier) {
         return
     }
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(9.mpx)) {
+        verticalArrangement = Arrangement.spacedBy(13.mpx)) {
         Box(
-            modifier = Modifier.size(99.mpx)
-                .clip(RoundedCornerShape(22.mpx))
-                .background(LoungePremiumTokens.Ink.copy(alpha = 0.48f))
-                .border(1.mpx, LoungePremiumTokens.Text.copy(alpha = 0.16f), RoundedCornerShape(22.mpx)),
+            modifier = Modifier.size(144.mpx)
+                .clip(RoundedCornerShape(32.mpx))
+                .background(LoungePremiumTokens.Ink.copy(alpha = 0.38f))
+                .border(1.mpx, LoungePremiumTokens.Text.copy(alpha = 0.15f), RoundedCornerShape(32.mpx)),
             contentAlignment = Alignment.Center,
         ) {
             LoungeLogo(team.logoUrl,
                 team.abbreviation.ifBlank { team.shortName },
-                Modifier.size(82.mpx))
+                Modifier.size(124.mpx))
         }
         Text(team.shortName, style = stageText(22, 800), color = LoungePremiumTokens.Text,
             maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -127,11 +152,9 @@ private fun HomeSportSide(team: Team?, modifier: Modifier = Modifier) {
 }
 
 /**
- * Home-only cinematic card. Reuses StageSurface focus/long-press and the original fixture
- * identity. Sports Lounge's PremiumEventCard and its navigation remain untouched.
- *
- * Only pass verifiedEventArtworkUrl after exact event-ID/date matching against an approved,
- * rights-cleared image source. Currently the caller supplies none: safe artwork fallback.
+ * Home-only broadcast card. The match identity, remote focus behaviour, open
+ * action and reminder behaviour remain owned by the original Home carousel.
+ * No image is inferred from team names: only approved exact-event art may be supplied.
  */
 @Composable
 internal fun LoungeCinematicSportsHeroCard(
@@ -143,6 +166,8 @@ internal fun LoungeCinematicSportsHeroCard(
 ) {
     val shape = RoundedCornerShape(26.mpx)
     val nowMs = System.currentTimeMillis()
+    val live = canShowHomeSportLive(match, nowMs)
+    val upcoming = canShowHomeSportUpcoming(match, nowMs)
     StageSurface(
         onClick = onOpen,
         radius = 26.mpx,
@@ -153,49 +178,60 @@ internal fun LoungeCinematicSportsHeroCard(
             .border(1.mpx, LoungePremiumTokens.Edge, shape),
     ) { focused ->
         HomeSportBackdrop(match, verifiedEventArtworkUrl)
-        Column(
-            Modifier.fillMaxSize().padding(horizontal = 30.mpx, vertical = 22.mpx),
-            verticalArrangement = Arrangement.SpaceBetween,
+        Row(
+            modifier = Modifier.fillMaxSize().padding(horizontal = 36.mpx, vertical = 28.mpx),
+            horizontalArrangement = Arrangement.spacedBy(20.mpx),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.mpx)) {
-                Text(match.leagueName, modifier = Modifier.weight(1f), style = stageText(20, 750),
-                    color = LoungePremiumTokens.Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                when {
-                    canShowHomeSportLive(match, nowMs) ->
-                        StageTag(stringResource(R.string.player_live), tint = LoungePremiumTokens.Live)
-                    canShowHomeSportUpcoming(match, nowMs) ->
-                        StageTag(stringResource(R.string.m6_upcoming), tint = LoungePremiumTokens.Cyan)
+            Column(
+                modifier = Modifier.weight(if (match.home != null && match.away != null) 0.55f else 1f)
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.mpx),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    match.leagueName.trim().takeIf { it.isNotEmpty() }?.let {
+                        HomeSportBadge(it, LoungePremiumTokens.Cyan)
+                    }
+                    if (live) {
+                        HomeSportBadge(stringResource(R.string.player_live), LoungePremiumTokens.Live)
+                    } else if (upcoming) {
+                        HomeSportBadge(stringResource(R.string.m6_upcoming), LoungePremiumTokens.Cyan)
+                    }
                 }
-            }
-            if (match.home != null && match.away != null) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.mpx)) {
-                    HomeSportSide(match.home?.team, Modifier.weight(1f))
-                    Text(stringResource(R.string.lounge_home_vs),
-                        style = stageText(21, 800), color = LoungePremiumTokens.Body)
-                    HomeSportSide(match.away?.team, Modifier.weight(1f))
-                }
-            } else {
-                // Racing sessions and individual events have no two-team pairing.
-                // Keep the focal space useful without inventing crests or a matchup.
-                Text(match.title, style = stageText(37, 800),
-                    color = LoungePremiumTokens.Text, maxLines = 2,
-                    overflow = TextOverflow.Ellipsis)
-            }
-            Column(verticalArrangement = Arrangement.spacedBy(5.mpx)) {
-                Text(match.title, style = stageText(27, 800), color = LoungePremiumTokens.Text,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis)
-                verifiedHomeSportSynopsis(match)?.let {
-                    Text(it, style = stageText(18, 500), color = LoungePremiumTokens.Body,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Column(verticalArrangement = Arrangement.spacedBy(14.mpx)) {
+                    Text(
+                        match.title, style = stageText(42, 850),
+                        color = LoungePremiumTokens.Text,
+                        maxLines = 2, overflow = TextOverflow.Ellipsis,
+                    )
+                    verifiedHomeSportSynopsis(match)?.let {
+                        Text(it, style = stageText(19, 500), color = LoungePremiumTokens.Body,
+                            maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    }
                 }
                 val details = listOfNotNull(
                     PremiumSportsPresentation.nzKickoffSummary(match.startMs),
                     match.venue?.trim()?.takeIf { it.isNotEmpty() },
                 ).joinToString(stringResource(R.string.content_epg_bits_separator))
-                Text(details, style = stageText(17, 650), color = LoungePremiumTokens.Text,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                if (details.isNotBlank()) {
+                    Text(details, style = stageText(20, 700), color = LoungePremiumTokens.Text,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+            if (match.home != null && match.away != null) {
+                Row(
+                    modifier = Modifier.weight(0.45f).fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.mpx),
+                ) {
+                    HomeSportSide(match.home?.team, Modifier.weight(1f))
+                    Text(stringResource(R.string.lounge_home_vs),
+                        style = stageText(30, 850), color = LoungePremiumTokens.Text)
+                    HomeSportSide(match.away?.team, Modifier.weight(1f))
+                }
             }
         }
         if (focused) Box(Modifier.matchParentSize().border(
