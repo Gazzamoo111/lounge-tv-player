@@ -58,6 +58,8 @@ import org.koin.androidx.compose.koinViewModel
 import tv.own.owntv.R
 import tv.own.owntv.core.database.entity.ChannelEntity
 import tv.own.owntv.core.database.entity.EpgProgrammeEntity
+import tv.own.owntv.core.epg.displayLogoUrl
+import tv.own.owntv.features.live.ProgrammeArtwork
 import tv.own.owntv.core.live.LiveKey
 import tv.own.owntv.core.model.RecordingStatus
 import tv.own.owntv.core.settings.SettingsRepository
@@ -148,6 +150,25 @@ private fun programmeAt(progs: List<EpgProgrammeEntity>?, time: Long): EpgProgra
 
 /** Across a gap the cursor moves by half an hour, rather than leaping hours to the next programme. */
 private const val GAP_STEP_MS = 30L * 60 * 1000
+
+internal const val NO_CURSOR = -1L
+
+internal data class GuideRowFocusArgs(val selectedRow: Boolean, val cursorTime: Long, val cellMode: Boolean)
+
+internal fun guideRowFocusArgs(
+    index: Int,
+    focusedRow: Int,
+    cursorTime: Long,
+    inCellMode: Boolean,
+    gridHasFocus: Boolean,
+): GuideRowFocusArgs {
+    val sel = index == focusedRow
+    return GuideRowFocusArgs(
+        selectedRow = gridHasFocus && sel,
+        cursorTime = if (sel) cursorTime else NO_CURSOR,
+        cellMode = sel && inCellMode,
+    )
+}
 
 /** Where ◀ ([dir] -1) or ▶ (+1) takes the cursor: programme by programme, half an hour at a time across gaps. */
 private fun cursorStep(progs: List<EpgProgrammeEntity>, cursor: Long, dir: Int, windowStart: Long, windowEnd: Long): Long {
@@ -282,6 +303,7 @@ fun EpgScreen(
     val rowRequesters = remember { HashMap<Int, FocusRequester>() }
     fun rowFocus(i: Int): FocusRequester = rowRequesters.getOrPut(i) { FocusRequester() }
     var focusedRow by remember { mutableIntStateOf(0) }
+    var focusedChannelId by remember(liveMode, categoryKey) { mutableStateOf<Long?>(null) }
     var gridHasFocus by remember { mutableStateOf(false) }
     var cursorTime by remember { mutableStateOf(0L) }
     // Row stage (false): ▲ ▼ move between channels, ◀ leaves for the menu. Cell stage (true): ◀ ▶ go
@@ -328,6 +350,42 @@ fun EpgScreen(
             }
         }
     }
+    // Opening or returning to the Guide should land on the channel that still owns playback.
+    // This moves focus only; it never changes the preview/player owner while the user browses rows.
+    var initialPlayingRowApplied by remember(liveMode, categoryKey) { mutableStateOf(false) }
+    val categoryRowsReady = GuideChannelOrdering.loadedRowsMatchCategory(
+        categoryKey, state.loadedCategory, liveMode, state.loadedLiveMode,
+    )
+    LaunchedEffect(
+        liveMode,
+        categoryKey,
+        restoreFocus,
+        state.loading,
+        state.channels,
+        categoryRowsReady,
+        previewChannel?.id,
+    ) {
+        if (initialPlayingRowApplied || restoreFocus || !categoryRowsReady || state.loading || state.channels.isEmpty()) {
+            return@LaunchedEffect
+        }
+        val idx = GuideChannelOrdering.initialRow(state.channels, previewChannel?.id)
+        focusedRow = idx
+        focusedChannelId = state.channels[idx].id
+        if (idx > 0) runCatching { rowListState.scrollToItem(idx) }
+        delay(80)
+        focusGrid(idx)
+        initialPlayingRowApplied = true
+    }
+    // A background order reload can replace the rows after initial focus was restored. Keep the
+    // channel identity, not its old row number, so a manual move cannot change the selected channel.
+    LaunchedEffect(state.channels, categoryRowsReady) {
+        if (!initialPlayingRowApplied || !categoryRowsReady || state.channels.isEmpty()) return@LaunchedEffect
+        val idx = GuideChannelOrdering.initialRow(state.channels, focusedChannelId)
+        if (idx != focusedRow) {
+            focusedRow = idx
+            if (gridHasFocus) focusGrid(idx)
+        }
+    }
     // The cursor stays in view: scroll only when it reaches an edge, by one slot of room.
     LaunchedEffect(cursorTime, timelinePx) {
         if (!gridHasFocus || timelinePx <= 0 || cursorTime <= 0L) return@LaunchedEffect
@@ -340,10 +398,11 @@ fun EpgScreen(
     }
 
     // Back from a channel tuned in the guide: its row again, once the reload has the grid on screen.
-    LaunchedEffect(restoreFocus, state.loading, state.channels.size) {
-        if (!restoreFocus || state.loading || state.channels.isEmpty()) return@LaunchedEffect
-        val idx = vm.lastTunedChannelId?.let { id -> state.channels.indexOfFirst { it.id == id } }?.takeIf { it >= 0 } ?: 0
+    LaunchedEffect(restoreFocus, state.loading, state.channels, categoryRowsReady, previewChannel?.id) {
+        if (!restoreFocus || !categoryRowsReady || state.loading || state.channels.isEmpty()) return@LaunchedEffect
+        val idx = GuideChannelOrdering.initialRow(state.channels, previewChannel?.id, vm.lastTunedChannelId)
         focusedRow = idx
+        focusedChannelId = state.channels[idx].id
         delay(80)
         focusGrid(idx)
         onRestored()
@@ -490,13 +549,17 @@ fun EpgScreen(
         Box(Modifier.weight(1f).fillMaxHeight()) {
             if (topChannel != null) {
                 val chName = ProviderTags.parse(topChannel.name).name
-                GuideProgrammeBlock(
-                    eyebrow = shown?.let { programmeEyebrow(it, chName, liveNow) },
-                    title = shown?.title ?: chName,
-                    details = if (shown == null) stringResource(R.string.content_epg_no_programme) else programmeDetailsLine(shown),
-                    synopsis = shown?.description,
-                    modifier = Modifier.padding(start = 46.mpx, top = 76.mpx).widthIn(max = 1080.mpx),
-                )
+                Row(Modifier.fillMaxSize().padding(start = 24.mpx), verticalAlignment = Alignment.CenterVertically) {
+                    ProgrammeArtwork(shown, topChannel.displayLogoUrl, Modifier.width(170.mpx).height(250.mpx),
+                        channelName = topChannel.name)
+                    GuideProgrammeBlock(
+                        eyebrow = shown?.let { programmeEyebrow(it, chName, liveNow) },
+                        title = shown?.title ?: chName,
+                        details = if (shown == null) stringResource(R.string.content_epg_no_programme) else programmeDetailsLine(shown),
+                        synopsis = shown?.description,
+                        modifier = Modifier.weight(1f).padding(start = 24.mpx).widthIn(max = 900.mpx),
+                    )
+                }
             }
             // The key hints at the bottom right of the top area, level with the video's bottom edge.
             Box(Modifier.align(Alignment.BottomEnd)) { GuideKeyHints(cellMode = inCellMode && gridHasFocus) }
@@ -597,6 +660,7 @@ fun EpgScreen(
                             contentPadding = PaddingValues(bottom = 24.mpx),
                         ) {
                             itemsIndexed(state.channels, key = { _, ch -> ch.id }) { index, channel ->
+                                val focus = guideRowFocusArgs(index, focusedRow, cursorTime, inCellMode, gridHasFocus)
                                 GuideRow(
                                     vm = vm,
                                     channel = channel,
@@ -609,9 +673,9 @@ fun EpgScreen(
                                     now = liveNow,
                                     scrollPx = scrollPx,
                                     focusRequester = rowFocus(index),
-                                    selectedRow = gridHasFocus && index == focusedRow,
-                                    cursorTime = cursorTime,
-                                    cellMode = inCellMode,
+                                    selectedRow = focus.selectedRow,
+                                    cursorTime = focus.cursorTime,
+                                    cellMode = focus.cellMode,
                                     onEnterCell = {
                                         cursorTime = System.currentTimeMillis()
                                         inCellMode = true
@@ -621,6 +685,7 @@ fun EpgScreen(
                                     reminderStarts = remindersByChannel[channel.id].orEmpty(),
                                     onFocused = {
                                         focusedRow = index
+                                        focusedChannelId = channel.id
                                         if (cursorTime !in state.windowStart until state.windowEnd) cursorTime = System.currentTimeMillis()
                                         if (!effectivePreview) liveVm.onChannelFocused(channel)
                                     },

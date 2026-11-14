@@ -33,6 +33,7 @@ import tv.own.owntv.features.shell.components.VodSortMenu
 import tv.own.owntv.features.shell.components.VodSortTool
 import tv.own.owntv.features.shell.components.VodStepper
 import tv.own.owntv.features.shell.components.VodTitleInfo
+import tv.own.owntv.features.shell.components.vodMoviePosterBadges
 import tv.own.owntv.features.shell.components.cinematicQualityBadges
 import tv.own.owntv.features.shell.components.vodCategoryEntries
 import tv.own.owntv.features.shell.components.vodCount
@@ -249,6 +250,7 @@ fun MoviesScreen(
     val firstItemFocus = remember { FocusRequester() }
     val firstFeaturedFocus = remember { FocusRequester() }
     val firstNewReleaseFocus = remember { FocusRequester() }
+    val firstRecentlyAddedFocus = remember { FocusRequester() }
     // Right from the rail on an empty list: the list's search box, so a search with no results can be cleared.
     val listSearchFocus = remember { FocusRequester() }
 
@@ -277,18 +279,33 @@ fun MoviesScreen(
             .take(8)
         (famous + categoryFeatured).distinctBy { it.id }.take(20)
     } else categoryFeatured
+    val recentPreview = highlights?.recentlyAdded.orEmpty().take(6)
+    val recentIdsInView = recentPreview.mapTo(HashSet()) { it.id }
     val newMovies = highlights?.newReleases.orEmpty()
-    val displayFeatured = lockedKey == null && searchQuery.isBlank() && allMoviesEditorial.isNotEmpty()
-    val displayNewReleases = lockedKey == null && searchQuery.isBlank() && newMovies.isNotEmpty()
-    // One six-poster row per section. Featured rotates daily from its larger candidate
-    // pool; New Releases contains the six newest matches. Both share the full-grid size.
-    val featuredPreview = if (displayFeatured) allMoviesEditorial.take(6) else emptyList()
-    val newPreview = if (displayNewReleases) newMovies.take(6) else emptyList()
-    val editorialRowCount = (if (displayFeatured) 1 else 0) + (if (displayNewReleases) 1 else 0)
+    // Home's genuine provider movies are a read-only fallback if the category
+    // highlight reader is unavailable. Never guess a release date from addedAt.
+    val releaseYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+    val matchingHomeMovies = if (selectedKey == LiveKey.All || selectedKey is LiveKey.Folder) {
+        homeEditorial.featuredMovies.filter {
+            selectedKey == LiveKey.All || it.categoryId == (selectedKey as LiveKey.Folder).id
+        }
+    } else emptyList()
+    val releaseCandidates = (newMovies + matchingHomeMovies.filter {
+        (it.year ?: it.parsedYear ?: 0) in (releaseYear - 1)..releaseYear
+    }).distinctBy { it.id }
+    val newPreview = releaseCandidates.filterNot { it.id in recentIdsInView }.take(6)
+    val editorialIds = (recentPreview + newPreview).mapTo(HashSet()) { it.id }
+    val featuredPreview = allMoviesEditorial.filterNot { it.id in editorialIds }.take(6)
+    val displayRecentlyAdded = lockedKey == null && searchQuery.isBlank() && recentPreview.isNotEmpty()
+    val displayFeatured = lockedKey == null && searchQuery.isBlank() && featuredPreview.isNotEmpty()
+    val displayNewReleases = lockedKey == null && searchQuery.isBlank() && newPreview.isNotEmpty()
+    val editorialRowCount = (if (displayRecentlyAdded) 1 else 0) +
+        (if (displayFeatured) 1 else 0) + (if (displayNewReleases) 1 else 0)
     val showCatalogueHeading = editorialRowCount > 0 && movies.itemCount > 0
     // LazyGrid indexes count every tile, not only the three section headings.
     // Offset all restore, paging and poster probing by the EXACT number of tiles.
-    val headerRowCount = (if (displayFeatured) 1 + featuredPreview.size else 0) +
+    val headerRowCount = (if (displayRecentlyAdded) 1 + recentPreview.size else 0) +
+        (if (displayFeatured) 1 + featuredPreview.size else 0) +
         (if (displayNewReleases) 1 + newPreview.size else 0) +
         (if (showCatalogueHeading) 1 else 0)
     val gridHeaderOffset = if (viewMode == SettingsRepository.VodViewMode.GRID) headerRowCount else 0
@@ -344,7 +361,7 @@ fun MoviesScreen(
             else effectiveListState.layoutInfo.visibleItemsInfo.map { it.index }
             info.map { if (grid) it - gridHeaderOffset else it - listHeaderOffset }.filter { it >= 0 && it < movies.itemCount }
                 .mapNotNull { movies.peek(it) }
-                .filter { it.posterUrl.isNullOrBlank() }
+
         }.distinctUntilChanged().collect { vm.onPosterlessVisible(it) }
     }
     // Returning from the player: scroll to and focus the movie you just played (waits for the grid to load).
@@ -449,8 +466,9 @@ fun MoviesScreen(
             repeat(12) {
                 withFrameNanos { }
                 val requester = when {
-                    displayFeatured -> firstFeaturedFocus
                     displayNewReleases -> firstNewReleaseFocus
+                    displayRecentlyAdded -> firstRecentlyAddedFocus
+                    displayFeatured -> firstFeaturedFocus
                     movies.itemCount > 0 -> firstItemFocus
                     else -> listSearchFocus
                 }
@@ -517,15 +535,16 @@ fun MoviesScreen(
         }
         if (categoriesOpen) categoriesOpen = false
     }
-    LaunchedEffect(selectedKey, pendingCategoryFocus, categoryHighlights.categoryKey, displayFeatured, displayNewReleases, categoriesOpen) {
+    LaunchedEffect(selectedKey, pendingCategoryFocus, categoryHighlights.categoryKey, displayFeatured, displayNewReleases, displayRecentlyAdded, categoriesOpen) {
         if (pendingCategoryFocus != selectedKey || categoryHighlights.categoryKey != selectedKey || categoriesOpen) return@LaunchedEffect
         runCatching { effectiveGridState.scrollToItem(0) }
         runCatching { effectiveListState.scrollToItem(0) }
         repeat(16) {
             withFrameNanos { }
             val requester = when {
-                displayFeatured -> firstFeaturedFocus
                 displayNewReleases -> firstNewReleaseFocus
+                displayRecentlyAdded -> firstRecentlyAddedFocus
+                displayFeatured -> firstFeaturedFocus
                 movies.itemCount > 0 -> firstItemFocus
                 else -> listSearchFocus
             }
@@ -550,7 +569,7 @@ fun MoviesScreen(
         vm.onMovieFocused(movie)
         if (rememberMovies) perCategoryMovieIds[selectedKey] = movie.id
     }
-    val posterOf: (MovieEntity) -> String? = { it.posterUrl?.takeIf { u -> u.isNotBlank() } ?: cachedPosters[it.id] }
+    val posterOf: (MovieEntity) -> String? = { tv.own.owntv.core.metadata.MetadataImages.poster(selectedMovieMeta?.takeIf { meta -> meta.movieId == it.id }?.cache?.posterPath) ?: cachedPosters[it.id] ?: it.posterUrl?.takeIf { u -> u.isNotBlank() } }
     val playHint = stringResource(R.string.common_ok) to stringResource(R.string.content_play)
     val optionsHint = stringResource(R.string.content_key_hold_ok) to stringResource(R.string.content_key_options)
 
@@ -635,7 +654,7 @@ fun MoviesScreen(
         if (cinematic) {
             // A pinned, readable hero stays above the scrolling highlight rails.
             // 226px leaves room for a complete focused portrait card AND its heading.
-            val showcaseActive = displayFeatured || displayNewReleases
+            val showcaseActive = displayFeatured || displayNewReleases || displayRecentlyAdded
             val heroH = if (showcaseActive) minOf(maxHeight * 0.325f, 350.mpx)
                 else if (panelShares != null) maxHeight * (cinematicDetailsPct / 100f)
                 else 464.mpx
@@ -692,35 +711,6 @@ fun MoviesScreen(
                                 modifier = Modifier.fillMaxWidth().weight(1f),
                             ) {
                                 // Two large rows scroll up with the existing paged grid.
-                                if (displayFeatured) {
-                                    item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
-                                        Text(
-                                            text = stringResource(R.string.lounge_home_featured_movies),
-                                            style = stageText(28, 800),
-                                            color = StageColors.Text,
-                                            modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
-                                        )
-                                    }
-                                    items(
-                                        count = featuredPreview.size,
-                                        key = { index -> Long.MIN_VALUE + 100L + index.toLong() },
-                                        contentType = { 11 },
-                                    ) { index ->
-                                        val movie = featuredPreview[index]
-                                        LoungeMoviesEditorialPoster(
-                                            item = movie,
-                                            width = posterW,
-                                            title = homeEditorial.featuredMovieNames[movie.id] ?: movie.canonicalTitle.ifBlank { movie.name },
-                                            posterUrl = posterOf(movie),
-                                            firstInSection = index == 0,
-                                            atLeftEdge = index % columns == 0,
-                                            focusRequester = firstFeaturedFocus,
-                                            onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
-                                            onFocus = onMovieFocus,
-                                            onOpen = startMovie,
-                                        )
-                                    }
-                                }
                                 if (displayNewReleases) {
                                     item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
                                         Text(
@@ -750,6 +740,64 @@ fun MoviesScreen(
                                         )
                                     }
                                 }
+                                if (displayRecentlyAdded) {
+                                    item(key = Long.MIN_VALUE + 3L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
+                                        Text(
+                                            text = stringResource(R.string.lounge_vod_recently_added),
+                                            style = stageText(28, 800),
+                                            color = StageColors.Text,
+                                            modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
+                                        )
+                                    }
+                                    items(
+                                        count = recentPreview.size,
+                                        key = { index -> Long.MIN_VALUE + 300L + index.toLong() },
+                                        contentType = { 14 },
+                                    ) { index ->
+                                        val movie = recentPreview[index]
+                                        LoungeMoviesEditorialPoster(
+                                            item = movie,
+                                            width = posterW,
+                                            title = movie.canonicalTitle.ifBlank { movie.name },
+                                            posterUrl = posterOf(movie),
+                                            firstInSection = index == 0,
+                                            atLeftEdge = index % columns == 0,
+                                            focusRequester = firstRecentlyAddedFocus,
+                                            onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                            onFocus = onMovieFocus,
+                                            onOpen = startMovie,
+                                        )
+                                    }
+                                }
+                                if (displayFeatured) {
+                                    item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
+                                        Text(
+                                            text = stringResource(R.string.lounge_home_featured_movies),
+                                            style = stageText(28, 800),
+                                            color = StageColors.Text,
+                                            modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
+                                        )
+                                    }
+                                    items(
+                                        count = featuredPreview.size,
+                                        key = { index -> Long.MIN_VALUE + 100L + index.toLong() },
+                                        contentType = { 11 },
+                                    ) { index ->
+                                        val movie = featuredPreview[index]
+                                        LoungeMoviesEditorialPoster(
+                                            item = movie,
+                                            width = posterW,
+                                            title = homeEditorial.featuredMovieNames[movie.id] ?: movie.canonicalTitle.ifBlank { movie.name },
+                                            posterUrl = posterOf(movie),
+                                            firstInSection = index == 0,
+                                            atLeftEdge = index % columns == 0,
+                                            focusRequester = firstFeaturedFocus,
+                                            onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                            onFocus = onMovieFocus,
+                                            onOpen = startMovie,
+                                        )
+                                    }
+                                }
                                 if (showCatalogueHeading) {
                                     item(key = Long.MIN_VALUE + 2L, span = { GridItemSpan(maxLineSpan) }, contentType = 3) {
                                         Text(
@@ -763,13 +811,13 @@ fun MoviesScreen(
                                 items(count = movies.itemCount, key = movies.itemKey { it.id }, contentType = movies.itemContentType { "movie" }) { index ->
                                     val movie = movies[index] ?: return@items
                                     val prog = movieProgress[movie.id]
-                                    val done = prog?.let { vm.isMovieCompleted(it) } == true
+                                    val badges = vodMoviePosterBadges(movie.rating, prog)
                                     StagePoster(
                                         title = loungeVodTitle(movie.name),
-                                        rating = movie.rating?.takeIf { it > 0 }?.let(::vodRating),
+                                        rating = badges.rating,
                                         width = posterW, height = posterW * 1.5f,
-                                        progress = prog?.takeIf { it.durationMs > 0 }?.let { it.positionMs.toFloat() / it.durationMs },
-                                        watched = done,
+                                        progress = badges.progress,
+                                        watched = badges.watched,
                                         onClick = { startMovie(movie) },
                                         onLongClick = { openMenu(movie, index) },
                                         modifier = Modifier
@@ -940,35 +988,6 @@ fun MoviesScreen(
                             contentPadding = PaddingValues(start = glowRoom, end = glowRoom, top = 12.mpx, bottom = 24.mpx),
                             modifier = Modifier.fillMaxWidth().weight(1f).then(glowWide),
                         ) {
-                            if (displayFeatured) {
-                                item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
-                                    Text(
-                                        text = stringResource(R.string.lounge_home_featured_movies),
-                                        style = stageText(28, 800),
-                                        color = StageColors.Text,
-                                        modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
-                                    )
-                                }
-                                items(
-                                    count = featuredPreview.size,
-                                    key = { index -> Long.MIN_VALUE + 100L + index.toLong() },
-                                    contentType = { 11 },
-                                ) { index ->
-                                    val movie = featuredPreview[index]
-                                    LoungeMoviesEditorialPoster(
-                                        item = movie,
-                                        width = posterW,
-                                        title = homeEditorial.featuredMovieNames[movie.id] ?: movie.canonicalTitle.ifBlank { movie.name },
-                                        posterUrl = posterOf(movie),
-                                        firstInSection = index == 0,
-                                        atLeftEdge = index % columns == 0,
-                                        focusRequester = firstFeaturedFocus,
-                                        onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
-                                        onFocus = onMovieFocus,
-                                        onOpen = startMovie,
-                                    )
-                                }
-                            }
                             if (displayNewReleases) {
                                 item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
                                     Text(
@@ -998,6 +1017,64 @@ fun MoviesScreen(
                                     )
                                 }
                             }
+                            if (displayRecentlyAdded) {
+                                item(key = Long.MIN_VALUE + 3L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
+                                    Text(
+                                        text = stringResource(R.string.lounge_vod_recently_added),
+                                        style = stageText(28, 800),
+                                        color = StageColors.Text,
+                                        modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
+                                    )
+                                }
+                                items(
+                                    count = recentPreview.size,
+                                    key = { index -> Long.MIN_VALUE + 300L + index.toLong() },
+                                    contentType = { 14 },
+                                ) { index ->
+                                    val movie = recentPreview[index]
+                                    LoungeMoviesEditorialPoster(
+                                        item = movie,
+                                        width = posterW,
+                                        title = movie.canonicalTitle.ifBlank { movie.name },
+                                        posterUrl = posterOf(movie),
+                                        firstInSection = index == 0,
+                                        atLeftEdge = index % columns == 0,
+                                        focusRequester = firstRecentlyAddedFocus,
+                                        onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                        onFocus = onMovieFocus,
+                                        onOpen = startMovie,
+                                    )
+                                }
+                            }
+                            if (displayFeatured) {
+                                item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
+                                    Text(
+                                        text = stringResource(R.string.lounge_home_featured_movies),
+                                        style = stageText(28, 800),
+                                        color = StageColors.Text,
+                                        modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
+                                    )
+                                }
+                                items(
+                                    count = featuredPreview.size,
+                                    key = { index -> Long.MIN_VALUE + 100L + index.toLong() },
+                                    contentType = { 11 },
+                                ) { index ->
+                                    val movie = featuredPreview[index]
+                                    LoungeMoviesEditorialPoster(
+                                        item = movie,
+                                        width = posterW,
+                                        title = homeEditorial.featuredMovieNames[movie.id] ?: movie.canonicalTitle.ifBlank { movie.name },
+                                        posterUrl = posterOf(movie),
+                                        firstInSection = index == 0,
+                                        atLeftEdge = index % columns == 0,
+                                        focusRequester = firstFeaturedFocus,
+                                        onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                        onFocus = onMovieFocus,
+                                        onOpen = startMovie,
+                                    )
+                                }
+                            }
                             if (showCatalogueHeading) {
                                 item(key = Long.MIN_VALUE + 2L, span = { GridItemSpan(maxLineSpan) }, contentType = 3) {
                                     Text(
@@ -1011,14 +1088,14 @@ fun MoviesScreen(
                             items(count = movies.itemCount, key = movies.itemKey { it.id }, contentType = movies.itemContentType { "movie" }) { index ->
                                 val movie = movies[index] ?: return@items
                                 val prog = movieProgress[movie.id]
-                                val done = prog?.let { vm.isMovieCompleted(it) } == true
+                                val badges = vodMoviePosterBadges(movie.rating, prog)
                                 StagePoster(
                                     title = loungeVodTitle(movie.name),
-                                    rating = movie.rating?.takeIf { it > 0 }?.let(::vodRating),
+                                    rating = badges.rating,
                                     width = posterW, height = posterW * 1.5f,
                                     compact = true,
-                                    progress = prog?.takeIf { it.durationMs > 0 }?.let { it.positionMs.toFloat() / it.durationMs },
-                                    watched = done,
+                                    progress = badges.progress,
+                                    watched = badges.watched,
                                     onClick = { startMovie(movie) },
                                     onLongClick = { openMenu(movie, index) },
                                     modifier = Modifier
@@ -1398,7 +1475,7 @@ private fun buildMovieDetails(
 ): tv.own.owntv.features.shell.components.MediaDetailsUi {
     val providerPoster = movie.posterUrl?.takeIf { it.isNotBlank() }
     val tmdbPoster = tv.own.owntv.core.metadata.MetadataImages.poster(meta?.posterPath)
-    val poster = if (tmdbWins) tmdbPoster ?: providerPoster else providerPoster ?: tmdbPoster
+    val poster = tmdbPoster ?: providerPoster
     // Backdrop is TMDB-only (providers don't carry one); fall back to the provider's if it exists.
     val backdrop = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath)
         ?: movie.backdropUrl?.takeIf { it.isNotBlank() }
@@ -1441,7 +1518,7 @@ internal fun movieTitleInfo(
         logoUrl = tv.own.owntv.core.metadata.MetadataImages.logo(meta?.logoPath),
         backdropUrl = tv.own.owntv.core.metadata.MetadataImages.backdrop(meta?.backdropPath, size = "w1280")
             ?: movie.backdropUrl?.takeIf { it.isNotBlank() },
-        posterUrl = if (tmdbWins) tmdbPoster ?: providerPoster else providerPoster ?: tmdbPoster,
+        posterUrl = tmdbPoster ?: providerPoster,
         year = if (tmdbWins) meta?.year ?: movie.year else movie.year ?: meta?.year,
         genres = jsonList(meta?.genresJson),
         runtimeSecs = movie.durationSecs?.takeIf { it > 0 },

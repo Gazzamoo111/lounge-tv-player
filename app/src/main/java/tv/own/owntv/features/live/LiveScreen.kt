@@ -68,6 +68,7 @@ import tv.own.owntv.core.customize.CustomizeKeys
 import tv.own.owntv.core.database.entity.ChannelEntity
 import tv.own.owntv.core.database.entity.ContentOrderEntity
 import tv.own.owntv.features.customize.MoveToCategoryDialog
+import tv.own.owntv.features.customize.FavouriteFolderPicker
 import tv.own.owntv.features.settings.SettingsViewModel
 import tv.own.owntv.core.settings.PanelSection
 import tv.own.owntv.features.settings.data.computePanelWidths
@@ -248,6 +249,8 @@ fun LiveScreen(
     var moveOriginKey by remember { mutableStateOf<String?>(null) }
     var moveOriginName by remember { mutableStateOf<String?>(null) }
     var creatingCategory by remember { mutableStateOf(false) }
+    var favouriteFolderChannel by remember { mutableStateOf<ChannelEntity?>(null) }
+    var creatingFavouriteFolder by remember { mutableStateOf(false) }
     // When the long-press menu closes (Cancel, Favourite, Hide) WITHOUT opening another dialog, return focus
     // to the channel it was opened from — otherwise focus falls back to the nav panel.
     var contextMenuOpen by remember { mutableStateOf(false) }
@@ -321,7 +324,7 @@ fun LiveScreen(
         // A follow-up dialog (rename / match EPG / catch-up / move) grabs focus itself — only restore
         // for plain closes (Cancel, Favourite, Hide, Close). Those dialogs restore on their own close.
         if (renaming != null || matchingEpg != null || offsettingEpg != null || catchupChannel != null || schedulingChannel != null || enteringMoveMode ||
-            moveItem != null || creatingCategory
+            moveItem != null || creatingCategory || favouriteFolderChannel != null || creatingFavouriteFolder
         ) return@LaunchedEffect
         restoreToContextRow()
     }
@@ -335,6 +338,16 @@ fun LiveScreen(
             moveCategoryWasOpen = true
         } else if (moveCategoryWasOpen) {
             moveCategoryWasOpen = false
+            restoreToContextRow()
+        }
+    }
+    // Return focus to the initiating channel after the folder chooser or name prompt closes.
+    var favouriteFolderWasOpen by remember { mutableStateOf(false) }
+    LaunchedEffect(favouriteFolderChannel, creatingFavouriteFolder) {
+        if (favouriteFolderChannel != null || creatingFavouriteFolder) {
+            favouriteFolderWasOpen = true
+        } else if (favouriteFolderWasOpen) {
+            favouriteFolderWasOpen = false
             restoreToContextRow()
         }
     }
@@ -489,6 +502,7 @@ fun LiveScreen(
     val railCounts by (if (categoriesVisible) vm.railCounts else remember { kotlinx.coroutines.flow.MutableStateFlow(emptyMap<LiveKey, Int>()) })
         .collectAsStateWithLifecycle()
     val scheduleFocus = remember { FocusRequester() }
+    var scheduleChannel by remember { mutableStateOf<ChannelEntity?>(null) }
     var openProgramme by remember { mutableStateOf<Pair<ChannelEntity, tv.own.owntv.core.parser.XtEpgEntry>?>(null) }
     // Back closes the sheet: one level out.
     androidx.activity.compose.BackHandler(enabled = categoriesOpen) { categoriesOpen = false; focusCurrentRow() }
@@ -878,6 +892,7 @@ fun LiveScreen(
                     scheduleFocus = scheduleFocus,
                     onOpenProgramme = { p -> previewChannel?.let { openProgramme = it to p } },
                     onBackToList = { focusCurrentRow() },
+                    onFullSchedule = { scheduleChannel = previewChannel },
                     modifier = Modifier
                         .padding(start = screenW - margin - stageW, top = 120.mpx)
                         .width(stageW),
@@ -909,6 +924,19 @@ fun LiveScreen(
         }
     }
 
+    if (tv.own.owntv.BuildConfig.LOUNGE_TV_2) scheduleChannel?.let { ch ->
+        val epgVm: tv.own.owntv.features.epg.EpgViewModel = koinViewModel()
+        ChannelScheduleDialog(
+            channel = ch,
+            load = { from, to -> epgVm.channelSchedule(ch, from, to) },
+            loadDays = { epgVm.scheduleDays() },
+            loadDetails = { epgVm.programmeFull(it) },
+            menuOpen = openProgramme != null,
+            onProgramme = { p -> openProgramme = ch to tv.own.owntv.core.parser.XtEpgEntry(p.title, p.description, p.startMs, p.stopMs) },
+            onDismiss = { scheduleChannel = null; runCatching { scheduleFocus.requestFocus() } },
+        )
+    }
+
     // A next / later programme opened from the schedule under the stage (▶ Schedule): the TV Guide's
     // programme menu, acting through the guide's view model so both screens do the same thing.
     openProgramme?.let { (ch, xt) ->
@@ -936,7 +964,7 @@ fun LiveScreen(
                 autoMatch = false,
             ),
             leadMinutes = leadMinutes,
-            onDismiss = { openProgramme = null; runCatching { scheduleFocus.requestFocus() } },
+            onDismiss = { openProgramme = null; if (scheduleChannel == null) runCatching { scheduleFocus.requestFocus() } },
         )
     }
     catchupChannel?.let { ch ->
@@ -1018,6 +1046,7 @@ fun LiveScreen(
             canMove = selectedKey is LiveKey.Folder || selectedKey is LiveKey.Custom || selectedKey == LiveKey.Favorites,
             isHistory = selectedKey == LiveKey.History,
             onToggleFavorite = { vm.toggleFavorite(ch); contextChannel = null },
+            onSaveToFavouriteFolder = { favouriteFolderChannel = ch; contextChannel = null },
             onRename = { renaming = ch; contextChannel = null },
             onHide = { vm.hideChannel(ch); contextChannel = null },
             onMatchEpg = { matchingEpg = ch; contextChannel = null },
@@ -1080,6 +1109,32 @@ fun LiveScreen(
 
     tv.own.owntv.ui.components.InAppToast(multiviewToast)
 
+    // Save to a profile-owned favourites folder, leaving the original category untouched.
+    val favouriteFolderTargets by vm.favouriteFolderTargets.collectAsStateWithLifecycle()
+    favouriteFolderChannel?.let { ch ->
+        if (creatingFavouriteFolder) {
+            TextInputDialog(
+                title = stringResource(R.string.lounge_v2_new_favourite_folder),
+                hint = stringResource(R.string.lounge_v2_favourite_folder_name_hint),
+                confirmLabel = stringResource(R.string.common_create),
+                allowBlank = false,
+                onConfirm = {
+                    vm.createFavouriteFolderAndSave(it, ch)
+                    creatingFavouriteFolder = false
+                    favouriteFolderChannel = null
+                },
+                onDismiss = { creatingFavouriteFolder = false },
+            )
+        } else {
+            FavouriteFolderPicker(
+                folders = favouriteFolderTargets,
+                onCreate = { creatingFavouriteFolder = true },
+                onSelect = { vm.saveToFavouriteFolder(ch, it); favouriteFolderChannel = null },
+                onDismiss = { favouriteFolderChannel = null },
+            )
+        }
+    }
+
     // Move to… a combined category, incl. the "＋ New category…" name prompt.
     val moveTargets by vm.moveTargets.collectAsStateWithLifecycle()
     if (creatingCategory) {
@@ -1088,7 +1143,7 @@ fun LiveScreen(
             hint = stringResource(R.string.settings_customize_new_category_description),
             confirmLabel = stringResource(R.string.common_create),
             allowBlank = false,
-            onConfirm = { vm.createCustomCategory(it); creatingCategory = false },
+            onConfirm = { vm.createCustomCategory(it, moveItem); creatingCategory = false; moveItem = null },
             onDismiss = { creatingCategory = false },
         )
     } else {
@@ -1171,6 +1226,7 @@ private fun ChannelContextMenu(
     epgMatchManual: Boolean,
     epgShiftMinutes: Int?,
     onToggleFavorite: () -> Unit,
+    onSaveToFavouriteFolder: () -> Unit,
     onRename: () -> Unit,
     onHide: () -> Unit,
     onMatchEpg: () -> Unit,
@@ -1213,6 +1269,7 @@ private fun ChannelContextMenu(
         // escape hatch for a stream neither in-app engine can open (same as Movies/Series/Downloads).
         add(MenuAction("play_external", stringResource(R.string.content_play_external_short), OwnTVIcon.EXTERNAL, group = watch, onClick = onPlayExternal))
         add(MenuAction("favourite", if (isFavorite) stringResource(R.string.content_remove_favourite) else stringResource(R.string.content_add_favourite), OwnTVIcon.FAVORITE, group = chan, onClick = onToggleFavorite))
+        add(MenuAction("save_favourite_folder", stringResource(R.string.lounge_v2_save_favourite_folder), OwnTVIcon.FOLDER, group = chan, onClick = onSaveToFavouriteFolder))
         add(MenuAction("rename", stringResource(R.string.content_rename), OwnTVIcon.PENCIL, group = chan, onClick = onRename))
         add(MenuAction("hide", stringResource(R.string.content_hide_channel), OwnTVIcon.EYE_OFF, group = chan, onClick = onHide))
         if (isHistory) add(MenuAction("remove_history", stringResource(R.string.content_remove_history), OwnTVIcon.HISTORY, group = chan, onClick = onRemoveFromHistory))

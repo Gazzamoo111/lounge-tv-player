@@ -32,6 +32,9 @@ fun SportsScreen(
     vm: SportsViewModel = koinViewModel(),
     liveVm: LiveViewModel = koinViewModel(),
 ) {
+    val hubState = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
+    val profileSettings = koinInject<tv.own.owntv.core.settings.SettingsRepository>()
+    val hubProfile by profileSettings.activeProfileId.collectAsStateWithLifecycle(-1L)
     var match by remember { mutableStateOf<Match?>(null) }
     var filters by remember { mutableStateOf(false) }
     // The league page, over the hub or a match (Back returns to whichever it came from).
@@ -43,14 +46,36 @@ fun SportsScreen(
     var lastKey by remember { mutableStateOf<String?>(null) }
     val open: (Match?) -> Unit = { m -> if (m != null) lastKey = m.key; match = m; vm.open(m) }
     val playback = koinInject<SportsPlayback>()
-    LaunchedEffect(Unit) {
-        playback.pendingMatch.value?.let { (m, ch) ->
-            playback.pendingMatch.value = null
-            returnTo = ch
-            open(m)
-        } ?: playback.returnToMatch?.let { m ->
+    val pendingMatch by playback.pendingMatch.collectAsStateWithLifecycle()
+    var initialNavigationApplied by remember { mutableStateOf(false) }
+    // This screen can stay mounted behind fullscreen. New player/goal requests must be consumed when
+    // it becomes active again, rather than relying on disposal and a second LaunchedEffect(Unit).
+    LaunchedEffect(active, pendingMatch) {
+        if (!active) return@LaunchedEffect
+        val request = pendingMatch
+        if (request != null) {
+            if (!playback.pendingMatch.compareAndSet(request, null)) return@LaunchedEffect
+            initialNavigationApplied = true
             playback.returnToMatch = null
-            open(m)
+            val (m, ch) = request
+            returnTo = ch
+            filters = false
+            if (league != null) openLeague(null)
+            if (tv.own.owntv.BuildConfig.LOUNGE_TV_2 && ch == null) {
+                // Home event action is explicit: go directly to this fixture's Watch live page.
+                // Open resets findAsked, so trigger the bounded search only after opening.
+                open(m)
+                vm.findChannels()
+            } else open(m)
+        } else if (!initialNavigationApplied) {
+            initialNavigationApplied = true
+            playback.returnToMatch?.let { m ->
+                playback.returnToMatch = null
+                open(m)
+            }
+        } else if (playback.returnToMatch?.key == match?.key) {
+            // The retained page already has this match; discard its legacy remount request.
+            playback.returnToMatch = null
         }
     }
     val current = match
@@ -65,7 +90,13 @@ fun SportsScreen(
             modifier = modifier,
         )
     } else if (current == null) {
-        SportLoungeScreen(
+        if (tv.own.owntv.BuildConfig.LOUNGE_TV_2) hubState.SaveableStateProvider(hubProfile) {
+            PremiumSportsScreen(
+            vm, liveVm, onOpenMatch = { open(it) }, onOpenLeague = { openLeague(it) },
+            onPlayChannel = onPlayChannel, onChildFocused = onChildFocused, onEntryHook = onEntryHook,
+            contentStart = contentStart, active = active, restoreKey = lastKey, modifier = modifier,
+            )
+        } else SportLoungeScreen(
             vm = vm,
             onOpenMatch = open,
             onPlayChannel = onPlayChannel,

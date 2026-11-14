@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.withIndex
@@ -287,7 +288,7 @@ class LiveViewModel(
     }
 
     private val livePreviewAudio: StateFlow<Boolean> = settings.livePreviewAudio
-        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, true)
 
     /** Settings → "Channel numbers": shows the provider number in the lists and the player, and enables
      *  typing one to tune. Off hides every number without touching the stored data. Eager so a playback
@@ -616,14 +617,54 @@ class LiveViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    /** Existing custom-category membership and profile sync power favourites folders. */
+    val favouriteFolderTargets: StateFlow<List<MoveTarget>> = combine(moveTargets, custom) { targets, cust ->
+        val ids = cust.customCategories.filter {
+            tv.own.owntv.features.customize.FavouriteFolders.isFolder(it.name)
+        }.mapTo(HashSet()) { it.id }
+        targets.filter { it.id in ids }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     /** The stable key of a provider folder ([null] when the folder vanished) — the Move dialog's origin. */
     fun folderKey(id: Long): String? = folderContextKeys.value[id]
 
-    /** Creates a custom category — the Move dialog's "＋ New category…" flow. */
-    fun createCustomCategory(name: String) {
+    /** Creating a category from a channel also saves the initiating channel, without deleting it
+     * from its original location. A blank prompt cannot create an unselectable category. */
+    fun createCustomCategory(name: String, initialChannel: ChannelEntity? = null) {
         viewModelScope.launch {
             val pid = currentProfileId() ?: return@launch
-            customize.createCustomCategory(pid, MediaType.LIVE, name)
+            if (name.isBlank()) return@launch
+            val category = customize.createCustomCategory(pid, MediaType.LIVE, name)
+            if (initialChannel != null) customCategoryDao.appendItem(pid, MediaType.LIVE, category.id, initialChannel.id)
+        }
+    }
+
+    /** Save to a folder only if it is owned by the active profile. This must never move provider
+     * channels or change a currently playing session. */
+    fun saveToFavouriteFolder(channel: ChannelEntity, targetId: String) {
+        viewModelScope.launch {
+            val pid = currentProfileId() ?: return@launch
+            val owned = customize.observe(pid, MediaType.LIVE).first().customCategories
+                .any { it.id == targetId && tv.own.owntv.features.customize.FavouriteFolders.isFolder(it.name) }
+            if (!owned) return@launch
+            if (!customCategoryDao.exists(pid, MediaType.LIVE, targetId, channel.id))
+                customCategoryDao.appendItem(pid, MediaType.LIVE, targetId, channel.id)
+            favoriteDao.add(FavoriteEntity(profileId = pid, mediaType = MediaType.LIVE, itemId = channel.id))
+        }
+    }
+
+    /** New folder + first channel are saved together in one coroutine; an existing name is reused.
+     * Ordinary custom categories cannot accidentally be promoted to favourites folders. */
+    fun createFavouriteFolderAndSave(name: String, channel: ChannelEntity) {
+        val canonical = tv.own.owntv.features.customize.FavouriteFolders.canonicalName(name) ?: return
+        viewModelScope.launch {
+            val pid = currentProfileId() ?: return@launch
+            val existing = customize.observe(pid, MediaType.LIVE).first().customCategories
+                .firstOrNull { tv.own.owntv.features.customize.FavouriteFolders.sameFolder(it.name, canonical) }
+            val id = existing?.id ?: customize.createCustomCategory(pid, MediaType.LIVE, canonical).id
+            if (!customCategoryDao.exists(pid, MediaType.LIVE, id, channel.id))
+                customCategoryDao.appendItem(pid, MediaType.LIVE, id, channel.id)
+            favoriteDao.add(FavoriteEntity(profileId = pid, mediaType = MediaType.LIVE, itemId = channel.id))
         }
     }
 
@@ -670,6 +711,9 @@ class LiveViewModel(
             }
         }
         .combine(loungeCuration) { hidden, plan -> hidden + plan.hiddenIds }
+        .combine(categoryNamesById) { hidden, names ->
+            hidden + names.filterValues(LoungeCustomerCatalogue::internalOnly).keys
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
 
     /** Customizations + resolved hidden-category ids, bundled so the list pipeline takes one flow. */
@@ -726,7 +770,7 @@ class LiveViewModel(
                 }.mapTo(hashSetOf()) { it.id }
                 val allowedFolders = (normalFolders + missingSky).filterNot { entry ->
                     entry.categoryId?.let(byId::get)?.let { category ->
-                        isUnwantedNzRailCategory(category.name) ||
+                        LoungeCustomerCatalogue.internalOnly(category.name) || isUnwantedNzRailCategory(category.name) ||
                             (entry.categoryId in nzIds && isUnwantedNzFreeviewRailCategory(category.name))
                     } == true
                 }
@@ -739,8 +783,11 @@ class LiveViewModel(
                 // Group categories by purpose rather than country. Explicit manual
                 // ordering stays pinned and custom folders remain at the front.
                 val orderIndex = cust.categoryOrder.withIndex().associate { (i, key) -> key to i }
-                val orderedFolders = displayFolders.withIndex().sortedWith(
-                    compareBy<IndexedValue<tv.own.owntv.core.customize.CustomizedCategory>>(
+                val orderedFolders = LoungeEditorialOrder.orderedCategories(
+                    rows = displayFolders.withIndex().toList(),
+                    savedKeys = cust.categoryOrder,
+                    key = { it.value.key },
+                    fallback = compareBy<IndexedValue<tv.own.owntv.core.customize.CustomizedCategory>>(
                         { if (it.value.customId != null) -1 else if (it.value.categoryId in nzIds) 0
                             else when (it.value.categoryId?.let(categoriesById::get)?.name?.let(::loungeLiveSectionOf)) {
                                 LoungeLiveSection.NEW_ZEALAND -> 1
@@ -751,6 +798,9 @@ class LiveViewModel(
                             else if (it.value.key in orderIndex) orderIndex.getValue(it.value.key)
                             else it.value.categoryId?.let(categoriesById::get)?.name
                                 ?.let(::loungeLiveSectionOf)?.ordinal ?: Int.MAX_VALUE },
+                        { if (it.value.key in orderIndex) -1 else LoungeEditorialOrder.categoryPriority(
+                            it.value.categoryId?.let(categoriesById::get)?.name?.let(::loungeLiveSectionOf),
+                            it.value.categoryId?.let(categoriesById::get)?.name ?: it.value.displayName) },
                         { it.index },
                     ),
                 ).map { it.value }
@@ -758,8 +808,11 @@ class LiveViewModel(
                     LiveRailItem(
                         key = e.categoryId?.let { LiveKey.Folder(it) } ?: LiveKey.Custom(e.customId!!),
                         title = loungeLiveFolderTitle(e.displayName),
-                        section = if (e.customId != null) LoungeLiveSection.MY_CATEGORIES
-                            else if (e.categoryId in nzIds) LoungeLiveSection.NEW_ZEALAND
+                        section = if (e.customId != null) {
+                            val name = cust.customCategories.firstOrNull { it.id == e.customId }?.name
+                            if (name != null && tv.own.owntv.features.customize.FavouriteFolders.isFolder(name))
+                                LoungeLiveSection.FAVOURITE_FOLDERS else LoungeLiveSection.MY_CATEGORIES
+                        } else if (e.categoryId in nzIds) LoungeLiveSection.NEW_ZEALAND
                             else e.categoryId?.let(categoriesById::get)?.name?.let(::loungeLiveSectionOf),
                         providerName = e.categoryId
                             ?.let(categoriesById::get)
@@ -779,6 +832,10 @@ class LiveViewModel(
                 }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), defaultRail)
+
+    /** System PPV policy applies even to saved favourites/history/custom lists; sports uses its own resolver. */
+    private fun customerChannelVisible(channel: ChannelEntity): Boolean =
+        !LoungeCustomerCatalogue.internalOnly(channel.categoryId?.let { categoryNamesById.value[it] })
 
     val channels: Flow<PagingData<ChannelEntity>> = combine(
         _selected,
@@ -818,6 +875,7 @@ class LiveViewModel(
                 // Keep only BEST NZ Sky Sport RAW and HD in the browsable lists.
                 // Do not delete provider data, favourites or independent M3U feeds.
                 customized
+                    .filter(::customerChannelVisible)
                     .filter(::showInNzSelection)
                     .filter { ch ->
                         // User's hand-picked favourites, watch history and custom
@@ -1088,14 +1146,20 @@ class LiveViewModel(
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
 
     val recentlyWatched: StateFlow<List<ChannelEntity>> = ctx
-        .flatMapLatest { channelDao.recentlyWatched(it.profileId, 20) }
-        .combine(custResolved) { list, cs ->
-            list.filter {
-                CustomizeKeys.channel(it) !in cs.cust.hiddenItems &&
-                    (it.categoryId == null || it.categoryId !in cs.hiddenCats) &&
-                    showInNzSelection(it)
-            }
-                .map { ch -> cs.cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
+        .flatMapLatest { c ->
+            combine(channelDao.recentlyWatched(c.profileId, 20), categoryDao.observe(c.sourceIds, MediaType.LIVE),
+                customize.observe(c.profileId, MediaType.LIVE), profileDao.observeById(c.profileId)) { list, cats, cust, profile ->
+                val hidden = tv.own.owntv.core.content.AdultCategoryClassifier.hiddenCategoryIds(
+                    cats, cust.hiddenCategories, profile?.isKids == true)
+                if (settings.activeProfileIdNow() != c.profileId) emptyList()
+                else list.distinctBy { it.id }.filter {
+                    it.sourceId in c.sourceIds &&
+                        !LoungeCustomerCatalogue.internalOnly(cats.firstOrNull { cat -> cat.id == it.categoryId }?.name) &&
+                        CustomizeKeys.channel(it) !in cust.hiddenItems &&
+                        (it.categoryId == null || it.categoryId !in hidden) &&
+                        showInNzSelection(it)
+                }.map { ch -> cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
+            }.onStart { emit(emptyList()) }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
@@ -1249,11 +1313,12 @@ class LiveViewModel(
     val previewBlockedSingleSession: StateFlow<Boolean> = live.previewBlockedSingleSession
 
     /** In-pane preview playback (no history) — triggered by the UI after the focus settles. */
-    fun playPreview(channel: ChannelEntity) {
+    fun playPreview(channel: ChannelEntity, withAudio: Boolean = false) {
         if (!showInNzSelection(channel) || channel.categoryId != null && channel.categoryId in hiddenCategoryIds.value) return
         // Core keeps the preview off a promoted full-screen stream, re-mutes on a re-focus instead of
         // reloading, mints a Stalker link, and holds back on a one-session panel while mpv plays.
-        live.preview(loungeNzPlaybackChannel(channel), muted = !livePreviewAudio.value)
+        // Sports preview audio is enabled only after an explicit user choice, never on browse focus.
+        live.preview(loungeNzPlaybackChannel(channel), muted = !(withAudio || livePreviewAudio.value))
     }
 
     // --- Multiview: channels kept from the browse screen ------------------------------------------
@@ -1284,8 +1349,10 @@ class LiveViewModel(
      */
     private fun loungeNzPlaybackChannel(channel: ChannelEntity): ChannelEntity {
         val source = sourceById[channel.sourceId] ?: return channel
+        val isLoungeQa3252 = tv.own.owntv.BuildConfig.LOUNGE_TV_2 &&
+            source.url.contains("/lounge-core-xtream-qa-3252")
         if (source.type != SourceType.XTREAM ||
-            !tv.own.owntv.features.setup.isLoungeXtream(source.type, source.url)
+            (!isLoungeQa3252 && !tv.own.owntv.features.setup.isLoungeXtream(source.type, source.url))
         ) return channel
 
         val key = java.text.Normalizer.normalize(channel.name, java.text.Normalizer.Form.NFKD)
@@ -1367,6 +1434,7 @@ class LiveViewModel(
     )
     val canZap: StateFlow<Boolean> = zapList.canZap
     val zapChannels: StateFlow<List<ChannelEntity>> = zapList.channels
+    val playbackZapChannels: StateFlow<List<ChannelEntity>> = zapList.playbackChannels
     val zapListTitle: StateFlow<String?> = zapList.title
     val zapListKey: StateFlow<LiveKey?> = zapList.key
 
@@ -1414,8 +1482,12 @@ class LiveViewModel(
         val raw = withContext(Dispatchers.IO) {
             when (key) {
                 LiveKey.Favorites -> channelDao.snapshotFavoritesManual(c.profileId, ContentOrderEntity.FAV_CONTEXT, sources, ZAP_LIST_LIMIT)
-                LiveKey.Catchup -> channelDao.snapshotCatchup(sources, ZAP_LIST_LIMIT)
-                else -> channelDao.snapshotAll(sources, ZAP_LIST_LIMIT)
+                LiveKey.Catchup -> if (sortMode.value == SettingsRepository.SortMode.ALPHA)
+                    channelDao.snapshotCatchupAlpha(sources, ZAP_LIST_LIMIT)
+                    else channelDao.snapshotCatchup(sources, ZAP_LIST_LIMIT)
+                else -> if (sortMode.value == SettingsRepository.SortMode.ALPHA)
+                    channelDao.snapshotAllAlpha(sources, ZAP_LIST_LIMIT)
+                    else channelDao.snapshotAll(sources, ZAP_LIST_LIMIT)
             }
         }
         val cust = custom.value
@@ -1431,9 +1503,11 @@ class LiveViewModel(
         if (c.profileId < 0) return emptyList()
         val cs = custResolved.value
         return withContext(Dispatchers.IO) {
-            customCategoryDao.snapshotChannels(c.profileId, key.id, c.sourceIds.ifEmpty { listOf(-1L) }, ZAP_LIST_LIMIT)
+            if (sortMode.value == SettingsRepository.SortMode.ALPHA)
+                customCategoryDao.snapshotChannelsAlpha(c.profileId, key.id, c.sourceIds.ifEmpty { listOf(-1L) }, ZAP_LIST_LIMIT)
+            else customCategoryDao.snapshotChannels(c.profileId, key.id, c.sourceIds.ifEmpty { listOf(-1L) }, ZAP_LIST_LIMIT)
         }
-            .filter { isChannelVisible(it, cs.cust, cs.hiddenCats, key) && showInNzSelection(it) }
+            .filter { customerChannelVisible(it) && isChannelVisible(it, cs.cust, cs.hiddenCats, key) && showInNzSelection(it) }
             .map { ch -> cs.cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
     }
 
@@ -1441,10 +1515,17 @@ class LiveViewModel(
     private suspend fun channelsInCategory(categoryId: Long): List<ChannelEntity> {
         val pid = currentProfileId() ?: return emptyList()
         val ctxKey = folderContextKeys.value[categoryId] ?: ""
-        val channels = channelDao.snapshotByCategoryManual(categoryId, pid, ctxKey, ZAP_LIST_LIMIT)
+        val channels = (if (LoungeEditorialOrder.channelsEnabled(categoryNamesById.value[categoryId]))
+            channelDao.snapshotByCategoryEditorial(categoryId, pid, ctxKey, sortMode.value == SettingsRepository.SortMode.ALPHA, System.currentTimeMillis(), ZAP_LIST_LIMIT)
+        else if (sortMode.value == SettingsRepository.SortMode.ALPHA)
+            channelDao.snapshotByCategoryManualAlpha(categoryId, pid, ctxKey, ZAP_LIST_LIMIT)
+        else channelDao.snapshotByCategoryManual(categoryId, pid, ctxKey, ZAP_LIST_LIMIT))
+            .filter(::customerChannelVisible)
             .filter(::showInNzSelection)
         // The in-player category list must match Live TV's NZ Freeview order.
-        return if (categoryId in nzFreeviewFolderIds.value) LoungeNzOrder.firstFive(channels)
+        return if (categoryId in nzFreeviewFolderIds.value) LoungeNzOrder.firstFive(
+            channels, preserveManualOrder = ctxKey in orderedContexts.value,
+        )
             else channels
     }
 
@@ -1455,18 +1536,42 @@ class LiveViewModel(
         val pid = currentProfileId()
         val raw = withContext(Dispatchers.IO) {
             if (catId != null && pid != null) {
-                channelDao.snapshotByCategoryManual(catId, pid, folderContextKeys.value[catId] ?: "", ZAP_LIST_LIMIT)
+                if (LoungeEditorialOrder.channelsEnabled(categoryNamesById.value[catId]))
+                    channelDao.snapshotByCategoryEditorial(catId, pid, folderContextKeys.value[catId].orEmpty(), sortMode.value == SettingsRepository.SortMode.ALPHA, System.currentTimeMillis(), ZAP_LIST_LIMIT)
+                else if (sortMode.value == SettingsRepository.SortMode.ALPHA)
+                    channelDao.snapshotByCategoryManualAlpha(catId, pid, folderContextKeys.value[catId] ?: "", ZAP_LIST_LIMIT)
+                else channelDao.snapshotByCategoryManual(catId, pid, folderContextKeys.value[catId] ?: "", ZAP_LIST_LIMIT)
             } else {
                 // No category on this row (hand-made M3U entries) — fall back to All Channels.
-                channelDao.snapshotAll(ctx.value.sourceIds.ifEmpty { listOf(-1L) }, ZAP_LIST_LIMIT)
+                if (sortMode.value == SettingsRepository.SortMode.ALPHA)
+                    channelDao.snapshotAllAlpha(ctx.value.sourceIds.ifEmpty { listOf(-1L) }, ZAP_LIST_LIMIT)
+                else channelDao.snapshotAll(ctx.value.sourceIds.ifEmpty { listOf(-1L) }, ZAP_LIST_LIMIT)
             }
         }
         val cust = custom.value
         val hiddenCats = hiddenCategoryIds.value
-        return raw
+        val visible = raw
             .filter { CustomizeKeys.channel(it) !in cust.hiddenItems && (it.categoryId == null || it.categoryId !in hiddenCats) && showInNzSelection(it) }
             .map { ch -> cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
+        return if (catId in nzFreeviewFolderIds.value) LoungeNzOrder.firstFive(
+            visible, preserveManualOrder = folderContextKeys.value[catId] in orderedContexts.value,
+        ) else visible
     }
+
+    /**
+     * Synopsis LEFT/RIGHT always browses the tuned channel's own category.
+     * This read-only scope is separate from the armed CH+/- playback rail.
+     * Synthetic sports candidates are absent from Room, so they retain their
+     * current explicit match-candidate group when it contains the playing feed.
+     */
+    suspend fun synopsisChannelsFor(
+        channel: ChannelEntity,
+        playbackContext: List<ChannelEntity>,
+    ): List<ChannelEntity> = synopsisChannelScope(
+        channel = channel,
+        categoryChannels = if (channel.id < 0L) emptyList() else channelsAroundChannel(channel),
+        playbackContext = playbackContext,
+    )
 
     /** The profile's recently-watched channels and when each was watched, for the right-hand in-player
      *  history overlay. */
@@ -1475,7 +1580,7 @@ class LiveViewModel(
         val cust = custom.value
         val hiddenCats = hiddenCategoryIds.value
         return channelDao.recentlyWatchedWithTimestamp(pid, limit).first()
-            .filter { (ch) -> CustomizeKeys.channel(ch) !in cust.hiddenItems && (ch.categoryId == null || ch.categoryId !in hiddenCats) && showInNzSelection(ch) }
+            .filter { (ch) -> customerChannelVisible(ch) && CustomizeKeys.channel(ch) !in cust.hiddenItems && (ch.categoryId == null || ch.categoryId !in hiddenCats) && showInNzSelection(ch) }
             .map { e -> cust.itemNames[CustomizeKeys.channel(e.channel)]?.let { e.copy(channel = e.channel.copy(name = it)) } ?: e }
     }
 
@@ -1512,7 +1617,7 @@ class LiveViewModel(
     /** Back out of full-screen to the Live screen: we're no longer full-screen on ExoPlayer, so the preview
      *  pane may re-take the engine (and re-apply the preview mute) on the next focus. Keeps the stream
      *  playing (no stop) — just clears the flag so [playPreview] works again. */
-    fun onFullscreenExited() {
+    fun onFullscreenExited(keepPreview: Boolean = false) {
         live.detach() // the stream stays; its watchers and the give-up alarm stand down
         // Leaving full-screen ends the rewind: the archive stream is torn down with the player, and the
         // 1 Hz "behind live" ticker would otherwise keep running against nothing for the rest of the session.
@@ -1521,7 +1626,7 @@ class LiveViewModel(
         // focus and re-applies the preview mute — so we can leave it running here. But when live preview
         // is OFF, nothing ever re-takes it, and the engine would keep decoding the (unmuted) channel's
         // audio in the background after exit. Stop it so leaving fullscreen actually silences the stream.
-        if (!livePreviewEnabled.value) live.stopExo()
+        if (!livePreviewEnabled.value && !keepPreview) live.stopExo()
     }
 
     fun clearLiveOnExo() {
@@ -1550,6 +1655,13 @@ class LiveViewModel(
         return customCategoryDao.contextsOf(current.profileId, MediaType.LIVE, channel.id)
             .any { it !in customizations.hiddenCategories }
     }
+
+    /** Sports discovery may return a synthetic backend channel absent from Room. Validate its source
+     * and profile policy, then use the same object-based canonical tune that already plays its preview. */
+    suspend fun watchSportsFullscreen(channel: ChannelEntity, candidates: List<ChannelEntity>): Boolean =
+        requestSportsFullscreen(channel, candidates, ::isVisibleToActiveProfile) { selected, context ->
+            watchFullscreen(selected, context)
+        }
 
     /** Open a channel fullscreen, preserving the browse context it was launched from. The channel's
      *  provider category is metadata (used by [previewCategoryName]); it must not replace Favorites,
@@ -2245,7 +2357,7 @@ class LiveViewModel(
     }
 
     fun stopPreview() {
-        live.stop() // both engines, every watcher and the give-up alarm, and the reconnect link
+        live.stopBrowsingPreview() // release only sessions owned by the Live controller
         _previewChannel.value = null
     }
 
@@ -2257,6 +2369,10 @@ class LiveViewModel(
      * guide simply has no entry here, and the row shows no second line. Returns only channels that
      * actually have something airing right now.
      */
+    /** Information-only reads: never changes preview, playback, or CH+/CH- context. */
+    suspend fun browseProgramme(channel: ChannelEntity): tv.own.owntv.core.live.EpgNowNext? =
+        withContext(Dispatchers.IO) { epgReader.nowNext(channel, custom.value, epgOffset.value) }
+
     suspend fun nowPlayingFor(channels: List<ChannelEntity>): Map<Long, tv.own.owntv.core.parser.XtEpgEntry> =
         epgReader.nowProgrammesFor(channels, custom.value, epgOffset.value)
 
@@ -2353,13 +2469,20 @@ class LiveViewModel(
         key: LiveKey, c: Ctx, query: String, sort: SettingsRepository.SortMode,
         nzFolderIds: Set<Long> = nzFreeviewFolderIds.value,
     ): PagingSource<Int, ChannelEntity> {
-        // Fixed launch five must lead in BOTH Playlist and A-Z modes. Keep the
-        // existing manual order for every other NZ channel and every other folder.
-        if (key is LiveKey.Folder && key.id in nzFolderIds && query.isBlank()) {
+        // The NZ launch five lead in either sort until the customer saves an explicit move.
+        // Saved category order then uses the same manual query as every other folder.
+        if (key is LiveKey.Folder && key.id in nzFolderIds && query.isBlank() &&
+            folderContextKeys.value[key.id] !in orderedContexts.value) {
             val contextKey = folderContextKeys.value[key.id].orEmpty()
             return LoungeNzPriorityPagingSource {
-                channelDao.snapshotByCategoryManual(key.id, c.profileId, contextKey, 300)
+                if (sort == SettingsRepository.SortMode.ALPHA)
+                    channelDao.snapshotByCategoryManualAlpha(key.id, c.profileId, contextKey, 300)
+                else channelDao.snapshotByCategoryManual(key.id, c.profileId, contextKey, 300)
             }
+        }
+        if (key is LiveKey.Folder && query.isBlank() && LoungeEditorialOrder.channelsEnabled(categoryNamesById.value[key.id])) {
+            return channelDao.pagingByCategoryEditorial(key.id, c.profileId, folderContextKeys.value[key.id].orEmpty(),
+                sort == SettingsRepository.SortMode.ALPHA, System.currentTimeMillis())
         }
         return livePagingSource(
             key = key,

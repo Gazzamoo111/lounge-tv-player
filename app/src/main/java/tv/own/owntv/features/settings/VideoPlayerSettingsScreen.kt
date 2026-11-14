@@ -788,7 +788,7 @@ internal fun VideoPlayerGroupRows(
             quickKey = "vp_vod_engine",
             choices = EnginePreference.entries.map { engineLabel(it) },
             chosen = vodEngine.ordinal,
-            recommended = EnginePreference.MPV_FIRST.ordinal,
+            recommended = EnginePreference.EXO_FIRST.ordinal,
             icon = OwnTVIcon.PLAY,
             title = stringResource(R.string.settings_movies_series_player),
             desc = stringResource(R.string.settings_movies_player_description),

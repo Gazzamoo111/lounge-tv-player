@@ -23,6 +23,7 @@ internal data class MovieCategoryHighlights(
     val day: Long = 0L,
     val featured: List<MovieEntity> = emptyList(),
     val newReleases: List<MovieEntity> = emptyList(),
+    val recentlyAdded: List<MovieEntity> = emptyList(),
 )
 
 internal class MovieCategoryHighlightsReader(
@@ -61,7 +62,19 @@ internal class MovieCategoryHighlightsReader(
             order = "COALESCE(m.year, m.parsedYear, 0) DESC, COALESCE(m.rating, 0) DESC, m.qualityRank DESC, m.id",
             limit = 160,
         )
-        val candidates = (featuredIds + releaseIds).distinct()
+        // Provider addition/last-modification timestamps; no release-year guesswork.
+        val nowMs = System.currentTimeMillis()
+        val addedIds = selectIds(
+            common,
+            extraWhere = " AND m.addedAt BETWEEN ? AND ?",
+            extraParams = listOf(
+                tv.own.owntv.ui.components.LoungeVodRecentlyAdded.since(nowMs),
+                tv.own.owntv.ui.components.LoungeVodRecentlyAdded.latestAcceptable(nowMs),
+            ),
+            order = "m.addedAt DESC, m.sortOrder DESC, m.id DESC",
+            limit = 160,
+        )
+        val candidates = (featuredIds + releaseIds + addedIds).distinct()
         if (candidates.isEmpty()) return@withContext MovieCategoryHighlights(categoryKey = key, day = day)
 
         val byId = movieDao.getByIds(candidates).associateBy { it.id }
@@ -94,6 +107,7 @@ internal class MovieCategoryHighlightsReader(
         }
 
         val newReleases = uniqueMovies(releaseIds).take(MAX_ROW_ITEMS)
+        val recentlyAdded = uniqueMovies(addedIds).take(MAX_ROW_ITEMS)
         val recentIds = newReleases.mapTo(HashSet()) { it.id }
         val seeded = uniqueMovies(featuredIds).take(FEATURED_POOL)
             .shuffled(Random((day xor key.hashCode().toLong()).toInt()))
@@ -105,6 +119,7 @@ internal class MovieCategoryHighlightsReader(
             day = day,
             featured = featured,
             newReleases = newReleases,
+            recentlyAdded = recentlyAdded,
         )
     }
 

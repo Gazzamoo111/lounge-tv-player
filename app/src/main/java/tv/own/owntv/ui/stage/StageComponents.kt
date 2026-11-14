@@ -653,16 +653,22 @@ fun StageSheetItem(
     maxLines: Int = 1,
     tags: (@Composable RowScope.(focused: Boolean) -> Unit)? = null,
     trailing: (@Composable RowScope.(focused: Boolean) -> Unit)? = null,
+    /** Only used for Lounge TV's top-level Live sections. Child folders retain original geometry. */
+    emphasized: Boolean = false,
 ) {
     val a = stageAccent
     StageSurface(
         onClick = onClick,
         onLongClick = onLongClick,
         radius = StageRadii.SheetItem,
-        modifier = modifier.fillMaxWidth().then(if (maxLines > 1) Modifier.heightIn(min = 56.mpx) else Modifier.height(56.mpx)),
+        modifier = modifier.fillMaxWidth().then(when {
+            emphasized -> Modifier.height(74.mpx)
+            maxLines > 1 -> Modifier.heightIn(min = 56.mpx)
+            else -> Modifier.height(56.mpx)
+        }),
     ) { focused ->
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.mpx, vertical = if (maxLines > 1) 8.mpx else 0.mpx),
+            Modifier.fillMaxWidth().padding(horizontal = if (emphasized) 20.mpx else 16.mpx, vertical = if (maxLines > 1) 8.mpx else 0.mpx),
             horizontalArrangement = Arrangement.spacedBy(14.mpx),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -671,11 +677,11 @@ fun StageSheetItem(
             if (selected && !focused) {
                 Box(Modifier.width(3.mpx).wrapContentWidth(Alignment.Start, unbounded = true)) { StageSelectedDot() }
             }
-            if (icon != null) StageIcon(icon, on ?: if (selected) a.accent else StageColors.Muted, 22.mpx)
+            if (icon != null) StageIcon(icon, on ?: if (selected) a.accent else StageColors.Muted, if (emphasized) 28.mpx else 22.mpx)
             val label = @Composable { m: Modifier ->
                 Text(
                     text,
-                    style = stageText(20, 600),
+                    style = stageText(if (emphasized) 22 else 20, if (emphasized) 750 else 600),
                     color = on ?: if (selected) a.accent else StageColors.ItemText,
                     maxLines = maxLines, overflow = TextOverflow.Ellipsis,
                     modifier = m,

@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import tv.own.owntv.core.database.OwnTVDatabase
 import tv.own.owntv.core.database.dao.CategoryDao
 import tv.own.owntv.core.customize.CustomizationStore
 import tv.own.owntv.core.database.dao.ChannelDao
@@ -95,12 +96,17 @@ data class HomeUiState(
     val heroItems: List<HeroItem> = emptyList(),
     val activeHeroIndex: Int = 0,
     val continueMovies: List<LauncherContinuationItem> = emptyList(),
+    val continuationMovieRatings: Map<Long, Double?> = emptyMap(),
     val continueSeries: List<LauncherContinuationItem> = emptyList(),
     val heroMetadata: Map<String, HomeHeroMetadata> = emptyMap(),
     val recentLive: List<ChannelEntity> = emptyList(),
     val favoriteLive: List<ChannelEntity> = emptyList(),
     val favoriteMovies: List<MovieEntity> = emptyList(),
     val favoriteSeries: List<SeriesEntity> = emptyList(),
+    val newMovies: List<MovieEntity> = emptyList(),
+    val newSeries: List<SeriesEntity> = emptyList(),
+    val moviePosterOverrides: Map<Long, String> = emptyMap(),
+    val seriesPosterOverrides: Map<Long, String> = emptyMap(),
     val featuredMovies: List<MovieEntity> = emptyList(),
     val popularSeries: List<SeriesEntity> = emptyList(),
     val featuredMovieNames: Map<Long, String> = emptyMap(),
@@ -157,12 +163,28 @@ class HomeViewModel(
     private val catalogSyncScheduler: CatalogSyncScheduler,
     private val context: android.content.Context,
     private val customizations: CustomizationStore,
+    private val database: OwnTVDatabase,
 ) : ViewModel() {
     // One automatic recovery attempt per playlist per Home VM lifetime.
     // A normal provider sync or backfill still owns its own Trending updates.
     private val attemptedMissingTrending = java.util.Collections.synchronizedSet(mutableSetOf<Long>())
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    /** The same profile-scoped Room progress rows used by the VOD poster badges. */
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val movieProgress = settings.activeProfileId.flatMapLatest { pid ->
+        if (pid < 0) flowOf(emptyList()) else progressDao.observeMovieProgress(pid)
+    }.map { rows -> rows.associateBy { it.itemId } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    val seriesProgress = settings.activeProfileId.flatMapLatest { pid ->
+        if (pid < 0) flowOf(emptyList()) else progressDao.observeLatestEpisodeProgressPerSeries(pid)
+    }.map { rows ->
+        rows.filter { it.durationMs > 0 && it.positionMs < (it.durationMs * 0.95f).toLong() }
+            .associate { it.seriesId to it.positionMs.toFloat() / it.durationMs }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     /**
      * Single entry point for "rebuild the Home rails". Every trigger goes through here rather than
@@ -396,6 +418,11 @@ class HomeViewModel(
      * gate has confirmed the active id against Room's profile list. Everyone else passes nothing and
      * gets the lookup.
      */
+    private var discoveryLoadedAt: Long? = null
+    fun refreshDiscoveryIfExpired() {
+        if (HomeDiscoveryRotation.expired(discoveryLoadedAt, System.currentTimeMillis())) refresh()
+    }
+
     fun refresh(profileId: Long? = null) {
         reloadRequests.tryEmit(profileId?.takeIf { it >= 0 })
     }
@@ -407,9 +434,24 @@ class HomeViewModel(
      */
     private suspend fun loadHomeData(profileId: Long) {
         val previous = _uiState.value
-        val data = feed.load(profileId)
+        val now = System.currentTimeMillis()
+        val rawData = feed.load(profileId)
+        val liveCategories = (rawData.recentLive + rawData.favoriteLive).mapNotNull { it.categoryId }.distinct()
+        val internalCategories = withContext(Dispatchers.IO) {
+            liveCategories.filter { id -> tv.own.owntv.features.live.LoungeCustomerCatalogue.internalOnly(categoryDao.getById(id)?.name) }.toSet()
+        }
+        val data = rawData.copy(
+            recentLive = rawData.recentLive.filterNot { it.categoryId in internalCategories },
+            favoriteLive = rawData.favoriteLive.filterNot { it.categoryId in internalCategories },
+            heroItems = rawData.heroItems.filterNot { it is HeroItem.LiveHero && it.channel.categoryId in internalCategories },
+        )
+        val continuationMovieRatings = withContext(Dispatchers.IO) {
+            val movieIds = data.continueMovies.map { it.sourceItemId }.distinct()
+            if (movieIds.isEmpty()) emptyMap() else movieDao.getByIds(movieIds).associate { it.id to it.rating }
+        }
+        discoveryLoadedAt = now
         _uiState.value = HomeUiState(
-            trendingItems = data.trendingItems,
+            trendingItems = HomeDiscoveryRotation.rotate(data.trendingItems, profileId, now),
             activeTrendingIndex = previous.activeTrendingIndex
                 .coerceIn(0, (data.trendingItems.size - 1).coerceAtLeast(0)),
             trendingPreferredLanguage = data.trendingPreferredLanguage,
@@ -418,6 +460,7 @@ class HomeViewModel(
             heroItems = data.heroItems,
             activeHeroIndex = 0,
             continueMovies = data.continueMovies,
+            continuationMovieRatings = continuationMovieRatings,
             continueSeries = data.continueSeries,
             heroMetadata = previous.heroMetadata.filterKeys { key -> data.heroItems.any { it.homeKey == key } },
             recentLive = data.recentLive,
@@ -438,15 +481,33 @@ class HomeViewModel(
             try {
                 val selection = LoungeHomeHighlightsReader(
                     movieDao, seriesDao, channelDao, categoryDao,
-                    profileDao, sourceDao, settings, customizations, context,
-                ).load(profileId)
+                    profileDao, sourceDao, settings, customizations, context, database,
+                ).load(profileId, now)
                 if (currentProfileId() == profileId) {
                     _uiState.value = _uiState.value.copy(
+                        newMovies = selection.newMovies,
+                        newSeries = selection.newSeries,
                         featuredMovies = selection.movies,
                         popularSeries = selection.series,
                         featuredMovieNames = selection.movieNames,
                         popularSeriesNames = selection.seriesNames,
                     )
+                    // Reuse already cached TMDB posters where available: provider thumbnails can be tiny.
+                    // No additional network metadata work or playlist writes are needed.
+                    val posterMovies = (selection.newMovies + selection.movies +
+                        data.trendingItems.filterIsInstance<TrendingHomeItem.Movie>().map { it.movie })
+                        .distinctBy { it.id }
+                    val posterSeries = (selection.newSeries + selection.series +
+                        data.trendingItems.filterIsInstance<TrendingHomeItem.Series>().map { it.series })
+                        .distinctBy { it.id }
+                    val moviePosters = metadata.cachedMoviePosters(posterMovies)
+                    val seriesPosters = metadata.cachedSeriesPosters(posterSeries)
+                    if (currentProfileId() == profileId) {
+                        _uiState.value = _uiState.value.copy(
+                            moviePosterOverrides = moviePosters,
+                            seriesPosterOverrides = seriesPosters,
+                        )
+                    }
                 }
             } catch (cancelled: kotlinx.coroutines.CancellationException) {
                 throw cancelled

@@ -32,16 +32,77 @@ jobs:
         with:
           packages: 'platform-tools'
       - uses: gradle/actions/setup-gradle@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.17.0'
       - name: Branding and Python guardrails
         run: |
           python3 -m pip install --disable-pip-version-check Pillow
           python3 scripts/generate_loungetv_brand_assets.py
           python3 scripts/check_branding.py
           PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts/tests -p 'test_*.py'
+      - name: Backend contracts and shared EPG regression
+        run: |
+          python3 -m pip install --disable-pip-version-check --only-binary=:all: lxml==5.4.0
+          node --test services/sport-lounge/test/*.mjs qa/gateway/*.test.mjs
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s qa/shared-epg -p 'test_*.py'
+      - name: Checkout baseline core for controlled before comparison
+        uses: actions/checkout@v4
+        with:
+          repository: ahXN00/OwnTV_Core
+          ref: 1de78b1e2690c22b50c060e986bce221454bf880
+          path: baseline-core
+          persist-credentials: false
+      - name: Run identical controller scenarios against prior effective core
+        env:
+          LOUNGE_M3_BASELINE: 'true'
+        run: |
+          python3 scripts/patch_lounge_playback_core.py baseline-core --baseline
+          python3 - <<'PYBENCH'
+          from pathlib import Path
+          template = Path('scripts/benchmarks/LivePlaybackWorkBenchmarkTest.kt').read_text()
+          # The old interface has no MPV URL property; the fake still records exactly the same value.
+          template = template.replace('override var mpvUrl:', 'var mpvUrl:')
+          Path('baseline-core/player-core/src/test/java/tv/own/owntv/player/LivePlaybackWorkBenchmarkTest.kt').write_text(template)
+          PYBENCH
+          chmod +x baseline-core/gradlew
+          baseline-core/gradlew -p baseline-core :player-core:testDebugUnitTest --tests tv.own.owntv.player.LivePlaybackWorkBenchmarkTest --stacktrace
+      - name: Checkout QA 610 effective core for targeted ownership comparison
+        uses: actions/checkout@v4
+        with:
+          repository: ahXN00/OwnTV_Core
+          ref: 1de78b1e2690c22b50c060e986bce221454bf880
+          path: qa610-core
+          persist-credentials: false
+      - name: Replay shared-session ownership against QA 610 and verify unchanged VOD configuration
+        env:
+          LOUNGE_M6_BASELINE: 'true'
+        run: |
+          python3 scripts/patch_lounge_playback_core.py qa610-core --milestone5
+          cp scripts/benchmarks/Milestone6OwnershipComparisonTest.kt qa610-core/player-core/src/test/java/tv/own/owntv/player/
+          chmod +x qa610-core/gradlew
+          qa610-core/gradlew -p qa610-core :player-core:testDebugUnitTest --tests tv.own.owntv.player.Milestone6OwnershipComparisonTest --stacktrace
+          python3 - <<'PYVOD'
+          import hashlib, json
+          from pathlib import Path
+          rows = []
+          for name in ('OwnTVPlayer.kt', 'SmartBuffer.kt', 'MpvLiveBuffer.kt', 'ExoSubtitleEngine.kt', 'AudioOutputPolicy.kt', 'FilmWatchdog.kt'):
+              path = Path('player-core/src/main/java/tv/own/owntv/player') / name
+              old = (Path('qa610-core') / path).read_bytes()
+              new = (Path('shared-core') / path).read_bytes()
+              assert old == new, 'Unreviewed VOD/decoder/audio change: ' + name
+              rows.append(dict(file=name, unchanged=True, sha256=hashlib.sha256(new).hexdigest()))
+          Path('m6-vod-configuration-invariants.json').write_text(json.dumps(rows, indent=2))
+          print(json.dumps(rows, indent=2))
+          PYVOD
       - name: Core, playback and app unit tests without signing credentials
         env:
           QA_SIGNING_REQUIRED: 'false'
           PRODUCTION_SIGNING_REQUIRED: 'false'
+          LOUNGE_TV_2_QA: ${{ github.head_ref == 'feature/lounge-tv-2.0' || github.ref_name == 'feature/lounge-tv-2.0' }}
         run: |
           chmod +x ./gradlew
           ./gradlew :shared-core:core:testDebugUnitTest :shared-core:player-core:testDebugUnitTest :app:testStandardDebugUnitTest -Powntv.corePath="$GITHUB_WORKSPACE/shared-core" --stacktrace
@@ -54,4 +115,7 @@ jobs:
             shared-core/core/build/test-results/**/*.xml
             shared-core/player-core/build/test-results/**/*.xml
             app/build/test-results/**/*.xml
+            baseline-core/player-core/build/test-results/**/*.xml
+            qa610-core/player-core/build/test-results/**/*.xml
+            m6-vod-configuration-invariants.json
           if-no-files-found: warn

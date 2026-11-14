@@ -6,6 +6,10 @@ import tv.own.owntv.R
 import tv.own.owntv.core.content.AdultCategoryClassifier
 import tv.own.owntv.core.customize.CustomizationStore
 import tv.own.owntv.core.customize.CustomizeKeys
+import tv.own.owntv.core.database.OwnTVDatabase
+import tv.own.owntv.core.live.LiveKey
+import tv.own.owntv.features.movies.MovieCategoryHighlightsReader
+import tv.own.owntv.features.series.SeriesCategoryHighlightsReader
 import tv.own.owntv.core.database.dao.CategoryDao
 import tv.own.owntv.core.database.dao.ChannelDao
 import tv.own.owntv.core.database.dao.MovieDao
@@ -25,6 +29,8 @@ internal data class LoungeHomeHighlights(
     val movies: List<MovieEntity> = emptyList(),
     val series: List<SeriesEntity> = emptyList(),
     val movieNames: Map<Long, String> = emptyMap(),
+    val newMovies: List<MovieEntity> = emptyList(),
+    val newSeries: List<SeriesEntity> = emptyList(),
     val seriesNames: Map<Long, String> = emptyMap(),
 )
 
@@ -38,8 +44,9 @@ internal class LoungeHomeHighlightsReader(
     private val settings: SettingsRepository,
     private val customizations: CustomizationStore,
     private val context: Context,
+    private val database: OwnTVDatabase,
 ) {
-    suspend fun load(profileId: Long): LoungeHomeHighlights {
+    suspend fun load(profileId: Long, nowMs: Long = System.currentTimeMillis()): LoungeHomeHighlights {
         val movieIds = activeSourceIds(settings, sources, profileId, MediaType.MOVIE).toList()
         val seriesIds = activeSourceIds(settings, sources, profileId, MediaType.SERIES).toList()
         val kids = profiles.getById(profileId)?.isKids == true
@@ -51,7 +58,7 @@ internal class LoungeHomeHighlightsReader(
         // films were obscure titles on BEST. Only pick recognisable editorially curated titles,
         // and only when an exact playable match exists in the customer's own playlist.
         val moviePicks = pickFamous(
-            movieIds, context.resources.getStringArray(R.array.lounge_popular_movies).toList(),
+            movieIds, HomeDiscoveryRotation.rotate(context.resources.getStringArray(R.array.lounge_popular_movies).toList(), profileId, nowMs),
             query = { title -> movies.searchListFts(phrase(title), movieIds, 15) },
             key = { item: MovieEntity -> titleKey(item.canonicalTitle.ifBlank { item.name }) },
             valid = { item: MovieEntity ->
@@ -61,7 +68,7 @@ internal class LoungeHomeHighlightsReader(
             quality = { item: MovieEntity -> item.qualityRank },
         )
         val seriesPicks = pickFamous(
-            seriesIds, context.resources.getStringArray(R.array.lounge_popular_series).toList(),
+            seriesIds, HomeDiscoveryRotation.rotate(context.resources.getStringArray(R.array.lounge_popular_series).toList(), profileId, nowMs),
             query = { title -> series.searchListFts(phrase(title), seriesIds, 15) },
             key = { item: SeriesEntity -> titleKey(item.canonicalTitle.ifBlank { item.name }) },
             valid = { item: SeriesEntity ->
@@ -71,7 +78,22 @@ internal class LoungeHomeHighlightsReader(
             quality = { item: SeriesEntity -> item.qualityRank },
         )
 
+        // Same release/eligibility/visibility logic as the Movies and Series browsers.
+        val movieReleases = MovieCategoryHighlightsReader(database, movies).load(
+            key = LiveKey.All, profileId = profileId, sourceIds = movieIds,
+            hiddenCategories = movieVisibility.hiddenCategories,
+            customization = customizations.observe(profileId, MediaType.MOVIE).first(),
+            folderContextKey = null, day = nowMs / 86_400_000L,
+        ).newReleases.take(6)
+        val seriesReleases = SeriesCategoryHighlightsReader(database, series).load(
+            key = LiveKey.All, profileId = profileId, sourceIds = seriesIds,
+            hiddenCategories = seriesVisibility.hiddenCategories,
+            customization = customizations.observe(profileId, MediaType.SERIES).first(),
+            folderContextKey = null, day = nowMs / 86_400_000L,
+        ).newReleases.take(6)
         return LoungeHomeHighlights(
+            newMovies = movieReleases,
+            newSeries = seriesReleases,
             movies = moviePicks.map { it.first },
             series = seriesPicks.map { it.first },
             movieNames = moviePicks.associate { it.first.id to it.second },

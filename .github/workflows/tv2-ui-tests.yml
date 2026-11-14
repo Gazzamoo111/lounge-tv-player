@@ -1,0 +1,127 @@
+name: Lounge TV 2 UI acceptance
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  compose-tv:
+    if: github.head_ref == 'feature/lounge-tv-2.0' || github.ref_name == 'feature/lounge-tv-2.0'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      LOUNGE_TV_2_QA: 'true'
+      QA_SIGNING_REQUIRED: 'false'
+      PRODUCTION_SIGNING_REQUIRED: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: ahXN00/OwnTV_Core
+          ref: 1de78b1e2690c22b50c060e986bce221454bf880
+          path: shared-core
+          persist-credentials: false
+      - name: Apply reviewed playback core
+        run: python3 scripts/patch_lounge_playback_core.py shared-core
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v4
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Prepare isolated emulator and rendered assets
+        run: |
+          python3 -m pip install --disable-pip-version-check Pillow
+          python3 scripts/generate_loungetv_brand_assets.py
+          command -v ffmpeg >/dev/null || (sudo apt-get update -qq && sudo apt-get install -y ffmpeg)
+          mkdir -p app/src/androidTest/assets
+          ffmpeg -hide_banner -loglevel error -f lavfi -i 'testsrc2=size=640x360:rate=30' -f lavfi -i 'sine=frequency=440:sample_rate=48000' -t 30 -c:v libx264 -preset ultrafast -pix_fmt yuv420p -c:a aac -movflags +faststart -y app/src/androidTest/assets/m6-local-av.mp4
+          sudo chmod 666 /dev/kvm
+          sdkmanager 'emulator' 'system-images;android-35;google_apis;x86_64'
+          echo no | avdmanager create avd --force --name lounge_m4 --package 'system-images;android-35;google_apis;x86_64'
+          "$ANDROID_HOME/emulator/emulator" -avd lounge_m4 -no-window -no-audio -no-boot-anim -no-snapshot -no-metrics -gpu swiftshader_indirect > /tmp/lounge-emulator.log 2>&1 &
+          adb wait-for-device
+          timeout 240 bash -c 'until [ "$(adb shell getprop sys.boot_completed | tr -d "\r")" = "1" ]; do sleep 2; done'
+          adb shell wm size 1920x1080
+          adb shell wm density 320
+          adb shell settings put system accelerometer_rotation 0
+          adb shell settings put system user_rotation 0
+          adb shell input keyevent 82
+      - name: Build and install instrumentation APKs
+        id: install
+        run: |
+          set -euo pipefail
+          # UTP's connected test task uninstalls the target on completion, deleting both PNGs and
+          # preference fixtures. Build then run the SAME AndroidJUnitRunner directly so the real
+          # app data remains present for export and the mandatory second-process restart check.
+          ./gradlew :app:assembleX86_64Debug :app:assembleX86_64DebugAndroidTest -Powntv.corePath="$GITHUB_WORKSPACE/shared-core" --stacktrace
+          TARGET_APK=$(find app/build/outputs/apk/x86_64/debug -name '*.apk' -print -quit)
+          TEST_APK=$(find app/build/outputs/apk/androidTest/x86_64/debug -name '*.apk' -print -quit)
+          test -n "$TARGET_APK" && test -n "$TEST_APK"
+          adb install "$TARGET_APK"
+          adb install "$TEST_APK"
+      - name: Existing Sports navigation and preference regression
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          adb shell am instrument -w -r -e class tv.own.owntv.features.sports.Milestone4UiTest com.loungetv.player.v2qa.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/lounge-ui-results.txt
+          grep -Eq '^OK \(11 tests\)' /tmp/lounge-ui-results.txt
+          ! grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|shortMsg=' /tmp/lounge-ui-results.txt
+      - name: Recovery Home navigation and native VOD probes
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          adb shell am instrument -w -r -e class tv.own.owntv.features.sports.Milestone6UiTest com.loungetv.player.v2qa.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/lounge-m6-results.txt
+          grep -Eq '^OK \(5 tests\)' /tmp/lounge-m6-results.txt
+          ! grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|shortMsg=' /tmp/lounge-m6-results.txt
+      - name: Finishing pass channel surf and interrupted XMLTV regression
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          adb shell am instrument -w -r -e class tv.own.owntv.features.sports.FinishingPassUiTest com.loungetv.player.v2qa.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/lounge-finishing-results.txt
+          grep -Eq '^OK \(3 tests\)' /tmp/lounge-finishing-results.txt
+          ! grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|shortMsg=' /tmp/lounge-finishing-results.txt
+      - name: Second-process preference persistence
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: |
+          set -euo pipefail
+          adb shell am force-stop com.loungetv.player.v2qa
+          adb shell am instrument -w -r -e class tv.own.owntv.features.sports.Milestone4RestartTest com.loungetv.player.v2qa.test/androidx.test.runner.AndroidJUnitRunner | tee /tmp/lounge-restart-results.txt
+          grep -Eq '^OK \(1 test\)' /tmp/lounge-restart-results.txt
+          ! grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED|shortMsg=' /tmp/lounge-restart-results.txt
+      - name: Collect actual emulator renders and logs
+        if: ${{ always() && !cancelled() }}
+        timeout-minutes: 2
+        run: |
+          set -euo pipefail
+          mkdir -p m4-ui-results
+          timeout 15 adb logcat -d > m4-ui-results/logcat.txt || true
+          cp /tmp/lounge-emulator.log m4-ui-results/ || true
+          cp /tmp/lounge-ui-results.txt m4-ui-results/ || true
+          cp /tmp/lounge-restart-results.txt m4-ui-results/ || true
+          cp /tmp/lounge-m6-results.txt m4-ui-results/ || true
+          # Keep the later fixes' internal-file export; the app now remains installed.
+          # Preserve partial diagnostics even if a test failed before creating its output directory.
+          for directory in m4-screenshots m6-results; do
+            if adb shell run-as com.loungetv.player.v2qa test -d "files/$directory"; then
+              timeout 15 adb exec-out run-as com.loungetv.player.v2qa tar -cf - -C files "$directory" | tar -xf - -C m4-ui-results/
+            fi
+          done
+          python3 - <<'PYRENDERS'
+          from pathlib import Path
+          from PIL import Image
+          root = Path('m4-ui-results/m4-screenshots')
+          for name in ('01-my-sports-test-data.png', '02-all-events-test-data.png', '03-follow-teams-test-data.png', '04-player-overlay-test-data.png', '05-sports-feed-picker-test-data.png', '06-guide-channel-artwork-test-data.png'):
+              path = root / name
+              with Image.open(path) as image:
+                  assert image.format == 'PNG' and image.width > image.height, (name, image.size)
+                  image.verify()
+              print('Verified actual render:', path)
+          PYRENDERS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lounge-tv-2-rendered-ui
+          path: |
+            m4-ui-results/
+            app/build/outputs/androidTest-results/connected/
+            app/build/reports/androidTests/connected/

@@ -40,6 +40,8 @@ class LiveZapList(
 ) {
 
     private var list: List<ChannelEntity> = emptyList()
+    private val _playbackChannels = MutableStateFlow<List<ChannelEntity>>(emptyList())
+    val playbackChannels: StateFlow<List<ChannelEntity>> = _playbackChannels.asStateFlow()
 
     private val _canZap = MutableStateFlow(false)
     val canZap: StateFlow<Boolean> = _canZap.asStateFlow()
@@ -105,7 +107,7 @@ class LiveZapList(
         loadJob = scope.launch {
             val loaded = loadForCategory(categoryId)
             if (loaded.isEmpty()) return@launch
-            publish(loaded, categoryId = categoryId, title = categoryName(categoryId), key = null)
+            publishBrowse(loaded, title = categoryName(categoryId), key = null)
             onLoaded()
         }
     }
@@ -119,7 +121,7 @@ class LiveZapList(
         loadJob = scope.launch {
             val loaded = load()
             if (loaded.isEmpty()) return@launch
-            publish(loaded, categoryId = null, title = title, key = key)
+            publishBrowse(loaded, title = title, key = key)
             onLoaded()
         }
     }
@@ -147,6 +149,14 @@ class LiveZapList(
      * empty, and killing a healthy rebuild for a category the user cannot even enter would leave CH±
      * with neither a list nor an anchor.
      */
+    /** Browsing another folder changes only the information list. OK commits it through armFromBrowse. */
+    private fun publishBrowse(loaded: List<ChannelEntity>, title: String?, key: LiveKey?) {
+        cancelPendingRebuild()
+        _channels.value = loaded
+        _title.value = title
+        _key.value = key
+    }
+
     private fun publish(loaded: List<ChannelEntity>, categoryId: Long?, title: String?, key: LiveKey?) {
         cancelPendingRebuild()
         this.categoryId = categoryId
@@ -159,6 +169,7 @@ class LiveZapList(
     /** Publish a list without touching the context around it — the guarded rebuild's landing point. */
     private fun replace(loaded: List<ChannelEntity>) {
         list = loaded
+        _playbackChannels.value = loaded
         _channels.value = loaded
         _canZap.value = loaded.size > 1
     }
