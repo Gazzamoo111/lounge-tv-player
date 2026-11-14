@@ -725,7 +725,6 @@ internal fun LiveCategories(
                                 selected = isOpen,
                                 emphasized = true,
                                 modifier = Modifier
-                                    .loungePremiumLiveSectionHeading(section)
                                     .focusRequester(headerFocusers.getValue(section))
                                     .onFocusChanged {
                                         if (it.hasFocus) {
