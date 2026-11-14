@@ -332,7 +332,16 @@ private fun SeriesGrid(
     val recentPreview = highlights?.recentlyAdded.orEmpty().take(6)
     val recentIdsInView = recentPreview.mapTo(HashSet()) { it.id }
     val newShows = highlights?.newReleases.orEmpty()
-    val newPreview = newShows.filterNot { it.id in recentIdsInView }.take(6)
+    val releaseYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+    val matchingHomeShows = if (selectedKey == LiveKey.All || selectedKey is LiveKey.Folder) {
+        homeEditorial.popularSeries.filter {
+            selectedKey == LiveKey.All || it.categoryId == (selectedKey as LiveKey.Folder).id
+        }
+    } else emptyList()
+    val releaseCandidates = (newShows + matchingHomeShows.filter {
+        (it.year ?: it.parsedYear ?: 0) in (releaseYear - 1)..releaseYear
+    }).distinctBy { it.id }
+    val newPreview = releaseCandidates.filterNot { it.id in recentIdsInView }.take(6)
     val editorialIds = (recentPreview + newPreview).mapTo(HashSet()) { it.id }
     val featuredPreview = featuredShows.filterNot { it.id in editorialIds }.take(6)
     val displayRecentlyAdded = lockedKey == null && searchQuery.isBlank() && recentPreview.isNotEmpty()
@@ -513,8 +522,8 @@ private fun SeriesGrid(
             repeat(12) {
                 withFrameNanos { }
                 val target = when {
-                    displayRecentlyAdded -> firstRecentlyAddedFocus
                     displayNewReleases -> firstNewReleaseFocus
+                    displayRecentlyAdded -> firstRecentlyAddedFocus
                     displayFeatured -> firstFeaturedFocus
                     series.itemCount > 0 -> firstItemFocus
                     else -> listSearchFocus
@@ -587,8 +596,8 @@ private fun SeriesGrid(
         repeat(16) {
             withFrameNanos { }
             val target = when {
+                displayNewReleases -> firstNewReleaseFocus
                 displayRecentlyAdded -> firstRecentlyAddedFocus
-                    displayNewReleases -> firstNewReleaseFocus
                 displayFeatured -> firstFeaturedFocus
                 series.itemCount > 0 -> firstItemFocus
                 else -> listSearchFocus
@@ -757,35 +766,6 @@ private fun SeriesGrid(
                                 contentPadding = PaddingValues(start = fx(84), end = fx(64), top = 14.mpx, bottom = glowRoom),
                                 modifier = Modifier.fillMaxWidth().weight(1f),
                             ) {
-                                if (displayRecentlyAdded) {
-                                    item(key = Long.MIN_VALUE + 3L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
-                                        Text(
-                                            text = stringResource(R.string.lounge_vod_recently_added),
-                                            style = stageText(28, 800),
-                                            color = StageColors.Text,
-                                            modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
-                                        )
-                                    }
-                                    items(
-                                        count = recentPreview.size,
-                                        key = { index -> Long.MIN_VALUE + 300L + index.toLong() },
-                                        contentType = { 14 },
-                                    ) { index ->
-                                        val show = recentPreview[index]
-                                        LoungeSeriesEditorialPoster(
-                                            item = show,
-                                            width = posterW,
-                                            title = homeEditorial.popularSeriesNames[show.id] ?: show.canonicalTitle.ifBlank { show.name },
-                                            posterUrl = posterOf(show),
-                                            firstInSection = index == 0,
-                                            atLeftEdge = index % columns == 0,
-                                            focusRequester = firstRecentlyAddedFocus,
-                                            onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
-                                            onFocus = onShowFocus,
-                                            onOpen = openHighlightedShow,
-                                        )
-                                    }
-                                }
                                 if (displayNewReleases) {
                                     item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
                                         Text(
@@ -815,7 +795,36 @@ private fun SeriesGrid(
                                         )
                                     }
                                 }
-                                if (displayFeatured) {
+if (displayRecentlyAdded) {
+                                    item(key = Long.MIN_VALUE + 3L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
+                                        Text(
+                                            text = stringResource(R.string.lounge_vod_recently_added),
+                                            style = stageText(28, 800),
+                                            color = StageColors.Text,
+                                            modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
+                                        )
+                                    }
+                                    items(
+                                        count = recentPreview.size,
+                                        key = { index -> Long.MIN_VALUE + 300L + index.toLong() },
+                                        contentType = { 14 },
+                                    ) { index ->
+                                        val show = recentPreview[index]
+                                        LoungeSeriesEditorialPoster(
+                                            item = show,
+                                            width = posterW,
+                                            title = homeEditorial.popularSeriesNames[show.id] ?: show.canonicalTitle.ifBlank { show.name },
+                                            posterUrl = posterOf(show),
+                                            firstInSection = index == 0,
+                                            atLeftEdge = index % columns == 0,
+                                            focusRequester = firstRecentlyAddedFocus,
+                                            onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                            onFocus = onShowFocus,
+                                            onOpen = openHighlightedShow,
+                                        )
+                                    }
+                                }
+if (displayFeatured) {
                                     item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
                                         Text(
                                             text = stringResource(R.string.lounge_series_featured),
@@ -1029,7 +1038,36 @@ private fun SeriesGrid(
                             contentPadding = PaddingValues(start = glowRoom, end = glowRoom, top = 12.mpx, bottom = 24.mpx),
                             modifier = Modifier.fillMaxWidth().weight(1f).then(glowWide),
                         ) {
-                            if (displayRecentlyAdded) {
+                            if (displayNewReleases) {
+                                item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
+                                    Text(
+                                        text = stringResource(R.string.lounge_series_new_releases),
+                                        style = stageText(28, 800),
+                                        color = StageColors.Text,
+                                        modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
+                                    )
+                                }
+                                items(
+                                    count = newPreview.size,
+                                    key = { index -> Long.MIN_VALUE + 200L + index.toLong() },
+                                    contentType = { 12 },
+                                ) { index ->
+                                    val show = newPreview[index]
+                                    LoungeSeriesEditorialPoster(
+                                        item = show,
+                                        width = posterW,
+                                        title = homeEditorial.popularSeriesNames[show.id] ?: show.canonicalTitle.ifBlank { show.name },
+                                        posterUrl = posterOf(show),
+                                        firstInSection = index == 0,
+                                        atLeftEdge = index % columns == 0,
+                                        focusRequester = firstNewReleaseFocus,
+                                        onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
+                                        onFocus = onShowFocus,
+                                        onOpen = openHighlightedShow,
+                                    )
+                                }
+                            }
+if (displayRecentlyAdded) {
                                 item(key = Long.MIN_VALUE + 3L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
                                     Text(
                                         text = stringResource(R.string.lounge_vod_recently_added),
@@ -1058,7 +1096,7 @@ private fun SeriesGrid(
                                     )
                                 }
                             }
-                            if (displayFeatured) {
+if (displayFeatured) {
                                 item(key = Long.MIN_VALUE + 0L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
                                     Text(
                                         text = stringResource(R.string.lounge_series_featured),
@@ -1081,35 +1119,6 @@ private fun SeriesGrid(
                                         firstInSection = index == 0,
                                         atLeftEdge = index % columns == 0,
                                         focusRequester = firstFeaturedFocus,
-                                        onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
-                                        onFocus = onShowFocus,
-                                        onOpen = openHighlightedShow,
-                                    )
-                                }
-                            }
-                            if (displayNewReleases) {
-                                item(key = Long.MIN_VALUE + 1L, span = { GridItemSpan(maxLineSpan) }, contentType = 13) {
-                                    Text(
-                                        text = stringResource(R.string.lounge_series_new_releases),
-                                        style = stageText(28, 800),
-                                        color = StageColors.Text,
-                                        modifier = Modifier.fillMaxWidth().padding(top = 28.mpx, bottom = 12.mpx),
-                                    )
-                                }
-                                items(
-                                    count = newPreview.size,
-                                    key = { index -> Long.MIN_VALUE + 200L + index.toLong() },
-                                    contentType = { 12 },
-                                ) { index ->
-                                    val show = newPreview[index]
-                                    LoungeSeriesEditorialPoster(
-                                        item = show,
-                                        width = posterW,
-                                        title = homeEditorial.popularSeriesNames[show.id] ?: show.canonicalTitle.ifBlank { show.name },
-                                        posterUrl = posterOf(show),
-                                        firstInSection = index == 0,
-                                        atLeftEdge = index % columns == 0,
-                                        focusRequester = firstNewReleaseFocus,
                                         onLeftToCategories = { if (cinematic) categoriesOpen = true else runCatching { railFocus.requestFocus() } },
                                         onFocus = onShowFocus,
                                         onOpen = openHighlightedShow,
