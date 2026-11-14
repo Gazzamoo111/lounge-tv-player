@@ -62,4 +62,26 @@
     <string name="lounge_my_sport_hint">Book sports fixtures in Sport Lounge.</string>
     <string name="lounge_my_open_guide">Open Live TV guide</string>
     <string name="lounge_my_open_sports">Open Sport Lounge</string>
+    <string name="lounge_pref_customize">Customise Home</string>
+    <string name="lounge_pref_hero_source">Featured HERO source</string>
+    <string name="lounge_pref_sports">Sports</string>
+    <string name="lounge_pref_trending">Trending Movies &amp; Series</string>
+    <string name="lounge_pref_recent">Recently Added</string>
+    <string name="lounge_pref_continue">Continue Watching</string>
+    <string name="lounge_pref_watchlist">My Watchlist</string>
+    <string name="lounge_pref_rotation">Rotate featured content automatically</string>
+    <string name="lounge_pref_featured_sports">Featured Sports</string>
+    <string name="lounge_pref_all_sports">All Sports</string>
+    <string name="lounge_pref_followed_first">Prioritise teams and leagues I follow</string>
+    <string name="lounge_pref_shelves">Home Rows: Show, Hide &amp; Reorder</string>
+    <string name="lounge_pref_keep_row">Keep Watching</string>
+    <string name="lounge_pref_live_row">Live Sports</string>
+    <string name="lounge_pref_favorite_channels">Favourite Channels</string>
+    <string name="lounge_pref_favorite_movies">Favourite Movies</string>
+    <string name="lounge_pref_favorite_series">Favourite Series</string>
+    <string name="lounge_pref_up">Move up</string>
+    <string name="lounge_pref_down">Move down</string>
+    <string name="lounge_pref_match_details">Match details</string>
+    <string name="lounge_pref_live_mark">LIVE</string>
+    <string name="lounge_pref_upcoming_mark">UPCOMING</string>
 </resources>
