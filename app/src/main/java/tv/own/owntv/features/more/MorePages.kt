@@ -221,7 +221,10 @@ private val SettingsCards = listOf(
     SettingsGroupCard(OwnTVIcon.INFO, R.string.settings_group_app, R.string.settings_card_app, 10),
 )
 
-/** The card last opened, so Back from /**
+/** The card last opened, so Back from its group lands on it again rather than on the search field. */
+private var lastOpenedCard: Int? = null
+
+/**
  * The overview has two levels only. The original SettingsGroup ordinals, all existing settings
  * pages, deep links and global search are deliberately unchanged. Returning from an advanced
  * group reopens that tier so the original group card is still focusable.
@@ -337,15 +340,6 @@ internal fun SettingsPage(entry: FocusRequester, pinned: Int, onOpenGroup: (Int)
             }
             if (advancedVisible.value) {
                 SettingsCardGrid(AdvancedSettingsGroups, back, entry, pinned, profiles, onOpenGroup)
-            }
-        }
-    }
-}
-
-    }
-                        }
-                    }
-                }
             }
         }
     }
