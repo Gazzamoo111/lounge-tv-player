@@ -259,6 +259,14 @@ fun SportsMatchScreen(
                     return@Column
                 }
                 val video = focused ?: shown.firstOrNull()
+                // Make the preview itself a remote-focusable fullscreen control.
+                // The selected feed is the exact same option used by its channel row.
+                StageSurface(
+                    onClick = { video?.let(play) },
+                    radius = 18.mpx,
+                    focusStyle = StageFocus.FX,
+                    modifier = Modifier.fillMaxWidth(),
+                ) { _ ->
                 GuideVideo(
                     channel = video?.channel,
                     channelLine = video?.channel?.let { listOfNotNull(it.number?.toString(), ProviderTags.parse(it.name).name).joinToString(sep) },
@@ -269,6 +277,7 @@ fun SportsMatchScreen(
                     showVideo = active && previewOn && focused != null,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                }
                 Row(Modifier.fillMaxWidth().padding(top = 18.mpx), verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         pluralStringResource(R.plurals.sports_watch_live_count, state.list.total, state.list.total),
