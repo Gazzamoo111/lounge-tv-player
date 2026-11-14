@@ -105,6 +105,8 @@ data class HomeUiState(
     val favoriteSeries: List<SeriesEntity> = emptyList(),
     val newMovies: List<MovieEntity> = emptyList(),
     val newSeries: List<SeriesEntity> = emptyList(),
+    val recentMovies: List<MovieEntity> = emptyList(),
+    val recentSeries: List<SeriesEntity> = emptyList(),
     val moviePosterOverrides: Map<Long, String> = emptyMap(),
     val seriesPosterOverrides: Map<Long, String> = emptyMap(),
     val featuredMovies: List<MovieEntity> = emptyList(),
@@ -487,6 +489,8 @@ class HomeViewModel(
                     _uiState.value = _uiState.value.copy(
                         newMovies = selection.newMovies,
                         newSeries = selection.newSeries,
+                        recentMovies = selection.recentMovies,
+                        recentSeries = selection.recentSeries,
                         featuredMovies = selection.movies,
                         popularSeries = selection.series,
                         featuredMovieNames = selection.movieNames,
@@ -494,10 +498,10 @@ class HomeViewModel(
                     )
                     // Reuse already cached TMDB posters where available: provider thumbnails can be tiny.
                     // No additional network metadata work or playlist writes are needed.
-                    val posterMovies = (selection.newMovies + selection.movies +
+                    val posterMovies = (selection.newMovies + selection.recentMovies + selection.movies +
                         data.trendingItems.filterIsInstance<TrendingHomeItem.Movie>().map { it.movie })
                         .distinctBy { it.id }
-                    val posterSeries = (selection.newSeries + selection.series +
+                    val posterSeries = (selection.newSeries + selection.recentSeries + selection.series +
                         data.trendingItems.filterIsInstance<TrendingHomeItem.Series>().map { it.series })
                         .distinctBy { it.id }
                     val moviePosters = metadata.cachedMoviePosters(posterMovies)
