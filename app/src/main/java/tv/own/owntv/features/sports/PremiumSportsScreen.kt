@@ -498,7 +498,14 @@ internal fun SportsFeedPicker(options: List<WatchOption>, onPick: (WatchOption) 
     onDismiss: () -> Unit, restoreFocus: FocusRequester) {
     val entry = remember { FocusRequester() }
     val inputMode = LocalInputModeManager.current
-    DisposableEffect(Unit) { onDispose { runCatching { restoreFocus.requestFocus() } } }
+    // Request focus after the dialog window has detached. Requesting synchronously in
+    // onDispose can silently fail while Android still owns focus in the closing popup.
+    val hostView = androidx.compose.ui.platform.LocalView.current
+    DisposableEffect(Unit) {
+        onDispose {
+            hostView.post { runCatching { restoreFocus.requestFocus() } }
+        }
+    }
     StagePopup(onDismiss = onDismiss, title = stringResource(R.string.m4_choose_feed), width = 800.mpx,
         buttons = { StageButton(stringResource(R.string.m4_done), onClick = onDismiss) }) {
         LaunchedEffect(Unit) { withFrameNanos { }; inputMode.requestInputMode(InputMode.Keyboard); entry.requestFocus() }
