@@ -8,4 +8,6 @@
     <string name="ondemand_welcome_manual">Enter details on TV</string>
     <string name="ondemand_welcome_hint">Use your own account details. One setup, then straight to your library.</string>
     <string name="ondemand_hero_featured">LOUNGE TV ORIGINAL DISCOVERY</string>
+    <string name="ondemand_type_series">SERIES</string>
+    <string name="ondemand_type_movie">MOVIE</string>
 </resources>
