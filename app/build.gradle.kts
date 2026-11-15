@@ -222,6 +222,7 @@ android {
             // Keep debug builds isolated from production (different signing keys and data).
             // Draft PR builds install alongside production and stable QA, never over either.
             applicationIdSuffix = when {
+                System.getenv("SPORT_LOUNGE_QA") == "true" -> ".sportqa"
                 System.getenv("RELIABILITY_AUDIT_QA") == "true" -> ".auditqa"
                 System.getenv("PLAYBACK_HOTFIX_QA") == "true" -> ".playbackqa"
                 System.getenv("ISOLATED_EVENT_QA") == "true" -> ".recoveryqa"
