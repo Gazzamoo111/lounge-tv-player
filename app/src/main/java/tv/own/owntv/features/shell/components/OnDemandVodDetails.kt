@@ -22,9 +22,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
+import tv.own.owntv.R
 import tv.own.owntv.ui.stage.StageKeyHints
 import tv.own.owntv.ui.stage.StageTitleArt
 import tv.own.owntv.ui.theme.OnDemandDesign
@@ -41,7 +43,7 @@ internal fun OnDemandVodHero(info: VodTitleInfo, modifier: Modifier = Modifier) 
     var titleArtFailed by remember(info.logoUrl) { mutableStateOf(false) }
     Column(modifier, verticalArrangement = Arrangement.spacedBy(16.mpx)) {
         Text(
-            text = "ON DEMAND",
+            text = stringResource(R.string.ondemand_welcome_kicker),
             style = stageText(16, 800),
             color = OnDemandDesign.electricLime,
         )
@@ -56,7 +58,7 @@ internal fun OnDemandVodHero(info: VodTitleInfo, modifier: Modifier = Modifier) 
             } else {
                 Text(
                     HeadlineTitle.of(info.title),
-                    style = stageText(61, 800).copy(lineHeight = 1.05f.em),
+                    style = stageText(61, 800).copy(lineHeight = 66.mpxSp),
                     color = OnDemandDesign.coolWhite,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
@@ -123,7 +125,7 @@ internal fun OnDemandVodDetailsPanel(
                         ),
                     )
                     Text(
-                        text = if (series) "SERIES" else "MOVIE",
+                        text = stringResource(if (series) R.string.ondemand_type_series else R.string.ondemand_type_movie),
                         style = stageText(16, 800),
                         color = OnDemandDesign.electricLime,
                         modifier = Modifier.align(Alignment.BottomStart).padding(17.mpx),
