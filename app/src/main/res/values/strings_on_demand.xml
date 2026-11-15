@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ondemand_welcome_brand">LOUNGE TV</string>
+    <string name="ondemand_welcome_kicker">ON DEMAND</string>
+    <string name="ondemand_welcome_headline">A better way to watch.</string>
+    <string name="ondemand_welcome_message">Your films and series, beautifully organised.</string>
+    <string name="ondemand_welcome_pair">Set up with phone</string>
+    <string name="ondemand_welcome_manual">Enter details on TV</string>
+    <string name="ondemand_welcome_hint">Use your own account details. One setup, then straight to your library.</string>
+</resources>
