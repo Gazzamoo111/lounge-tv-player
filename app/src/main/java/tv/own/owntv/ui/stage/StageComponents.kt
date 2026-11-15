@@ -808,7 +808,8 @@ fun StagePoster(
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
     val accent = stageAccent
-    val r = StageRadii.Poster
+    val isOnDemand = tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND
+    val r = if (isOnDemand) 18.mpx else StageRadii.Poster
     val badge = Color(8, 12, 14)
     Column(
         modifier
@@ -852,9 +853,9 @@ fun StagePoster(
         Spacer(Modifier.height(12.mpx))
         Text(
             title,
-            style = if (line != null) stageText(18, 700) else stageText(if (compact) 15.5f else 17f, if (focused) 700 else 600),
+            style = if (line != null) stageText(18, 700) else stageText(if (compact) 15.5f else if (isOnDemand) 19f else 17f, if (focused) 700 else 600),
             color = if (focused || line != null) stageTone(Color.White, StageColors.Text) else StageColors.Muted,
-            maxLines = 1,
+            maxLines = if (isOnDemand && !compact) 2 else 1,
             overflow = TextOverflow.Ellipsis,
         )
         if (line != null) Text(line, style = stageText(15, 400), color = StageColors.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
