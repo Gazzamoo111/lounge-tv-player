@@ -27,6 +27,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
 import tv.own.owntv.R
+import tv.own.owntv.core.metadata.HeadlineTitle
 import tv.own.owntv.ui.stage.StageKeyHints
 import tv.own.owntv.ui.stage.StageTitleArt
 import tv.own.owntv.ui.theme.OnDemandDesign
