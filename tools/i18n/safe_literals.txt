@@ -1091,7 +1091,7 @@
 1	technical	app/src/main/java/tv/own/owntv/features/setup/RemoteSetupScreen.kt	…
 12	empty	app/src/main/java/tv/own/owntv/features/setup/SetupViewModel.kt	\0
 2	technical	app/src/main/java/tv/own/owntv/features/setup/SetupWizard.kt	+
-5	empty	app/src/main/java/tv/own/owntv/features/setup/SetupWizard.kt	\0
+11	empty	app/src/main/java/tv/own/owntv/features/setup/SetupWizard.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/features/shell/OwnTVShell.kt	UFC
 3	protocol	app/src/main/java/tv/own/owntv/features/shell/OwnTVShell.kt	\0
 1	protocol	app/src/main/java/tv/own/owntv/features/shell/OwnTVShell.kt	ass
@@ -2257,3 +2257,19 @@
 1	technical	app/src/main/java/tv/own/owntv/ui/theme/Glass.kt	glassPosition
 2	empty	app/src/main/java/tv/own/owntv/ui/theme/OwnTVColors.kt	\0
 2	empty	app/src/main/java/tv/own/owntv/ui/theme/Theme.kt	\0
+
+# QA-only VOD UI animation key, protocol markers, and decoder codec identifiers
+1	technical	app/src/main/java/tv/own/owntv/features/home/LoungeFullBleedVodHero.kt	on-demand-hero-art
+1	protocol	app/src/main/java/tv/own/owntv/features/setup/SetupWizard.kt	http://
+1	protocol	app/src/main/java/tv/own/owntv/features/setup/SetupWizard.kt	https://
+2	technical	app/src/main/java/tv/own/owntv/features/shell/components/OnDemandVodDetails.kt	·
+1	protocol	app/src/main/java/tv/own/owntv/player/OnDemandVerifiedBadges.kt	a52
+1	protocol	app/src/main/java/tv/own/owntv/player/OnDemandVerifiedBadges.kt	ac3
+1	protocol	app/src/main/java/tv/own/owntv/player/OnDemandVerifiedBadges.kt	dts
+1	regex	app/src/main/java/tv/own/owntv/player/OnDemandVerifiedBadges.kt	dts[- ]?hd\\s*(ma|master audio)
+1	protocol	app/src/main/java/tv/own/owntv/player/OnDemandVerifiedBadges.kt	dtsl
+1	protocol	app/src/main/java/tv/own/owntv/player/OnDemandVerifiedBadges.kt	e-ac-3
+1	protocol	app/src/main/java/tv/own/owntv/player/OnDemandVerifiedBadges.kt	e-ac-3-joc
+1	protocol	app/src/main/java/tv/own/owntv/player/OnDemandVerifiedBadges.kt	eac3
+1	protocol	app/src/main/java/tv/own/owntv/player/OnDemandVerifiedBadges.kt	eac3-joc
+1	protocol	app/src/main/java/tv/own/owntv/player/OnDemandVerifiedBadges.kt	ec-3-joc
