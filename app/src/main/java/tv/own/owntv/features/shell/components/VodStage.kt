@@ -141,6 +141,9 @@ internal fun vodRuntime(secs: Int): String {
  * every language — so nothing here is translated.
  */
 fun cinematicQualityBadges(qualityRank: Int, advertisedCapabilities: String?): List<String> = buildList {
+    // On Demand technical badges must come from the active decoded stream, never
+    // from provider-advertised quality ranks or parsed filenames.
+    if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND) return@buildList
     when (qualityRank) {
         5 -> add("8K")
         4 -> add("4K")
