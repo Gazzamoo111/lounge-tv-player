@@ -128,7 +128,7 @@ internal fun LoungeFullBleedVodHero(
             )))
             Column(
                 Modifier.align(Alignment.CenterStart).fillMaxWidth(0.62f)
-                    .padding(start = 175.mpx, top = 78.mpx, bottom = 55.mpx),
+                    .padding(start = 64.mpx, top = 78.mpx, bottom = 55.mpx),
                 horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.spacedBy(17.mpx),
             ) {
