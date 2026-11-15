@@ -10,4 +10,18 @@
     <string name="ondemand_hero_featured">LOUNGE TV ORIGINAL DISCOVERY</string>
     <string name="ondemand_type_series">SERIES</string>
     <string name="ondemand_type_movie">MOVIE</string>
+    <!-- Active decoder evidence only. Never show these from filenames or provider claims. -->
+    <string name="ondemand_badge_4k">4K</string>
+    <string name="ondemand_badge_1080p">1080p</string>
+    <string name="ondemand_badge_720p">720p</string>
+    <string name="ondemand_badge_hdr_pq">HDR PQ</string>
+    <string name="ondemand_badge_hlg">HLG</string>
+    <string name="ondemand_badge_atmos_stream">Atmos stream</string>
+    <string name="ondemand_badge_dts_hd_ma">DTS-HD MA</string>
+    <string name="ondemand_badge_dts">DTS</string>
+    <string name="ondemand_badge_dd_plus">Dolby Digital+</string>
+    <string name="ondemand_badge_dd">Dolby Digital</string>
+    <string name="ondemand_badge_7_1_source">7.1 source</string>
+    <string name="ondemand_badge_5_1_source">5.1 source</string>
+    <string name="ondemand_badge_stereo_source">Stereo source</string>
 </resources>
