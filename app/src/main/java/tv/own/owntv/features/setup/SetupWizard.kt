@@ -34,6 +34,10 @@ import org.koin.androidx.compose.koinViewModel
 import tv.own.owntv.R
 import tv.own.owntv.core.brand.AppIcon
 import tv.own.owntv.core.database.entity.SourceEntity
+import tv.own.owntv.core.model.SourceType
+import tv.own.owntv.core.settings.PlaylistRefresh
+import tv.own.owntv.core.settings.PlaylistAutoRefresh
+import tv.own.owntv.core.sync.SyncScopeChoice
 import tv.own.owntv.core.setup.SourceImporter
 import tv.own.owntv.core.sync.importProgressDisplay
 import tv.own.owntv.core.theme.UiFontScale
@@ -181,8 +185,35 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
                 payloads = vm.remotePayloads,
                 onStartListener = { port -> vm.startRemoteListener(port) },
                 onStopListener = { vm.stopRemoteListener() },
-                // A remote submission hands off to the pre-filled form (the user presses Start Import).
-                onPayloadReceived = { step = Step.ADD_SOURCE },
+                // On Demand: authenticated LAN phone submissions of a valid Xtream account
+                // go straight into the VOD import. Other formats or incomplete inputs
+                // retain the safe pre-filled manual fallback. No secrets ship in the APK.
+                onPayloadReceived = { payload ->
+                    val directXtream = tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND &&
+                        payload.type == SourceType.XTREAM &&
+                        (payload.server.startsWith("https://", ignoreCase = true) ||
+                            payload.server.startsWith("http://", ignoreCase = true)) &&
+                        payload.user.isNotBlank() && payload.pass.isNotBlank()
+                    if (directXtream) {
+                        importName = payload.name.ifBlank { defaultIptvName }
+                        vm.startXtream(
+                            name = importName!!,
+                            server = payload.server,
+                            username = payload.user,
+                            password = payload.pass,
+                            userAgent = payload.userAgent,
+                            epgUrl = "",
+                            autoRefresh = PlaylistRefresh(PlaylistAutoRefresh.HOURS_6, 1),
+                            live = SyncScopeChoice.Off,
+                            movies = SyncScopeChoice.Now,
+                            series = SyncScopeChoice.Now,
+                        )
+                        importOrigin = Step.ADD_SOURCE
+                        step = Step.IMPORTING
+                    } else {
+                        step = Step.ADD_SOURCE
+                    }
+                },
                 onBack = { vm.stopRemoteListener(); step = if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND) Step.ADD_SOURCE else Step.ADD_CONTENT },
             )
             Step.ADD_SOURCE -> AddSourceScreen(
