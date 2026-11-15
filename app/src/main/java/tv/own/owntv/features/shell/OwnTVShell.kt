@@ -1555,11 +1555,13 @@ fun OwnTVShell(
         // The solid-mode wizard aura is deliberately drawn after the opaque browse surfaces so it
         // remains visible, exactly like the approved concept. It never intercepts input; fullscreen
         // video and glass mode skip it entirely. Global Animations Off also freezes the slow pulse.
-        SolidAmbientBackdrop(
-            glowEnabled = ambientGlowEnabled,
-            pulseEnabled = ambientGlowPulse && shellAnimationLevel != tv.own.owntv.core.theme.AnimationLevel.OFF,
-            modifier = Modifier.fillMaxSize(),
-        )
+        if (!tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND) {
+            SolidAmbientBackdrop(
+                glowEnabled = ambientGlowEnabled,
+                pulseEnabled = ambientGlowPulse && shellAnimationLevel != tv.own.owntv.core.theme.AnimationLevel.OFF,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
       }
 
       // Unobtrusive background-sync pill (bottom middle): visible while any catalog sync runs —
