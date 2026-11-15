@@ -279,7 +279,9 @@ fun SearchScreen(
         }
     }
 
-    BoxWithConstraints(modifier.fillMaxSize().onFocusChanged { if (it.hasFocus) onChildFocused() }) {
+    BoxWithConstraints(modifier.fillMaxSize()
+        .then(if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND) Modifier.padding(top = 100.mpx) else Modifier)
+        .onFocusChanged { if (it.hasFocus) onChildFocused() }) {
         val screenW = maxWidth
         fun fx(px: Int) = screenW * (px / 1920f)
         val listX = fx(64)
