@@ -714,12 +714,12 @@ private fun SeriesGrid(
             // Top navigation replaces the old side rail. Keep the category heading and
             // spotlight clear of its focusable menu without pushing poster rows offscreen.
             val menuClearance = if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND) 100.mpx else 0.dp
-            val naturalHeroH = if (showcaseActive) minOf(maxHeight * 0.325f, 350.mpx)
+            val heroH = if (showcaseActive) minOf(maxHeight * 0.325f, 350.mpx)
                 else if (panelShares != null) maxHeight * (cinematicDetailsPct / 100f)
                 else 464.mpx
-            val heroH = if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND)
-                maxOf(260.mpx, naturalHeroH - 96.mpx) else naturalHeroH
-            val toolTop = 122.mpx + menuClearance + heroH
+            val adjustedHeroH = if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND)
+                maxOf(260.mpx, heroH - 96.mpx) else heroH
+            val toolTop = 122.mpx + menuClearance + adjustedHeroH
             Box(Modifier.fillMaxSize().then(if (categoriesOpen) Modifier.graphicsLayer { alpha = 0.36f } else Modifier)) {
                 VodCinematicBackdrop(titleInfo?.backdropUrl, series = true, Modifier.align(Alignment.TopEnd))
                 VodHeader(
@@ -727,7 +727,7 @@ private fun SeriesGrid(
                     showChevron = true, modifier = Modifier.padding(start = fx(84), top = 52.mpx + menuClearance).width(fx(900)),
                 )
                 titleInfo?.let {
-                    val location = Modifier.padding(start = fx(84), top = 122.mpx + menuClearance).width(fx(1050)).height(heroH)
+                    val location = Modifier.padding(start = fx(84), top = 122.mpx + menuClearance).width(fx(1050)).height(adjustedHeroH)
                     if (showcaseActive) LoungeBrowseSpotlight(it, location) else VodHero(it, location)
                 }
                 Column(Modifier.padding(top = toolTop).fillMaxSize().then(paneModifier)) {
