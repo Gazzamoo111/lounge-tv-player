@@ -3,6 +3,7 @@ package tv.own.owntv.player
 import tv.own.owntv.ui.theme.hudShade
 import tv.own.owntv.ui.theme.hudInk
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -60,6 +61,27 @@ fun StreamInfoOverlay(player: PlaybackEngine, modifier: Modifier = Modifier) {
             fontWeight = FontWeight.Bold,
         )
         Spacer(Modifier.width(2.dp))
+        if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND) {
+            val verified = verifiedPlaybackBadges(rows)
+            if (verified.isNotEmpty()) {
+                Row(
+                    Modifier.fillMaxWidth().padding(vertical = 10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    verified.take(4).forEach { badge ->
+                        Text(
+                            badge,
+                            style = tv.own.owntv.ui.theme.stageText(14, 750),
+                            color = tv.own.owntv.ui.theme.OnDemandDesign.electricLime,
+                            modifier = Modifier
+                                .background(tv.own.owntv.ui.theme.OnDemandDesign.slateBlue, RoundedCornerShape(8.dp))
+                                .padding(horizontal = 8.dp, vertical = 6.dp),
+                            maxLines = 1,
+                        )
+                    }
+                }
+            }
+        }
         rows.forEach { row ->
             Row(modifier = Modifier.fillMaxWidth().padding(top = 5.dp)) {
                 Text(
