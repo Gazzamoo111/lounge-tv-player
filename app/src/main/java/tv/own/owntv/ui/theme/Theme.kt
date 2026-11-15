@@ -99,22 +99,26 @@ fun OwnTVTheme(
     popupSizePercent: Int = PopupSizeScale.DEFAULT,
     content: @Composable () -> Unit,
 ) {
-    val useDark = when (themeMode) {
+    val onDemand = tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND
+    val useDark = onDemand || when (themeMode) {
         ThemeMode.DARK -> true
         ThemeMode.LIGHT -> false
         ThemeMode.SYSTEM -> systemInDarkTheme
     }
 
-    val colors = ownTvColors(
+    val originalColors = ownTvColors(
         isDark = useDark,
         accent = accent,
         customAccent = customAccent,
         focusHighlight = focusHighlight,
     )
+    // An independent colour system for the separately-installed On Demand QA app.
+    // The Live TV build still resolves the existing theme and user-selected accent.
+    val colors = if (onDemand) OnDemandDesign.colors(originalColors) else originalColors
 
     CompositionLocalProvider(
         LocalOwnTVColors provides colors,
-        LocalStagePalette provides if (useDark) StagePalette.Dark else StagePalette.Light,
+        LocalStagePalette provides if (onDemand) OnDemandDesign.stage else if (useDark) StagePalette.Dark else StagePalette.Light,
         LocalThemeMode provides themeMode,
         LocalFocusBorderWidth provides focusBorderWidthDp.dp,
         LocalAnimationLevel provides animationLevel,
