@@ -70,7 +70,7 @@ fun StreamInfoOverlay(player: PlaybackEngine, modifier: Modifier = Modifier) {
                 ) {
                     verified.take(4).forEach { badge ->
                         Text(
-                            badge,
+                            stringResource(badge),
                             style = tv.own.owntv.ui.theme.stageText(14, 750),
                             color = tv.own.owntv.ui.theme.OnDemandDesign.electricLime,
                             modifier = Modifier
