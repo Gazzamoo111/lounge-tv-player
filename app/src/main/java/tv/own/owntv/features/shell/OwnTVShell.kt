@@ -1157,7 +1157,7 @@ fun OwnTVShell(
                             // edge (or beside a docked rail).
                             Modifier
                                 .padding(
-                                    start = if (navStyle == tv.own.owntv.core.settings.SettingsRepository.NavStyle.DOCKED) {
+                                    start = if (!tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND && navStyle == tv.own.owntv.core.settings.SettingsRepository.NavStyle.DOCKED) {
                                         tv.own.owntv.features.shell.components.railDockedReserve(navSize)
                                     } else 0.dp,
                                 )
@@ -1165,6 +1165,9 @@ fun OwnTVShell(
                                 // content was entered. The D-pad search alone missed it whenever the open rail
                                 // overlapped the content's left edge, which left Back as the only way out.
                                 .onKeyEvent { e ->
+                                    // There is no side rail in On Demand: never swallow Left/Right
+                                    // to return to a hidden rail. Back still focuses the top menu.
+                                    if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND) return@onKeyEvent false
                                     val back = if (contentLtr) Key.DirectionLeft else Key.DirectionRight
                                     if (e.key != back || e.type != KeyEventType.KeyDown) return@onKeyEvent false
                                     if (!contentFocusManager.moveFocus(if (contentLtr) androidx.compose.ui.focus.FocusDirection.Left else androidx.compose.ui.focus.FocusDirection.Right)) {
@@ -1333,7 +1336,7 @@ fun OwnTVShell(
                                     }
                                 }
                             },
-                            contentStart = if (navStyle == tv.own.owntv.core.settings.SettingsRepository.NavStyle.DOCKED) 64.mpx else 150.mpx,
+                            contentStart = if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND || navStyle == tv.own.owntv.core.settings.SettingsRepository.NavStyle.DOCKED) 64.mpx else 150.mpx,
                             modifier = Modifier.fillMaxSize(),
                         )
 
