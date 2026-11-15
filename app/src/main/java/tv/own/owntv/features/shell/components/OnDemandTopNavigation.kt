@@ -10,17 +10,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.res.stringResource
 import androidx.tv.material3.Text
-import kotlinx.coroutines.launch
 import tv.own.owntv.core.nav.MainSection
 import tv.own.owntv.ui.stage.StageFocus
 import tv.own.owntv.ui.stage.StageSurface
@@ -43,7 +42,6 @@ internal fun OnDemandTopNavigation(
     onFocused: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val scope = rememberCoroutineScope()
     val sections = listOf(
         MainSection.HOME,
         MainSection.MOVIES,
@@ -58,21 +56,18 @@ internal fun OnDemandTopNavigation(
 
     Box(modifier, contentAlignment = Alignment.TopStart) {
         Row(
-            Modifier.padding(start = 145.mpx, top = 26.mpx)
+            Modifier.padding(start = 64.mpx, top = 26.mpx)
                 .background(OnDemandDesign.midnight.copy(alpha = 0.91f), RoundedCornerShape(25.mpx))
                 .padding(horizontal = 12.mpx, vertical = 8.mpx)
                 .onFocusChanged { if (it.hasFocus) onFocused() }
-                .focusProperties {
-                    onExit = {
-                        if (requestedFocusDirection == FocusDirection.Down) {
-                            cancelFocusChange()
-                            scope.launch {
-                                if (enterContent?.invoke() != true) {
-                                    runCatching { contentFocusRequester.requestFocus() }
-                                }
-                            }
-                        }
-                    }
+                // The old floating rail dispatched Down asynchronously from onExit,
+                // cancelling the transition before any content acquired focus. That
+                // trapped Fire TV D-pad navigation in the top menu.
+                .onPreviewKeyEvent { event ->
+                    if (event.type == KeyEventType.KeyDown && event.key == Key.DirectionDown) {
+                        enterContent?.invoke() == true ||
+                            runCatching { contentFocusRequester.requestFocus() }.getOrDefault(false)
+                    } else false
                 }
                 .focusGroup(),
             horizontalArrangement = Arrangement.spacedBy(4.mpx),
