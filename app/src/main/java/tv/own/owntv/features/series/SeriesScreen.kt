@@ -711,18 +711,23 @@ private fun SeriesGrid(
         fun fx(px: Int) = screenW * (px / 1920f)
         if (cinematic) {
             val showcaseActive = displayFeatured || displayNewReleases || displayRecentlyAdded
-            val heroH = if (showcaseActive) minOf(maxHeight * 0.325f, 350.mpx)
+            // Top navigation replaces the old side rail. Keep the category heading and
+            // spotlight clear of its focusable menu without pushing poster rows offscreen.
+            val menuClearance = if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND) 100.mpx else 0.dp
+            val naturalHeroH = if (showcaseActive) minOf(maxHeight * 0.325f, 350.mpx)
                 else if (panelShares != null) maxHeight * (cinematicDetailsPct / 100f)
                 else 464.mpx
-            val toolTop = 122.mpx + heroH
+            val heroH = if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND)
+                maxOf(260.mpx, naturalHeroH - 96.mpx) else naturalHeroH
+            val toolTop = 122.mpx + menuClearance + heroH
             Box(Modifier.fillMaxSize().then(if (categoriesOpen) Modifier.graphicsLayer { alpha = 0.36f } else Modifier)) {
                 VodCinematicBackdrop(titleInfo?.backdropUrl, series = true, Modifier.align(Alignment.TopEnd))
                 VodHeader(
                     section = stringResource(R.string.common_nav_series), category = headerLabel, count = vodCount(true, count),
-                    showChevron = true, modifier = Modifier.padding(start = fx(84), top = 52.mpx).width(fx(900)),
+                    showChevron = true, modifier = Modifier.padding(start = fx(84), top = 52.mpx + menuClearance).width(fx(900)),
                 )
                 titleInfo?.let {
-                    val location = Modifier.padding(start = fx(84), top = 122.mpx).width(fx(1050)).height(heroH)
+                    val location = Modifier.padding(start = fx(84), top = 122.mpx + menuClearance).width(fx(1050)).height(heroH)
                     if (showcaseActive) LoungeBrowseSpotlight(it, location) else VodHero(it, location)
                 }
                 Column(Modifier.padding(top = toolTop).fillMaxSize().then(paneModifier)) {
@@ -913,7 +918,7 @@ private fun SeriesGrid(
             if (!locked) {
                 VodHeader(
                     section = stringResource(R.string.common_nav_series), category = headerLabel, count = vodCount(true, count),
-                    showChevron = false, modifier = Modifier.padding(start = fx(84), top = 52.mpx).width(fx(860)),
+                    showChevron = false, modifier = Modifier.padding(start = fx(84), top = if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND) 152.mpx else 52.mpx).width(fx(860)),
                 )
                 LiveCategories(
                     searchQuery = vm.categoryQuery.collectAsStateWithLifecycle().value,
