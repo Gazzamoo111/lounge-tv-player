@@ -1,5 +1,7 @@
 package tv.own.owntv.features.home
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,6 +47,7 @@ import tv.own.owntv.ui.stage.StageFocus
 import tv.own.owntv.ui.stage.StageSurface
 import tv.own.owntv.ui.stage.StageTag
 import tv.own.owntv.ui.stage.StageTitleArt
+import tv.own.owntv.ui.theme.OnDemandDesign
 import tv.own.owntv.ui.theme.mpx
 import tv.own.owntv.ui.theme.stageText
 
@@ -77,7 +80,7 @@ internal fun LoungeFullBleedVodHero(
     var logoFailed by remember(item.key) { mutableStateOf(false) }
     LaunchedEffect(items.map { it.key }, autoRotate, active, focused) {
         while (autoRotate && active && !focused && items.size > 1) {
-            delay(8_000L)
+            delay(10_000L)
             index = (index + 1).mod(items.size)
         }
     }
@@ -85,7 +88,7 @@ internal fun LoungeFullBleedVodHero(
         onClick = item.onPlay,
         radius = 0.mpx,
         focusStyle = StageFocus.FX,
-        modifier = modifier.fillMaxWidth().height(835.mpx)
+        modifier = modifier.fillMaxWidth().height(800.mpx)
             .onFocusChanged { focused = it.hasFocus; if (it.hasFocus) onFocus() }
             .onPreviewKeyEvent { event ->
                 if (event.type != KeyEventType.KeyDown || !focused || items.size < 2) false
@@ -97,32 +100,43 @@ internal fun LoungeFullBleedVodHero(
             }
             .then(if (firstFocus != null) Modifier.focusRequester(firstFocus) else Modifier),
     ) { _ ->
-        Box(Modifier.fillMaxSize().background(Color(0xFF0D1522))) {
-            if (!item.backdropUrl.isNullOrBlank()) {
-                AsyncImage(
-                    model = item.backdropUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                )
+        Box(Modifier.fillMaxSize().background(OnDemandDesign.midnight)) {
+            Crossfade(
+                targetState = item.backdropUrl,
+                animationSpec = tween(350),
+                label = "on-demand-hero-art",
+            ) { backdrop ->
+                if (!backdrop.isNullOrBlank()) {
+                    AsyncImage(
+                        model = backdrop,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
             }
             Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
-                0f to Color(0xFF00030A).copy(alpha = 0.22f),
+                0f to OnDemandDesign.midnight.copy(alpha = 0.10f),
                 0.48f to Color.Transparent,
-                0.73f to Color(0xFF04070C).copy(alpha = 0.50f),
-                1f to Color(0xFF04070C).copy(alpha = 0.96f),
+                0.73f to OnDemandDesign.midnight.copy(alpha = 0.55f),
+                1f to OnDemandDesign.midnight,
             )))
             Box(Modifier.fillMaxSize().background(Brush.horizontalGradient(
-                0f to Color(0xFF03060D).copy(alpha = 0.96f),
-                0.38f to Color(0xFF03060D).copy(alpha = 0.68f),
+                0f to OnDemandDesign.midnight,
+                0.42f to OnDemandDesign.midnight.copy(alpha = 0.84f),
                 0.80f to Color.Transparent,
             )))
             Column(
-                Modifier.align(Alignment.CenterStart).fillMaxWidth(0.63f)
-                    .padding(start = 175.mpx, top = 120.mpx, bottom = 40.mpx),
+                Modifier.align(Alignment.CenterStart).fillMaxWidth(0.62f)
+                    .padding(start = 175.mpx, top = 78.mpx, bottom = 55.mpx),
                 horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.spacedBy(16.mpx),
+                verticalArrangement = Arrangement.spacedBy(17.mpx),
             ) {
+                Text(
+                    stringResource(R.string.ondemand_hero_featured),
+                    style = stageText(17, 800),
+                    color = OnDemandDesign.electricLime,
+                )
                 if (!item.logoUrl.isNullOrBlank() && !logoFailed) {
                     StageTitleArt(
                         url = item.logoUrl,
@@ -134,23 +148,26 @@ internal fun LoungeFullBleedVodHero(
                     Text(
                         item.title,
                         style = stageText(64, 850),
-                        color = Color.White,
+                        color = OnDemandDesign.coolWhite,
                         textAlign = TextAlign.Start,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.widthIn(max = 880.mpx),
                     )
                 }
-                if (item.metadata.isNotBlank()) {
-                    Text(item.metadata, style = stageText(20, 650), color = Color.White,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-                item.rating?.takeIf { it > 0.0 }?.let { score ->
-                    StageTag(stringResource(R.string.lounge_pref_rating_number, score))
+                Row(horizontalArrangement = Arrangement.spacedBy(14.mpx),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    if (item.metadata.isNotBlank()) {
+                        Text(item.metadata, style = stageText(20, 650), color = OnDemandDesign.secondaryText,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                    item.rating?.takeIf { it > 0.0 }?.let { score ->
+                        StageTag(stringResource(R.string.lounge_pref_rating_number, score))
+                    }
                 }
                 item.synopsis?.takeIf { it.isNotBlank() }?.let { summary ->
-                    Text(summary, style = stageText(22, 430), color = Color.White.copy(alpha = 0.86f),
-                        maxLines = 3, overflow = TextOverflow.Ellipsis,
+                    Text(summary, style = stageText(22, 430), color = OnDemandDesign.secondaryText,
+                        maxLines = 2, overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.widthIn(max = 730.mpx))
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(14.mpx),
@@ -166,8 +183,8 @@ internal fun LoungeFullBleedVodHero(
                         Box(
                             Modifier.size(if (dot == index.mod(items.size)) 13.mpx else 8.mpx)
                                 .background(
-                                    if (dot == index.mod(items.size)) Color.White
-                                    else Color.White.copy(alpha = 0.35f), CircleShape
+                                    if (dot == index.mod(items.size)) OnDemandDesign.electricLime
+                                    else OnDemandDesign.coolWhite.copy(alpha = 0.28f), CircleShape
                                 )
                         )
                     }
