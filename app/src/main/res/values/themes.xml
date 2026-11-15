@@ -22,6 +22,17 @@
         <item name="windowSplashScreenBackground">@color/owntv_window_bg</item>
         <item name="postSplashScreenTheme">@style/Theme.OwnTV</item>
     </style>
+    <!-- QA-only theme reference: Live launcher styles are unchanged. -->
+    <style name="Theme.OwnTV.OnDemand" parent="Theme.OwnTV">
+        <item name="android:windowBackground">@color/loungetv_ondemand_window_bg</item>
+        <item name="android:statusBarColor">@color/loungetv_ondemand_window_bg</item>
+        <item name="android:navigationBarColor">@color/loungetv_ondemand_window_bg</item>
+    </style>
+    <style name="Theme.OwnTV.Starting.OnDemand" parent="Theme.OwnTV.Starting">
+        <item name="windowSplashScreenBackground">@color/loungetv_ondemand_window_bg</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/loungetv_on_demand_mark</item>
+        <item name="postSplashScreenTheme">@style/Theme.OwnTV.OnDemand</item>
+    </style>
     <style name="Theme.OwnTV.Starting.Petrol">
         <item name="windowSplashScreenAnimatedIcon">@drawable/loungetv_system_launch_art</item>
     </style>

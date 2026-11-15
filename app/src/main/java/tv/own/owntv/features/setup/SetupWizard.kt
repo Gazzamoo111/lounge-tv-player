@@ -34,6 +34,10 @@ import org.koin.androidx.compose.koinViewModel
 import tv.own.owntv.R
 import tv.own.owntv.core.brand.AppIcon
 import tv.own.owntv.core.database.entity.SourceEntity
+import tv.own.owntv.core.model.SourceType
+import tv.own.owntv.core.settings.PlaylistRefresh
+import tv.own.owntv.core.settings.PlaylistAutoRefresh
+import tv.own.owntv.core.sync.SyncScopeChoice
 import tv.own.owntv.core.setup.SourceImporter
 import tv.own.owntv.core.sync.importProgressDisplay
 import tv.own.owntv.core.theme.UiFontScale
@@ -83,6 +87,8 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
     val defaultPlaylistName = stringResource(R.string.setup_name_default_playlist)
     val defaultPortalName = stringResource(R.string.setup_default_portal)
     var step by rememberSaveable(firstRun) { mutableStateOf(if (firstRun) Step.WELCOME else Step.CREATE_PROFILE) }
+    var onDemandProfilePending by remember { mutableStateOf(false) }
+
     val importState by vm.state.collectAsStateWithLifecycle()
     val progress by vm.progress.collectAsStateWithLifecycle()
     val epgSync by vm.epgSync.collectAsStateWithLifecycle()
@@ -106,7 +112,22 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
     val accent = stageAccent.accent
     Box(modifier = modifier.fillMaxSize().stageBackground(accent)) {
         when (step) {
-            Step.WELCOME -> WelcomeStep(onNext = { step = Step.DISPLAY_SIZE })
+            Step.WELCOME -> if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND) {
+                val createDefaultProfileAndContinue: (Step) -> Unit = { next ->
+                    if (!onDemandProfilePending) {
+                        onDemandProfilePending = true
+                        vm.createProfile(defaultProfileName, -1, false, null, null) {
+                            onDemandProfilePending = false
+                            step = next
+                        }
+                    }
+                }
+                OnDemandWelcome(
+                    onPairFromPhone = { createDefaultProfileAndContinue(Step.ADD_SOURCE_REMOTE) },
+                    onEnterManually = { createDefaultProfileAndContinue(Step.ADD_SOURCE) },
+                    enabled = !onDemandProfilePending,
+                )
+            } else WelcomeStep(onNext = { step = Step.DISPLAY_SIZE })
             // Before the disclaimer, which is the first screen with a paragraph of real text on it:
             // if the interface is too small to read, that is the screen it first hurts on.
             Step.DISPLAY_SIZE -> DisplaySizeStep(onNext = { step = Step.DISCLAIMER }, onBack = { step = Step.WELCOME })
@@ -164,9 +185,36 @@ fun Onboarding(firstRun: Boolean, onDone: (Long?) -> Unit, onCancel: () -> Unit,
                 payloads = vm.remotePayloads,
                 onStartListener = { port -> vm.startRemoteListener(port) },
                 onStopListener = { vm.stopRemoteListener() },
-                // A remote submission hands off to the pre-filled form (the user presses Start Import).
-                onPayloadReceived = { step = Step.ADD_SOURCE },
-                onBack = { vm.stopRemoteListener(); step = Step.ADD_CONTENT },
+                // On Demand: authenticated LAN phone submissions of a valid Xtream account
+                // go straight into the VOD import. Other formats or incomplete inputs
+                // retain the safe pre-filled manual fallback. No secrets ship in the APK.
+                onPayloadReceived = { payload ->
+                    val directXtream = tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND &&
+                        payload.type == SourceType.XTREAM &&
+                        (payload.server.startsWith("https://", ignoreCase = true) ||
+                            payload.server.startsWith("http://", ignoreCase = true)) &&
+                        payload.user.isNotBlank() && payload.pass.isNotBlank()
+                    if (directXtream) {
+                        importName = payload.name.ifBlank { defaultIptvName }
+                        vm.startXtream(
+                            name = importName!!,
+                            server = payload.server,
+                            username = payload.user,
+                            password = payload.pass,
+                            userAgent = payload.userAgent,
+                            epgUrl = "",
+                            autoRefresh = PlaylistRefresh(PlaylistAutoRefresh.HOURS_6, 1),
+                            live = SyncScopeChoice.Off,
+                            movies = SyncScopeChoice.Now,
+                            series = SyncScopeChoice.Now,
+                        )
+                        importOrigin = Step.ADD_SOURCE
+                        step = Step.IMPORTING
+                    } else {
+                        step = Step.ADD_SOURCE
+                    }
+                },
+                onBack = { vm.stopRemoteListener(); step = if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND) Step.ADD_SOURCE else Step.ADD_CONTENT },
             )
             Step.ADD_SOURCE -> AddSourceScreen(
                 onStartXtream = { name, server, user, pass, ua, ref, epg, refresh, live, movies, series, _, preferHls ->

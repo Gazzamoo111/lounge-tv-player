@@ -193,12 +193,16 @@ fun SearchScreen(
 
     val searching = query.trim().length >= 2
     val showingResults = searching || intent != null
-    val shown = if (searching) results.only(kinds) else curated
+    val onDemandOnly = tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND
+    val vodKinds = setOf(SearchKind.MOVIES, SearchKind.SERIES)
+    val effectiveKinds = if (onDemandOnly) kinds.intersect(vodKinds).ifEmpty { vodKinds } else kinds
+    val shown = if (searching) results.only(effectiveKinds)
+        else if (onDemandOnly) curated.only(vodKinds) else curated
     // One filter button on lists that kind alone, uncapped; otherwise the kinds are grouped under headings.
-    val singleKind = searching && kinds.size == 1
+    val singleKind = searching && effectiveKinds.size == 1
     val entries = searchEntries(shown, grouped = !singleKind, capChannels = searching && !singleKind)
     // ▼ from the field and ▲ out of the results land on the first button that is on, else the first.
-    val filterEntry = filterFocus.getValue(kinds.minOrNull() ?: SearchKind.entries.first())
+    val filterEntry = filterFocus.getValue(effectiveKinds.minOrNull() ?: SearchKind.entries.first())
     var filterFocused by remember { mutableStateOf<SearchKind?>(null) }
 
     // The focused row drives the right side; nothing focused yet = the first result.
@@ -275,7 +279,9 @@ fun SearchScreen(
         }
     }
 
-    BoxWithConstraints(modifier.fillMaxSize().onFocusChanged { if (it.hasFocus) onChildFocused() }) {
+    BoxWithConstraints(modifier.fillMaxSize()
+        .then(if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND) Modifier.padding(top = 100.mpx) else Modifier)
+        .onFocusChanged { if (it.hasFocus) onChildFocused() }) {
         val screenW = maxWidth
         fun fx(px: Int) = screenW * (px / 1920f)
         val listX = fx(64)
@@ -314,6 +320,7 @@ fun SearchScreen(
                 firstFocus = jumpFocus,
                 recent = recent,
                 onIntent = vm::setIntent,
+                vodOnly = onDemandOnly,
                 onRecent = vm::setQuery,
                 onClearRecent = vm::clearRecentSearches,
                 modifier = Modifier.padding(start = listX, top = 192.mpx).width(listW),
@@ -330,7 +337,7 @@ fun SearchScreen(
         if (searching) {
             // Filter buttons: OK switches one on or off, several can be on, none on shows everything.
             Row(Modifier.padding(start = fx(84) - 12.mpx, top = 192.mpx), horizontalArrangement = Arrangement.spacedBy(16.mpx)) {
-                SearchKind.entries.forEach { k ->
+                SearchKind.entries.filter { !onDemandOnly || it in vodKinds }.forEach { k ->
                     StageTab(
                         label = k.label(),
                         count = localizedInteger(results.count(k)),
@@ -696,13 +703,14 @@ private fun Launcher(
     onIntent: (SearchIntent) -> Unit,
     onRecent: (String) -> Unit,
     onClearRecent: () -> Unit,
+    vodOnly: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val locale = androidx.compose.ui.platform.LocalConfiguration.current.locales[0]
     Column(modifier.focusGroup()) {
         GroupHeading(stringResource(R.string.search_jump_to).uppercase(locale), Modifier.padding(top = 8.mpx, bottom = 10.mpx))
         Row(horizontalArrangement = Arrangement.spacedBy(10.mpx)) {
-            SearchIntent.entries.forEach { i ->
+            SearchIntent.entries.filter { !vodOnly || it != SearchIntent.CHANNELS }.forEach { i ->
                 val icon = when (i) {
                     SearchIntent.CONTINUE -> OwnTVIcon.PLAY
                     SearchIntent.UNWATCHED -> OwnTVIcon.SPARKLE

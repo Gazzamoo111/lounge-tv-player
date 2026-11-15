@@ -41,10 +41,10 @@
         android:banner="@drawable/owntv_banner_eggshell"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/owntv_icon_eggshell"
-        android:label="@string/app_name"
+        android:icon="${loungeAppIcon}"
+        android:label="${loungeAppName}"
         android:requestLegacyExternalStorage="true"
-        android:roundIcon="@mipmap/owntv_icon_eggshell"
+        android:roundIcon="${loungeAppIcon}"
         android:supportsRtl="true"
         android:theme="@style/Theme.OwnTV"
         android:usesCleartextTraffic="true"
@@ -87,11 +87,11 @@
             android:banner="@drawable/owntv_banner_petrol"
             android:enabled="false"
             android:exported="true"
-            android:icon="@mipmap/owntv_icon_petrol"
+            android:icon="${loungeIconPetrol}"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|smallestScreenSize|screenLayout|orientation|uiMode|density|colorMode"
             android:launchMode="singleTop"
-            android:roundIcon="@mipmap/owntv_icon_petrol"
-            android:theme="@style/Theme.OwnTV.Starting.Petrol"
+            android:roundIcon="${loungeIconPetrol}"
+            android:theme="${loungeSplashPetrol}"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -116,11 +116,11 @@
             android:banner="@drawable/owntv_banner_sunflower"
             android:enabled="false"
             android:exported="true"
-            android:icon="@mipmap/owntv_icon_sunflower"
+            android:icon="${loungeIconSunflower}"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|smallestScreenSize|screenLayout|orientation|uiMode|density|colorMode"
             android:launchMode="singleTop"
-            android:roundIcon="@mipmap/owntv_icon_sunflower"
-            android:theme="@style/Theme.OwnTV.Starting.Sunflower"
+            android:roundIcon="${loungeIconSunflower}"
+            android:theme="${loungeSplashSunflower}"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -145,11 +145,11 @@
             android:banner="@drawable/owntv_banner_cobalt"
             android:enabled="false"
             android:exported="true"
-            android:icon="@mipmap/owntv_icon_cobalt"
+            android:icon="${loungeIconCobalt}"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|smallestScreenSize|screenLayout|orientation|uiMode|density|colorMode"
             android:launchMode="singleTop"
-            android:roundIcon="@mipmap/owntv_icon_cobalt"
-            android:theme="@style/Theme.OwnTV.Starting.Cobalt"
+            android:roundIcon="${loungeIconCobalt}"
+            android:theme="${loungeSplashCobalt}"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -174,11 +174,11 @@
             android:banner="@drawable/owntv_banner_tomato"
             android:enabled="false"
             android:exported="true"
-            android:icon="@mipmap/owntv_icon_tomato"
+            android:icon="${loungeIconTomato}"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|smallestScreenSize|screenLayout|orientation|uiMode|density|colorMode"
             android:launchMode="singleTop"
-            android:roundIcon="@mipmap/owntv_icon_tomato"
-            android:theme="@style/Theme.OwnTV.Starting.Tomato"
+            android:roundIcon="${loungeIconTomato}"
+            android:theme="${loungeSplashTomato}"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -203,11 +203,11 @@
             android:banner="@drawable/owntv_banner_board"
             android:enabled="false"
             android:exported="true"
-            android:icon="@mipmap/owntv_icon_board"
+            android:icon="${loungeIconBoard}"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|smallestScreenSize|screenLayout|orientation|uiMode|density|colorMode"
             android:launchMode="singleTop"
-            android:roundIcon="@mipmap/owntv_icon_board"
-            android:theme="@style/Theme.OwnTV.Starting.Board"
+            android:roundIcon="${loungeIconBoard}"
+            android:theme="${loungeSplashBoard}"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -232,11 +232,11 @@
             android:banner="@drawable/owntv_banner_eggshell"
             android:enabled="true"
             android:exported="true"
-            android:icon="@mipmap/owntv_icon_eggshell"
+            android:icon="${loungeIconEggshell}"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|smallestScreenSize|screenLayout|orientation|uiMode|density|colorMode"
             android:launchMode="singleTop"
-            android:roundIcon="@mipmap/owntv_icon_eggshell"
-            android:theme="@style/Theme.OwnTV.Starting.Eggshell"
+            android:roundIcon="${loungeIconEggshell}"
+            android:theme="${loungeSplashEggshell}"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -261,11 +261,11 @@
             android:banner="@drawable/owntv_banner_olive"
             android:enabled="false"
             android:exported="true"
-            android:icon="@mipmap/owntv_icon_olive"
+            android:icon="${loungeIconOlive}"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|smallestScreenSize|screenLayout|orientation|uiMode|density|colorMode"
             android:launchMode="singleTop"
-            android:roundIcon="@mipmap/owntv_icon_olive"
-            android:theme="@style/Theme.OwnTV.Starting.Olive"
+            android:roundIcon="${loungeIconOlive}"
+            android:theme="${loungeSplashOlive}"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -290,11 +290,11 @@
             android:banner="@drawable/owntv_banner_olive_cream"
             android:enabled="false"
             android:exported="true"
-            android:icon="@mipmap/owntv_icon_olive_cream"
+            android:icon="${loungeIconOliveCream}"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|smallestScreenSize|screenLayout|orientation|uiMode|density|colorMode"
             android:launchMode="singleTop"
-            android:roundIcon="@mipmap/owntv_icon_olive_cream"
-            android:theme="@style/Theme.OwnTV.Starting.OliveCream"
+            android:roundIcon="${loungeIconOliveCream}"
+            android:theme="${loungeSplashOliveCream}"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -320,11 +320,11 @@
             android:banner="@drawable/owntv_banner_pixel"
             android:enabled="false"
             android:exported="true"
-            android:icon="@mipmap/owntv_icon_pixel"
+            android:icon="${loungeIconPixel}"
             android:configChanges="keyboard|keyboardHidden|navigation|screenSize|smallestScreenSize|screenLayout|orientation|uiMode|density|colorMode"
             android:launchMode="singleTop"
-            android:roundIcon="@mipmap/owntv_icon_pixel"
-            android:theme="@style/Theme.OwnTV.Starting.Pixel"
+            android:roundIcon="${loungeIconPixel}"
+            android:theme="${loungeSplashPixel}"
             android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

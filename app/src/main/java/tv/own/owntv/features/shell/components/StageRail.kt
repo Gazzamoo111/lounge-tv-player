@@ -150,6 +150,19 @@ fun StageRail(
     onNowPlaying: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND) {
+        OnDemandTopNavigation(
+            selected = selected,
+            visibleSections = visibleSections,
+            onSelect = onSelect,
+            selectedItemFocusRequester = selectedItemFocusRequester,
+            contentFocusRequester = contentFocusRequester,
+            enterContent = enterContent,
+            onFocused = onFocused,
+            modifier = modifier,
+        )
+        return
+    }
     val open = (state == RailState.OPEN || state == RailState.PINNED) && size != NavSize.COMPACT
     val counts = size >= NavSize.WIDE
     val details = size == NavSize.EXTRA_WIDE

@@ -4,4 +4,5 @@
     <color name="owntv_window_bg">#050A14</color>
     <!-- Adaptive launcher icon background. -->
     <color name="owntv_icon_bg">#00000000</color>
+    <color name="loungetv_ondemand_window_bg">#081528</color>
 </resources>

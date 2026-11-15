@@ -139,7 +139,7 @@ fun MoreScreen(
         // --- The sheet (`.gsheet`, 440 wide at 24 / 24 / 24): the full height.
         Column(
             Modifier
-                .padding(start = 24.mpx, top = 24.mpx, bottom = 24.mpx)
+                .padding(start = 24.mpx, top = if (BuildConfig.LOUNGE_ON_DEMAND) 124.mpx else 24.mpx, bottom = 24.mpx)
                 .width(440.mpx)
                 .fillMaxHeight()
                 .stageGlass(32.mpx, overContent = true)
@@ -189,7 +189,7 @@ fun MoreScreen(
         // --- The page: everything right of the sheet, below the top-right cluster.
         Box(
             Modifier
-                .padding(start = 520.mpx, top = 128.mpx, end = 64.mpx)
+                .padding(start = 520.mpx, top = if (BuildConfig.LOUNGE_ON_DEMAND) 150.mpx else 128.mpx, end = 64.mpx)
                 .fillMaxSize()
                 .onFocusChanged { pageFocused = it.hasFocus },
         ) {

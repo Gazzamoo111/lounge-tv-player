@@ -52,6 +52,20 @@ android {
 
     defaultConfig {
         applicationId = "com.loungetv.player"
+        manifestPlaceholders["loungeAppName"] = "@string/app_name"
+        // Production keeps its existing launch themes. QA may opt into an independent identity.
+        manifestPlaceholders["loungeAppIcon"] = "@mipmap/owntv_icon_eggshell"
+        mapOf(
+            "Petrol" to "petrol", "Sunflower" to "sunflower",
+            "Cobalt" to "cobalt", "Tomato" to "tomato",
+            "Board" to "board", "Eggshell" to "eggshell",
+            "Olive" to "olive", "OliveCream" to "olive_cream",
+            "Pixel" to "pixel",
+        ).forEach { (name, suffix) ->
+            manifestPlaceholders["loungeSplash$name"] = "@style/Theme.OwnTV.Starting.$name"
+            manifestPlaceholders["loungeIcon$name"] = "@mipmap/owntv_icon_$suffix"
+        }
+
         minSdk = 26
         targetSdk = 36
         // Release CI always injects both values. The fallback belongs to local QA builds only and is
@@ -62,6 +76,7 @@ android {
 
         // Experimental TV experience is off in every normal and production build.
         buildConfigField("boolean", "LOUNGE_TV_2", "false")
+        buildConfigField("boolean", "LOUNGE_ON_DEMAND", "false")
 
         // Opt-in local diagnostic APKs keep the rolling playback trace enabled even when they are
         // release-signed (so they can update an installed production build without changing its data).
@@ -225,8 +240,23 @@ android {
             // Keep debug builds isolated from production (different signing keys and data).
             // Draft PR builds install alongside production and stable QA, never over either.
             val loungeTv2 = System.getenv("LOUNGE_TV_2_QA") == "true"
-            buildConfigField("boolean", "LOUNGE_TV_2", loungeTv2.toString())
+            val onDemandQa = System.getenv("LOUNGE_TV_ON_DEMAND_QA") == "true"
+            require(!(loungeTv2 && onDemandQa)) { "Select only one isolated Lounge TV QA variant" }
+            // On Demand reuses the finished 2.0 Movies/Series UI, not the old legacy path.
+            buildConfigField("boolean", "LOUNGE_TV_2", (loungeTv2 || onDemandQa).toString())
+            buildConfigField("boolean", "LOUNGE_ON_DEMAND", onDemandQa.toString())
+            if (onDemandQa) {
+                manifestPlaceholders["loungeAppName"] = "@string/lounge_on_demand_app_name"
+                manifestPlaceholders["loungeAppIcon"] = "@drawable/loungetv_on_demand_mark"
+                listOf("Petrol", "Sunflower", "Cobalt", "Tomato", "Board",
+                    "Eggshell", "Olive", "OliveCream", "Pixel").forEach { name ->
+                    manifestPlaceholders["loungeSplash$name"] = "@style/Theme.OwnTV.Starting.OnDemand"
+                    manifestPlaceholders["loungeIcon$name"] = "@drawable/loungetv_on_demand_mark"
+                }
+            }
+            manifestPlaceholders["loungeDebugAppName"] = if (onDemandQa) "@string/lounge_on_demand_app_name" else "@string/lounge_recovery_qa_app_name"
             applicationIdSuffix = when {
+                onDemandQa -> ".ondemandqa"
                 loungeTv2 -> ".v2qa"
                 System.getenv("RELIABILITY_AUDIT_QA") == "true" -> ".auditqa"
                 System.getenv("PLAYBACK_HOTFIX_QA") == "true" -> ".playbackqa"

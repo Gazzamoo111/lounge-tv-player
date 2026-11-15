@@ -116,7 +116,8 @@ fun MyLoungeScreen(
         onEntryHook?.invoke { runCatching { primaryFocus.requestFocus() }.getOrDefault(false) }
         onDispose { onEntryHook?.invoke(null) }
     }
-    var tab by remember(profileId) { mutableIntStateOf(0) }
+    val onDemandOnly = tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND
+    var tab by remember(profileId) { mutableIntStateOf(if (onDemandOnly) 1 else 0) }
     var liveGroup by remember(profileId) { mutableIntStateOf(0) }
     var vodGroup by remember(profileId) { mutableIntStateOf(0) }
     val liveOptions = listOf(
@@ -138,14 +139,16 @@ fun MyLoungeScreen(
     ) {
         Text(stringResource(R.string.lounge_my_title), style = stageText(42, 800), color = StageColors.Text)
         Spacer(Modifier.height(24.mpx))
-        StageSegmented(
-            options = listOf(
-                stringResource(R.string.lounge_my_live), stringResource(R.string.lounge_my_vod),
-                stringResource(R.string.lounge_my_reminders),
-            ),
-            selected = tab, onSelect = { tab = it }, modifier = Modifier.focusRequester(primaryFocus),
-            icons = listOf(OwnTVIcon.LIVE_TV, OwnTVIcon.FAVORITE, OwnTVIcon.BELL),
-        )
+        if (!onDemandOnly) {
+            StageSegmented(
+                options = listOf(
+                    stringResource(R.string.lounge_my_live), stringResource(R.string.lounge_my_vod),
+                    stringResource(R.string.lounge_my_reminders),
+                ),
+                selected = tab, onSelect = { tab = it }, modifier = Modifier.focusRequester(primaryFocus),
+                icons = listOf(OwnTVIcon.LIVE_TV, OwnTVIcon.FAVORITE, OwnTVIcon.BELL),
+            )
+        }
         Spacer(Modifier.height(27.mpx))
         when (tab) {
             0 -> {
@@ -166,7 +169,8 @@ fun MyLoungeScreen(
                 }
             }
             1 -> {
-                StageSegmented(options = vodOptions, selected = vodGroup, onSelect = { vodGroup = it })
+                StageSegmented(options = vodOptions, selected = vodGroup, onSelect = { vodGroup = it },
+                    modifier = if (onDemandOnly) Modifier.focusRequester(primaryFocus) else Modifier)
                 Spacer(Modifier.height(23.mpx))
                 if (vodGroup == 0 && lists.movies.isEmpty() || vodGroup == 1 && lists.series.isEmpty()) {
                     MyLoungeEmpty(stringResource(R.string.lounge_my_no_vod))
