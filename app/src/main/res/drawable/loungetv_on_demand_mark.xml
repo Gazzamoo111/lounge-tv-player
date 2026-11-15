@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Standalone On Demand mark, not a Live TV or third-party asset. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="192dp"
+    android:height="192dp"
+    android:viewportWidth="192"
+    android:viewportHeight="192">
+    <path
+        android:fillColor="#081528"
+        android:pathData="M96,10 A86,86 0,1 1,96 182 A86,86 0,1 1,96 10 Z"/>
+    <path
+        android:fillColor="#182840"
+        android:pathData="M96,24 A72,72 0,1 1,96 168 A72,72 0,1 1,96 24 Z"/>
+    <!-- A luminous architectural L: Lounge, not a TV antenna or cloned Nuvio icon. -->
+    <path
+        android:fillColor="#B7FF35"
+        android:pathData="M57,51 L76,51 L76,117 L133,117 L133,137 L57,137 Z"/>
+    <path
+        android:fillColor="#F5F8FC"
+        android:pathData="M93,54 L135,54 L135,64 L93,64 Z"/>
+</vector>
