@@ -229,6 +229,10 @@ internal fun VodCinematicBackdrop(url: String?, series: Boolean, modifier: Modif
  */
 @Composable
 internal fun VodHero(info: VodTitleInfo, modifier: Modifier = Modifier) {
+    if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND) {
+        OnDemandVodHero(info, modifier)
+        return
+    }
     Column(modifier.clipToBounds()) {
         var logoFailed by remember(info.logoUrl) { mutableStateOf(false) }
         Box(Modifier.fillMaxWidth().height(170.mpx), contentAlignment = Alignment.BottomStart) {
@@ -351,6 +355,10 @@ internal fun VodCast(cast: List<CastMember>, count: Int, modifier: Modifier = Mo
  */
 @Composable
 internal fun VodDetailsCard(info: VodTitleInfo?, hints: List<Pair<String, String>>, series: Boolean, modifier: Modifier = Modifier) {
+    if (tv.own.owntv.BuildConfig.LOUNGE_ON_DEMAND) {
+        OnDemandVodDetailsPanel(info, hints, series, modifier)
+        return
+    }
     Box(modifier.stageGlass(30.mpx).padding(20.mpx)) {
         if (info != null) {
             Column(Modifier.fillMaxSize().clipToBounds()) {
