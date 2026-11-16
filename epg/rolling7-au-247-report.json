@@ -1,26 +1,26 @@
 {
-  "generatedAtUtc": "2026-11-15T18:54:46.886770+00:00",
-  "requiredThroughUtc": "2026-11-18T18:54:46.886770+00:00",
-  "preferredThroughUtc": "2026-11-22T18:54:46.886770+00:00",
+  "generatedAtUtc": "2026-11-16T06:39:11.065981+00:00",
+  "requiredThroughUtc": "2026-11-19T06:39:11.065981+00:00",
+  "preferredThroughUtc": "2026-11-23T06:39:11.065981+00:00",
   "minimumRealDays": 3,
   "sourceErrors": {},
   "auChannels": 38,
   "auChannelsWithThreeDaySource": 29,
   "auChannelsWithSevenDaySource": 0,
-  "auProgrammesAdded": 31,
+  "auProgrammesAdded": 90,
   "auMatches": {
     "BEIN SPORTS 1": {
       "source": "primary",
       "sourceId": "beINSPORTS1.au",
       "match": "exact-id",
-      "added": 12,
+      "added": 0,
       "latest": "2026-11-22T00:30:00+00:00"
     },
     "BEIN SPORTS 3": {
       "source": "primary",
       "sourceId": "beINSPORTS3.au",
       "match": "exact-id",
-      "added": 19,
+      "added": 0,
       "latest": "2026-11-22T01:00:00+00:00"
     },
     "ESPN Australia": "no-three-day-source",
@@ -50,8 +50,8 @@
       "source": "epgshare",
       "sourceId": "FoxSports503.au",
       "match": "reviewed-alias",
-      "added": 0,
-      "latest": "2026-11-20T13:30:00+00:00"
+      "added": 15,
+      "latest": "2026-11-21T15:00:00+00:00"
     },
     "FOX SPORTS 504": {
       "source": "epgshare",
@@ -64,8 +64,8 @@
       "source": "epgshare",
       "sourceId": "FoxSports505.au",
       "match": "reviewed-alias",
-      "added": 0,
-      "latest": "2026-11-20T15:00:00+00:00"
+      "added": 13,
+      "latest": "2026-11-21T15:00:00+00:00"
     },
     "FOX SPORTS 506": {
       "source": "epgshare",
@@ -78,15 +78,15 @@
       "source": "epgshare",
       "sourceId": "FoxSportsMore.au",
       "match": "reviewed-alias",
-      "added": 0,
-      "latest": "2026-11-20T15:00:00+00:00"
+      "added": 15,
+      "latest": "2026-11-21T15:00:00+00:00"
     },
     "Fox Sports News Australia": {
       "source": "epgshare",
       "sourceId": "FoxSportsNews.au",
       "match": "exact-id",
-      "added": 0,
-      "latest": "2026-11-20T15:30:00+00:00"
+      "added": 47,
+      "latest": "2026-11-21T15:30:00+00:00"
     },
     "10 BOLD": "shared-epg-id-skipped",
     "10 Peach": {
@@ -231,10 +231,10 @@
       {
         "feed": "sydney",
         "sourceId": "mjh-redbull-tv",
-        "programmes": 40,
-        "first": "2026-11-15T18:36:14+00:00",
-        "last": "2026-11-16T16:16:58+00:00",
-        "daysAhead": 0.89
+        "programmes": 42,
+        "first": "2026-11-16T06:38:30+00:00",
+        "last": "2026-11-17T03:18:36+00:00",
+        "daysAhead": 0.86
       }
     ],
     "SKY NEWS": [],
@@ -244,8 +244,9 @@
   "loopChannelsNewlyCovered": 672,
   "loopProgrammesAdded": 672,
   "changedEpgIds": [
-    "beINSports1.au",
-    "beINSports3.au",
+    "FoxSports3.au",
+    "FoxSports5.au",
+    "FoxSportsNews.au",
     "live:24-7-ahiru-no-sora",
     "live:24-7-american-dad",
     "live:24-7-aqua-teen-hunger-force",
@@ -796,6 +797,7 @@
     "live:247-wrong-turn",
     "live:247-wwe-wrestling",
     "live:247-x-men",
+    "live:au-fox-sports-507",
     "live:oneplay-007",
     "live:oneplay-007classic",
     "live:oneplay-123",
@@ -919,10 +921,10 @@
     "live:oneplay-zig-sharko",
     "live:the-teenage-witch"
   ],
-  "untouchedExistingProgrammeEntries": 98156,
-  "existingProgrammeEntries": 98156,
-  "totalProgrammeEntries": 98859,
-  "shortFilesUpdated": 674,
+  "untouchedExistingProgrammeEntries": 92902,
+  "existingProgrammeEntries": 92902,
+  "totalProgrammeEntries": 93664,
+  "shortFilesUpdated": 676,
   "sourceCoverageClaim": "At least three days of real AU schedule horizon, seven where available; other regions unchanged",
-  "previousGuideGitSha": "4670b02232271e60d6a3750ecbb5de1676020448"
+  "previousGuideGitSha": "2d71ac8b3e05efc6a818ddb183796c0ae6ed75b8"
 }
