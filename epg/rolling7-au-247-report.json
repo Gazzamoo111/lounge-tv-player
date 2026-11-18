@@ -1,27 +1,27 @@
 {
-  "generatedAtUtc": "2026-11-18T07:36:37.124463+00:00",
-  "requiredThroughUtc": "2026-11-21T07:36:37.124463+00:00",
-  "preferredThroughUtc": "2026-11-25T07:36:37.124463+00:00",
+  "generatedAtUtc": "2026-11-18T20:37:12.655803+00:00",
+  "requiredThroughUtc": "2026-11-21T20:37:12.655803+00:00",
+  "preferredThroughUtc": "2026-11-25T20:37:12.655803+00:00",
   "minimumRealDays": 3,
   "sourceErrors": {},
   "auChannels": 38,
   "auChannelsWithThreeDaySource": 24,
   "auChannelsWithSevenDaySource": 11,
-  "auProgrammesAdded": 506,
+  "auProgrammesAdded": 252,
   "auMatches": {
     "BEIN SPORTS 1": {
       "source": "primary",
       "sourceId": "beINSPORTS1.au",
       "match": "exact-id",
-      "added": 0,
-      "latest": "2026-11-24T00:00:00+00:00"
+      "added": 18,
+      "latest": "2026-11-25T00:00:00+00:00"
     },
     "BEIN SPORTS 3": {
       "source": "primary",
       "sourceId": "beINSPORTS3.au",
       "match": "exact-id",
-      "added": 0,
-      "latest": "2026-11-24T00:50:00+00:00"
+      "added": 25,
+      "latest": "2026-11-25T00:30:00+00:00"
     },
     "ESPN Australia": "no-three-day-source",
     "ESPN2 Australia": "no-three-day-source",
@@ -40,7 +40,7 @@
       "source": "epgshare",
       "sourceId": "FoxSports505.au",
       "match": "reviewed-alias",
-      "added": 13,
+      "added": 0,
       "latest": "2026-11-23T12:00:00+00:00"
     },
     "FOX SPORTS 506": "no-three-day-source",
@@ -48,14 +48,14 @@
       "source": "epgshare",
       "sourceId": "FoxSportsMore.au",
       "match": "reviewed-alias",
-      "added": 16,
+      "added": 0,
       "latest": "2026-11-23T11:00:00+00:00"
     },
     "Fox Sports News Australia": {
       "source": "epgshare",
       "sourceId": "FoxSportsNews.au",
       "match": "exact-id",
-      "added": 52,
+      "added": 0,
       "latest": "2026-11-23T15:30:00+00:00"
     },
     "10 BOLD": "shared-epg-id-skipped",
@@ -63,78 +63,78 @@
       "source": "xmltv-net",
       "sourceId": "403769auepg.com.au",
       "match": "official-rename-reviewed-id",
-      "added": 22,
-      "latest": "2026-11-25T08:00:00+00:00"
+      "added": 26,
+      "latest": "2026-11-25T21:00:00+00:00"
     },
     "10 Shake": "no-three-day-source",
     "7flix": {
       "source": "xmltv-net",
       "sourceId": "431541auepg.com.au",
       "match": "unique-name",
-      "added": 15,
-      "latest": "2026-11-25T08:00:00+00:00"
+      "added": 16,
+      "latest": "2026-11-25T21:05:20+00:00"
     },
     "7mate": {
       "source": "sydney",
       "sourceId": "mjh-7mate-syd",
       "match": "unique-name",
-      "added": 32,
+      "added": 0,
       "latest": "2026-11-25T00:03:35+00:00"
     },
     "7two": {
       "source": "xmltv-net",
       "sourceId": "410798auepg.com.au",
       "match": "unique-name",
-      "added": 13,
-      "latest": "2026-11-25T08:35:00+00:00"
+      "added": 16,
+      "latest": "2026-11-25T20:58:35+00:00"
     },
     "9Gem": {
       "source": "sydney",
       "sourceId": "mjh-gem-nsw",
       "match": "unique-name",
-      "added": 22,
+      "added": 0,
       "latest": "2026-11-25T00:30:00+00:00"
     },
     "9Go!": {
       "source": "sydney",
       "sourceId": "mjh-go-nsw",
       "match": "unique-name",
-      "added": 38,
+      "added": 0,
       "latest": "2026-11-25T00:30:00+00:00"
     },
     "9Life": {
       "source": "xmltv-net",
       "sourceId": "431510auepg.com.au",
       "match": "unique-name",
-      "added": 14,
-      "latest": "2026-11-25T08:00:00+00:00"
+      "added": 18,
+      "latest": "2026-11-25T21:00:00+00:00"
     },
     "9Rush": {
       "source": "sydney",
       "sourceId": "mjh-rush-nsw",
       "match": "unique-name",
-      "added": 28,
+      "added": 0,
       "latest": "2026-11-25T01:00:00+00:00"
     },
     "ABC": {
       "source": "xmltv-net",
       "sourceId": "431733auepg.com.au",
       "match": "official-rename-reviewed-id",
-      "added": 12,
-      "latest": "2026-11-25T08:00:00+00:00"
+      "added": 19,
+      "latest": "2026-11-25T22:00:00+00:00"
     },
     "ABC Comedy": {
       "source": "xmltv-net",
       "sourceId": "411316auepg.com.au",
       "match": "official-rename-reviewed-id",
       "added": 26,
-      "latest": "2026-11-25T08:00:00+00:00"
+      "latest": "2026-11-25T20:40:00+00:00"
     },
     "ABC Kids": {
       "source": "sydney",
       "sourceId": "mjh-abc-kids",
       "match": "unique-name",
-      "added": 85,
+      "added": 0,
       "latest": "2026-11-25T00:05:00+00:00"
     },
     "ABC ME": "no-three-day-source",
@@ -142,14 +142,14 @@
       "source": "xmltv-net",
       "sourceId": "391135auepg.com.au",
       "match": "official-rename-reviewed-id",
-      "added": 9,
-      "latest": "2026-11-25T08:00:00+00:00"
+      "added": 23,
+      "latest": "2026-11-25T22:00:00+00:00"
     },
     "Channel 9": {
       "source": "sydney",
       "sourceId": "mjh-channel-9-nsw",
       "match": "unique-name",
-      "added": 25,
+      "added": 0,
       "latest": "2026-11-25T00:30:00+00:00"
     },
     "Red Bull TV": "no-three-day-source",
@@ -157,35 +157,35 @@
       "source": "xmltv-net",
       "sourceId": "251831auepg.com.au",
       "match": "official-rename-reviewed-id",
-      "added": 18,
-      "latest": "2026-11-25T08:35:00+00:00"
+      "added": 17,
+      "latest": "2026-11-25T21:00:00+00:00"
     },
     "SBS Food": {
       "source": "xmltv-net",
       "sourceId": "431491auepg.com.au",
       "match": "official-rename-reviewed-id",
-      "added": 22,
-      "latest": "2026-11-25T08:00:00+00:00"
+      "added": 26,
+      "latest": "2026-11-25T21:00:00+00:00"
     },
     "SBS Viceland": {
       "source": "xmltv-net",
       "sourceId": "431775auepg.com.au",
       "match": "official-rename-reviewed-id",
-      "added": 17,
-      "latest": "2026-11-25T07:40:00+00:00"
+      "added": 15,
+      "latest": "2026-11-25T20:50:00+00:00"
     },
     "SBS World Movies": {
       "source": "xmltv-net",
       "sourceId": "432033auepg.com.au",
       "match": "official-rename-reviewed-id",
-      "added": 6,
-      "latest": "2026-11-25T08:05:00+00:00"
+      "added": 7,
+      "latest": "2026-11-25T22:05:00+00:00"
     },
     "Seven": {
       "source": "sydney",
       "sourceId": "mjh-seven-syd",
       "match": "unique-name",
-      "added": 21,
+      "added": 0,
       "latest": "2026-11-25T01:00:00+00:00"
     },
     "SKY NEWS": "no-three-day-source",
@@ -199,50 +199,50 @@
       {
         "feed": "epgshare",
         "sourceId": "FoxCricket.au",
-        "programmes": 50,
-        "first": "2026-11-18T03:30:00+00:00",
+        "programmes": 39,
+        "first": "2026-11-18T20:30:00+00:00",
         "last": "2026-11-20T12:30:00+00:00",
-        "daysAhead": 2.2
+        "daysAhead": 1.66
       }
     ],
     "FOX SPORTS 501": [
       {
         "feed": "epgshare",
         "sourceId": "FoxCricket.au",
-        "programmes": 50,
-        "first": "2026-11-18T03:30:00+00:00",
+        "programmes": 39,
+        "first": "2026-11-18T20:30:00+00:00",
         "last": "2026-11-20T12:30:00+00:00",
-        "daysAhead": 2.2
+        "daysAhead": 1.66
       }
     ],
     "FOX SPORTS 502": [
       {
         "feed": "epgshare",
         "sourceId": "FoxLeague.au",
-        "programmes": 67,
-        "first": "2026-11-18T07:00:00+00:00",
+        "programmes": 52,
+        "first": "2026-11-18T20:00:00+00:00",
         "last": "2026-11-20T12:30:00+00:00",
-        "daysAhead": 2.2
+        "daysAhead": 1.66
       }
     ],
     "FOX SPORTS 504": [
       {
         "feed": "epgshare",
         "sourceId": "FoxFooty.au",
-        "programmes": 51,
-        "first": "2026-11-18T07:00:00+00:00",
+        "programmes": 37,
+        "first": "2026-11-18T20:00:00+00:00",
         "last": "2026-11-20T11:00:00+00:00",
-        "daysAhead": 2.14
+        "daysAhead": 1.6
       }
     ],
     "FOX SPORTS 506": [
       {
         "feed": "epgshare",
         "sourceId": "FoxSports506.au",
-        "programmes": 56,
-        "first": "2026-11-18T07:25:00+00:00",
+        "programmes": 41,
+        "first": "2026-11-18T20:00:00+00:00",
         "last": "2026-11-20T12:50:00+00:00",
-        "daysAhead": 2.22
+        "daysAhead": 1.68
       }
     ],
     "10 Shake": [],
@@ -251,10 +251,10 @@
       {
         "feed": "sydney",
         "sourceId": "mjh-redbull-tv",
-        "programmes": 37,
-        "first": "2026-11-18T07:30:45+00:00",
-        "last": "2026-11-19T03:18:36+00:00",
-        "daysAhead": 0.82
+        "programmes": 45,
+        "first": "2026-11-18T19:58:46+00:00",
+        "last": "2026-11-19T19:13:42+00:00",
+        "daysAhead": 0.94
       }
     ],
     "SKY NEWS": [],
@@ -266,18 +266,15 @@
   "changedEpgIds": [
     "10Peach.au",
     "7Flix.au",
-    "7Mate.au",
     "7TWO.au",
-    "ABC Kids",
     "ABC.au",
     "ABCComedy.au",
-    "Channel9.au",
-    "FoxSports5.au",
-    "FoxSportsNews.au",
     "SBS.au",
     "SBSFood.au",
     "SBSViceland.au",
     "SBSWorldMovies.au",
+    "beINSports1.au",
+    "beINSports3.au",
     "live:24-7-ahiru-no-sora",
     "live:24-7-american-dad",
     "live:24-7-aqua-teen-hunger-force",
@@ -829,12 +826,7 @@
     "live:247-wwe-wrestling",
     "live:247-x-men",
     "live:abc-news-sydney",
-    "live:au-9gem",
-    "live:au-9go",
     "live:au-9life",
-    "live:au-9rush",
-    "live:au-fox-sports-507",
-    "live:au-seven",
     "live:oneplay-007",
     "live:oneplay-007classic",
     "live:oneplay-123",
@@ -958,10 +950,10 @@
     "live:oneplay-zig-sharko",
     "live:the-teenage-witch"
   ],
-  "untouchedExistingProgrammeEntries": 93583,
-  "existingProgrammeEntries": 93583,
-  "totalProgrammeEntries": 94761,
-  "shortFilesUpdated": 693,
+  "untouchedExistingProgrammeEntries": 106031,
+  "existingProgrammeEntries": 106031,
+  "totalProgrammeEntries": 106955,
+  "shortFilesUpdated": 685,
   "sourceCoverageClaim": "At least three days of real AU schedule horizon, seven where available; other regions unchanged",
-  "previousGuideGitSha": "675f1c2ee3f1cd0fa6da588ff74317dea0db08bd"
+  "previousGuideGitSha": "c608629dc1f0fca7aca772134e344fbebc401b20"
 }
