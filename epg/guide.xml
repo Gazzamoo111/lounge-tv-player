@@ -216879,22 +216879,7 @@
 		<rating system="UK Content Provider">
 			<value>PG</value>
 		</rating>
-	</programme><programme start="20261116095600 +0000" stop="20261116223000 +0000" channel="mjh-te-reo">
-    <title>Te Reo</title>
-    <desc>Whakaata Māori specialises in the stories of Aotearoa. Be entertained and informed with news, current affairs, sports, drama, documentaries and much more.</desc>
-    <icon src="https://images.nzxmltv.com/posters/te-reo_tereo.jpg"/>
-    <country>New Zealand</country>
-    <episode-num system="original-air-date">2026-11-08 11:46:33</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>SDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/te-reo_tereo.jpg</image>
-  </programme><programme start="20261116223000 +0000" stop="20261116230000 +0000" channel="mjh-te-reo">
+	</programme><programme start="20261116223000 +0000" stop="20261116230000 +0000" channel="mjh-te-reo">
     <title>Ōpaki</title>
     <desc>Pānia Papa uses games, music and activities to teach Māori.</desc>
     <credits>
@@ -219120,174 +219105,6 @@
       <stereo>stereo</stereo>
     </audio>
     <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/te-reo_tereo.jpg</image>
-  </programme><programme start="20261116111000 +0000" stop="20261116170000 +0000" channel="mjh-three">
-    <title>Infomercials</title>
-    <desc>Infomercials</desc>
-    <category>Entertainment</category>
-    <category>Movie</category>
-    <icon src="https://images.nzxmltv.com/posters/infomercials_three.jpg"/>
-    <url>https://www.skygo.co.nz/movie/mac_11317297</url>
-    <episode-num system="dd_progid">EPmac_11317297.mac_11317297</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercials_three.jpg</image>
-  </programme><programme start="20261116170000 +0000" stop="20261116173000 +0000" channel="mjh-three">
-    <title>My Lottery Dream Home</title>
-    <sub-title>Snow Place Like Home In Hub 2.0</sub-title>
-    <desc>David has already found a lucky couple a Florida beach hub, and now they're calling on him once again to search for a second dream hub - a snowy fairytale cabin in the Pocono Mountains...</desc>
-    <date>2020</date>
-    <category>Reality</category>
-    <orig-language>English</orig-language>
-    <icon src="https://images.skyone.co.nz/mac/479214/DAM/950E0311-8857-461F-861A955B9EA0399D.jpg"/>
-    <url>https://www.threenow.co.nz/shows/my-lottery-dream-home/S3445-642</url>
-    <country>United States of America</country>
-    <episode-num system="dd_progid">EP/1009245./SNZ11975476</episode-num>
-    <episode-num system="xmltv_ns">18.5.0</episode-num>
-    <episode-num system="themoviedb.org">series/77684</episode-num>
-    <episode-num system="original-air-date">2026-11-09 11:46:31</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <new/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <star-rating>
-      <value>6.4/10</value>
-    </star-rating>
-    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/950E0311-8857-461F-861A955B9EA0399D.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/72073AD9-567F-4761-AF739536AABF1124.jpg</image>
-    <image type="still" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/DCE635B6-A88A-4080-BC22E0386F90EE18.jpg</image>
-  </programme><programme start="20261116173000 +0000" stop="20261116180000 +0000" channel="mjh-three">
-    <title>Herald NOW Business</title>
-    <desc>Join Herald NOW Business with host Garth Bray as he brings you the business news of the day, subject matter expert interviews, along with local and global thought leaders.</desc>
-    <date>2025</date>
-    <category>News</category>
-    <icon src="https://images.skyone.co.nz/mac/479214/DAM/1ED12D89-A88E-475E-B63FE0392E5FB37F.jpg"/>
-    <episode-num system="dd_progid">EP/1002589./SNZ11940004</episode-num>
-    <episode-num system="xmltv_ns">0.0.0</episode-num>
-    <episode-num system="original-air-date">2026-08-01 03:39:12</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <live/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/1ED12D89-A88E-475E-B63FE0392E5FB37F.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/01C3DB34-1E57-43F3-A4D540E6FFAF972A.jpg</image>
-    <image type="still" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/13BF115E-05E6-4BD3-851FB13422C02EE4.jpg</image>
-  </programme><programme start="20261116180000 +0000" stop="20261116200000 +0000" channel="mjh-three">
-    <title>Ryan Bridge TODAY</title>
-    <desc>Join Ryan Bridge TODAY with host Ryan Bridge as he brings you the day's news, interviews and panel discussions live from the NZ Herald newsroom.</desc>
-    <date>2026</date>
-    <category>News</category>
-    <icon src="https://images.skyone.co.nz/mac/479214/DAM/737AB8F1-C850-4AD6-8C0B2225122AA093.jpg"/>
-    <episode-num system="dd_progid">EP/1001465./SNZ11940522</episode-num>
-    <episode-num system="xmltv_ns">0.0.0</episode-num>
-    <episode-num system="original-air-date">2026-08-01 03:39:12</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <live/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/737AB8F1-C850-4AD6-8C0B2225122AA093.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/60F5E0E3-2E65-4073-A9C29AAE12ED729F.jpg</image>
-    <image type="still" size="3" orient="L">https://mac-images.digital.skyone.co.nz/v3/479214/DAM/A8622B3F-E27A-4E26-AA3610D1DD79A711.jpg?width=[width]&amp;height=[height]&amp;crop=auto</image>
-  </programme><programme start="20261116200000 +0000" stop="20261116212500 +0000" channel="mjh-three">
-    <title>Infomercials</title>
-    <desc>Infomercials</desc>
-    <category>Entertainment</category>
-    <category>Movie</category>
-    <icon src="https://images.nzxmltv.com/posters/infomercials_three.jpg"/>
-    <url>https://www.skygo.co.nz/movie/mac_11317297</url>
-    <episode-num system="dd_progid">EPmac_11317297.mac_11317297</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercials_three.jpg</image>
-  </programme><programme start="20261116212500 +0000" stop="20261116222500 +0000" channel="mjh-three">
-    <title>Home Town</title>
-    <sub-title>The Zen Room</sub-title>
-    <desc>A couple who wants to settle in Laurel and never move again is looking for a home with a zen-style room for relaxation and a porch for entertaining.</desc>
-    <date>2023</date>
-    <category>Other</category>
-    <orig-language>English</orig-language>
-    <icon src="https://images.skyone.co.nz/mac/479214/DAM/82DE73CD-B819-4889-82530955EA56BBC9.jpg"/>
-    <url>https://www.threenow.co.nz/shows/home-town/S2956-214</url>
-    <country>United States of America</country>
-    <episode-num system="dd_progid">EP/1009395./SNZ11976342</episode-num>
-    <episode-num system="xmltv_ns">5.3.0</episode-num>
-    <episode-num system="themoviedb.org">series/71359</episode-num>
-    <episode-num system="original-air-date">2026-11-09 11:46:31</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <new/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <star-rating>
-      <value>6.2/10</value>
-    </star-rating>
-    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/82DE73CD-B819-4889-82530955EA56BBC9.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/4B660532-3BE0-4EE5-99F1C0759DD3B469.jpg</image>
-    <image type="still" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/68639927-BC6F-4439-B38B107500AB067C.jpg</image>
   </programme><programme start="20261116222500 +0000" stop="20261116232000 +0000" channel="mjh-three">
     <title>Pit Bulls &amp; Parolees</title>
     <sub-title>Bad Reputation</sub-title>
@@ -222003,373 +221820,6 @@
       <value>G</value>
     </rating>
     <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercials_three.jpg</image>
-  </programme><programme start="20261116112500 +0000" stop="20261116121000 +0000" channel="mjh-tvnz-1">
-    <title>Scamanda</title>
-    <desc>Season Premiere: Woman diagnosed with cancer blogs journey, inspiring many, but truth about her situation is questioned amidst community support, raising doubts on authenticity of her story.</desc>
-    <date>2025</date>
-    <category>Science</category>
-    <orig-language>English</orig-language>
-    <icon src="https://image.tmdb.org/t/p/original/x8TkCMW7XSLmcpj69NgAzO8eOkr.jpg"/>
-    <url>https://www.tvnz.co.nz/tvseries/scamanda</url>
-    <country>United States of America</country>
-    <episode-num system="dd_progid">EP/1040175./10766816</episode-num>
-    <episode-num system="xmltv_ns">0.0.0</episode-num>
-    <episode-num system="themoviedb.org">series/258927</episode-num>
-    <episode-num system="original-air-date">2026-11-16 11:25:00</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <rating system="NZ">
-      <value>PG</value>
-    </rating>
-    <star-rating>
-      <value>6.3/10</value>
-    </star-rating>
-    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/x8TkCMW7XSLmcpj69NgAzO8eOkr.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/zIDsljEXSxNEuYo9GFFvFoYhUN8.jpg</image>
-  </programme><programme start="20261116121000 +0000" stop="20261116123500 +0000" channel="mjh-tvnz-1">
-    <title>Te Karere</title>
-    <desc>Te Karere brings you key events and stories of interest to Māori as well as bringing a Māori perspective to the day's news and current affairs.</desc>
-    <date>2026</date>
-    <category>Culture</category>
-    <icon src="https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/D7FAF7D4-05DC-4BBC-B144-B84DD4B0F507/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web"/>
-    <url>https://www.tvnz.co.nz/tvseries/te-karere</url>
-    <country>New Zealand</country>
-    <episode-num system="dd_progid">EP/1039821./10760328</episode-num>
-    <episode-num system="xmltv_ns">2025.205.0</episode-num>
-    <episode-num system="original-air-date">2026-11-16 03:00:00</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>SDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <image type="poster" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/D7FAF7D4-05DC-4BBC-B144-B84DD4B0F507/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
-    <image type="backdrop" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/D7FAF7D4-05DC-4BBC-B144-B84DD4B0F507/2-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
-  </programme><programme start="20261116123500 +0000" stop="20261116130000 +0000" channel="mjh-tvnz-1">
-    <title>TVNZ1 Quiz</title>
-    <desc>TVNZ1 Quiz</desc>
-    <category>Game Show/Quiz/Contest</category>
-    <icon src="https://images.nzxmltv.com/posters/tvnz1-quiz_tvnz1.jpg"/>
-    <episode-num system="dd_progid">EPmac_sh_ptc127170628.mac_ptc1612654844</episode-num>
-    <episode-num system="original-air-date">2026-08-30 00:02:44</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>SDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/tvnz1-quiz_tvnz1.jpg</image>
-  </programme><programme start="20261116130000 +0000" stop="20261116133000 +0000" channel="mjh-tvnz-1">
-    <title>Infomercials</title>
-    <desc>Infomercials</desc>
-    <category>Advertisement/Shopping</category>
-    <icon src="https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg"/>
-    <episode-num system="dd_progid">EPmac_sh_ptc1564315203.mac_ptc1949757395</episode-num>
-    <episode-num system="original-air-date">2026-08-30 00:02:44</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>SDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <new/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg</image>
-  </programme><programme start="20261116133000 +0000" stop="20261116140000 +0000" channel="mjh-tvnz-1">
-    <title>Infomercials</title>
-    <desc>Infomercials</desc>
-    <category>Advertisement/Shopping</category>
-    <icon src="https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg"/>
-    <episode-num system="dd_progid">EPmac_sh_ptc1564315203.mac_ptc143426644</episode-num>
-    <episode-num system="original-air-date">2026-08-30 00:02:44</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>SDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <new/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg</image>
-  </programme><programme start="20261116140000 +0000" stop="20261116143000 +0000" channel="mjh-tvnz-1">
-    <title>Infomercials</title>
-    <desc>Infomercials</desc>
-    <category>Advertisement/Shopping</category>
-    <icon src="https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg"/>
-    <episode-num system="dd_progid">EPmac_sh_ptc1564315203.mac_ptc2015151710</episode-num>
-    <episode-num system="original-air-date">2026-08-30 00:02:44</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>SDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <new/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg</image>
-  </programme><programme start="20261116143000 +0000" stop="20261116150000 +0000" channel="mjh-tvnz-1">
-    <title>Infomercials</title>
-    <desc>Infomercials</desc>
-    <category>Advertisement/Shopping</category>
-    <icon src="https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg"/>
-    <episode-num system="dd_progid">EPmac_sh_ptc1564315203.mac_ptc1102120365</episode-num>
-    <episode-num system="original-air-date">2026-08-30 00:02:44</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>SDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <new/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg</image>
-  </programme><programme start="20261116150000 +0000" stop="20261116153000 +0000" channel="mjh-tvnz-1">
-    <title>Infomercials</title>
-    <desc>Infomercials</desc>
-    <category>Advertisement/Shopping</category>
-    <icon src="https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg"/>
-    <episode-num system="dd_progid">EPmac_sh_ptc1564315203.mac_ptc1179530914</episode-num>
-    <episode-num system="original-air-date">2026-08-30 00:02:44</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>SDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <new/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg</image>
-  </programme><programme start="20261116153000 +0000" stop="20261116160000 +0000" channel="mjh-tvnz-1">
-    <title>Infomercials</title>
-    <desc>Infomercials</desc>
-    <category>Advertisement/Shopping</category>
-    <icon src="https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg"/>
-    <episode-num system="dd_progid">EPmac_sh_ptc1564315203.mac_ptc1783233756</episode-num>
-    <episode-num system="original-air-date">2026-08-30 00:02:44</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>SDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <new/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg</image>
-  </programme><programme start="20261116160000 +0000" stop="20261116163000 +0000" channel="mjh-tvnz-1">
-    <title>Infomercials</title>
-    <desc>Infomercials</desc>
-    <category>Advertisement/Shopping</category>
-    <icon src="https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg"/>
-    <episode-num system="dd_progid">EPmac_sh_ptc1564315203.mac_ptc1371356650</episode-num>
-    <episode-num system="original-air-date">2026-08-30 00:02:44</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>SDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <new/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg</image>
-  </programme><programme start="20261116163000 +0000" stop="20261116170000 +0000" channel="mjh-tvnz-1">
-    <title>Te Karere</title>
-    <desc>Te Karere brings you key events and stories of interest to Māori as well as bringing a Māori perspective to the day's news and current affairs.</desc>
-    <date>2026</date>
-    <category>Culture</category>
-    <icon src="https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/D7FAF7D4-05DC-4BBC-B144-B84DD4B0F507/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web"/>
-    <url>https://www.tvnz.co.nz/tvseries/te-karere</url>
-    <country>New Zealand</country>
-    <episode-num system="dd_progid">EP/1039821./10760328</episode-num>
-    <episode-num system="xmltv_ns">2025.205.0</episode-num>
-    <episode-num system="original-air-date">2026-11-16 03:00:00</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>SDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <image type="poster" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/D7FAF7D4-05DC-4BBC-B144-B84DD4B0F507/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
-    <image type="backdrop" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/D7FAF7D4-05DC-4BBC-B144-B84DD4B0F507/2-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
-  </programme><programme start="20261116170000 +0000" stop="20261116173000 +0000" channel="mjh-tvnz-1">
-    <title>BNZ Business Breakfast</title>
-    <desc>Join BNZ Business Breakfast for a sharp, authoritative start to the business day. In just 30 minutes we set the agenda — fast, focused, and forward-looking.</desc>
-    <date>2026</date>
-    <category>Current Affairs</category>
-    <icon src="https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/F670793A-2243-4703-9D50-B5870BF4187D/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web"/>
-    <url>https://www.tvnz.co.nz/tvseries/bnz-business-breakfast</url>
-    <country>New Zealand</country>
-    <episode-num system="dd_progid">EP/1040220./10767771</episode-num>
-    <episode-num system="xmltv_ns">2025.130.0</episode-num>
-    <episode-num system="original-air-date">2026-11-16 17:00:00</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <image type="poster" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/F670793A-2243-4703-9D50-B5870BF4187D/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
-    <image type="backdrop" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/F670793A-2243-4703-9D50-B5870BF4187D/2-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
-  </programme><programme start="20261116173000 +0000" stop="20261116200000 +0000" channel="mjh-tvnz-1">
-    <title>Breakfast</title>
-    <desc>Start your day off right as the Breakfast team brings you all the latest in news, weather, sport and entertainment.</desc>
-    <category>Current Affairs</category>
-    <orig-language>English</orig-language>
-    <icon src="https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/924A132C-0969-4C50-892B-7533499002BB/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web"/>
-    <url>https://www.tvnz.co.nz/tvseries/breakfast</url>
-    <country>Philippines</country>
-    <episode-num system="dd_progid">EP/1039545./10755085</episode-num>
-    <episode-num system="xmltv_ns">2025.201.0</episode-num>
-    <episode-num system="themoviedb.org">series/15274</episode-num>
-    <episode-num system="original-air-date">2026-11-16 17:30:00</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <star-rating>
-      <value>0.0/10</value>
-    </star-rating>
-    <image type="poster" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/924A132C-0969-4C50-892B-7533499002BB/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
-    <image type="backdrop" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/924A132C-0969-4C50-892B-7533499002BB/2-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
-  </programme><programme start="20261116200000 +0000" stop="20261116210000 +0000" channel="mjh-tvnz-1">
-    <title>The Finish Line</title>
-    <desc>The more you know, the further you go. Knowledge equals speed as contestants battle it out to reach the finish line first. Action-packed quiz fun with Roman Kemp and Sarah Greene.</desc>
-    <date>2023</date>
-    <category>Game Show</category>
-    <orig-language>English</orig-language>
-    <icon src="https://image.tmdb.org/t/p/original/vieKw7PbiVeXhOQZIZrT3t7WQES.jpg"/>
-    <url>https://www.tvnz.co.nz/tvseries/the-finish-line</url>
-    <country>United Kingdom</country>
-    <episode-num system="dd_progid">EP/1038581./10740593</episode-num>
-    <episode-num system="xmltv_ns">2.21.0</episode-num>
-    <episode-num system="themoviedb.org">series/237254</episode-num>
-    <episode-num system="original-air-date">2026-11-16 20:00:00</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <star-rating>
-      <value>0.0/10</value>
-    </star-rating>
-    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/vieKw7PbiVeXhOQZIZrT3t7WQES.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/b2ruIbYUdaW9oJIjv2rYfpiO6b1.jpg</image>
-  </programme><programme start="20261116210000 +0000" stop="20261116220000 +0000" channel="mjh-tvnz-1">
-    <title>Tipping Point</title>
-    <desc>Fantastic quiz show in which four players take on a machine in the hopes of winning its 10,000 pounds jackpot. Only one can win!</desc>
-    <date>2012</date>
-    <category>Game Show</category>
-    <orig-language>English</orig-language>
-    <icon src="https://image.tmdb.org/t/p/original/wMOFdn5vJ9ET1gAWgFqPfjED2i0.jpg"/>
-    <url>https://www.tvnz.co.nz/tvseries/tipping-point</url>
-    <country>United Kingdom</country>
-    <episode-num system="dd_progid">EP/1039969./10578344</episode-num>
-    <episode-num system="xmltv_ns">9.144.0</episode-num>
-    <episode-num system="themoviedb.org">series/56926</episode-num>
-    <episode-num system="original-air-date">2026-11-16 21:00:00</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <star-rating>
-      <value>6.1/10</value>
-    </star-rating>
-    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/wMOFdn5vJ9ET1gAWgFqPfjED2i0.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/tfIQAHP3xvpYdt5V6ZUu4v8Ag6i.jpg</image>
   </programme><programme start="20261116220000 +0000" stop="20261116230000 +0000" channel="mjh-tvnz-1">
     <title>The Chase</title>
     <desc>It's game on as teams of complete strangers work together to win money and try and defeat the Chaser, a ruthless quiz genius, who wants to leave them with nothing!</desc>
@@ -225647,610 +225097,6 @@
     </subtitle>
     <image type="poster" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/D7FAF7D4-05DC-4BBC-B144-B84DD4B0F507/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
     <image type="backdrop" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/D7FAF7D4-05DC-4BBC-B144-B84DD4B0F507/2-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
-  </programme><programme start="20261116115000 +0000" stop="20261116124000 +0000" channel="mjh-tvnz-2">
-    <title>Bel Air</title>
-    <sub-title>Be A Kid</sub-title>
-    <desc>Will and Carlton decide to celebrate Homecoming week in their own style. Uncle Phil is compelled to reconsider his relationship with Geoffrey after finding himself in a difficult situation. S4 E2</desc>
-    <date>2022</date>
-    <category>Drama</category>
-    <orig-language>English</orig-language>
-    <icon src="https://image.tmdb.org/t/p/original/j8tbXWXrL15RucA6H4khq87dEXa.jpg"/>
-    <url>https://www.tvnz.co.nz/tvseries/bel-air</url>
-    <country>United States of America</country>
-    <episode-num system="dd_progid">EP/1039521./10754212</episode-num>
-    <episode-num system="xmltv_ns">3.1.0</episode-num>
-    <episode-num system="themoviedb.org">series/107365</episode-num>
-    <episode-num system="original-air-date">2026-11-09 11:46:31</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>dolby digital</stereo>
-    </audio>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <rating system="NZ">
-      <value>16-L</value>
-    </rating>
-    <star-rating>
-      <value>7.7/10</value>
-    </star-rating>
-    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/j8tbXWXrL15RucA6H4khq87dEXa.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/929XdVflzbgQWtKFDOnak3saK0R.jpg</image>
-  </programme><programme start="20261116124000 +0000" stop="20261116130000 +0000" channel="mjh-tvnz-2">
-    <title>Emmerdale</title>
-    <desc>Long-running soap following the ups and downs of village life amid the rolling scenery of the Yorkshire Dales.</desc>
-    <date>1972</date>
-    <category>Drama</category>
-    <orig-language>English</orig-language>
-    <icon src="https://image.tmdb.org/t/p/original/4elMyMe6W782VxXr5R1BmWDoqSg.jpg"/>
-    <url>https://www.tvnz.co.nz/tvseries/emmerdale</url>
-    <country>United Kingdom</country>
-    <episode-num system="dd_progid">EP/1040744./10777572</episode-num>
-    <episode-num system="xmltv_ns">108.10693.0</episode-num>
-    <episode-num system="themoviedb.org">series/2527</episode-num>
-    <episode-num system="original-air-date">2026-11-16 00:00:00</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <new/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <rating system="NZ">
-      <value>PG</value>
-    </rating>
-    <star-rating>
-      <value>4.3/10</value>
-    </star-rating>
-    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/4elMyMe6W782VxXr5R1BmWDoqSg.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/kkyrixKwSU6fHCUOD9QJj6XKYmi.jpg</image>
-  </programme><programme start="20261116130000 +0000" stop="20261116133000 +0000" channel="mjh-tvnz-2">
-    <title>Infomercial</title>
-    <desc>Infomercial</desc>
-    <category>Advertisement/Shopping</category>
-    <icon src="https://images.nzxmltv.com/posters/infomercial_tvnz2.jpg"/>
-    <episode-num system="dd_progid">EPmac_sh_ptc1466170275.mac_ptc1142331494</episode-num>
-    <episode-num system="original-air-date">2026-08-30 00:02:44</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>SDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercial_tvnz2.jpg</image>
-  </programme><programme start="20261116133000 +0000" stop="20261116140000 +0000" channel="mjh-tvnz-2">
-    <title>Infomercial</title>
-    <desc>Infomercial</desc>
-    <category>Advertisement/Shopping</category>
-    <icon src="https://images.nzxmltv.com/posters/infomercial_tvnz2.jpg"/>
-    <episode-num system="dd_progid">EPmac_sh_ptc1466170275.mac_ptc2030699452</episode-num>
-    <episode-num system="original-air-date">2026-08-30 00:02:44</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>SDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercial_tvnz2.jpg</image>
-  </programme><programme start="20261116140000 +0000" stop="20261116153000 +0000" channel="mjh-tvnz-2">
-    <title>Nashville</title>
-    <sub-title>I'm Lost Between Right Or Wrong</sub-title>
-    <desc>Rayna is furious when she finds out Jeff Fordham's plans to sign Maddie to Edgehill. Luke enlists Gunnar in his efforts to forget his heartbreak. S3 E13</desc>
-    <date>2015</date>
-    <category>Drama</category>
-    <orig-language>English</orig-language>
-    <icon src="https://image.tmdb.org/t/p/original/oZ2K2cPeWURnQjCxrvSEnaEcIST.jpg"/>
-    <url>https://www.tvnz.co.nz/tvseries/nashville</url>
-    <country>United States of America</country>
-    <episode-num system="dd_progid">EP/1038910./10388283</episode-num>
-    <episode-num system="xmltv_ns">2.12.0</episode-num>
-    <episode-num system="themoviedb.org">series/44549</episode-num>
-    <episode-num system="original-air-date">2026-11-09 11:46:31</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>dolby digital</stereo>
-    </audio>
-    <previously-shown/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <rating system="NZ">
-      <value>PG</value>
-    </rating>
-    <star-rating>
-      <value>6.7/10</value>
-    </star-rating>
-    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/oZ2K2cPeWURnQjCxrvSEnaEcIST.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/ibLYptKeE64xa3zzfgbLcBjtN09.jpg</image>
-  </programme><programme start="20261116153000 +0000" stop="20261116160000 +0000" channel="mjh-tvnz-2">
-    <title>TVNZ2 Quiz</title>
-    <desc>TVNZ2 Quiz</desc>
-    <category>Advertisement/Shopping</category>
-    <icon src="https://images.nzxmltv.com/posters/tvnz2-quiz_tvnz2.jpg"/>
-    <episode-num system="dd_progid">EPmac_sh_ptc34338410.mac_ptc1012344749</episode-num>
-    <episode-num system="original-air-date">2026-10-05 07:13:25</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>SDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/tvnz2-quiz_tvnz2.jpg</image>
-  </programme><programme start="20261116160000 +0000" stop="20261116163000 +0000" channel="mjh-tvnz-2">
-    <title>Infomercial</title>
-    <desc>Infomercial</desc>
-    <category>Advertisement/Shopping</category>
-    <icon src="https://images.nzxmltv.com/posters/infomercial_tvnz2.jpg"/>
-    <episode-num system="dd_progid">EPmac_sh_ptc1466170275.mac_ptc348628696</episode-num>
-    <episode-num system="original-air-date">2026-08-30 00:02:44</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>SDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercial_tvnz2.jpg</image>
-  </programme><programme start="20261116163000 +0000" stop="20261116170000 +0000" channel="mjh-tvnz-2">
-    <title>Infomercial</title>
-    <desc>Infomercial</desc>
-    <category>Advertisement/Shopping</category>
-    <icon src="https://images.nzxmltv.com/posters/infomercial_tvnz2.jpg"/>
-    <episode-num system="dd_progid">EPmac_sh_ptc1466170275.mac_ptc654592775</episode-num>
-    <episode-num system="original-air-date">2026-08-30 00:02:44</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>SDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercial_tvnz2.jpg</image>
-  </programme><programme start="20261116170000 +0000" stop="20261116172500 +0000" channel="mjh-tvnz-2">
-    <title>LES MILLS Born To Move</title>
-    <sub-title>Dance Dance Dance</sub-title>
-    <desc>Designed to nurture a life-long love of physical activity, BORN TO MOVE helps children experience the joy and vitality of moving to music, combining fun and fitness in way that children love.</desc>
-    <date>2026</date>
-    <category>Lifestyle</category>
-    <icon src="https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/49AA6302-4FDE-46B2-93E2-72F448267AA5/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web"/>
-    <url>https://www.tvnz.co.nz/tvseries/les-mills-born-to-move</url>
-    <episode-num system="dd_progid">EP/1040637./10776470</episode-num>
-    <episode-num system="xmltv_ns">6.7.0</episode-num>
-    <episode-num system="original-air-date">2026-09-04 08:52:51</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <image type="poster" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/49AA6302-4FDE-46B2-93E2-72F448267AA5/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
-    <image type="backdrop" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/49AA6302-4FDE-46B2-93E2-72F448267AA5/2-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
-  </programme><programme start="20261116172500 +0000" stop="20261116173000 +0000" channel="mjh-tvnz-2">
-    <title>Be With Zee</title>
-    <sub-title>Womp</sub-title>
-    <desc>Follow Zee and caregiver Matua as they embark on adventures while sharing mindfulness and wellbeing tools to better connect with their emotions and each other.</desc>
-    <date>2026</date>
-    <category>Youth Programmes</category>
-    <icon src="https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/B2185AFD-6407-4DFC-9059-F7B298C5E7FB/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web"/>
-    <url>https://www.tvnz.co.nz/tvseries/be-with-zee</url>
-    <country>New Zealand</country>
-    <episode-num system="dd_progid">EP/1040579./10774834</episode-num>
-    <episode-num system="xmltv_ns">0.6.0</episode-num>
-    <episode-num system="original-air-date">2026-11-09 11:46:31</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <new/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <image type="poster" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/B2185AFD-6407-4DFC-9059-F7B298C5E7FB/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
-    <image type="backdrop" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/B2185AFD-6407-4DFC-9059-F7B298C5E7FB/2-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
-  </programme><programme start="20261116173000 +0000" stop="20261116180500 +0000" channel="mjh-tvnz-2">
-    <title>Toi Time</title>
-    <desc>Toi Time is back with a bang! Join Aunty Anika, Māia, Jojo, Tama, Buzz, and the new kid on the block, Riki. Get ready for laughter, learning, and lots of fun!</desc>
-    <date>2024</date>
-    <category>Youth Programmes</category>
-    <orig-language>English</orig-language>
-    <icon src="https://image.tmdb.org/t/p/original/nHH8hmIHzRIqeIvPqRsPVjfOGXF.jpg"/>
-    <url>https://www.tvnz.co.nz/tvseries/toi-time</url>
-    <country>New Zealand</country>
-    <episode-num system="dd_progid">EP/1037652./10720975</episode-num>
-    <episode-num system="xmltv_ns">2.15.0</episode-num>
-    <episode-num system="themoviedb.org">series/243636</episode-num>
-    <episode-num system="original-air-date">2026-11-16 17:30:00</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <star-rating>
-      <value>0.0/10</value>
-    </star-rating>
-    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/nHH8hmIHzRIqeIvPqRsPVjfOGXF.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/wWFUJdSBJhzwSrRxS8v4tjLw296.jpg</image>
-  </programme><programme start="20261116180500 +0000" stop="20261116182500 +0000" channel="mjh-tvnz-2">
-    <title>Powerpuff Girls</title>
-    <sub-title>The Fog</sub-title>
-    <desc>Blossom, Bubbles and Buttercup have many adventures while protecting the world from mad scientists, bank robbers and aliens with the help of their special powers.</desc>
-    <date>1998</date>
-    <category>Youth Programmes</category>
-    <orig-language>English</orig-language>
-    <icon src="https://image.tmdb.org/t/p/original/468mmhMd21pY4Yx0S0woqeEcxtL.jpg"/>
-    <url>https://www.tvnz.co.nz/tvseries/powerpuff-girls</url>
-    <country>United States of America</country>
-    <episode-num system="dd_progid">EP/1040474./10772175</episode-num>
-    <episode-num system="xmltv_ns">2.25.0</episode-num>
-    <episode-num system="themoviedb.org">series/607</episode-num>
-    <episode-num system="original-air-date">2026-11-09 11:46:31</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <star-rating>
-      <value>7.5/10</value>
-    </star-rating>
-    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/468mmhMd21pY4Yx0S0woqeEcxtL.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/gnK2nptRXra4RnKgGqAWFSqP5aG.jpg</image>
-  </programme><programme start="20261116182500 +0000" stop="20261116185000 +0000" channel="mjh-tvnz-2">
-    <title>Beyblade X</title>
-    <sub-title>Partner</sub-title>
-    <desc>Four beybladers and their genius friend travel the world as team 'Bladebreakers' to win a championship, realising there's much more at stake on the go.</desc>
-    <date>2023</date>
-    <category>Youth Programmes</category>
-    <orig-language>Japanese</orig-language>
-    <icon src="https://image.tmdb.org/t/p/original/66wkm14IWdrY5LaKZDAbkD2T9Jt.jpg"/>
-    <url>https://www.tvnz.co.nz/tvseries/beyblade-x</url>
-    <country>Japan</country>
-    <episode-num system="dd_progid">EP/1038977./10746712</episode-num>
-    <episode-num system="xmltv_ns">1.31.0</episode-num>
-    <episode-num system="themoviedb.org">series/226688</episode-num>
-    <episode-num system="original-air-date">2026-11-09 11:46:31</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>SDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <star-rating>
-      <value>7.1/10</value>
-    </star-rating>
-    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/66wkm14IWdrY5LaKZDAbkD2T9Jt.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/qAq9RBeHZoTMDFqQZ2o4cE5CJIQ.jpg</image>
-  </programme><programme start="20261116185000 +0000" stop="20261116191000 +0000" channel="mjh-tvnz-2">
-    <title>Teen Titans Go!</title>
-    <sub-title>Magic Man</sub-title>
-    <desc>Superhero roommates Robin, Cyborg, Starfire, Raven and Beast Boy love saving the day, but what happens when they're done fighting crime?</desc>
-    <date>2013</date>
-    <category>Youth Programmes</category>
-    <orig-language>English</orig-language>
-    <icon src="https://image.tmdb.org/t/p/original/kPKAigYUlWRpnfo4Ptiwlz4FWXU.jpg"/>
-    <url>https://www.tvnz.co.nz/tvseries/teen-titans-go</url>
-    <country>United States of America</country>
-    <episode-num system="dd_progid">EP/1040468./10647711</episode-num>
-    <episode-num system="xmltv_ns">5.13.0</episode-num>
-    <episode-num system="themoviedb.org">series/45140</episode-num>
-    <episode-num system="original-air-date">2026-11-09 11:46:31</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <star-rating>
-      <value>6.4/10</value>
-    </star-rating>
-    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/kPKAigYUlWRpnfo4Ptiwlz4FWXU.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/bIHCUqaapZdRjd2kzSDiwzYyrpC.jpg</image>
-  </programme><programme start="20261116191000 +0000" stop="20261116193000 +0000" channel="mjh-tvnz-2">
-    <title>Bluey</title>
-    <sub-title>TV Shop</sub-title>
-    <desc>Meet Bluey, an inexhaustible six-year-old Blue Heeler dog who loves to play. She turns everyday family life into extraordinary adventures!</desc>
-    <date>2018</date>
-    <category>Youth Programmes</category>
-    <orig-language>English</orig-language>
-    <icon src="https://image.tmdb.org/t/p/original/9p4pNoGcuyCfHcGWKNrTopqMWtq.jpg"/>
-    <url>https://www.tvnz.co.nz/tvseries/bluey</url>
-    <country>Australia</country>
-    <episode-num system="dd_progid">EP/1039707./10645315</episode-num>
-    <episode-num system="xmltv_ns">2.44.0</episode-num>
-    <episode-num system="themoviedb.org">series/82728</episode-num>
-    <episode-num system="original-air-date">2026-11-09 11:46:31</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>dolby digital</stereo>
-    </audio>
-    <previously-shown/>
-    <new/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <star-rating>
-      <value>8.6/10</value>
-    </star-rating>
-    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/9p4pNoGcuyCfHcGWKNrTopqMWtq.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/tWdNZ3xuFBhJ2ZoQ9vShNGHTb85.jpg</image>
-  </programme><programme start="20261116193000 +0000" stop="20261116200000 +0000" channel="mjh-tvnz-2">
-    <title>Tākaro Tribe</title>
-    <sub-title>Kemu</sub-title>
-    <desc>This New Zealand-made animation sees the Tākaro Tribe on a learning adventure in Te Wao Arapū (the magical Alphabet Forest), along with Pāpā Rākau (Tree father) and Kōkā (Pond Mother).</desc>
-    <category>Youth Programmes</category>
-    <icon src="https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/A658DA02-7D98-4D9B-B110-778DB220DC60/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web"/>
-    <url>https://www.tvnz.co.nz/tvseries/takaro-tribe</url>
-    <episode-num system="dd_progid">EP/1037980./10487620</episode-num>
-    <episode-num system="xmltv_ns">1.12.0</episode-num>
-    <episode-num system="original-air-date">2026-11-09 11:46:31</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <new/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <image type="poster" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/A658DA02-7D98-4D9B-B110-778DB220DC60/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
-    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/takaro%20tribe%20BG%201920x1080.jpg</image>
-  </programme><programme start="20261116200000 +0000" stop="20261116203000 +0000" channel="mjh-tvnz-2">
-    <title>Infomercial</title>
-    <desc>Infomercial</desc>
-    <category>Advertisement/Shopping</category>
-    <icon src="https://images.nzxmltv.com/posters/infomercial_tvnz2.jpg"/>
-    <episode-num system="dd_progid">EPmac_sh_ptc1466170275.mac_ptc895384720</episode-num>
-    <episode-num system="original-air-date">2026-08-30 00:02:44</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>SDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <new/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercial_tvnz2.jpg</image>
-  </programme><programme start="20261116203000 +0000" stop="20261116210000 +0000" channel="mjh-tvnz-2">
-    <title>Les Mills Adult Classes</title>
-    <sub-title>Bodycombat 102</sub-title>
-    <desc>Les Mills and TVNZ are thrilled to be working together to offer you free access to renowned Les Mills classes; BODYBALANCE, BODYCOMBAT, BODYATTACK, LES MILLS CORE and LES MILLS GRIT Cardio.</desc>
-    <date>2026</date>
-    <category>Lifestyle</category>
-    <icon src="https://images.nzxmltv.com/posters/les-mills-adult-classes_tvnz2.jpg"/>
-    <url>https://www.tvnz.co.nz/tvseries/do-not-use-les-mills-adult-classes</url>
-    <episode-num system="dd_progid">EP/1040636./10776459</episode-num>
-    <episode-num system="xmltv_ns">6.16.0</episode-num>
-    <episode-num system="original-air-date">2026-09-18 23:45:54</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/les-mills-adult-classes_tvnz2.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://img-store-prod.switch.tv/images/ea0595f2-007c-42e0-93e6-29c09df01c87/7148.image-hbbtv.jpg</image>
-  </programme><programme start="20261116210000 +0000" stop="20261116213000 +0000" channel="mjh-tvnz-2">
-    <title>Everyday Gourmet With Justine Schofield</title>
-    <desc>MasterChef Australia finalist Justine Schofield shares some of her favourite recipes in this cookery program aimed at ideas for the home cook.</desc>
-    <category>Hobbies</category>
-    <orig-language>English</orig-language>
-    <icon src="https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/0F7E4B12-8960-4050-B786-0D2DAC1FD656/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web"/>
-    <url>https://www.tvnz.co.nz/tvseries/everyday-gourmet-with-justine-schofield</url>
-    <country>Australia</country>
-    <episode-num system="dd_progid">EP/1039891./10761984</episode-num>
-    <episode-num system="xmltv_ns">12.22.0</episode-num>
-    <episode-num system="themoviedb.org">series/40365</episode-num>
-    <episode-num system="original-air-date">2026-11-16 01:30:00</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <new/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <star-rating>
-      <value>0.0/10</value>
-    </star-rating>
-    <image type="poster" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/0F7E4B12-8960-4050-B786-0D2DAC1FD656/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
-    <image type="backdrop" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/0F7E4B12-8960-4050-B786-0D2DAC1FD656/2-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
-  </programme><programme start="20261116213000 +0000" stop="20261116220000 +0000" channel="mjh-tvnz-2">
-    <title>Farm To Fork</title>
-    <desc>Masterchef Australia Judge Andy Allen, alongside Michael Weldon and Courtney Roulston take you on a food journey to find the freshest produce and create inspiring recipes in the kitchen.</desc>
-    <date>2019</date>
-    <category>Hobbies</category>
-    <orig-language>English</orig-language>
-    <icon src="https://image.tmdb.org/t/p/original/uqgRy30nsHU1g6XCxp4pwATo8AE.jpg"/>
-    <url>https://www.tvnz.co.nz/tvseries/farm-to-fork</url>
-    <country>Australia</country>
-    <episode-num system="dd_progid">EP/1040342./10769757</episode-num>
-    <episode-num system="xmltv_ns">1.56.0</episode-num>
-    <episode-num system="themoviedb.org">series/205709</episode-num>
-    <episode-num system="original-air-date">2026-11-16 21:30:00</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <new/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <star-rating>
-      <value>0.0/10</value>
-    </star-rating>
-    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/uqgRy30nsHU1g6XCxp4pwATo8AE.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/47xtctFmCYNGGQM7XVBNow9CjhB.jpg</image>
-  </programme><programme start="20261116220000 +0000" stop="20261116223000 +0000" channel="mjh-tvnz-2">
-    <title>Come Dine With Me</title>
-    <sub-title>Cambridge Day 2</sub-title>
-    <desc>The knives are out as a group of strangers compete for the title of ultimate dinner party host. The prize money adds spice to the proceedings as there's no end to what contestants will do to win!</desc>
-    <date>2005</date>
-    <category>Game Show</category>
-    <orig-language>English</orig-language>
-    <icon src="https://image.tmdb.org/t/p/original/enFfviWZwnIKn9DhyMa7cXqKx6Q.jpg"/>
-    <url>https://www.tvnz.co.nz/tvseries/come-dine-with-me-uk</url>
-    <country>United Kingdom</country>
-    <episode-num system="dd_progid">EP/1038758./10743328</episode-num>
-    <episode-num system="xmltv_ns">20.36.0</episode-num>
-    <episode-num system="themoviedb.org">series/2637</episode-num>
-    <episode-num system="original-air-date">2026-11-09 11:46:31</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <subtitle type="teletext">
-      <language>English (NZ)</language>
-    </subtitle>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <star-rating>
-      <value>5.2/10</value>
-    </star-rating>
-    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/enFfviWZwnIKn9DhyMa7cXqKx6Q.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/oniNKYLHR0M5y7i4V1K1FhpCl7G.jpg</image>
   </programme><programme start="20261116223000 +0000" stop="20261116230000 +0000" channel="mjh-tvnz-2">
     <title>Shortland Street</title>
     <desc>Wedding bells ring.</desc>
@@ -230141,439 +228987,6 @@
       <language>English (NZ)</language>
     </subtitle>
     <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/tvnz2-quiz_tvnz2.jpg</image>
-  </programme><programme start="20261116100000 +0000" stop="20261116173000 +0000" channel="mjh-maori-tv">
-    <title>Whakaata Māori</title>
-    <desc>Whakaata Māori specialises in the stories of Aotearoa. Be entertained and informed with news, current affairs, sports, drama, documentaries and much more.</desc>
-    <icon src="https://images.nzxmltv.com/posters/whakaata-mori_maoritv.jpg"/>
-    <country>New Zealand</country>
-    <episode-num system="original-air-date">2026-11-08 11:46:33</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>SDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/whakaata-mori_maoritv.jpg</image>
-  </programme><programme start="20261116173000 +0000" stop="20261116173600 +0000" channel="mjh-maori-tv">
-    <title>Kori Club</title>
-    <desc>Kori Club is a captivating series for 0-8-year-olds that marries the charm of "The Wiggles" with the magic of Te Ao Māori.</desc>
-    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/Kori%20Club.jpg"/>
-    <url>https://www.maoriplus.co.nz/show/kori-club</url>
-    <country>New Zealand</country>
-    <episode-num system="xmltv_ns">0.2.0</episode-num>
-    <episode-num system="original-air-date">2026-08-30 05:32:09</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/Kori%20Club.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/KoriClub_BG%20(1).jpeg</image>
-  </programme><programme start="20261116173600 +0000" stop="20261116174000 +0000" channel="mjh-maori-tv">
-    <title>Cocomelon</title>
-    <desc>Join the CoComelon family in a world that centres on the everyday experiences of young children through toe-tapping music.</desc>
-    <date>2020</date>
-    <orig-language>English</orig-language>
-    <icon src="https://image.tmdb.org/t/p/original/7gliOqwY7YwFAxrjfMVcryuvnW.jpg"/>
-    <url>https://www.maoriplus.co.nz/show/cocomelon</url>
-    <country>United Kingdom</country>
-    <episode-num system="xmltv_ns">0.94.0</episode-num>
-    <episode-num system="themoviedb.org">series/114718</episode-num>
-    <episode-num system="original-air-date">2026-11-09 11:46:31</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <new/>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <star-rating>
-      <value>6.3/10</value>
-    </star-rating>
-    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/7gliOqwY7YwFAxrjfMVcryuvnW.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/Cocomelon%20Bg.jpg</image>
-  </programme><programme start="20261116174000 +0000" stop="20261116175500 +0000" channel="mjh-maori-tv">
-    <title>Takaro Tribe</title>
-    <desc>Takaro Tribe is an animated series for 0-6 year olds. We follow our cute characters as they enter the magical Alphabet Forest where our talking Papa Rakau, Pond Koka, Pu and Waea Wao live.</desc>
-    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/Takaro%20tribe%20se6%20TN%20960x540.jpg"/>
-    <url>https://www.maoriplus.co.nz/show/takaro-tribe</url>
-    <country>New Zealand</country>
-    <episode-num system="xmltv_ns">5.13.0</episode-num>
-    <episode-num system="original-air-date">2026-10-03 03:33:52</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/Takaro%20tribe%20se6%20TN%20960x540.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/takaro%20tribe%20BG%201920x1080.jpg</image>
-  </programme><programme start="20261116175500 +0000" stop="20261116180100 +0000" channel="mjh-maori-tv">
-    <title>Kiri &amp; Lou</title>
-    <desc>Reversioned into reo Māori. Follows the adventures of two friends living in pre-historic Aotearoa NZ.</desc>
-    <date>2019</date>
-    <orig-language>English</orig-language>
-    <icon src="https://image.tmdb.org/t/p/original/oRehzbU7U9kNk90fexAO09401S2.jpg"/>
-    <url>https://www.maoriplus.co.nz/show/kiri-and-lou</url>
-    <country>Canada</country>
-    <episode-num system="xmltv_ns">1.2.0</episode-num>
-    <episode-num system="themoviedb.org">series/102882</episode-num>
-    <episode-num system="original-air-date">2026-10-03 03:33:52</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <star-rating>
-      <value>8.8/10</value>
-    </star-rating>
-    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/oRehzbU7U9kNk90fexAO09401S2.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/2025-11-04-15-40-19-Kiri%20and%20Lou%20BG1920x1080.jpg</image>
-  </programme><programme start="20261116180100 +0000" stop="20261116180900 +0000" channel="mjh-maori-tv">
-    <title>Bigsies and Littles</title>
-    <desc>An animated series for tamariki about two little kororā living their lives between the moving of the tides.</desc>
-    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/2026-01-27-16-11-30-Bigsies%20and%20Littles%20TN1920x1080.jpg"/>
-    <url>https://www.maoriplus.co.nz/show/bigsies-and-littles</url>
-    <country>New Zealand</country>
-    <episode-num system="xmltv_ns">0.3.0</episode-num>
-    <episode-num system="original-air-date">2026-08-30 05:32:09</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/2026-01-27-16-11-30-Bigsies%20and%20Littles%20TN1920x1080.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/2026-01-27-16-11-43-Bigsies%20and%20Littles%20BG1920x1080.jpg</image>
-  </programme><programme start="20261116180900 +0000" stop="20261116181700 +0000" channel="mjh-maori-tv">
-    <title>Island of Mystery</title>
-    <desc>After crashing down into a valley of lava streams, Kura is determined to find a way back up the cliff and get their godstick back from.</desc>
-    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/IslandofMystery%20TN.jpg"/>
-    <url>https://www.maoriplus.co.nz/show/island-of-mystery</url>
-    <episode-num system="xmltv_ns">0.7.0</episode-num>
-    <episode-num system="original-air-date">2026-09-18 23:45:54</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/IslandofMystery%20TN.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/2026-02-20-10-13-12-island%20of%20mystery%20new%20bg.jpg</image>
-  </programme><programme start="20261116181700 +0000" stop="20261116182700 +0000" channel="mjh-maori-tv">
-    <title>Mahi Pai</title>
-    <desc>Kori learns all about his favourite shape, tapawhā, and we make some amazing square bubbles!</desc>
-    <category>Kids</category>
-    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/MahipaiS2%20TN.jpg"/>
-    <url>https://www.maoriplus.co.nz/show/mahi-pai</url>
-    <country>New Zealand</country>
-    <episode-num system="xmltv_ns">1.11.0</episode-num>
-    <episode-num system="original-air-date">2026-09-18 23:45:54</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/MahipaiS2%20TN.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/mahi-pai_BG.jpg</image>
-    <image type="still" size="3" orient="L">https://img-store-prod.switch.tv/images/d237c225-60ed-42a9-b00f-2699c35e5e33/image.jpg</image>
-  </programme><programme start="20261116182700 +0000" stop="20261116183700 +0000" channel="mjh-maori-tv">
-    <title>Tamaiti Tū Spring</title>
-    <desc>The whanau are off to fetch water with Moeariki learning a valuable knot-tying skill along the way. A karakia honors the awa before the water pumps, and a haka marks the end of a job well done.</desc>
-    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/Tamaiti%20Tu%20Spring%20TN%201.jpg"/>
-    <url>https://www.maoriplus.co.nz/show/tamaiti-tu</url>
-    <country>New Zealand</country>
-    <episode-num system="xmltv_ns">2.6.0</episode-num>
-    <episode-num system="original-air-date">2026-10-12 11:43:50</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/Tamaiti%20Tu%20Spring%20TN%201.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/Tamaiti%20Tu%20Spring%20BG2.jpg</image>
-  </programme><programme start="20261116183700 +0000" stop="20261116184700 +0000" channel="mjh-maori-tv">
-    <title>Mahi Tika Ana! Terenga 2</title>
-    <desc>PAIHAMU: Hinewai and Hine Te Kura discover the importance of kaitiakitanga and caring for the ngahere.</desc>
-    <icon src="https://images.nzxmltv.com/posters/mahi-tika-ana-terenga-2_maoritv.jpg"/>
-    <country>New Zealand</country>
-    <episode-num system="xmltv_ns">1.6.0</episode-num>
-    <episode-num system="original-air-date">2026-10-03 03:33:52</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/mahi-tika-ana-terenga-2_maoritv.jpg</image>
-  </programme><programme start="20261116184700 +0000" stop="20261116185200 +0000" channel="mjh-maori-tv">
-    <title>Tūhura</title>
-    <desc>Niua and Hura travel to Te Hokianga-nui-ā-Kupe to uncover the story one of most well-known fortified Pā of Ngāpuhi.</desc>
-    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/tuhura%20tn%202%20960x540.jpg"/>
-    <url>https://www.maoriplus.co.nz/show/tuhura</url>
-    <country>New Zealand</country>
-    <episode-num system="xmltv_ns">0.11.0</episode-num>
-    <episode-num system="original-air-date">2026-08-30 05:32:09</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/tuhura%20tn%202%20960x540.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/TUHURA-BG2-min.jpg</image>
-  </programme><programme start="20261116185200 +0000" stop="20261116185800 +0000" channel="mjh-maori-tv">
-    <title>Te Ohu o Pūkana</title>
-    <desc>Shorter, sharper and cooler, Pūkana has been reinvented for our digitally savvy tamariki and taiohi</desc>
-    <icon src="https://images.nzxmltv.com/posters/te-ohu-o-pkana_maoritv.jpg"/>
-    <country>New Zealand</country>
-    <episode-num system="xmltv_ns">2025.125.0</episode-num>
-    <episode-num system="original-air-date">2026-11-09 11:46:31</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <new/>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/te-ohu-o-pkana_maoritv.jpg</image>
-  </programme><programme start="20261116185800 +0000" stop="20261116193000 +0000" channel="mjh-maori-tv">
-    <title>Pūkana 2025</title>
-    <desc>Te Reo Māori entertainment programme for Kura and Kura Kaupapa tamariki / taiohi.</desc>
-    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/2026-05-27-15-18-28-pukana%202026%20tn%201920x1080.jpg"/>
-    <url>https://www.maoriplus.co.nz/show/pukana</url>
-    <country>New Zealand</country>
-    <episode-num system="original-air-date">2026-11-09 11:46:31</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/2026-05-27-15-18-28-pukana%202026%20tn%201920x1080.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/2026-07-30-08-48-14-p%C5%ABkana%20BG.jpg</image>
-  </programme><programme start="20261116193000 +0000" stop="20261116200000 +0000" channel="mjh-maori-tv">
-    <title>Ōpaki</title>
-    <desc>Pānia Papa uses games, music and activities to teach Māori.</desc>
-    <credits>
-      <actor>Pānia Papa</actor>
-    </credits>
-    <category>Te Reo Maori</category>
-    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/20260813-081506-%C5%8Cpaki%20TN.jpg"/>
-    <url>https://www.maoriplus.co.nz/show/opaki</url>
-    <country>New Zealand</country>
-    <episode-num system="dd_progid">EPmac_sh_ptc990338740.mac_ptc439948386</episode-num>
-    <episode-num system="xmltv_ns">1.34.0</episode-num>
-    <episode-num system="original-air-date">2026-08-30 05:32:08</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/20260813-081506-%C5%8Cpaki%20TN.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/opaki_poster%20(2).jpg</image>
-    <image type="still" size="3" orient="L">https://img-store-prod.switch.tv/images/19043818-3948-46ae-ad3a-4979c453ffcd/image.jpg</image>
-  </programme><programme start="20261116200000 +0000" stop="20261116203000 +0000" channel="mjh-maori-tv">
-    <title>Tōku Reo</title>
-    <desc>Professor John Moorfield's Māori language course supported by an interactive website.</desc>
-    <category>Informational/Educational/Scho</category>
-    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/toku-reo_thumbnail.jpg"/>
-    <url>https://www.maoriplus.co.nz/show/toku-reo</url>
-    <country>New Zealand</country>
-    <episode-num system="dd_progid">EPmac_sh_ptc1269348654.mac_ptc1133903073</episode-num>
-    <episode-num system="xmltv_ns">4.39.0</episode-num>
-    <episode-num system="original-air-date">2026-11-09 11:46:31</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/toku-reo_thumbnail.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/TokuReo_BG.jpg</image>
-  </programme><programme start="20261116203000 +0000" stop="20261116210000 +0000" channel="mjh-maori-tv">
-    <title>Tagata Pasifika 2026</title>
-    <desc>Aotearoa’s longest-running Pacific news and current affairs television programme, Tagata Pasifika covers stories of Pacific Island communities here and around the Pacific region.</desc>
-    <category>News/Current Affairs</category>
-    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/20260827-060713-Tagata%20Pasifika.jpg"/>
-    <url>https://www.maoriplus.co.nz/show/tagata-pasifika</url>
-    <episode-num system="dd_progid">EPmac_sh_ptc57974317.mac_ptc10589098</episode-num>
-    <episode-num system="xmltv_ns">22.29.0</episode-num>
-    <episode-num system="original-air-date">2026-11-08 11:46:33</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/20260827-060713-Tagata%20Pasifika.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/20260902-090905-Tagata%20Pasifika%20BG.jpg</image>
-  </programme><programme start="20261116210000 +0000" stop="20261116213000 +0000" channel="mjh-maori-tv">
-    <title>The Hui</title>
-    <desc>A compelling mix of current affairs investigations, human interest and arts and culture stories.</desc>
-    <date>2020</date>
-    <category>News/Current Affairs</category>
-    <orig-language>English</orig-language>
-    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/the%20hui%20tn-1.jpg"/>
-    <url>https://www.maoriplus.co.nz/show/the-hui</url>
-    <episode-num system="dd_progid">EPmac_sh_ptc1695659995.mac_ptc1669165221</episode-num>
-    <episode-num system="xmltv_ns">2025.28.0</episode-num>
-    <episode-num system="themoviedb.org">series/104550</episode-num>
-    <episode-num system="original-air-date">2026-11-08 11:46:33</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <star-rating>
-      <value>0.0/10</value>
-    </star-rating>
-    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/the%20hui%20tn-1.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/the%20hui%20bg-1.jpg</image>
-  </programme><programme start="20261116213000 +0000" stop="20261116220000 +0000" channel="mjh-maori-tv">
-    <title>Top of the South</title>
-    <desc>Kiley holds a men’s wānanga on abundance and wellbeing. Then, Lee Mason’s Kānuka initiative, Hawaiki Kura’s Haka Fusion, Margie’s care of Waikoropupū Springs, Shannon’s kai traditions, an</desc>
-    <category>General</category>
-    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/2025-10-14-13-06-37-Top%20of%20the%20South%20TN1920x1080.jpg"/>
-    <url>https://www.maoriplus.co.nz/show/top-of-the-south</url>
-    <country>New Zealand</country>
-    <episode-num system="dd_progid">EPmac_sh_ptc1598729556.mac_ptc1437897963</episode-num>
-    <episode-num system="xmltv_ns">0.5.0</episode-num>
-    <episode-num system="original-air-date">2026-11-09 11:46:31</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <rating system="NZ">
-      <value>G</value>
-    </rating>
-    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/2025-10-14-13-06-37-Top%20of%20the%20South%20TN1920x1080.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/2025-10-14-13-06-54-Top%20of%20The%20South%20BG1920x1080.jpg</image>
-  </programme><programme start="20261116220000 +0000" stop="20261116223000 +0000" channel="mjh-maori-tv">
-    <title>Te Ao With Moana</title>
-    <desc>Te Ao with Moana is an award-winning and trusted force in current affairs. More than a current affairs show, it explores the rich diversity of today’s Māori experience.</desc>
-    <date>2019</date>
-    <category>News/Current Affairs</category>
-    <orig-language>English</orig-language>
-    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/2026-03-27-15-52-12-TAWM%20TN%201920x1080.jpg"/>
-    <url>https://www.maoriplus.co.nz/show/te-ao-with-moana</url>
-    <country>United States of America</country>
-    <episode-num system="dd_progid">EPmac_sh_ptc1701022315.mac_ptc896615665</episode-num>
-    <episode-num system="xmltv_ns">7.29.0</episode-num>
-    <episode-num system="themoviedb.org">series/208947</episode-num>
-    <episode-num system="original-air-date">2026-11-08 11:46:33</episode-num>
-    <video>
-      <present>yes</present>
-      <quality>HDTV</quality>
-    </video>
-    <audio>
-      <present>yes</present>
-      <stereo>stereo</stereo>
-    </audio>
-    <previously-shown/>
-    <star-rating>
-      <value>0.0/10</value>
-    </star-rating>
-    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/2026-03-27-15-52-12-TAWM%20TN%201920x1080.jpg</image>
-    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/2026-07-29-10-53-46-tawm%20bg.jpg</image>
   </programme><programme start="20261116223000 +0000" stop="20261117000000 +0000" channel="mjh-maori-tv">
     <title>Spreadsheet Champions</title>
     <desc>A quirky and uplifting documentary in which numbers take centre stage as competitors from around the world battle it out in the surprisingly intense Microsoft Excel World Championship.</desc>
@@ -330732,69 +329145,6 @@ JML Presents the Chef O Matic, Double Door Oven. Teleshopping.</desc>
       <quality>HDTV</quality>
     </video>
     <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/whakaata-maori_maoritv.jpg</image>
-  </programme><programme start="20261116120000 +0000" stop="20261116143000 +0000" channel="SkySport1.nz">
-    <title lang="en">Rugby League World Cup</title>
-    <sub-title lang="en">RLWC Final: Australia v Kiwi Ferns</sub-title>
-    <desc lang="en">Coverage from the Women's Rugby League World Cup Grand Final match between Australia and New Zealand at Suncorp Stadium, Brisbane.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116143000 +0000" stop="20261116170000 +0000" channel="SkySport1.nz">
-    <title lang="en">Rugby League World Cup</title>
-    <sub-title lang="en">RLWC Final: Australia v Kiwis</sub-title>
-    <desc lang="en">Coverage from the Men's Rugby League World Cup Grand Final match between Australia and New Zealand at Suncorp Stadium, Brisbane.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116170000 +0000" stop="20261116171500 +0000" channel="SkySport1.nz">
-    <title lang="en">Women's Big Bash League</title>
-    <sub-title lang="en">WBBL: Sixers v Renegades Hls</sub-title>
-    <desc lang="en">Highlights from the Women's Big Bash League match 23 between the Sydney Sixers and Melbourne Renegades at North Sydney Oval, Sydney.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116171500 +0000" stop="20261116173000 +0000" channel="SkySport1.nz">
-    <title lang="en">Women's Big Bash League</title>
-    <sub-title lang="en">WBBL: Thunder v Stars Hls</sub-title>
-    <desc lang="en">Highlights from the Women's Big Bash League match 24 between the Sydney Thunder and Melbourne Stars at Drummoyne Oval, Sydney.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116173000 +0000" stop="20261116174500 +0000" channel="SkySport1.nz">
-    <title lang="en">Rugby League World Cup</title>
-    <sub-title lang="en">RLWC Final: Australia v Kiwi Ferns Hls</sub-title>
-    <desc lang="en">Highlights from the Women's Rugby League World Cup Grand Final match between Australia and New Zealand at Suncorp Stadium, Brisbane.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116174500 +0000" stop="20261116180000 +0000" channel="SkySport1.nz">
-    <title lang="en">Rugby League World Cup</title>
-    <sub-title lang="en">RLWC Final: Australia v Kiwis Hls</sub-title>
-    <desc lang="en">Highlights from the Men's Rugby League World Cup Grand Final match between Australia and New Zealand at Suncorp Stadium, Brisbane.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116180000 +0000" stop="20261116183000 +0000" channel="SkySport1.nz">
-    <title lang="en">The Crowd Goes Wild</title>
-    <desc lang="en">MON 16 NOV - Join the team for an alternative dose of sports news, delivering the best (and worst) sporting moments the only way they know how, with a little cheek!</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116183000 +0000" stop="20261116190000 +0000" channel="SkySport1.nz">
-    <title lang="en">BLACKCAPS v India</title>
-    <sub-title lang="en">BLACKCAPS v India: 5th ODI Hls</sub-title>
-    <desc lang="en">Highlights of the fifth One Day International between the BLACKCAPS and India at Bay Oval, Tauranga.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
   </programme><programme start="20261116190000 +0000" stop="20261116230000 +0000" channel="SkySport1.nz">
     <title lang="en">Grand Slam Of Darts</title>
     <sub-title lang="en">Grand Slam of Darts: D3</sub-title>
@@ -330812,84 +329162,6 @@ JML Presents the Chef O Matic, Double Door Oven. Teleshopping.</desc>
     <rating system="BSA">
       <value>PG</value>
     </rating>
-  </programme><programme start="20261116114500 +0000" stop="20261116144500 +0000" channel="SkySport2.nz">
-    <title lang="en">Bowls New Zealand: India Test Series</title>
-    <sub-title lang="en">Bowls: NZ v India Day One</sub-title>
-    <desc lang="en">Coverage of Bowls New Zealands India Test Series Day One pitting the Blackjacks against both India's Men and Women's teams. From Royal Oak Bowls, Auckland.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116144500 +0000" stop="20261116151500 +0000" channel="SkySport2.nz">
-    <title lang="en">The Crowd Goes Wild</title>
-    <desc lang="en">MON 16 NOV - Join the team for an alternative dose of sports news, delivering the best (and worst) sporting moments the only way they know how, with a little cheek!</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116151500 +0000" stop="20261116153000 +0000" channel="SkySport2.nz">
-    <title lang="en">Women's Big Bash League</title>
-    <sub-title lang="en">WBBL: Thunder v Stars Hls</sub-title>
-    <desc lang="en">Highlights from the Women's Big Bash League match 24 between the Sydney Thunder and Melbourne Stars at Drummoyne Oval, Sydney.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116153000 +0000" stop="20261116160000 +0000" channel="SkySport2.nz">
-    <title lang="en">LPGA</title>
-    <sub-title lang="en">LPGA: Round 4 Hls</sub-title>
-    <desc lang="en">Highlights of Round 4 of the ANNIKA Driven by Gainbridge at Pelican from Pelican Golf Club, Belleair, Florida.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116160000 +0000" stop="20261116163000 +0000" channel="SkySport2.nz">
-    <title lang="en">PGA Tour</title>
-    <sub-title lang="en">PGA Tour: Round 4 Hls</sub-title>
-    <desc lang="en">Highlights of Round 4 of the PGA Tour: Austin Championship held at Omni Barton Creek Resort &amp; Spa, Austin, USA.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116163000 +0000" stop="20261116170000 +0000" channel="SkySport2.nz">
-    <title lang="en">DP World Tour</title>
-    <sub-title lang="en">DP World Tour: Round 4 Hls</sub-title>
-    <desc lang="en">Highlights of Round 4 of the DP World Tour:  Dp World Tour Championship held at Jumeirah Golf Estates, Earth Course, Dubai, UAE.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116170000 +0000" stop="20261116201500 +0000" channel="SkySport2.nz">
-    <title lang="en">Women's Big Bash League</title>
-    <sub-title lang="en">WBBL: Thunder v Stars</sub-title>
-    <desc lang="en">Coverage from the Women's Big Bash League match 24 between theSydney Thunder and Melbourne Stars at Drummoyne Oval, Sydney.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116201500 +0000" stop="20261116204500 +0000" channel="SkySport2.nz">
-    <title lang="en">T100 Triathlon World Tour</title>
-    <sub-title lang="en">T100 Triathlon: Dubai Men Hls</sub-title>
-    <desc lang="en">Highlights of the men's race from the T100 Triathlon World Tour in Dubai, UAE.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116204500 +0000" stop="20261116214500 +0000" channel="SkySport2.nz">
-    <title lang="en">The Breakdown</title>
-    <desc lang="en">SUN 15 NOV - Fresh off the back of the weekend action, host Kirstie Stanway is joined by All Black legends Goldie and Mils to discuss and analyse all the hot topics.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116214500 +0000" stop="20261116221500 +0000" channel="SkySport2.nz">
-    <title lang="en">BLACKCAPS v India</title>
-    <sub-title lang="en">BLACKCAPS v India: 5th ODI Hls</sub-title>
-    <desc lang="en">Highlights of the fifth One Day International between the BLACKCAPS and India at Bay Oval, Tauranga.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
   </programme><programme start="20261116221500 +0000" stop="20261116224500 +0000" channel="SkySport2.nz">
     <title lang="en">Intl Cricket: Australia v England</title>
     <sub-title lang="en">Australia v England: 2nd ODI Hls</sub-title>
@@ -330905,77 +329177,6 @@ JML Presents the Chef O Matic, Double Door Oven. Teleshopping.</desc>
     <category lang="en">Episode</category>
     <rating system="BSA">
       <value>PG</value>
-    </rating>
-  </programme><programme start="20261116110000 +0000" stop="20261116153000 +0000" channel="SkySport3.nz">
-    <title lang="en">T100 Triathlon World Tour</title>
-    <sub-title lang="en">T100 Triathlon: Dubai</sub-title>
-    <desc lang="en">Coverage of the T100 Triathlon World Tour in Al Mamzar, Dubai, UAE.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116153000 +0000" stop="20261116160000 +0000" channel="SkySport3.nz">
-    <title lang="en">BLACKCAPS v India</title>
-    <sub-title lang="en">BLACKCAPS v India: 5th ODI Hls</sub-title>
-    <desc lang="en">Highlights of the fifth One Day International between the BLACKCAPS and India at Bay Oval, Tauranga.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116160000 +0000" stop="20261116163000 +0000" channel="SkySport3.nz">
-    <title lang="en">Intl Cricket: Australia v England</title>
-    <sub-title lang="en">Australia v England: 2nd ODI Hls</sub-title>
-    <desc lang="en">Highlights of the second One Day International between Australia and England at Adelaide Oval, Adelaide.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116163000 +0000" stop="20261116164500 +0000" channel="SkySport3.nz">
-    <title lang="en">Rugby League World Cup</title>
-    <sub-title lang="en">RLWC Final: Australia v Kiwi Ferns Hls</sub-title>
-    <desc lang="en">Highlights from the Women's Rugby League World Cup Grand Final match between Australia and New Zealand at Suncorp Stadium, Brisbane.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116164500 +0000" stop="20261116170000 +0000" channel="SkySport3.nz">
-    <title lang="en">Rugby League World Cup</title>
-    <sub-title lang="en">RLWC Final: Australia v Kiwis Hls</sub-title>
-    <desc lang="en">Highlights from the Men's Rugby League World Cup Grand Final match between Australia and New Zealand at Suncorp Stadium, Brisbane.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116170000 +0000" stop="20261116173000 +0000" channel="SkySport3.nz">
-    <title lang="en">Intl Cricket: Australia v England</title>
-    <sub-title lang="en">Australia v England: 1st ODI Hls</sub-title>
-    <desc lang="en">Highlights of the first One Day International between Australia and England at Optus Stadium, Perth.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116173000 +0000" stop="20261116180000 +0000" channel="SkySport3.nz">
-    <title lang="en">Intl Cricket: Australia v England</title>
-    <sub-title lang="en">Australia v England: 2nd ODI Hls</sub-title>
-    <desc lang="en">Highlights of the second One Day International between Australia and England at Adelaide Oval, Adelaide.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116180000 +0000" stop="20261116190000 +0000" channel="SkySport3.nz">
-    <title lang="en">The Breakdown</title>
-    <desc lang="en">SUN 15 NOV - Fresh off the back of the weekend action, host Kirstie Stanway is joined by All Black legends Goldie and Mils to discuss and analyse all the hot topics.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116190000 +0000" stop="20261116210000 +0000" channel="SkySport3.nz">
-    <title lang="en">Rugby: Nations Championship</title>
-    <sub-title lang="en">NC: France v South Africa</sub-title>
-    <desc lang="en">Coverage from Round 5 of the Nations Championship between France and South Africa at Stade de France, Paris.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
     </rating>
   </programme><programme start="20261116210000 +0000" stop="20261116230000 +0000" channel="SkySport3.nz">
     <title lang="en">Rugby: Nations Championship</title>
@@ -330993,77 +329194,6 @@ JML Presents the Chef O Matic, Double Door Oven. Teleshopping.</desc>
     <rating system="BSA">
       <value>G</value>
     </rating>
-  </programme><programme start="20261116110000 +0000" stop="20261116130000 +0000" channel="SkySport4.nz">
-    <title lang="en">Tauihi Basketball Aotearoa</title>
-    <sub-title lang="en">Tauihi: Hoiho v Whai</sub-title>
-    <desc lang="en">Coverage from Round 8 of Tauihi Basketball Aotearoa between the Southern Hoiho and Tauranga Whai at the Edgar Centre, Dunedin.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116130000 +0000" stop="20261116150000 +0000" channel="SkySport4.nz">
-    <title lang="en">Tauihi Basketball Aotearoa</title>
-    <sub-title lang="en">Tauihi: Pouakai v Kahu</sub-title>
-    <desc lang="en">Coverage from Round 8 of Tauihi Basketball Aotearoa between the Mainland Pouakai and Northern Kahu at the Parakiore Recreation and Sports Centre, Christchurch.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116150000 +0000" stop="20261116170000 +0000" channel="SkySport4.nz">
-    <title lang="en">Tauihi Basketball Aotearoa</title>
-    <sub-title lang="en">Tauihi: Queens v Whai</sub-title>
-    <desc lang="en">Coverage from Round 8 of Tauihi Basketball Aotearoa between the Tokomanawa Queens and Tauranga Whai at Te Rauparaha Arena, Porirua.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116170000 +0000" stop="20261116173000 +0000" channel="SkySport4.nz">
-    <title lang="en">The Outdoor Sports Show</title>
-    <sub-title lang="en">The Outdoor Sports Show Ep.11</sub-title>
-    <desc lang="en">The Outdoor Sports Show showcases a diverse array of outdoor sports in a range of world class races, as well as introduce the characters and athletes competing.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116173000 +0000" stop="20261116180000 +0000" channel="SkySport4.nz">
-    <title lang="en">Rugby: Nations Championship</title>
-    <sub-title lang="en">NC: Wales v All Blacks Ext. Hls</sub-title>
-    <desc lang="en">Extended highlights from Round 5 of the Nations Championship between Wales and the All Blacks at Principality Stadium, Cardiff.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116180000 +0000" stop="20261116183000 +0000" channel="SkySport4.nz">
-    <title lang="en">DP World Tour</title>
-    <sub-title lang="en">DP World Tour: Round 4 Hls</sub-title>
-    <desc lang="en">Highlights of Round 4 of the DP World Tour:  Dp World Tour Championship held at Jumeirah Golf Estates, Earth Course, Dubai, UAE.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116183000 +0000" stop="20261116190000 +0000" channel="SkySport4.nz">
-    <title lang="en">LPGA</title>
-    <sub-title lang="en">LPGA: Round 4 Hls</sub-title>
-    <desc lang="en">Highlights of Round 4 of the ANNIKA Driven by Gainbridge at Pelican from Pelican Golf Club, Belleair, Florida.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116190000 +0000" stop="20261116193000 +0000" channel="SkySport4.nz">
-    <title lang="en">PGA Tour</title>
-    <sub-title lang="en">PGA Tour: Round 4 Hls</sub-title>
-    <desc lang="en">Highlights of Round 4 of the PGA Tour: Austin Championship held at Omni Barton Creek Resort &amp; Spa, Austin, USA.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116193000 +0000" stop="20261116200000 +0000" channel="SkySport4.nz">
-    <title lang="en">The Crowd Goes Wild</title>
-    <desc lang="en">MON 16 NOV - Join the team for an alternative dose of sports news, delivering the best (and worst) sporting moments the only way they know how, with a little cheek!</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
   </programme><programme start="20261116200000 +0000" stop="20261116231500 +0000" channel="SkySport4.nz">
     <title lang="en">Women's Big Bash League</title>
     <sub-title lang="en">WBBL: Sixers v Renegades</sub-title>
@@ -331080,102 +329210,6 @@ JML Presents the Chef O Matic, Double Door Oven. Teleshopping.</desc>
     <rating system="BSA">
       <value>G</value>
     </rating>
-  </programme><programme start="20261116114500 +0000" stop="20261116121500 +0000" channel="SkySport5.nz">
-    <title lang="en">PGA Tour</title>
-    <sub-title lang="en">PGA Tour: Round 4 Hls</sub-title>
-    <desc lang="en">Highlights of Round 4 of the PGA Tour: Austin Championship held at Omni Barton Creek Resort &amp; Spa, Austin, USA.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116121500 +0000" stop="20261116124500 +0000" channel="SkySport5.nz">
-    <title lang="en">A-League: Women</title>
-    <sub-title lang="en">ALW: Melbourne City v Newcastle Hls</sub-title>
-    <desc lang="en">Extended highlights from Round 5 of the Women's A-League as Melbourne City take on Newcastle Jets at the ctrl:cyber Pitch, Melbourne.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116124500 +0000" stop="20261116131500 +0000" channel="SkySport5.nz">
-    <title lang="en">A-League: Women</title>
-    <sub-title lang="en">ALW: Melb Victory v Adelaide Utd Hls</sub-title>
-    <desc lang="en">Extended highlights from Round 5 of the Women's A-League as the Melbourne Victory take on Adelaide United at the Home of the Matildas, Melbourne.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116131500 +0000" stop="20261116134500 +0000" channel="SkySport5.nz">
-    <title lang="en">A-League: Women</title>
-    <sub-title lang="en">ALW: Mariners v Perth Glory Ext. Hls</sub-title>
-    <desc lang="en">Extended highlights from Round 5 of the Women's A-League as the Central Coast Mariners take on Perth Glory at polytec Stadium, Gosford.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116134500 +0000" stop="20261116141500 +0000" channel="SkySport5.nz">
-    <title lang="en">A-League: Women</title>
-    <sub-title lang="en">ALW: Wellington Phoenix v Sydney FC ExHl</sub-title>
-    <desc lang="en">Extended highlights from Round 5 of the Women's A-League as the Wellington Phoenix take on Sydney FC at Porirua Park.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116141500 +0000" stop="20261116144500 +0000" channel="SkySport5.nz">
-    <title lang="en">A-League: Women</title>
-    <sub-title lang="en">ALW: Canberra Utd v Brisbane Ext.HLs</sub-title>
-    <desc lang="en">Extended highlights from Round 5 of the Women's A-League as Canberra United take on Brisbane Roar at McKellar Park, Canberra.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116144500 +0000" stop="20261116150000 +0000" channel="SkySport5.nz">
-    <title lang="en">Football: Women's Super League</title>
-    <sub-title lang="en">WSL: Man United v Crystal Palace Hls</sub-title>
-    <desc lang="en">Highlights from the Women's Super League as Manchester United take on Crystal Palace at Progress with Unity Stadium, Manchester.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116150000 +0000" stop="20261116151500 +0000" channel="SkySport5.nz">
-    <title lang="en">Football: Women's Super League</title>
-    <sub-title lang="en">WSL: Chelsea v Man City Hls</sub-title>
-    <desc lang="en">Highlights from the Women's Super League as Chelsea take on Manchester City at Stamford Bridge, London.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116151500 +0000" stop="20261116153000 +0000" channel="SkySport5.nz">
-    <title lang="en">Football: Women's Super League</title>
-    <sub-title lang="en">WSL: West Ham v Charlton Hls</sub-title>
-    <desc lang="en">Highlights  from the Women's Super League as West Ham United take on Charlton Athletic at Chigwell Construction Stadium, Dagenham.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116153000 +0000" stop="20261116154500 +0000" channel="SkySport5.nz">
-    <title lang="en">Football: Women's Super League</title>
-    <sub-title lang="en">WSL: Brighton v Liverpool Hls</sub-title>
-    <desc lang="en">Highlights from the Women's Super League as Brighton &amp; Hove Albion take on Liverpool at the AmEx Stadium, East Sussex.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116154500 +0000" stop="20261116160000 +0000" channel="SkySport5.nz">
-    <title lang="en">Football: Women's Super League</title>
-    <sub-title lang="en">WSL: Aston Villa v Birmingham Hls</sub-title>
-    <desc lang="en">Highlights from the Women's Super League as Aston Villa take on Birmingham City at Villa Park, Birmingham.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116160000 +0000" stop="20261116170000 +0000" channel="SkySport5.nz">
-    <title lang="en">Dubai International Baja</title>
-    <sub-title lang="en">Dubai International Baja Hls</sub-title>
-    <desc lang="en">The 2026 Dubai International Baja showcased thrilling off-road racing, spectacular desert landscapes and high-speed action, as competitors tackled challenging terrain and demanding dunes in an unforgettable celebration of rally sport.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
   </programme><programme start="20261116170000 +0000" stop="20261117010000 +0000" channel="SkySport5.nz">
     <title lang="en">BLACKCAPS v India</title>
     <sub-title lang="en">BLACKCAPS v India: 5th ODI</sub-title>
@@ -331183,46 +329217,6 @@ JML Presents the Chef O Matic, Double Door Oven. Teleshopping.</desc>
     <category lang="en">Episode</category>
     <rating system="BSA">
       <value>G</value>
-    </rating>
-  </programme><programme start="20261116110000 +0000" stop="20261116150000 +0000" channel="SkySport6.nz">
-    <title lang="en">Champion Of Champions</title>
-    <sub-title lang="en">Champion of Champions: D7 Afternoon</sub-title>
-    <desc lang="en">Coverage of Champion of Champions Snooker Day 7 Afternoon Session held at the Mattioli Arena, Leicester.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116150000 +0000" stop="20261116180000 +0000" channel="SkySport6.nz">
-    <title lang="en">Champion Of Champions</title>
-    <sub-title lang="en">Champion of Champions: D7 Evening</sub-title>
-    <desc lang="en">Coverage of Champion of Champions Snooker Day 7 Evening Session held at the Mattioli Arena, Leicester.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116180000 +0000" stop="20261116183000 +0000" channel="SkySport6.nz">
-    <title lang="en">The Outdoor Sports Show</title>
-    <sub-title lang="en">The Outdoor Sports Show Ep.11</sub-title>
-    <desc lang="en">The Outdoor Sports Show showcases a diverse array of outdoor sports in a range of world class races, as well as introduce the characters and athletes competing.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116183000 +0000" stop="20261116190000 +0000" channel="SkySport6.nz">
-    <title lang="en">T100 Triathlon World Tour</title>
-    <sub-title lang="en">T100 Triathlon: Dubai Men Hls</sub-title>
-    <desc lang="en">Highlights of the men's race from the T100 Triathlon World Tour in Dubai, UAE.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116190000 +0000" stop="20261116210000 +0000" channel="SkySport6.nz">
-    <title lang="en">LPGA</title>
-    <sub-title lang="en">LPGA: Round 4</sub-title>
-    <desc lang="en">Coverage of Round 4 of the ANNIKA Driven by Gainbridge at Pelican from Pelican Golf Club, Belleair, Florida.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
     </rating>
   </programme><programme start="20261116210000 +0000" stop="20261116230000 +0000" channel="SkySport6.nz">
     <title lang="en">PGA Champions Tour</title>
@@ -331236,46 +329230,6 @@ JML Presents the Chef O Matic, Double Door Oven. Teleshopping.</desc>
     <title lang="en">PGA Tour</title>
     <sub-title lang="en">PGA Tour: Round 4</sub-title>
     <desc lang="en">Coverage of Round 4 of the PGA Tour: Austin Championship held at Omni Barton Creek Resort &amp; Spa, Austin, USA.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116111500 +0000" stop="20261116131000 +0000" channel="SkySport7.nz">
-    <title lang="en">Football: Women's Super League</title>
-    <sub-title lang="en">WSL: Brighton v Liverpool</sub-title>
-    <desc lang="en">Coverage from the Women's Super League as Brighton &amp; Hove Albion take on Liverpool at the AmEx Stadium, East Sussex.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116131000 +0000" stop="20261116150500 +0000" channel="SkySport7.nz">
-    <title lang="en">Football: Women's Super League</title>
-    <sub-title lang="en">WSL: Aston Villa v Birmingham</sub-title>
-    <desc lang="en">Coverage from the Women's Super League as Aston Villa take on Birmingham City at Villa Park, Birmingham.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116150500 +0000" stop="20261116170000 +0000" channel="SkySport7.nz">
-    <title lang="en">Football: Women's Super League</title>
-    <sub-title lang="en">WSL: Man United v Crystal Palace</sub-title>
-    <desc lang="en">Coverage from the Women's Super League as Manchester United take on Crystal Palace at Progress with Unity Stadium, Manchester.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116170000 +0000" stop="20261116190000 +0000" channel="SkySport7.nz">
-    <title lang="en">Football: Women's Super League</title>
-    <sub-title lang="en">WSL: West Ham v Charlton</sub-title>
-    <desc lang="en">Coverage from the Women's Super League as West Ham United take on Charlton Athletic at Chigwell Construction Stadium, Dagenham.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116190000 +0000" stop="20261116210000 +0000" channel="SkySport7.nz">
-    <title lang="en">A-League: Women</title>
-    <sub-title lang="en">ALW: Melbourne City v Newcastle Jets</sub-title>
-    <desc lang="en">Coverage from Round 5 of the Women's A-League as Melbourne City take on Newcastle Jets at the ctrl:cyber Pitch, Melbourne.</desc>
     <category lang="en">Episode</category>
     <rating system="BSA">
       <value>PG</value>
@@ -331296,134 +329250,12 @@ JML Presents the Chef O Matic, Double Door Oven. Teleshopping.</desc>
     <rating system="BSA">
       <value>PG</value>
     </rating>
-  </programme><programme start="20261116120000 +0000" stop="20261116123000 +0000" channel="SkySport8.nz">
-    <title lang="en">THE BIG INTERVIEW</title>
-    <desc lang="en">EP12: MARC GUEHI. Marc Guehi arrived at Manchester City as an FA Cup winner with Crystal Palace before winning the same trophy with his new club 12 months later. The centre-back sits down with The Big Interview to talk about becoming a key figure in Enzo.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116123000 +0000" stop="20261116130000 +0000" channel="SkySport8.nz">
-    <title lang="en">THE BIG INTERVIEW</title>
-    <desc lang="en">EP13:. Extended sit-downs and more informal  out and about  interview with the Premier League s biggest stars, providing players with a platform to tell their story in their own words.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116130000 +0000" stop="20261116133000 +0000" channel="SkySport8.nz">
-    <title lang="en">PL STORIES</title>
-    <desc lang="en">EP22: (Subbed) FABRICIO COLOCCINI. We head to Chile to catch up with former Newcastle United captain Fabricio Coloccini, where he is forging a new path in coaching. He reflects on life in the dugout and looks back on an unforgettable Premier League career.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116133000 +0000" stop="20261116153000 +0000" channel="SkySport8.nz">
-    <title lang="en">CLASSIC MATCH</title>
-    <desc lang="en">NEW v ARS. We delve into the Premier League archive to bring you a Classic Match from the 2010/2011 season.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116153000 +0000" stop="20261116160000 +0000" channel="SkySport8.nz">
-    <title lang="en">PL STORIES</title>
-    <desc lang="en">EP09: KEVIN KEEGAN. From fearless forward to one of English football's most inspirational figures, this is the story of Kevin Keegan. We chart his remarkable playing career with Liverpool, Hamburg and England before exploring his impact as a manager, wher.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116160000 +0000" stop="20261116170000 +0000" channel="SkySport8.nz">
-    <title lang="en">REVIEW</title>
-    <desc lang="en">MW10. An extensive recap of Matchweek 10, showcasing the thrills, spills and major talking points from each Premier League fixture.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116170000 +0000" stop="20261116180000 +0000" channel="SkySport8.nz">
-    <title lang="en">THE CATCH-UP SHOW</title>
-    <desc lang="en">EP12. The Catch-Up Show is your chance to relive the 'best bits'  from across the Premier League week with a compilation of all PLP content and programming.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116180000 +0000" stop="20261116190000 +0000" channel="SkySport8.nz">
-    <title lang="en">PL MOMENTS</title>
-    <desc lang="en">EP07: JIMMY FLOYD HASSELBAINK. Over a nine season spell in the Premier League, Jimmy Floyd Hasselbaink etched his name into footballing folklore as one of the most dynamic goalscorers in the competition's history. Fourth all time in Premier League goals f.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116190000 +0000" stop="20261116193000 +0000" channel="SkySport8.nz">
-    <title lang="en">PL STORIES</title>
-    <desc lang="en">EP14: PETR CECH. One of the Premier League s greatest-ever goalkeepers, Petr Cech s career was nearly changed forever by the horrific head injury he suffered in 2006. We sit down with him to discuss his remarkable recovery and journey back to the very top.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116193000 +0000" stop="20261116200000 +0000" channel="SkySport8.nz">
-    <title lang="en">PL STORIES</title>
-    <desc lang="en">EP20: THE EVOLUTION OF GOALKEEPERS. Once the last line of defence, today s goalkeeper is expected to be so much more. From sweeper-keepers to playing out under pressure, we explore the innovations, characters and changing demands that have revolutionised.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116200000 +0000" stop="20261116203000 +0000" channel="SkySport8.nz">
-    <title lang="en">NETBUSTERS</title>
-    <desc lang="en">MW10. A fast-paced music and commentary driven ISO angle highlights show featuring every game and every goal from each match round.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116203000 +0000" stop="20261116210000 +0000" channel="SkySport8.nz">
-    <title lang="en">Rewind</title>
-    <desc lang="en">EP10: MICHAEL OWEN: MY BREAKTHROUGH YEARS. Michael Owen burst onto the scene for Liverpool at just seventeen years of age, and in two consecutive seasons the teenage sensation won the Premier League Golden Boot. Owen recalls those campaigns for the Reds,.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116210000 +0000" stop="20261116213000 +0000" channel="SkySport8.nz">
-    <title lang="en">Rewind</title>
-    <desc lang="en">EP05: THEO WALCOTT: MY PREMIER LEAGUE YEARS. At just 16 years old, Theo Walcott attracted the attention of Arsene Wenger, who brought the electric youngster to Arsenal. The Englishman bagged over 100 goals for the Gunners, becoming one of their most proli.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116213000 +0000" stop="20261116220000 +0000" channel="SkySport8.nz">
-    <title lang="en">PL STORIES</title>
-    <desc lang="en">EP24: MIKEL ARTETA. We explore Mikel Arteta s impact at Arsenal and the managerial approach behind his success, reflecting on how his upbringing and football education in the Basque region shaped his thinking. We examine his tactics, how he develops playe.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
   </programme><programme start="20261116220000 +0000" stop="20261117000000 +0000" channel="SkySport8.nz">
     <title lang="en">REVIEW OF THE SEASON</title>
     <desc lang="en">2016/2017 (CHE). A review of all the best goals, action and drama from Premier League seasons past.</desc>
     <category lang="en">Episode</category>
     <rating system="BSA">
       <value>G</value>
-    </rating>
-  </programme><programme start="20261116101500 +0000" stop="20261116170000 +0000" channel="SkySport9.nz">
-    <title lang="en">Nextgen Championship</title>
-    <sub-title lang="en">Nextgen Championship 2026 Rd1 Day2</sub-title>
-    <desc lang="en">Coverage of Nextgen NZ Championship 2026 Round 1 Day 2 held at Taupo International Motorsport Park in Taupo, New Zealand.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
-    </rating>
-  </programme><programme start="20261116170000 +0000" stop="20261116190000 +0000" channel="SkySport9.nz">
-    <title lang="en">Tauihi Basketball Aotearoa</title>
-    <sub-title lang="en">Tauihi: Queens v Whai</sub-title>
-    <desc lang="en">Coverage from Round 8 of Tauihi Basketball Aotearoa between the Tokomanawa Queens and Tauranga Whai at Te Rauparaha Arena, Porirua.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>G</value>
-    </rating>
-  </programme><programme start="20261116190000 +0000" stop="20261116210000 +0000" channel="SkySport9.nz">
-    <title lang="en">Women's AFL</title>
-    <sub-title lang="en">AFLW: SF1 Geelong v Sydney</sub-title>
-    <desc lang="en">Coverage of the AFL Women's Semi Final 1 between the Geelong Cats and the Sydney Swans at GMHBA Stadium, Geelong.</desc>
-    <category lang="en">Episode</category>
-    <rating system="BSA">
-      <value>PG</value>
     </rating>
   </programme><programme start="20261116210000 +0000" stop="20261116230000 +0000" channel="SkySport9.nz">
     <title lang="en">Women's AFL</title>
@@ -1717181,4 +1715013,1305 @@ A round-up of all the latest action and stories from the UEFA Europa League and 
     <title>No Data</title>
     <desc>https://iptv-epg.org/help</desc>
     <icon src="https://iptv-epg.org/images/pk65exgZRia1zyr7s4YcyRO7F2TiMUhgiwLmULl7h5EH7iD92IFnB98qrplev4JIcSM_A6B0QEcW"/>
+  </programme><programme start="20261126223000 +0000" stop="20261126230000 +0000" channel="mjh-te-reo">
+    <title>Ōpaki</title>
+    <desc>Pānia Papa uses games, music and activities to teach Māori. (R)</desc>
+    <credits>
+      <actor>Pānia Papa</actor>
+    </credits>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/20260813-081506-%C5%8Cpaki%20TN.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/opaki</url>
+    <episode-num system="xmltv_ns">1.8.0</episode-num>
+    <episode-num system="original-air-date">2026-11-26 22:30:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/20260813-081506-%C5%8Cpaki%20TN.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/opaki_poster%20(2).jpg</image>
+  </programme><programme start="20261126170000 +0000" stop="20261126173000 +0000" channel="mjh-three">
+    <title>My Lottery Dream Home</title>
+    <sub-title>From Big Rigs To Big Riches</sub-title>
+    <desc>After hitting the jackpot, an ex-servicewoman is ready to leave renting behind and search for her perfect forever home in Greensboro, North Carolina, with the help of David Bromstad and her son.</desc>
+    <date>2020</date>
+    <category>Factual</category>
+    <orig-language>English</orig-language>
+    <icon src="https://images.skyone.co.nz/mac/479214/DAM/950E0311-8857-461F-861A955B9EA0399D.jpg"/>
+    <url>https://www.threenow.co.nz/shows/my-lottery-dream-home/S3445-642</url>
+    <country>United States of America</country>
+    <episode-num system="dd_progid">EPmac_sh_107787.mac_11975484</episode-num>
+    <episode-num system="xmltv_ns">18.13.0</episode-num>
+    <episode-num system="themoviedb.org">series/77684</episode-num>
+    <episode-num system="original-air-date">2026-11-18 18:16:23</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <new/>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>6.4/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/950E0311-8857-461F-861A955B9EA0399D.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/72073AD9-567F-4761-AF739536AABF1124.jpg</image>
+    <image type="still" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/620A4EA3-CF85-45E3-BA6F591ADFE2C3A5.jpg</image>
+  </programme><programme start="20261126173000 +0000" stop="20261126180000 +0000" channel="mjh-three">
+    <title>Herald Now Business</title>
+    <desc>Join Herald NOW Business with host Garth Bray as he brings you the business news of the day, subject matter expert interviews, along with local and global thought leaders.</desc>
+    <date>2025</date>
+    <category>News</category>
+    <icon src="https://images.skyone.co.nz/mac/479214/DAM/1ED12D89-A88E-475E-B63FE0392E5FB37F.jpg"/>
+    <episode-num system="dd_progid">EPmac_sh_180854.mac_11940004</episode-num>
+    <episode-num system="xmltv_ns">0.0.0</episode-num>
+    <episode-num system="original-air-date">2026-08-03 18:30:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <live/>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/1ED12D89-A88E-475E-B63FE0392E5FB37F.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/01C3DB34-1E57-43F3-A4D540E6FFAF972A.jpg</image>
+    <image type="still" size="3" orient="L">https://mac-images.digital.skyone.co.nz/v3/479214/DAM/13BF115E-05E6-4BD3-851FB13422C02EE4.jpg?width=[width]&amp;height=[height]&amp;crop=auto</image>
+  </programme><programme start="20261126180000 +0000" stop="20261126200000 +0000" channel="mjh-three">
+    <title>Ryan Bridge TODAY</title>
+    <desc>Join Ryan Bridge TODAY with host Ryan Bridge as he brings you the day's news, interviews and panel discussions live from the NZ Herald newsroom.</desc>
+    <date>2026</date>
+    <category>News</category>
+    <icon src="https://images.skyone.co.nz/mac/479214/DAM/737AB8F1-C850-4AD6-8C0B2225122AA093.jpg"/>
+    <episode-num system="dd_progid">EPmac_sh_180794.mac_11940522</episode-num>
+    <episode-num system="xmltv_ns">0.0.0</episode-num>
+    <episode-num system="original-air-date">2026-08-03 19:00:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <live/>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/737AB8F1-C850-4AD6-8C0B2225122AA093.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/60F5E0E3-2E65-4073-A9C29AAE12ED729F.jpg</image>
+    <image type="still" size="3" orient="L">https://mac-images.digital.skyone.co.nz/v3/479214/DAM/A8622B3F-E27A-4E26-AA3610D1DD79A711.jpg?width=[width]&amp;height=[height]&amp;crop=auto</image>
+  </programme><programme start="20261126200000 +0000" stop="20261126213000 +0000" channel="mjh-three">
+    <title>Infomercials</title>
+    <desc>Infomercials</desc>
+    <category>Entertainment</category>
+    <category>Movie</category>
+    <icon src="https://images.nzxmltv.com/posters/infomercials_three.jpg"/>
+    <url>https://www.skygo.co.nz/movie/mac_11317297</url>
+    <episode-num system="dd_progid">EPmac_11317297.mac_11317297</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercials_three.jpg</image>
+  </programme><programme start="20261126213000 +0000" stop="20261126223000 +0000" channel="mjh-three">
+    <title>Home Town</title>
+    <sub-title>A Solid Foundation</sub-title>
+    <desc>After facing tough times, a family is ready be part of Laurel’s vibrant community. Ben and Erin show them two houses in two very different neighbourhoods.</desc>
+    <date>2024</date>
+    <category>Factual</category>
+    <orig-language>English</orig-language>
+    <icon src="https://images.skyone.co.nz/mac/479214/DAM/82DE73CD-B819-4889-82530955EA56BBC9.jpg"/>
+    <url>https://www.threenow.co.nz/shows/home-town/S2956-214</url>
+    <country>United States of America</country>
+    <episode-num system="dd_progid">EPmac_sh_132459.mac_11976350</episode-num>
+    <episode-num system="xmltv_ns">5.11.0</episode-num>
+    <episode-num system="themoviedb.org">series/71359</episode-num>
+    <episode-num system="original-air-date">2026-11-26 21:30:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>6.2/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/82DE73CD-B819-4889-82530955EA56BBC9.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/4B660532-3BE0-4EE5-99F1C0759DD3B469.jpg</image>
+    <image type="still" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/C8858A55-9F62-4EEF-97FEB0CA052AC142.jpg</image>
+  </programme><programme start="20261126223000 +0000" stop="20261126233000 +0000" channel="mjh-three">
+    <title>Supermarket Stakeout</title>
+    <sub-title>Steakout</sub-title>
+    <desc>The chefs race to track down steaks in a parking lot scavenger hunt, but the pressure heats up when one lands on the chopping block and another serves up a berry-filled winner.</desc>
+    <date>2022</date>
+    <category>Reality</category>
+    <orig-language>English</orig-language>
+    <icon src="https://images.skyone.co.nz/mac/479214/DAM/96E877C9-5917-4A34-9B8979C59B902629.jpg"/>
+    <url>https://www.threenow.co.nz/shows/supermarket-stakeout/1721080876585</url>
+    <country>United States of America</country>
+    <episode-num system="dd_progid">EPmac_sh_98389.mac_11921568</episode-num>
+    <episode-num system="xmltv_ns">3.1.0</episode-num>
+    <episode-num system="themoviedb.org">series/92609</episode-num>
+    <episode-num system="original-air-date">2026-11-26 22:30:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>10.0/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://images.skyone.co.nz/mac/479214/DAM/96E877C9-5917-4A34-9B8979C59B902629.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/B15395F7-AD63-4341-9328CB22F9C04504.jpg</image>
+    <image type="still" size="3" orient="L">https://images.skyone.co.nz/mac/479214/DAM/89B191E5-4566-4D8B-AFF0377E31F3111D.jpg</image>
+  </programme><programme start="20261126122500 +0000" stop="20261126125000 +0000" channel="mjh-tvnz-1">
+    <title>Te Karere</title>
+    <desc>Te Karere brings you key events and stories of interest to Maori as well as bringing a Maori perspective to the day's news and current affairs.</desc>
+    <date>2026</date>
+    <category>Other</category>
+    <icon src="https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/D7FAF7D4-05DC-4BBC-B144-B84DD4B0F507/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web"/>
+    <url>https://www.tvnz.co.nz/tvseries/te-karere</url>
+    <episode-num system="dd_progid">EPmac_sh_ptc1598851051.mac_ptc1079598440</episode-num>
+    <episode-num system="original-air-date">2026-11-26 12:25:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <image type="poster" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/D7FAF7D4-05DC-4BBC-B144-B84DD4B0F507/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
+    <image type="backdrop" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/D7FAF7D4-05DC-4BBC-B144-B84DD4B0F507/2-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
+  </programme><programme start="20261126125000 +0000" stop="20261126130000 +0000" channel="mjh-tvnz-1">
+    <title>TVNZ1 Quiz</title>
+    <desc>TVNZ1 Quiz</desc>
+    <category>Game Show/Quiz/Contest</category>
+    <icon src="https://images.nzxmltv.com/posters/tvnz1-quiz_tvnz1.jpg"/>
+    <episode-num system="dd_progid">EPmac_sh_ptc127170628.mac_ptc1268330130</episode-num>
+    <episode-num system="original-air-date">2026-11-26 12:50:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/tvnz1-quiz_tvnz1.jpg</image>
+  </programme><programme start="20261126130000 +0000" stop="20261126133000 +0000" channel="mjh-tvnz-1">
+    <title>Infomercials</title>
+    <desc>Infomercials</desc>
+    <icon src="https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg"/>
+    <episode-num system="dd_progid">EPmac_sh_ptc1564315203.mac_ptc188316975</episode-num>
+    <episode-num system="original-air-date">2026-11-26 13:00:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg</image>
+  </programme><programme start="20261126133000 +0000" stop="20261126140000 +0000" channel="mjh-tvnz-1">
+    <title>Infomercials</title>
+    <desc>Infomercials</desc>
+    <icon src="https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg"/>
+    <episode-num system="dd_progid">EPmac_sh_ptc1564315203.mac_ptc499869962</episode-num>
+    <episode-num system="original-air-date">2026-11-26 13:30:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg</image>
+  </programme><programme start="20261126140000 +0000" stop="20261126143000 +0000" channel="mjh-tvnz-1">
+    <title>Infomercials</title>
+    <desc>Infomercials</desc>
+    <icon src="https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg"/>
+    <episode-num system="dd_progid">EPmac_sh_ptc1564315203.mac_ptc1877220676</episode-num>
+    <episode-num system="original-air-date">2026-11-26 14:00:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg</image>
+  </programme><programme start="20261126143000 +0000" stop="20261126150000 +0000" channel="mjh-tvnz-1">
+    <title>Infomercials</title>
+    <desc>Infomercials</desc>
+    <icon src="https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg"/>
+    <episode-num system="dd_progid">EPmac_sh_ptc1564315203.mac_ptc765179827</episode-num>
+    <episode-num system="original-air-date">2026-11-26 14:30:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg</image>
+  </programme><programme start="20261126150000 +0000" stop="20261126153000 +0000" channel="mjh-tvnz-1">
+    <title>Infomercials</title>
+    <desc>Infomercials</desc>
+    <icon src="https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg"/>
+    <episode-num system="dd_progid">EPmac_sh_ptc1564315203.mac_ptc1118275871</episode-num>
+    <episode-num system="original-air-date">2026-11-26 15:00:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg</image>
+  </programme><programme start="20261126153000 +0000" stop="20261126160000 +0000" channel="mjh-tvnz-1">
+    <title>Infomercials</title>
+    <desc>Infomercials</desc>
+    <icon src="https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg"/>
+    <episode-num system="dd_progid">EPmac_sh_ptc1564315203.mac_ptc1394670733</episode-num>
+    <episode-num system="original-air-date">2026-11-26 15:30:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg</image>
+  </programme><programme start="20261126160000 +0000" stop="20261126163000 +0000" channel="mjh-tvnz-1">
+    <title>Infomercials</title>
+    <desc>Infomercials</desc>
+    <icon src="https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg"/>
+    <episode-num system="dd_progid">EPmac_sh_ptc1564315203.mac_ptc205694729</episode-num>
+    <episode-num system="original-air-date">2026-11-26 16:00:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercials_tvnz1.jpg</image>
+  </programme><programme start="20261126163000 +0000" stop="20261126170000 +0000" channel="mjh-tvnz-1">
+    <title>Te Karere</title>
+    <desc>Te Karere brings you key events and stories of interest to Maori as well as bringing a Maori perspective to the day's news and current affairs.</desc>
+    <date>2026</date>
+    <category>Other</category>
+    <icon src="https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/D7FAF7D4-05DC-4BBC-B144-B84DD4B0F507/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web"/>
+    <url>https://www.tvnz.co.nz/tvseries/te-karere</url>
+    <episode-num system="dd_progid">EPmac_sh_ptc1598851051.mac_ptc118635244</episode-num>
+    <episode-num system="original-air-date">2026-11-26 16:30:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <image type="poster" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/D7FAF7D4-05DC-4BBC-B144-B84DD4B0F507/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
+    <image type="backdrop" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/D7FAF7D4-05DC-4BBC-B144-B84DD4B0F507/2-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
+  </programme><programme start="20261126170000 +0000" stop="20261126173000 +0000" channel="mjh-tvnz-1">
+    <title>BNZ Business Breakfast</title>
+    <desc>Join BNZ Business Breakfast for a sharp, authoritative start to the business day. In just 30 minutes we set the agenda - fast, focused, and forward-looking.</desc>
+    <date>2026</date>
+    <category>News/Current Affairs</category>
+    <icon src="https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/F670793A-2243-4703-9D50-B5870BF4187D/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web"/>
+    <url>https://www.tvnz.co.nz/tvseries/bnz-business-breakfast</url>
+    <episode-num system="dd_progid">EPmac_sh_ptc79981881.mac_ptc984255322</episode-num>
+    <episode-num system="original-air-date">2026-11-26 17:00:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <image type="poster" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/F670793A-2243-4703-9D50-B5870BF4187D/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
+    <image type="backdrop" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/F670793A-2243-4703-9D50-B5870BF4187D/2-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
+  </programme><programme start="20261126173000 +0000" stop="20261126200000 +0000" channel="mjh-tvnz-1">
+    <title>Breakfast</title>
+    <desc>Start your day off right as the Breakfast team brings you all the latest in news, weather, sport and entertainment.</desc>
+    <category>News/Current Affairs</category>
+    <orig-language>English</orig-language>
+    <icon src="https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/924A132C-0969-4C50-892B-7533499002BB/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web"/>
+    <url>https://www.tvnz.co.nz/tvseries/breakfast</url>
+    <country>Philippines</country>
+    <episode-num system="dd_progid">EPmac_sh_ptc186140459.mac_ptc253269170</episode-num>
+    <episode-num system="themoviedb.org">series/15274</episode-num>
+    <episode-num system="original-air-date">2026-11-26 17:30:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <star-rating>
+      <value>0.0/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/924A132C-0969-4C50-892B-7533499002BB/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
+    <image type="backdrop" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/924A132C-0969-4C50-892B-7533499002BB/2-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
+  </programme><programme start="20261126200000 +0000" stop="20261126210000 +0000" channel="mjh-tvnz-1">
+    <title>Lingo</title>
+    <desc>Quiz show hosted by Adil Ray in which three pairs of contestants use their powers of deduction to work out words that appear in the Lingo grids and Puzzlewords.</desc>
+    <date>2021</date>
+    <category>Game Show/Quiz/Contest</category>
+    <orig-language>English</orig-language>
+    <icon src="https://image.tmdb.org/t/p/original/q2wGmDu29yJeIcoJnncICuy2ayt.jpg"/>
+    <url>https://www.tvnz.co.nz/tvseries/lingo</url>
+    <country>United Kingdom</country>
+    <episode-num system="dd_progid">EPmac_sh_ptc12333905.mac_ptc1105983599</episode-num>
+    <episode-num system="themoviedb.org">series/116129</episode-num>
+    <episode-num system="original-air-date">2026-11-26 20:00:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>6.0/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/q2wGmDu29yJeIcoJnncICuy2ayt.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/qtzr0L40wBJqc6LO47J71GPv937.jpg</image>
+  </programme><programme start="20261126210000 +0000" stop="20261126220000 +0000" channel="mjh-tvnz-1">
+    <title>Tipping Point</title>
+    <desc>Fantastic quiz show in which four players take on a machine in the hopes of winning its 10,000 pounds jackpot. Only one can win!</desc>
+    <date>2012</date>
+    <category>Entertainment</category>
+    <orig-language>English</orig-language>
+    <icon src="https://image.tmdb.org/t/p/original/wMOFdn5vJ9ET1gAWgFqPfjED2i0.jpg"/>
+    <url>https://www.tvnz.co.nz/tvseries/tipping-point</url>
+    <country>United Kingdom</country>
+    <episode-num system="dd_progid">EPmac_sh_ptc29696951.mac_ptc52127880</episode-num>
+    <episode-num system="themoviedb.org">series/56926</episode-num>
+    <episode-num system="original-air-date">2026-11-26 21:00:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>6.1/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/wMOFdn5vJ9ET1gAWgFqPfjED2i0.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/tfIQAHP3xvpYdt5V6ZUu4v8Ag6i.jpg</image>
+  </programme><programme start="20261126220000 +0000" stop="20261126230000 +0000" channel="mjh-tvnz-1">
+    <title>The Chase</title>
+    <desc>It's game on as teams of complete strangers work together to win money and try and defeat the Chaser, a ruthless quiz genius, who wants to leave them with nothing!</desc>
+    <date>2009</date>
+    <category>Game Show/Quiz/Contest</category>
+    <orig-language>English</orig-language>
+    <icon src="https://image.tmdb.org/t/p/original/rPg5T51DAHn7tANKgOVtMG5JQdN.jpg"/>
+    <url>https://www.tvnz.co.nz/tvseries/the-chase</url>
+    <country>United Kingdom</country>
+    <episode-num system="dd_progid">EPmac_sh_ptc1927921065.mac_ptc794406918</episode-num>
+    <episode-num system="themoviedb.org">series/21502</episode-num>
+    <episode-num system="original-air-date">2026-11-26 22:00:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>6.5/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/rPg5T51DAHn7tANKgOVtMG5JQdN.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/gzqOVv4s5IZEK61y2bckbgisJP3.jpg</image>
+  </programme><programme start="20261126122500 +0000" stop="20261126124500 +0000" channel="mjh-tvnz-2">
+    <title>Emmerdale</title>
+    <desc>Long-running soap following the ups and downs of village life amid the rolling scenery of the Yorkshire Dales.</desc>
+    <date>1972</date>
+    <category>Soap</category>
+    <orig-language>English</orig-language>
+    <icon src="https://image.tmdb.org/t/p/original/4elMyMe6W782VxXr5R1BmWDoqSg.jpg"/>
+    <url>https://www.tvnz.co.nz/tvseries/emmerdale</url>
+    <country>United Kingdom</country>
+    <episode-num system="dd_progid">EPmac_sh_ptc1918203277.mac_ptc1023427342</episode-num>
+    <episode-num system="themoviedb.org">series/2527</episode-num>
+    <episode-num system="original-air-date">2026-11-26 12:25:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>PG</value>
+    </rating>
+    <star-rating>
+      <value>4.3/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/4elMyMe6W782VxXr5R1BmWDoqSg.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/kkyrixKwSU6fHCUOD9QJj6XKYmi.jpg</image>
+  </programme><programme start="20261126124500 +0000" stop="20261126131500 +0000" channel="mjh-tvnz-2">
+    <title>Infomercial</title>
+    <desc>Infomercial</desc>
+    <category>Advertisement/Shopping</category>
+    <icon src="https://images.nzxmltv.com/posters/infomercial_tvnz2.jpg"/>
+    <episode-num system="dd_progid">EPmac_sh_ptc1466170275.mac_ptc1207037452</episode-num>
+    <episode-num system="original-air-date">2026-11-26 12:45:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <new/>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercial_tvnz2.jpg</image>
+  </programme><programme start="20261126131500 +0000" stop="20261126134500 +0000" channel="mjh-tvnz-2">
+    <title>Infomercial</title>
+    <desc>Infomercial</desc>
+    <category>Advertisement/Shopping</category>
+    <icon src="https://images.nzxmltv.com/posters/infomercial_tvnz2.jpg"/>
+    <episode-num system="dd_progid">EPmac_sh_ptc1466170275.mac_ptc561413252</episode-num>
+    <episode-num system="original-air-date">2026-11-26 13:15:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <new/>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercial_tvnz2.jpg</image>
+  </programme><programme start="20261126134500 +0000" stop="20261126151500 +0000" channel="mjh-tvnz-2">
+    <title>Nashville</title>
+    <desc>Maddie and Colt get a taste of freedom while joining Luke on tour. Gunnar wants Kevin and Will to help him find a new girlfriend. S4 E5</desc>
+    <date>2015</date>
+    <category>Drama</category>
+    <orig-language>English</orig-language>
+    <icon src="https://image.tmdb.org/t/p/original/oZ2K2cPeWURnQjCxrvSEnaEcIST.jpg"/>
+    <url>https://www.tvnz.co.nz/tvseries/nashville</url>
+    <country>United States of America</country>
+    <episode-num system="dd_progid">EPmac_sh_ptc1488078306.mac_ptc261416523</episode-num>
+    <episode-num system="xmltv_ns">3.4.0</episode-num>
+    <episode-num system="themoviedb.org">series/44549</episode-num>
+    <episode-num system="original-air-date">2026-11-26 13:45:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>6.6/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/oZ2K2cPeWURnQjCxrvSEnaEcIST.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/ibLYptKeE64xa3zzfgbLcBjtN09.jpg</image>
+  </programme><programme start="20261126151500 +0000" stop="20261126160000 +0000" channel="mjh-tvnz-2">
+    <title>TVNZ2 Quiz</title>
+    <desc>TVNZ2 Quiz</desc>
+    <category>Advertisement/Shopping</category>
+    <icon src="https://images.nzxmltv.com/posters/tvnz2-quiz_tvnz2.jpg"/>
+    <episode-num system="dd_progid">EPmac_sh_ptc34338410.mac_ptc2084585410</episode-num>
+    <episode-num system="original-air-date">2026-11-26 15:15:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <new/>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/tvnz2-quiz_tvnz2.jpg</image>
+  </programme><programme start="20261126160000 +0000" stop="20261126163000 +0000" channel="mjh-tvnz-2">
+    <title>Infomercial</title>
+    <desc>Infomercial</desc>
+    <category>Advertisement/Shopping</category>
+    <icon src="https://images.nzxmltv.com/posters/infomercial_tvnz2.jpg"/>
+    <episode-num system="dd_progid">EPmac_sh_ptc1466170275.mac_ptc876201369</episode-num>
+    <episode-num system="original-air-date">2026-11-26 16:00:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <new/>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercial_tvnz2.jpg</image>
+  </programme><programme start="20261126163000 +0000" stop="20261126170000 +0000" channel="mjh-tvnz-2">
+    <title>Infomercial</title>
+    <desc>Infomercial</desc>
+    <category>Advertisement/Shopping</category>
+    <icon src="https://images.nzxmltv.com/posters/infomercial_tvnz2.jpg"/>
+    <episode-num system="dd_progid">EPmac_sh_ptc1466170275.mac_ptc928590414</episode-num>
+    <episode-num system="original-air-date">2026-11-26 16:30:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <new/>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercial_tvnz2.jpg</image>
+  </programme><programme start="20261126170000 +0000" stop="20261126173000 +0000" channel="mjh-tvnz-2">
+    <title>Les Mills Born To Move</title>
+    <desc>Designed to nurture a life-long love of physical activity, BORN TO MOVE helps children experience the joy and vitality of moving to music, combining fun and fitness in way that children love.</desc>
+    <date>2026</date>
+    <category>Lifestyle</category>
+    <icon src="https://img-store-prod.switch.tv/images/34f81677-6d6b-45ee-91ae-9a1cb765643a/0-16x9.jpg%3Fwidth%3D1000"/>
+    <url>https://www.tvnz.co.nz/tvseries/les-mills-born-to-move</url>
+    <episode-num system="dd_progid">EPmac_sh_ptc639191730.mac_ptc583566773</episode-num>
+    <episode-num system="original-air-date">2026-11-26 17:00:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://img-store-prod.switch.tv/images/34f81677-6d6b-45ee-91ae-9a1cb765643a/0-16x9.jpg%3Fwidth%3D1000</image>
+    <image type="backdrop" size="3" orient="L">https://img-store-prod.switch.tv/images/34f81677-6d6b-45ee-91ae-9a1cb765643a/0-16x9.jpg%3Fwidth%3D1000</image>
+  </programme><programme start="20261126173000 +0000" stop="20261126173500 +0000" channel="mjh-tvnz-2">
+    <title>Be With Zee</title>
+    <desc>Follow Zee and caregiver Matua as they embark on adventures while sharing mindfulness and wellbeing tools to better connect with their emotions and each other.</desc>
+    <date>2026</date>
+    <category>Pre-School Childrens Programme</category>
+    <icon src="https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/B2185AFD-6407-4DFC-9059-F7B298C5E7FB/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web"/>
+    <url>https://www.tvnz.co.nz/tvseries/be-with-zee</url>
+    <episode-num system="dd_progid">EPmac_sh_ptc752494493.mac_ptc1376298456</episode-num>
+    <episode-num system="original-air-date">2026-11-26 17:30:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/B2185AFD-6407-4DFC-9059-F7B298C5E7FB/0-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
+    <image type="backdrop" size="3" orient="L">https://image-resizer-cloud-cdn.cms-api.tvnz.co.nz/image/B2185AFD-6407-4DFC-9059-F7B298C5E7FB/2-16x9.png?width=1920&amp;updatedTime=0&amp;dt=Web</image>
+  </programme><programme start="20261126173500 +0000" stop="20261126180500 +0000" channel="mjh-tvnz-2">
+    <title>Toi Time</title>
+    <desc>Toi Time is back for Season 4 with more laughter and learning. Join Aunty Anika, Maia, Jojo, Riki, and Buzz as they explore the world around them.</desc>
+    <date>2024</date>
+    <category>Pre-School Childrens Programme</category>
+    <orig-language>English</orig-language>
+    <icon src="https://image.tmdb.org/t/p/original/nHH8hmIHzRIqeIvPqRsPVjfOGXF.jpg"/>
+    <url>https://www.tvnz.co.nz/tvseries/toi-time</url>
+    <country>New Zealand</country>
+    <episode-num system="dd_progid">EPmac_sh_ptc1477672238.mac_ptc387544265</episode-num>
+    <episode-num system="themoviedb.org">series/243636</episode-num>
+    <episode-num system="original-air-date">2026-11-26 17:35:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>0.0/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/nHH8hmIHzRIqeIvPqRsPVjfOGXF.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/wWFUJdSBJhzwSrRxS8v4tjLw296.jpg</image>
+  </programme><programme start="20261126180500 +0000" stop="20261126183000 +0000" channel="mjh-tvnz-2">
+    <title>Robin Hood: Mischief In Sherwood</title>
+    <desc>Sherwood is in danger from the tyrannical Prince John! Teenage Robin and his merry band of outlaws fight back.</desc>
+    <category>Other</category>
+    <icon src="https://img-store-prod.switch.tv/images/67b08620-2f97-401b-8ee1-0ef80da3ba62/Robin_Hood_Mischief_in_Sherwood_showtile.png.c85d7cc7d560b13eb5f9179f17dbd3a8.jpg"/>
+    <episode-num system="dd_progid">EPmac_sh_ptc2054461428.mac_ptc1684793869</episode-num>
+    <episode-num system="original-air-date">2026-11-26 18:05:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://img-store-prod.switch.tv/images/67b08620-2f97-401b-8ee1-0ef80da3ba62/Robin_Hood_Mischief_in_Sherwood_showtile.png.c85d7cc7d560b13eb5f9179f17dbd3a8.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://img-store-prod.switch.tv/images/5678e292-8219-46d7-8416-23030d27e1cf/Robin_Hood_Mischief_in_Sherwood_coverimg.png.785a2d6ec391d504881fed525242c198.jpg%3Fwidth%3D800%26height%3D450</image>
+  </programme><programme start="20261126183000 +0000" stop="20261126185000 +0000" channel="mjh-tvnz-2">
+    <title>Beyblade X</title>
+    <desc>Four beybladers and their genius friend travel the world as team 'Bladebreakers' to win a championship, realising there's much more at stake on the go.</desc>
+    <date>2023</date>
+    <category>Other</category>
+    <orig-language>Japanese</orig-language>
+    <icon src="https://image.tmdb.org/t/p/original/66wkm14IWdrY5LaKZDAbkD2T9Jt.jpg"/>
+    <url>https://www.tvnz.co.nz/tvseries/beyblade-x</url>
+    <country>Japan</country>
+    <episode-num system="dd_progid">EPmac_sh_ptc162530249.mac_ptc936111973</episode-num>
+    <episode-num system="themoviedb.org">series/226688</episode-num>
+    <episode-num system="original-air-date">2026-11-26 18:30:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>7.1/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/66wkm14IWdrY5LaKZDAbkD2T9Jt.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/qAq9RBeHZoTMDFqQZ2o4cE5CJIQ.jpg</image>
+  </programme><programme start="20261126185000 +0000" stop="20261126191000 +0000" channel="mjh-tvnz-2">
+    <title>Teen Titans Go!</title>
+    <desc>Superhero roommates Robin, Cyborg, Starfire, Raven and Beast Boy love saving the day, but what happens when they're done fighting crime?</desc>
+    <date>2013</date>
+    <category>Other</category>
+    <orig-language>English</orig-language>
+    <icon src="https://image.tmdb.org/t/p/original/kPKAigYUlWRpnfo4Ptiwlz4FWXU.jpg"/>
+    <url>https://www.tvnz.co.nz/tvseries/teen-titans-go</url>
+    <country>United States of America</country>
+    <episode-num system="dd_progid">EPmac_sh_ptc2073737509.mac_ptc1039229954</episode-num>
+    <episode-num system="themoviedb.org">series/45140</episode-num>
+    <episode-num system="original-air-date">2026-11-26 18:50:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>6.4/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/kPKAigYUlWRpnfo4Ptiwlz4FWXU.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/bIHCUqaapZdRjd2kzSDiwzYyrpC.jpg</image>
+  </programme><programme start="20261126191000 +0000" stop="20261126193500 +0000" channel="mjh-tvnz-2">
+    <title>Maddie + Triggs</title>
+    <desc>Maddie, an adventurous youngster who happens to be visually impaired, sets out with her best doggy friend Triggs to discover the music and adventure in the sounds of the world around them.</desc>
+    <date>2024</date>
+    <category>Other</category>
+    <orig-language>English</orig-language>
+    <icon src="https://image.tmdb.org/t/p/original/tOLQ3aodmqjiDotcaTEPKJmMoJN.jpg"/>
+    <url>https://www.tvnz.co.nz/tvseries/maddie-triggs</url>
+    <country>United Kingdom</country>
+    <episode-num system="dd_progid">EPmac_sh_ptc233627619.mac_ptc1781842019</episode-num>
+    <episode-num system="themoviedb.org">series/257723</episode-num>
+    <episode-num system="original-air-date">2026-11-26 19:10:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>10.0/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/tOLQ3aodmqjiDotcaTEPKJmMoJN.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/poDJP5e9JzyTSY1bYdcZkAjivVr.jpg</image>
+  </programme><programme start="20261126193500 +0000" stop="20261126200000 +0000" channel="mjh-tvnz-2">
+    <title>Takaro Tribe</title>
+    <desc>Come join the Takaro Tribe as they sing and dance their way through their magical alphabet forest, meeting friends and whanau and learning as they go.</desc>
+    <category>Pre-School Childrens Programme</category>
+    <icon src="https://img-store-prod.switch.tv/images/e5a48a2a-d6bf-4643-bfae-a68a2759fe50/takarotribe_showtile.png.7b01c27a5ff9ceb72ff79acc125fe39b.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/takaro-tribe</url>
+    <episode-num system="dd_progid">EPmac_sh_ptc1170768964.mac_ptc1807455411</episode-num>
+    <episode-num system="original-air-date">2026-11-26 19:35:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://img-store-prod.switch.tv/images/e5a48a2a-d6bf-4643-bfae-a68a2759fe50/takarotribe_showtile.png.7b01c27a5ff9ceb72ff79acc125fe39b.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/takaro%20tribe%20BG%201920x1080.jpg</image>
+  </programme><programme start="20261126200000 +0000" stop="20261126203000 +0000" channel="mjh-tvnz-2">
+    <title>Infomercial</title>
+    <desc>Infomercial</desc>
+    <category>Advertisement/Shopping</category>
+    <icon src="https://images.nzxmltv.com/posters/infomercial_tvnz2.jpg"/>
+    <episode-num system="dd_progid">EPmac_sh_ptc1466170275.mac_ptc572456692</episode-num>
+    <episode-num system="original-air-date">2026-11-26 20:00:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/infomercial_tvnz2.jpg</image>
+  </programme><programme start="20261126203000 +0000" stop="20261126210000 +0000" channel="mjh-tvnz-2">
+    <title>Les Mills Adult Classes</title>
+    <desc>Les Mills and TVNZ are thrilled to be working together to offer you free access to renowned Les Mills classes; BODYBALANCE, BODYCOMBAT, BODYATTACK, LES MILLS CORE and LES MILLS GRIT Cardio.</desc>
+    <date>2026</date>
+    <category>Lifestyle</category>
+    <icon src="https://images.nzxmltv.com/posters/les-mills-adult-classes_tvnz2.jpg"/>
+    <url>https://www.tvnz.co.nz/tvseries/do-not-use-les-mills-adult-classes</url>
+    <episode-num system="dd_progid">EPmac_sh_ptc199798068.mac_ptc1282092569</episode-num>
+    <episode-num system="original-air-date">2026-11-26 20:30:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/les-mills-adult-classes_tvnz2.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://img-store-prod.switch.tv/images/ea0595f2-007c-42e0-93e6-29c09df01c87/7148.image-hbbtv.jpg</image>
+  </programme><programme start="20261126210000 +0000" stop="20261126213000 +0000" channel="mjh-tvnz-2">
+    <title>Everyday Gourmet With Justine Schofield</title>
+    <desc>MasterChef Australia finalist Justine Schofield shares some of her favourite recipes in this cookery program aimed at ideas for the home cook.</desc>
+    <category>Food/Cooking</category>
+    <orig-language>English</orig-language>
+    <icon src="https://img-store-prod.switch.tv/images/fb9fe111-17a2-4db9-a924-41c913853cc2/Everyday_Gourmet_with_Justine_Schofield_Show_Tile.png.584f71922ddcda4ed6cd8406054d6dc2.jpg"/>
+    <url>https://www.tvnz.co.nz/tvseries/everyday-gourmet-with-justine-schofield</url>
+    <country>Australia</country>
+    <episode-num system="dd_progid">EPmac_sh_ptc2015768926.mac_ptc157876096</episode-num>
+    <episode-num system="themoviedb.org">series/40365</episode-num>
+    <episode-num system="original-air-date">2026-11-26 21:00:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>0.0/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="L">https://img-store-prod.switch.tv/images/fb9fe111-17a2-4db9-a924-41c913853cc2/Everyday_Gourmet_with_Justine_Schofield_Show_Tile.png.584f71922ddcda4ed6cd8406054d6dc2.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://img-store-prod.switch.tv/images/edf5c291-5691-40b8-9ea4-a0a90b9bf90a/Everyday_Gourmet_with_Justine_Schofield_Cover_Image.png.8fa76a2b395ba6bb7d052752af436e89.jpg%3Fwidth%3D800%26height%3D450</image>
+  </programme><programme start="20261126213000 +0000" stop="20261126220000 +0000" channel="mjh-tvnz-2">
+    <title>Farm To Fork</title>
+    <desc>Masterchef Australia Judge Andy Allen, alongside Michael Weldon and Courtney Roulston take you on a food journey to find the freshest produce and create inspiring recipes in the kitchen.</desc>
+    <date>2019</date>
+    <category>Food/Cooking</category>
+    <orig-language>English</orig-language>
+    <icon src="https://image.tmdb.org/t/p/original/uqgRy30nsHU1g6XCxp4pwATo8AE.jpg"/>
+    <url>https://www.tvnz.co.nz/tvseries/farm-to-fork</url>
+    <country>Australia</country>
+    <episode-num system="dd_progid">EPmac_sh_ptc1937957806.mac_ptc687156557</episode-num>
+    <episode-num system="themoviedb.org">series/205709</episode-num>
+    <episode-num system="original-air-date">2026-11-26 21:30:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>0.0/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/uqgRy30nsHU1g6XCxp4pwATo8AE.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/47xtctFmCYNGGQM7XVBNow9CjhB.jpg</image>
+  </programme><programme start="20261126220000 +0000" stop="20261126223000 +0000" channel="mjh-tvnz-2">
+    <title>Come Dine With Me</title>
+    <desc>The knives are out as a group of strangers compete for the title of ultimate dinner party host. The prize money adds spice to the proceedings as there's no end to what contestants will do to win!</desc>
+    <date>2005</date>
+    <category>Reality</category>
+    <orig-language>English</orig-language>
+    <icon src="https://image.tmdb.org/t/p/original/enFfviWZwnIKn9DhyMa7cXqKx6Q.jpg"/>
+    <url>https://www.tvnz.co.nz/tvseries/come-dine-with-me-uk</url>
+    <country>United Kingdom</country>
+    <episode-num system="dd_progid">EPmac_sh_ptc673754118.mac_ptc843127786</episode-num>
+    <episode-num system="themoviedb.org">series/2637</episode-num>
+    <episode-num system="original-air-date">2026-11-26 22:00:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>5.2/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/enFfviWZwnIKn9DhyMa7cXqKx6Q.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/oniNKYLHR0M5y7i4V1K1FhpCl7G.jpg</image>
+  </programme><programme start="20261126223000 +0000" stop="20261126230000 +0000" channel="mjh-tvnz-2">
+    <title>Kevin Can Wait</title>
+    <desc>Kevin and Donna try to sabotage Jack's friendship with Grayden when they don't hit it off with Grayden's father. S1 E6</desc>
+    <date>2016</date>
+    <category>Comedy</category>
+    <orig-language>English</orig-language>
+    <icon src="https://image.tmdb.org/t/p/original/rpuNe29T0ZnBhw7nHpDDgimfObe.jpg"/>
+    <url>https://www.tvnz.co.nz/tvseries/kevin-can-wait</url>
+    <country>United States of America</country>
+    <episode-num system="dd_progid">EPmac_sh_ptc45293705.mac_ptc1204089629</episode-num>
+    <episode-num system="xmltv_ns">0.5.0</episode-num>
+    <episode-num system="themoviedb.org">series/67132</episode-num>
+    <episode-num system="original-air-date">2026-11-26 22:30:00</episode-num>
+    <video>
+      <quality>HDTV</quality>
+    </video>
+    <subtitle type="teletext">
+      <language>English (NZ)</language>
+    </subtitle>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>5.7/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/rpuNe29T0ZnBhw7nHpDDgimfObe.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://image.tmdb.org/t/p/original/1hu8Gx4xd9mnrrd53STKIFLEXgK.jpg</image>
+  </programme><programme start="20261126173000 +0000" stop="20261126173600 +0000" channel="mjh-maori-tv">
+    <title>Kori Club</title>
+    <desc>Kori Club is a captivating series for 0-8-year-olds that marries the charm of "The Wiggles" with the magic of Te Ao Māori. (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/Kori%20Club.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/kori-club</url>
+    <episode-num system="xmltv_ns">0.2.0</episode-num>
+    <episode-num system="original-air-date">2026-11-26 17:30:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/Kori%20Club.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/KoriClub_BG%20(1).jpeg</image>
+  </programme><programme start="20261126173600 +0000" stop="20261126173800 +0000" channel="mjh-maori-tv">
+    <title>Cocomelon</title>
+    <desc>Join the CoComelon family in a world that centres on the everyday experiences of young children through toe-tapping music.</desc>
+    <date>2020</date>
+    <orig-language>English</orig-language>
+    <icon src="https://image.tmdb.org/t/p/original/7gliOqwY7YwFAxrjfMVcryuvnW.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/cocomelon</url>
+    <country>United Kingdom</country>
+    <episode-num system="xmltv_ns">0.122.0</episode-num>
+    <episode-num system="themoviedb.org">series/114718</episode-num>
+    <episode-num system="original-air-date">2026-11-26 17:36:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <new/>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>6.3/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/7gliOqwY7YwFAxrjfMVcryuvnW.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/Cocomelon%20Bg.jpg</image>
+  </programme><programme start="20261126173800 +0000" stop="20261126175300 +0000" channel="mjh-maori-tv">
+    <title>Takaro Tribe</title>
+    <desc>Takaro Tribe is an animated series for 0-6 year olds. We follow our cute characters as they enter the magical Alphabet Forest where our talking Papa Rakau, Pond Koka, Pu and Waea Wao live. 
+ (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/Takaro%20tribe%20se6%20TN%20960x540.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/takaro-tribe</url>
+    <episode-num system="xmltv_ns">5.21.0</episode-num>
+    <episode-num system="original-air-date">2026-11-26 17:38:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/Takaro%20tribe%20se6%20TN%20960x540.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/takaro%20tribe%20BG%201920x1080.jpg</image>
+  </programme><programme start="20261126175300 +0000" stop="20261126175900 +0000" channel="mjh-maori-tv">
+    <title>Kiri &amp; Lou</title>
+    <desc>Reversioned into reo Māori. Follows the adventures of two friends living in pre-historic Aotearoa NZ. (R)</desc>
+    <date>2019</date>
+    <orig-language>English</orig-language>
+    <icon src="https://image.tmdb.org/t/p/original/oRehzbU7U9kNk90fexAO09401S2.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/kiri-and-lou</url>
+    <country>Canada</country>
+    <episode-num system="xmltv_ns">1.12.0</episode-num>
+    <episode-num system="themoviedb.org">series/102882</episode-num>
+    <episode-num system="original-air-date">2026-11-26 17:53:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>8.8/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/oRehzbU7U9kNk90fexAO09401S2.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/2025-11-04-15-40-19-Kiri%20and%20Lou%20BG1920x1080.jpg</image>
+  </programme><programme start="20261126175900 +0000" stop="20261126180700 +0000" channel="mjh-maori-tv">
+    <title>Bigsies and Littles</title>
+    <desc>An animated series for tamariki about two little kororā living their lives between the moving of the tides. (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/2026-01-27-16-11-30-Bigsies%20and%20Littles%20TN1920x1080.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/bigsies-and-littles</url>
+    <episode-num system="xmltv_ns">0.3.0</episode-num>
+    <episode-num system="original-air-date">2026-11-26 17:59:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/2026-01-27-16-11-30-Bigsies%20and%20Littles%20TN1920x1080.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/2026-01-27-16-11-43-Bigsies%20and%20Littles%20BG1920x1080.jpg</image>
+  </programme><programme start="20261126180700 +0000" stop="20261126182000 +0000" channel="mjh-maori-tv">
+    <title>Island of Mystery</title>
+    <desc>Island of Mystery is an animation series that features Josh and his boisterous dog Kazumi as they unwittingly crash back 700 years in time.  (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/IslandofMystery%20TN.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/island-of-mystery</url>
+    <episode-num system="xmltv_ns">2.5.0</episode-num>
+    <episode-num system="original-air-date">2026-11-26 18:07:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/IslandofMystery%20TN.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/2026-02-20-10-13-12-island%20of%20mystery%20new%20bg.jpg</image>
+  </programme><programme start="20261126182000 +0000" stop="20261126182900 +0000" channel="mjh-maori-tv">
+    <title>Mahi Pai</title>
+    <desc>We take a deep dive into the ocean exploring the interesting world of whales with Kamaka along for the ride. (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/MahipaiS2%20TN.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/mahi-pai</url>
+    <episode-num system="xmltv_ns">1.1.0</episode-num>
+    <episode-num system="original-air-date">2026-11-26 18:20:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/MahipaiS2%20TN.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/mahi-pai_BG.jpg</image>
+  </programme><programme start="20261126182900 +0000" stop="20261126183900 +0000" channel="mjh-maori-tv">
+    <title>Tamaiti Tū Spring</title>
+    <desc>Helping hands, happy hearts. The whanau gathers under spring blooms to prepare a hangi feast.  (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/Tamaiti%20Tu%20Spring%20TN%201.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/tamaiti-tu</url>
+    <episode-num system="xmltv_ns">2.14.0</episode-num>
+    <episode-num system="original-air-date">2026-11-26 18:29:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/Tamaiti%20Tu%20Spring%20TN%201.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/Tamaiti%20Tu%20Spring%20BG2.jpg</image>
+  </programme><programme start="20261126183900 +0000" stop="20261126185000 +0000" channel="mjh-maori-tv">
+    <title>Mahi Tika Ana! Terenga 2</title>
+    <desc>HĀNGĪ ME TE POUNAMU: Hinewai and Hine Te Kura travel south to Hokitika for a day with Te Rua Mason.  (R)</desc>
+    <icon src="https://images.nzxmltv.com/posters/mahi-tika-ana-terenga-2_maoritv.jpg"/>
+    <episode-num system="xmltv_ns">1.4.0</episode-num>
+    <episode-num system="original-air-date">2026-11-26 18:39:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/mahi-tika-ana-terenga-2_maoritv.jpg</image>
+  </programme><programme start="20261126185000 +0000" stop="20261126185500 +0000" channel="mjh-maori-tv">
+    <title>Tūhura</title>
+    <desc>Niua and Hura travel to Tāmaki Makaurau to uncover the story behind how Rangitoto was carried from the West Coast of Tāmaki to the Te Waitematā Harbour. (R)</desc>
+    <category>Informational/Educational/Scho</category>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/tuhura%20tn%202%20960x540.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/tuhura</url>
+    <episode-num system="dd_progid">EPmac_sh_ptc2119718729.mac_ptc1238086107</episode-num>
+    <episode-num system="xmltv_ns">0.7.0</episode-num>
+    <episode-num system="original-air-date">2026-11-26 18:50:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/tuhura%20tn%202%20960x540.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/TUHURA-BG2-min.jpg</image>
+  </programme><programme start="20261126185500 +0000" stop="20261126190100 +0000" channel="mjh-maori-tv">
+    <title>Te Ohu o Pūkana</title>
+    <desc>NEW: Shorter, sharper and cooler, Pūkana has been reinvented for our digitally savvy tamariki and taiohi</desc>
+    <icon src="https://images.nzxmltv.com/posters/te-ohu-o-pkana_maoritv.jpg"/>
+    <episode-num system="xmltv_ns">2025.133.0</episode-num>
+    <episode-num system="original-air-date">2026-11-26 18:55:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <new/>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/te-ohu-o-pkana_maoritv.jpg</image>
+  </programme><programme start="20261126190100 +0000" stop="20261126192800 +0000" channel="mjh-maori-tv">
+    <title>Te Nūtube Haka</title>
+    <desc>A fusion of haka and tamariki awesome-ness with Te Nūtube stars Atareta and Te Haakura. (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/TeNutube%20TN.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/te-nutube</url>
+    <episode-num system="xmltv_ns">0.3.0</episode-num>
+    <episode-num system="original-air-date">2026-11-26 19:01:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/TeNutube%20TN.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/TeNutubeHaka_POSTER.jpg</image>
+  </programme><programme start="20261126192800 +0000" stop="20261126193900 +0000" channel="mjh-maori-tv">
+    <title>Mauri Reo Mauri Ora</title>
+    <desc>Mauri Reo, Mauri Ora is a series of programme content that focus on entertaining and education Kōhungahunga and Kura Tuatahi audiences. (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/MAURI%20REO%20Koanga%202021.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/mauri-reo-mauri-ora-koanga-2021</url>
+    <episode-num system="xmltv_ns">1.125.0</episode-num>
+    <episode-num system="original-air-date">2026-11-26 19:28:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/MAURI%20REO%20Koanga%202021.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/20261106-155151-BG%20MRMO.jpg</image>
+  </programme><programme start="20261126193900 +0000" stop="20261126203100 +0000" channel="mjh-maori-tv">
+    <title>Oranga Ngākau</title>
+    <desc>Yvonne Te Wanihi Edwards presents uniquely Māori exercise workouts for young and old to keep fit and healthy. (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/oranga%20ngakau.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/oranga-ngakau</url>
+    <episode-num system="xmltv_ns">0.8.0</episode-num>
+    <episode-num system="original-air-date">2026-11-26 19:39:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/oranga%20ngakau.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/oranga-ngakau_poster.jpg</image>
+  </programme><programme start="20261126203100 +0000" stop="20261126210000 +0000" channel="mjh-maori-tv">
+    <title>Sidewalk Karaoke</title>
+    <desc>Te Hāmua Nikora hits the streets in search of karaoke talent. (R)</desc>
+    <date>2016</date>
+    <orig-language>English</orig-language>
+    <icon src="https://image.tmdb.org/t/p/original/g7ArsZG3SeNvtyg8DkPw8jHBRcx.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/sidewalk-karaoke</url>
+    <country>United States of America</country>
+    <episode-num system="xmltv_ns">2.15.0</episode-num>
+    <episode-num system="themoviedb.org">series/318034</episode-num>
+    <episode-num system="original-air-date">2026-11-26 20:31:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>0.0/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/g7ArsZG3SeNvtyg8DkPw8jHBRcx.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/sidewalk-karaoke_poster.jpg</image>
+  </programme><programme start="20261126210000 +0000" stop="20261126212600 +0000" channel="mjh-maori-tv">
+    <title>Toi Te Ora - Our Way Of Life</title>
+    <desc>Join Tiare Tawera and Pohoira Iopata for Māori stories, life hacks, recipes, health tips, DIY ideas and more. The best business stories of the season. (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/Toi%20Te%20Ora.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/toi-te-ora</url>
+    <episode-num system="xmltv_ns">0.23.0</episode-num>
+    <episode-num system="original-air-date">2026-11-26 21:00:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/Toi%20Te%20Ora.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/toi-te-ora_poster.jpg</image>
+  </programme><programme start="20261126212600 +0000" stop="20261126213000 +0000" channel="mjh-maori-tv">
+    <title>Waiata Anthems</title>
+    <desc>What was once a traditional love song becomes a celebration of universal love and connection in te reo Māori, when iconic band The Black Seeds revisit their anthemic tune "˜So True'. (R)</desc>
+    <date>2021</date>
+    <orig-language>English</orig-language>
+    <icon src="https://image.tmdb.org/t/p/original/c1icgyVgMmf0BEiq4E7bNgm4dig.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/waiata-anthems</url>
+    <country>New Zealand</country>
+    <episode-num system="xmltv_ns">2.1.0</episode-num>
+    <episode-num system="themoviedb.org">series/242970</episode-num>
+    <episode-num system="original-air-date">2026-11-26 21:26:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <star-rating>
+      <value>0.0/10</value>
+    </star-rating>
+    <image type="poster" size="3" orient="P">https://image.tmdb.org/t/p/original/c1icgyVgMmf0BEiq4E7bNgm4dig.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/WAIATAANTHEMS_BG-min.jpg</image>
+  </programme><programme start="20261126213000 +0000" stop="20261126220500 +0000" channel="mjh-maori-tv">
+    <title>The People's Game</title>
+    <desc>Look into the world of touch with some of the legends of the game.  We learn the history, meet the legends and are with those who owe their success to touch. (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/2025-10-14-12-56-44-The%20Peoples%20Game%20TN1920x1080.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/the-peoples-game</url>
+    <episode-num system="xmltv_ns">0.0.0</episode-num>
+    <episode-num system="original-air-date">2026-11-26 21:30:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/2025-10-14-12-56-44-The%20Peoples%20Game%20TN1920x1080.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/2025-10-14-12-57-08-The%20Peoples%20Game%20BG1920x1080.jpg</image>
+  </programme><programme start="20261126220500 +0000" stop="20261126223100 +0000" channel="mjh-maori-tv">
+    <title>Te Hekenga ā Rangi</title>
+    <desc>Featuring Te Hekenga ā Rangi, Whakaata Māori presents Te Matatini o Te Kāhui Maunga - the ultimate celebration of haka excellence. Experience the passion, precision, and power of Aotearoa's finest teams as they bring te reo, identity, and tradition to the stage. This is haka at its finest! (R)</desc>
+    <icon src="https://images.nzxmltv.com/posters/te-hekenga-rangi_maoritv.jpg"/>
+    <episode-num system="original-air-date">2026-11-26 22:05:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>G</value>
+    </rating>
+    <image type="poster" size="3" orient="P">https://images.nzxmltv.com/posters/te-hekenga-rangi_maoritv.jpg</image>
+  </programme><programme start="20261126223100 +0000" stop="20261126230000 +0000" channel="mjh-maori-tv">
+    <title>Whiua Te Paatai</title>
+    <desc>Fluent reo Māori speakers are in the hot seat to answer the tough questions. (R)</desc>
+    <icon src="https://www.maoriplus.co.nz/api/thumbnail-media/file/whiuatepatai_thumbnail.jpg"/>
+    <url>https://www.maoriplus.co.nz/show/whiua-te-patai</url>
+    <episode-num system="xmltv_ns">0.19.0</episode-num>
+    <episode-num system="original-air-date">2026-11-26 22:31:00</episode-num>
+    <video>
+      <present>yes</present>
+      <quality>HDTV</quality>
+    </video>
+    <audio>
+      <present>yes</present>
+      <stereo>stereo</stereo>
+    </audio>
+    <rating system="NZ">
+      <value>PG</value>
+    </rating>
+    <image type="poster" size="3" orient="L">https://www.maoriplus.co.nz/api/thumbnail-media/file/whiuatepatai_thumbnail.jpg</image>
+    <image type="backdrop" size="3" orient="L">https://www.maoriplus.co.nz/api/background-media/file/2026-08-03-11-17-45-Whiua%20Te%20P%C4%81tai%20BG%201920x1080.jpg</image>
   </programme></tv>
