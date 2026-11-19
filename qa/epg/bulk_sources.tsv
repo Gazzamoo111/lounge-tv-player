@@ -97,3 +97,14 @@ share-kz	kz		https://epgshare01.online/epgshare01/epg_ripper_KZ1.xml.gz
 share-mt	mt		https://epgshare01.online/epgshare01/epg_ripper_MT1.xml.gz
 share-sk	sk		https://epgshare01.online/epgshare01/epg_ripper_SK1.xml.gz
 share-ba	ba		https://epgshare01.online/epgshare01/epg_ripper_BA1.xml.gz
+mjh-pluto-us	us	pluto	https://raw.githubusercontent.com/matthuisman/i.mjh.nz/master/PlutoTV/us.xml.gz
+mjh-pluto-ca	ca	pluto	https://raw.githubusercontent.com/matthuisman/i.mjh.nz/master/PlutoTV/ca.xml.gz
+mjh-pluto-uk	uk	pluto	https://raw.githubusercontent.com/matthuisman/i.mjh.nz/master/PlutoTV/gb.xml.gz
+mjh-samsung-us	us	samsung	https://raw.githubusercontent.com/matthuisman/i.mjh.nz/master/SamsungTVPlus/us.xml.gz
+mjh-samsung-ca	ca	samsung	https://raw.githubusercontent.com/matthuisman/i.mjh.nz/master/SamsungTVPlus/ca.xml.gz
+mjh-samsung-uk	uk	samsung	https://raw.githubusercontent.com/matthuisman/i.mjh.nz/master/SamsungTVPlus/gb.xml.gz
+mjh-plex-us	us	plex	https://raw.githubusercontent.com/matthuisman/i.mjh.nz/master/Plex/us.xml.gz
+mjh-plex-ca	ca	plex	https://raw.githubusercontent.com/matthuisman/i.mjh.nz/master/Plex/ca.xml.gz
+mjh-plex-uk	uk	plex	https://raw.githubusercontent.com/matthuisman/i.mjh.nz/master/Plex/gb.xml.gz
+mjh-plex-au	au	plex	https://raw.githubusercontent.com/matthuisman/i.mjh.nz/master/Plex/au.xml.gz
+mjh-plex-nz	nz	plex	https://raw.githubusercontent.com/matthuisman/i.mjh.nz/master/Plex/nz.xml.gz
