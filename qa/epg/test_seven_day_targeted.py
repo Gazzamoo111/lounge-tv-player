@@ -32,6 +32,23 @@ class EpgTargetedTest(unittest.TestCase):
             {"primary": source_index(root, NOW, NOW + timedelta(days=7))},
             NOW, NOW + timedelta(days=7)))
 
+    def test_ten_requires_the_exact_perth_main_channel(self):
+        def feed(source_id, label):
+            root = etree.fromstring(
+                f'<tv><channel id="{source_id}"><display-name>{label}</display-name></channel>'
+                f'<programme channel="{source_id}" start="20261105000000 +0000" '
+                'stop="20261109000000 +0000"><title>Real programme</title></programme></tv>')
+            return source_index(root, NOW, NOW + timedelta(days=7))
+
+        row = {"key": "live:au-ten", "name": "Ten", "epgId": "10Bold.au"}
+        wrong = feed("10Bold.au", "Ten")
+        perth = feed("10Perth.au", "AU - 10 Perth")
+        self.assertIsNone(select_feed(row, {"primary": wrong, "sydney": perth},
+                                      NOW, NOW + timedelta(days=7)))
+        match = select_feed(row, {"primary": perth, "sydney": wrong},
+                            NOW, NOW + timedelta(days=7))
+        self.assertEqual(match[2:5], ("primary", "10Perth.au", "verified-source-binding"))
+
     def test_exact_au_fox_sports_ids_from_epgshare(self):
         au = etree.Element("tv")
         for cid in ("FoxCricket.au", "FoxSportsNews.au"):
