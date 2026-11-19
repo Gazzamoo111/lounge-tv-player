@@ -8,6 +8,7 @@ on:
     paths: ['.github/workflows/epg-rolling7-au-247.yml', 'qa/epg/**']
   schedule:
     - cron: '17 0,12 * * *'
+    - cron: '42 0,12 * * *'
   workflow_dispatch:
 permissions:
   contents: read
@@ -16,6 +17,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   validate:
+    if: github.event.schedule != '42 0,12 * * *'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -157,3 +159,148 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -m 'epg: refresh Australian schedules with three-day minimum and honest 24/7 labels'
           git push origin HEAD:epg-data
+
+  bulk:
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event.schedule == '42 0,12 * * *' || github.event_name == 'workflow_dispatch') &&
+      (vars.LOUNGE_EPG_BULK_MODE == 'candidate' || vars.LOUNGE_EPG_BULK_MODE == 'publish')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      BROKER_URL: https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-international-epg-broker-qa
+      WORK: ${{ runner.temp }}/lounge-epg-bulk
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install lxml==5.4.0
+      - run: python -m unittest discover -s qa/epg -v
+      - name: Obtain a read token for the private International guide
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const token = await core.getIDToken('loungetv-international-epg-qa');
+            core.setSecret(token);
+            core.exportVariable('LOUNGE_QA_OIDC', token);
+      - name: Capture full authenticated catalogue and current guide versions
+        env:
+          NZ_AU_M3U: ${{ secrets.LOUNGE_EPG_NZ_AU_QA_M3U }}
+          PLUS_M3U: ${{ secrets.LOUNGE_EPG_PLUS_QA_M3U }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p "$WORK"
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          import subprocess
+          from urllib.parse import urlsplit
+          for key in ('NZ_AU_M3U', 'PLUS_M3U'):
+              url = os.environ[key]
+              endpoint = urlsplit(url)
+              trusted = ((endpoint.netloc == 'n.loungetv.nz' and endpoint.path == '/get.php') or
+                         (endpoint.netloc == 'liqocisegeqzbyuqloql.supabase.co' and
+                          endpoint.path in {'/functions/v1/n/get.php', '/functions/v1/lounge-plus-qa/get.php'}))
+              if endpoint.scheme != 'https' or not trusted or any(ord(c) < 33 or c in (chr(34), chr(92)) for c in url):
+                  raise SystemExit(f'missing or invalid dedicated {key} input')
+              subprocess.run(['curl', '--config', '-', '--fail', '--silent',
+                              '--compressed', '--max-filesize', '20000000', '--max-time', '90',
+                              '--output', str(Path(os.environ['WORK']) / (key + '.m3u'))],
+                             input=f'url = "{url}"' + chr(10), text=True, check=True)
+          PY
+          curl -fsS --max-time 90 --max-filesize 20000000 -o "$WORK/international.m3u" \
+            -H "Authorization: Bearer $LOUNGE_QA_OIDC" "$BROKER_URL/bulk-regional-playlist"
+          curl -fsS --max-time 90 --max-filesize 49000000 -D "$WORK/international.headers" \
+            -H "Authorization: Bearer $LOUNGE_QA_OIDC" "$BROKER_URL/bulk-baseline" \
+            -o "$WORK/international-before.xml.gz"
+          head="$(git ls-remote origin refs/heads/epg-data | cut -f1)"
+          test "${#head}" = 40
+          printf '%s\n' "$head" > "$WORK/source-head"
+          canonical="https://raw.githubusercontent.com/Gazzamoo111/lounge-tv-player/$head/epg"
+          curl -fsS --max-time 120 "$canonical/guide.xml.gz" -o "$WORK/canonical.xml.gz"
+          code="$(curl -sS --max-time 120 -w '%{http_code}' "$canonical/bulk/guide.xml.gz" -o "$WORK/previous")"
+          case "$code" in
+            200) ;;
+            404) rm "$WORK/previous" ;;
+            *) exit 1 ;;
+          esac
+      - name: Validate combined XMLTV and record source health
+        run: |
+          set -euo pipefail
+          for file in "$WORK"/{NZ_AU_M3U,PLUS_M3U,international}.m3u; do
+            test "$(grep -c '^#EXTINF:' "$file")" -ge 10000
+          done
+          previous=()
+          if test -s "$WORK/previous"; then previous=(--previous-bulk "$WORK/previous"); fi
+          python qa/epg/bulk_guide.py \
+            --profile nz-au="$WORK/NZ_AU_M3U.m3u" --profile plus="$WORK/PLUS_M3U.m3u" \
+            --profile international="$WORK/international.m3u" \
+            --baseline "$WORK/canonical.xml.gz" --international-baseline "$WORK/international-before.xml.gz" \
+            "${previous[@]}" --cache "$WORK/sources" --out "$WORK/candidate"
+          python - <<'PY'
+          from datetime import datetime
+          import json, os
+          from pathlib import Path
+          base = Path(os.environ['WORK']) / 'candidate'
+          report = json.loads((base / 'report.json').read_text())
+          groups = report['after']
+          if not any(r.get('shared_programmes', 0) for r in report['contributions'].values()) and not (base.parent / 'previous').exists():
+              raise SystemExit('initial build provided no shared schedule gains')
+          if not report['international_compiled_baseline_used'] or (base / 'international-master.xml.gz').stat().st_size >= 49000000:
+              raise SystemExit('compiled guide failed its publication bounds')
+          manifest = {'generated_at': report['generated_at'],
+                      'revision': datetime.fromisoformat(report['generated_at']).strftime('%Y%m%d%H%M%S'),
+                      'baseline_head': (base.parent / 'source-head').read_text().strip(),
+                      'guides': report['guides'],
+                      'coverage': {p: groups[p]['categories']['TOTAL'] for p in groups},
+                      'sources': {name: status['status'] for name, status in report['source_health'].items()}}
+          (base / 'manifest.json').write_text(json.dumps(manifest, indent=2) + chr(10))
+          PY
+      - name: Checkout only the EPG data branch for promotion
+        if: vars.LOUNGE_EPG_BULK_MODE == 'publish'
+        uses: actions/checkout@v4
+        with:
+          ref: epg-data
+          path: bulk-published
+      - name: Promote the validated shared guide with Git compare-and-swap
+        if: vars.LOUNGE_EPG_BULK_MODE == 'publish'
+        run: |
+          set -euo pipefail
+          cd bulk-published
+          expected="$(cat "$WORK/source-head")"
+          test "$(git rev-parse HEAD)" = "$expected"
+          test "$(git ls-remote origin refs/heads/epg-data | cut -f1)" = "$expected"
+          mkdir -p epg/bulk/short
+          cp "$WORK/candidate/guide.xml.gz" "$WORK/candidate/manifest.json" epg/bulk/
+          find "$WORK/candidate/short" -name '*.json' -exec cp {} epg/bulk/short/ \;
+          git config user.name 'Lounge TV EPG Automation'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add epg/bulk
+          git diff --cached --quiet && exit 0
+          git commit -m 'epg: refresh validated aggregate programmes'
+          git push origin HEAD:epg-data
+      - name: Obtain a fresh token for the compiled guide promotion
+        if: vars.LOUNGE_EPG_BULK_MODE == 'publish'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const token = await core.getIDToken('loungetv-international-epg-qa');
+            core.setSecret(token);
+            core.exportVariable('LOUNGE_QA_OIDC', token);
+      - name: Promote the compiled International guide against its captured version
+        if: vars.LOUNGE_EPG_BULK_MODE == 'publish'
+        run: |
+          set -euo pipefail
+          version="$(awk 'tolower($1) == "x-lounge-guide-version:" {gsub(/\r/, "", $2); print $2}' "$WORK/international.headers")"
+          test -n "$version"
+          curl -fsS --max-time 130 -X PUT \
+            -H "Authorization: Bearer $LOUNGE_QA_OIDC" -H "X-Lounge-Guide-Version: $version" \
+            -H "Content-Type: application/gzip" --data-binary @"$WORK/candidate/international-master.xml.gz" \
+            "$BROKER_URL/bulk-upload"

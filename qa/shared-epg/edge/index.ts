@@ -26,6 +26,25 @@ const xmlEsc=(s:unknown)=>String(s??"")
 const terrestrialIds=["mjh-tvnz-1","mjh-tvnz-2","mjh-three","mjh-maori-tv","mjh-te-reo"];
 let xmlCache:{until:number,body:string}|null=null;
 const LOUNGE_STATIC_EPG_URL="https://raw.githubusercontent.com/Gazzamoo111/lounge-tv-player/epg-data/epg/guide.xml";
+const BULK_EPG_BASE=LOUNGE_STATIC_EPG_URL.replace(/\/guide\.xml$/,"/bulk");
+async function publishedBulkGuide(method:string){
+  if(Deno.env.get("LOUNGE_BULK_EPG_ENABLED")!=="1")return null;
+  try{
+    const manifest=await fetch(BULK_EPG_BASE+"/manifest.json",{signal:AbortSignal.timeout(2500)});
+    if(!manifest.ok)return null;
+    const info=await manifest.json();
+    const timestamp=Date.parse(info.generated_at||"");
+    const age=Date.now()-timestamp;
+    if(!Number.isFinite(age)||age<0||age>48*3600000||!/^\d{14}$/.test(info.revision||""))return null;
+    const upstream=await fetch(BULK_EPG_BASE+"/guide.xml.gz?rev="+info.revision,{
+      method,headers:{"Accept-Encoding":"identity"},signal:AbortSignal.timeout(12000),
+    });
+    if(!upstream.ok||method!=="HEAD"&&!upstream.body)return null;
+    return method==="HEAD"?upstream:new Response(
+      upstream.body!.pipeThrough(new DecompressionStream("gzip"))
+    );
+  }catch{return null;}
+}
 
 const skySportTargets=[
   {id:"SkySport1.nz",rx:/\bsky\s*sport\s*1\b/i},
@@ -415,7 +434,8 @@ Deno.serve(async(req:Request)=>{
   // the finished canonical guide. If that artifact is unavailable, the existing
   // lightweight NZ/Sky/core fallback below remains intact.
   try{
-    const upstream=await fetch(LOUNGE_STATIC_EPG_URL,{
+    const bulk=await publishedBulkGuide(req.method);
+    const upstream=bulk||await fetch(LOUNGE_STATIC_EPG_URL,{
       method:req.method,
       headers:{"User-Agent":"LoungeTV-EPG-Serve/1.0","Accept":"application/xml,text/xml,*/*"},
       signal:AbortSignal.timeout(12000),
@@ -428,7 +448,7 @@ Deno.serve(async(req:Request)=>{
             "Content-Type":"application/xml; charset=utf-8",
             "Cache-Control":"public, max-age=900, stale-while-revalidate=3600",
             "Access-Control-Allow-Origin":"*",
-            "X-Lounge-EPG-Source":"canonical-static+sky+uk-movie-fallback",
+            "X-Lounge-EPG-Source":bulk?"bulk+sky+uk-movies":"canonical-static+sky+uk-movie-fallback",
           },
         });
       }
@@ -453,7 +473,7 @@ Deno.serve(async(req:Request)=>{
           "Content-Type":"application/xml; charset=utf-8",
           "Cache-Control":"public, max-age=900, stale-while-revalidate=3600",
           "Access-Control-Allow-Origin":"*",
-          "X-Lounge-EPG-Source":"canonical-stream+sky+uk-movies",
+          "X-Lounge-EPG-Source":bulk?"bulk+sky+uk-movies":"canonical-stream+sky+uk-movies",
         },
       });
     }
