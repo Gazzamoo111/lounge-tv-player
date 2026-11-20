@@ -1,15 +1,15 @@
 {
-  "generatedAtUtc": "2026-11-19T22:43:41.058904+00:00",
+  "generatedAtUtc": "2026-11-20T11:59:42.227533+00:00",
   "nzChannels": 14,
   "conflicts": [],
   "sourceErrors": {},
   "coreNowCovered": 5,
   "matchedChannels": 14,
   "changedChannels": 14,
-  "addedProgrammes": 38,
-  "prunedExpired": 171,
-  "originalProgrammes": 96381,
-  "finalProgrammes": 96248,
+  "addedProgrammes": 265,
+  "prunedExpired": 198,
+  "originalProgrammes": 106804,
+  "finalProgrammes": 106871,
   "sevenDayChannels": 5,
   "matched": [
     {
@@ -18,8 +18,8 @@
       "source": "mjh",
       "sourceId": "mjh-te-reo",
       "match": "exact-id",
-      "added": 0,
-      "latestUtc": "2026-11-28T03:30:00+00:00"
+      "added": 14,
+      "latestUtc": "2026-11-29T03:30:00+00:00"
     },
     {
       "name": "Three",
@@ -27,8 +27,8 @@
       "source": "mjh",
       "sourceId": "mjh-three",
       "match": "exact-id",
-      "added": 5,
-      "latestUtc": "2026-11-27T23:25:00+00:00"
+      "added": 13,
+      "latestUtc": "2026-11-28T16:00:00+00:00"
     },
     {
       "name": "TVNZ 1",
@@ -36,8 +36,8 @@
       "source": "mjh",
       "sourceId": "mjh-tvnz-1",
       "match": "exact-id",
-      "added": 10,
-      "latestUtc": "2026-11-27T17:00:00+00:00"
+      "added": 26,
+      "latestUtc": "2026-11-28T12:50:00+00:00"
     },
     {
       "name": "TVNZ 2",
@@ -45,7 +45,7 @@
       "source": "mjh",
       "sourceId": "mjh-tvnz-2",
       "match": "exact-id",
-      "added": 6,
+      "added": 0,
       "latestUtc": "2026-11-27T16:50:00+00:00"
     },
     {
@@ -54,8 +54,8 @@
       "source": "mjh",
       "sourceId": "mjh-maori-tv",
       "match": "exact-id",
-      "added": 17,
-      "latestUtc": "2026-11-27T23:00:00+00:00"
+      "added": 18,
+      "latestUtc": "2026-11-28T17:30:00+00:00"
     },
     {
       "name": "SKY SPORT 1",
@@ -63,8 +63,8 @@
       "source": "nz1",
       "sourceId": "Sky.Sport.1.nz",
       "match": "unique-nz-name",
-      "added": 0,
-      "latestUtc": "2026-11-23T06:00:00+00:00"
+      "added": 18,
+      "latestUtc": "2026-11-24T00:00:00+00:00"
     },
     {
       "name": "SKY SPORT 2",
@@ -72,8 +72,8 @@
       "source": "nz1",
       "sourceId": "Sky.Sport.2.nz",
       "match": "unique-nz-name",
-      "added": 0,
-      "latestUtc": "2026-11-23T00:00:00+00:00"
+      "added": 25,
+      "latestUtc": "2026-11-24T00:00:00+00:00"
     },
     {
       "name": "SKY SPORT 3",
@@ -81,8 +81,8 @@
       "source": "nz1",
       "sourceId": "Sky.Sport.3.nz",
       "match": "unique-nz-name",
-      "added": 0,
-      "latestUtc": "2026-11-23T01:30:00+00:00"
+      "added": 19,
+      "latestUtc": "2026-11-24T01:00:00+00:00"
     },
     {
       "name": "SKY SPORT 4",
@@ -90,8 +90,8 @@
       "source": "nz1",
       "sourceId": "Sky.Sport.4.nz",
       "match": "unique-nz-name",
-      "added": 0,
-      "latestUtc": "2026-11-23T07:30:00+00:00"
+      "added": 12,
+      "latestUtc": "2026-11-24T07:30:00+00:00"
     },
     {
       "name": "SKY SPORT 5",
@@ -99,8 +99,8 @@
       "source": "nz1",
       "sourceId": "Sky.Sport.5.nz",
       "match": "unique-nz-name",
-      "added": 0,
-      "latestUtc": "2026-11-23T00:00:00+00:00"
+      "added": 9,
+      "latestUtc": "2026-11-24T08:00:00+00:00"
     },
     {
       "name": "SKY SPORT 6",
@@ -108,8 +108,8 @@
       "source": "nz1",
       "sourceId": "Sky.Sport.6.nz",
       "match": "unique-nz-name",
-      "added": 0,
-      "latestUtc": "2026-11-22T17:30:00+00:00"
+      "added": 17,
+      "latestUtc": "2026-11-24T01:00:00+00:00"
     },
     {
       "name": "SKY SPORT 7",
@@ -117,8 +117,8 @@
       "source": "nz1",
       "sourceId": "Sky.Sport.7.nz",
       "match": "unique-nz-name",
-      "added": 0,
-      "latestUtc": "2026-11-23T00:30:00+00:00"
+      "added": 44,
+      "latestUtc": "2026-11-24T01:00:00+00:00"
     },
     {
       "name": "SKY SPORT 8",
@@ -126,8 +126,8 @@
       "source": "nz1",
       "sourceId": "Sky.Sport.8.nz",
       "match": "unique-nz-name",
-      "added": 0,
-      "latestUtc": "2026-11-23T00:00:00+00:00"
+      "added": 37,
+      "latestUtc": "2026-11-24T00:00:00+00:00"
     },
     {
       "name": "SKY SPORT 9",
@@ -135,8 +135,8 @@
       "source": "nz1",
       "sourceId": "Sky.Sport.9.nz",
       "match": "unique-nz-name",
-      "added": 0,
-      "latestUtc": "2026-11-23T01:00:00+00:00"
+      "added": 13,
+      "latestUtc": "2026-11-24T01:00:00+00:00"
     }
   ]
 }
