@@ -1,4 +1,5 @@
 name: Lounge TV scheduled AU EPG | 3-day minimum and honest 24-7
+run-name: ${{ inputs.candidate_only && 'Read-only bulk EPG candidate' || '' }}
 on:
   push:
     branches: [main]
