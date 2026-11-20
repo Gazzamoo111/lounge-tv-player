@@ -1,0 +1,19 @@
+# source<TAB>country<TAB>FAST platform<TAB>URL<TAB>policy
+# Candidate sources in priority order. Keep only guides with measured contributions.
+epgenius-66			https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg66.xml.gz	epgenius
+epgenius-64			https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg64.xml.gz	epgenius
+epgenius-37			https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg37.xml.gz	epgenius
+epgenius-42			https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg42.xml.gz	epgenius
+epgenius-32			https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg32.xml.gz	epgenius
+epgenius-63			https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg63.xml.gz	epgenius
+epgenius-31			https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg31.xml.gz	epgenius
+epgenius-49			https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg49.xml.gz	epgenius
+epgenius-38			https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg38.xml.gz	epgenius
+epgenius-41			https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg41.xml.gz	epgenius
+epgenius-14			https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg14.xml.gz	epgenius
+epgenius-15			https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg15.xml.gz	epgenius
+epgenius-6			https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg6.xml.gz	epgenius
+epgenius-2			https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg2.xml.gz	epgenius
+epgenius-65			https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg65.xml.gz	epgenius
+epgenius-13			https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg13.xml.gz	epgenius
+epgenius-55			https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg55.xml.gz	epgenius

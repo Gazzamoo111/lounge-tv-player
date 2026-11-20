@@ -42,6 +42,17 @@ MARKET = re.compile(r"\b(?:east(?:ern)?|west(?:ern)?|pacific|central|mountain|at
                     r"sydney|melbourne|brisbane|perth|adelaide|darwin|hobart|canberra|nsw|vic|qld|"
                     r"scotland|wales|northern ireland|suisse|schweiz)\b", re.I)
 PLATFORM = re.compile(r"\b(pluto(?:\s*tv)?|samsung(?:\s*tv\s*plus)?|plex|tubi|prime)\b", re.I)
+EPGENIUS_PLACEHOLDERS = re.compile(
+    r"^(?:next event:|no programming|no information|no events|off air|24/7|tba\b|to be announced)",
+    re.I,
+)
+EXPLICIT_MARKET = re.compile(
+    r"\b(?:australia|new zealand|hong kong|malaysia|singapore|(?:beIN Sports|ESPN)\s+AU)\b", re.I
+)
+MARKET_COUNTRY = {
+    "australia": "au", "new zealand": "nz", "hong kong": "hk", "malaysia": "my",
+    "singapore": "sg", "bein sports au": "au", "espn au": "au",
+}
 GENERIC = {"abc", "nbc", "fox", "cbs", "pbs", "cw", "bbc1", "bbc2", "itv1",
            "seven", "nine", "ten", "sbs", "channel9", "channel7", "channel10",
            "channel4", "5", "rtl", "tv1", "tv2", "tv3"}
@@ -160,6 +171,7 @@ class Source:
     region: str
     platform: str
     url: str
+    policy: str = ""
 
 
 def read_sources(path):
@@ -327,6 +339,13 @@ def safe_match(row, source, cid, labels, method):
         return False
     if market_tokens([raw]) != market_tokens([cid, *labels]):
         return False
+    if source.policy == "epgenius":
+        if not region or identity(raw, region) != identity(labels[0], region):
+            return False
+        # Some mixed feeds label imports under the provider's grouping market.
+        if any(MARKET_COUNTRY[" ".join(value.casefold().split())] != region
+               for value in EXPLICIT_MARKET.findall(raw)):
+            return False
     if method == "exact":
         # Existing IDs can be wrong. Require a corroborating label or an ID
         # spelling of the same service before adding a new source schedule.
@@ -347,6 +366,8 @@ def current_next(windows, now):
 def read_source(source, path, index, aliases, now, cutoff, horizon):
     valid_ids, discovered, matched, records = set(), set(), {}, defaultdict(dict)
     duplicates = set()
+    active_titles = defaultdict(set)
+    conflicts = set()
     counts = Counter()
     latest = None
     for element in elements(path):
@@ -363,7 +384,8 @@ def read_source(source, path, index, aliases, now, cutoff, horizon):
             for target in aliases.get((source.name, cid), ()):
                 matched.setdefault(cid, {})[target] = "reviewed"
             strict = {(row, "exact") for row in index.get(("id", cid.casefold()), ())}
-            by_name = {(row, "name") for label in labels
+            aliases_for_matching = labels[:1] if source.policy == "epgenius" else labels
+            by_name = {(row, "name") for label in aliases_for_matching
                        for row in index.get(("name", region, identity(label, region)), ()) if region}
             for row, method in sorted(strict | by_name, key=lambda item: item[1]):
                 if safe_match(row, source, cid, labels, method):
@@ -377,10 +399,19 @@ def read_source(source, path, index, aliases, now, cutoff, horizon):
                 valid_ids.add(key)
                 latest = max(latest or window[1], window[1])
                 if key in matched and key not in duplicates:
+                    title = (element.findtext("title") or "").strip().casefold()
+                    if source.policy == "epgenius" and EPGENIUS_PLACEHOLDERS.match(title):
+                        counts["placeholder"] += 1
+                        continue
                     if window not in records[key]:
                         records[key][window] = compact(element, *window)
                     else:
                         counts["duplicate"] += 1
+                        if source.policy == "epgenius" and title != (
+                                etree.fromstring(records[key][window]).findtext("title") or "").strip().casefold():
+                            conflicts.add(key)
+                    if source.policy == "epgenius" and window[1] > now and window[0] <= now + timedelta(hours=24):
+                        active_titles[key].add(title)
     by_target = defaultdict(dict)
     for source_id, targets in matched.items():
         if source_id in duplicates:
@@ -400,6 +431,15 @@ def read_source(source, path, index, aliases, now, cutoff, horizon):
                 max(stop for _, stop in line) < now + timedelta(days=3)):
             reasons[target] = "schedule-not-current-and-next-or-short-horizon"
             continue
+        if source.policy == "epgenius":
+            if len(active_titles[cid]) < 2:
+                reasons[target] = "repeated-or-placeholder-listings"
+                continue
+            windows = sorted(line)
+            if cid in conflicts or any(stop > next_start
+                    for (_, stop), (next_start, _) in zip(windows, windows[1:])):
+                reasons[target] = "conflicting-source-windows"
+                continue
         selections[target] = (cid, method, line)
     health = {"status": "usable" if latest and latest > now else "stale-or-empty",
               "channels": len(discovered), "scheduled_ids": len(valid_ids),
@@ -587,19 +627,25 @@ def build(args):
                 reasons[target] = note
             print(source.name, summary["status"], len(choices), flush=True)
 
+    epgenius_priority = {source.name: pos for pos, source in enumerate(sources)
+                         if source.policy == "epgenius"}
     contributions = defaultdict(Counter)
     additions = {}
     bindings = {}
     for target, choices in ranked.items():
-        # Choose one coherent schedule per channel. Exact/verified identity
-        # wins before the longest programme horizon, then configured priority.
-        source, cid, method, schedule = min(
-            choices, key=lambda c: (METHODS[c[2]], -max(end for _, end in c[3]).timestamp(),
-                                    c[0]))
+        # Keep a single source schedule. Prefer stronger identity, then the
+        # reviewed EPGenius feed order among equally strong EPGenius matches.
+        ordered = sorted(choices, key=lambda choice: (
+            METHODS[choice[2]], epgenius_priority.get(choice[0], -1),
+            -max(end for _, end in choice[3]).timestamp(), choice[0],
+        ))
         previous = records.get(target, {})
-        proposed = dict(previous)
-        added = add_schedule(proposed, schedule, target)
-        if not added or not all(current_next(proposed, now)):
+        for source, cid, method, schedule in ordered:
+            proposed = dict(previous)
+            added = add_schedule(proposed, schedule, target)
+            if added and all(current_next(proposed, now)):
+                break
+        else:
             reasons[target] = "conflicting-programme-windows"
             continue
         if target not in channels:

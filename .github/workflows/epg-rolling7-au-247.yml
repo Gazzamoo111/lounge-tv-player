@@ -1,5 +1,5 @@
 name: Lounge TV scheduled AU EPG | 3-day minimum and honest 24-7
-run-name: ${{ inputs.candidate_only && 'Read-only bulk EPG candidate' || '' }}
+run-name: ${{ (inputs.candidate_only || inputs.epgenius_candidate || github.event_name == 'push' || github.event_name == 'pull_request') && 'Read-only bulk EPG candidate' || '' }}
 on:
   push:
     branches: [main]
@@ -13,6 +13,10 @@ on:
     inputs:
       candidate_only:
         description: 'Validate the bulk EPG without publishing'
+        type: boolean
+        default: false
+      epgenius_candidate:
+        description: 'Use the reviewed EPGenius source list for a candidate-only build'
         type: boolean
         default: false
       prepare_release:
@@ -49,7 +53,7 @@ jobs:
     if: >-
       github.event_name != 'push' &&
       (github.event_name != 'workflow_dispatch' ||
-       (!inputs.candidate_only && vars.LOUNGE_EPG_BULK_MODE != 'candidate'))
+       (!inputs.candidate_only && !inputs.epgenius_candidate && vars.LOUNGE_EPG_BULK_MODE != 'candidate'))
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -329,6 +333,8 @@ jobs:
           (work / 'authenticated.m3u').replace(received)
           PY
       - name: Validate combined XMLTV and record source health
+        env:
+          EPGENIUS_CANDIDATE: ${{ inputs.epgenius_candidate }}
         run: |
           set -euo pipefail
           for file in "$WORK"/profiles/{nz-au,plus}.m3u "$WORK"/international.m3u; do
@@ -336,7 +342,12 @@ jobs:
           done
           previous=()
           if test -s "$WORK/previous"; then previous=(--previous-bulk "$WORK/previous"); fi
+          source_args=()
+          if [[ "$EPGENIUS_CANDIDATE" == true ]]; then
+            source_args=(--sources qa/epg/epgenius_sources.tsv)
+          fi
           python qa/epg/bulk_guide.py \
+            "${source_args[@]}" \
             --profile nz-au="$WORK/profiles/nz-au.m3u" --profile plus="$WORK/profiles/plus.m3u" \
             --profile international="$WORK/international.m3u" \
             --baseline "$WORK/canonical.xml.gz" --international-baseline "$WORK/international-before.xml.gz" \
@@ -430,7 +441,7 @@ jobs:
   publish_shared_only:
     if: >-
       github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' &&
-      inputs.candidate_only && !inputs.prepare_release && inputs.shared_release_package &&
+      inputs.candidate_only && !inputs.epgenius_candidate && !inputs.prepare_release && inputs.shared_release_package &&
       inputs.international_action == 'none' && vars.LOUNGE_EPG_SHARED_PUBLISH == 'approved'
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -483,7 +494,7 @@ jobs:
   international_only:
     if: >-
       github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' &&
-      inputs.candidate_only && !inputs.prepare_release && !inputs.shared_release_package &&
+      inputs.candidate_only && !inputs.epgenius_candidate && !inputs.prepare_release && !inputs.shared_release_package &&
       (inputs.international_action == 'publish' || inputs.international_action == 'restore') &&
       vars.LOUNGE_EPG_INTERNATIONAL_PUBLISH == 'approved'
     runs-on: ubuntu-latest
