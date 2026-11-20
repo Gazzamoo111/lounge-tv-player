@@ -1,101 +1,101 @@
 {
-  "revision": "59daa9072591c2519fb5538fda5c9a212064694a",
-  "source_guide_revision": "e96385728470e534491602bd9e61753257d951ba",
-  "generated_at": "2026-11-20T09:12:37.364466+00:00",
+  "revision": "1d072d570dc60dfad6742cbf67f7774ee8543971",
+  "source_guide_revision": "148f7593c2a256e7633756eaf79bf9f580e10a57",
+  "generated_at": "2026-11-20T09:14:43.571954+00:00",
   "shards": [
     {
       "file": "00.json.gz",
-      "sha256": "469ccfdc71b0c4c8469ed7ed9c5b2631f789cb4205587bf906fbb100ed1cd783",
+      "sha256": "0b8f56ed16ab12c67f71c2517d42d662a97adf98d215ce565e14a6e863f201e7",
       "channels": 75,
       "bytes": 7130437
     },
     {
       "file": "01.json.gz",
-      "sha256": "100641c3e6dd70d2bb61bf55f4ef5d9e7dba907806b1a519715f4db2604427bd",
+      "sha256": "7c6ae1a32fa6a5183b9a07a3319e5c84b071371b6323862764ad2ee1e3e5c3bf",
       "channels": 72,
       "bytes": 6778579
     },
     {
       "file": "02.json.gz",
-      "sha256": "a35e73dfd4926e00ba77c42e2b24d495fd18f661fdcb24434920ef6813d7982c",
+      "sha256": "37dc2c8b94ab2ca7f3ee08056da12dd32cafd8f2297bfe5a4357b452da1c7dc6",
       "channels": 79,
       "bytes": 9412174
     },
     {
       "file": "03.json.gz",
-      "sha256": "cdf6e087d96c461888b7f50f7430535d6028bca3fa8e3d68b0419fffd441a95d",
+      "sha256": "45cfa8bd7aad0a17375867670f7ffa110be2c9cfd4479eb48443019288678d86",
       "channels": 78,
       "bytes": 5685788
     },
     {
       "file": "04.json.gz",
-      "sha256": "2939191be7395651409b3f55e54d0cd906f0d1e1f02624212e1d830bba31843e",
+      "sha256": "cb72b7681552e188dd4c6793b0df12f61d174d2ce05e6c8c8f030d159a5a5302",
       "channels": 75,
       "bytes": 6318933
     },
     {
       "file": "05.json.gz",
-      "sha256": "c0a12d7a53de64a180d9ec2847e17ef8a5765ef845a4366223afdd073e7d7df1",
+      "sha256": "00aa5dfcc659a927dff2b6f43fb77ad1a15007a9859c004a85fbe87ac4ece6cc",
       "channels": 84,
       "bytes": 8293917
     },
     {
       "file": "06.json.gz",
-      "sha256": "6621bac0a57f77c60d73838606d3ea02dc29e15273c6c97ed76cd99434f05237",
+      "sha256": "1a44c3df3bf5cf7dc56047e539f3d8f77802265c4374c590bd24b9a177658b65",
       "channels": 84,
       "bytes": 6033589
     },
     {
       "file": "07.json.gz",
-      "sha256": "d89c1a04c507d28e8c1de39510f8b0e30d6ef3a6fe251d13bbba5c610b13c14b",
+      "sha256": "ce7fcc5673a6e26823c0024900999bb5171223817a346d3d844a1e9868649cbd",
       "channels": 80,
       "bytes": 9166531
     },
     {
       "file": "08.json.gz",
-      "sha256": "8a819927316d1ca2849e5799c1055ebde38138e1094bc7350b489a6ea99fd295",
+      "sha256": "16c25aca1637fd4550e8f0900ae7d1898620fe0759775130c1b54f4265c1eecf",
       "channels": 59,
       "bytes": 4788187
     },
     {
       "file": "09.json.gz",
-      "sha256": "755d1fd1327d9c6b934d1dc1d709641edf0a92276fe7d0acef840236d4ce82c0",
+      "sha256": "fb9c9577e8320b094facd7b3cd7008571a852154c384db4cf9b085b9f9b8b179",
       "channels": 66,
       "bytes": 5490362
     },
     {
       "file": "10.json.gz",
-      "sha256": "6b696ffa65d42175a9e4067a11e8066e7838f5686e48ce0ea57682df493ad52c",
+      "sha256": "2c4237db83fda901e7aef05470dcbe6f43a72b18cb8726d2ebbe9387ec7d0849",
       "channels": 68,
       "bytes": 8410795
     },
     {
       "file": "11.json.gz",
-      "sha256": "ec63dd81763cd47f8841f2535ed8372e7012c4f15fa3439160a233753208bc2a",
+      "sha256": "3afbe889e53c0e5180c8dcbb5d45dd6e245c71f74474e2cc9eabb8ebf169c0c4",
       "channels": 71,
       "bytes": 7277324
     },
     {
       "file": "12.json.gz",
-      "sha256": "636f819b5fa20941a8e5a14d6aeee605257fbab0dbde14a759ad893d9fbed3cc",
+      "sha256": "8933e633cf7b19eb1f6d92460554475b18d8a2d389fe193dbecf16327be00f55",
       "channels": 77,
       "bytes": 6304922
     },
     {
       "file": "13.json.gz",
-      "sha256": "44acbac67e6a7ea3c3c2e4431e569d49e3a89fdcf9a700e55c59486953d8c32c",
+      "sha256": "326fc1e32cea90d9ef687287b7cbc2e65e9eef5f54c47d71942b3bfe41a59d7a",
       "channels": 72,
       "bytes": 5111023
     },
     {
       "file": "14.json.gz",
-      "sha256": "67046eee53aca9341ab054f5b7435df426afb3a4d5b7f3f13dd9a075c26dcc01",
+      "sha256": "ad253827d6b338e6942ed81e87ac0c4129735421853c01fe428a91c133d8c627",
       "channels": 77,
       "bytes": 6735897
     },
     {
       "file": "15.json.gz",
-      "sha256": "c3a0d7b174a2be385f8f8b87b72fdc179fde67ffe15e1a25a3a69bdd9885050e",
+      "sha256": "a55f59b413596bfd4fdde0088c4b8c8301a4528495a0eb294b50c83b41fcc71e",
       "channels": 77,
       "bytes": 5489614
     }
