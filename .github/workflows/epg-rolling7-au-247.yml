@@ -20,7 +20,7 @@ on:
         type: boolean
         default: false
       shared_release_package:
-        description: 'Approved shared release package run and attempt (blank for candidate)'
+        description: 'Existing package run and attempt (blank for a fresh candidate)'
         type: string
       shared_release_sha256:
         description: 'Approved shared archive SHA-256 (blank for candidate)'
@@ -400,6 +400,32 @@ jobs:
       - name: Stage release packages and verify International restore on a non-serving object
         if: inputs.prepare_release
         run: bash qa/epg/prepare_bulk_release.sh
+
+  rehearse_existing:
+    if: >-
+      github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' &&
+      inputs.candidate_only && inputs.prepare_release && inputs.shared_release_package &&
+      inputs.international_action == 'none' && vars.LOUNGE_EPG_BULK_MODE == 'candidate'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      BROKER_URL: https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-international-epg-broker-qa
+      RESUME_PACKAGE: ${{ inputs.shared_release_package }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const token = await core.getIDToken('loungetv-international-epg-qa');
+            core.setSecret(token);
+            core.exportVariable('LOUNGE_QA_OIDC', token);
+      - name: Rehearse restore from the existing private package
+        run: WORK="$RUNNER_TEMP/lounge-epg-bulk" bash qa/epg/prepare_bulk_release.sh
 
   publish_shared_only:
     if: >-
