@@ -12,40 +12,47 @@ jobs:
       - name: Compare the existing Plus subscription with the isolated QA fallback
         env:
           PLUS_M3U: ${{ secrets.LOUNGE_EPG_PLUS_QA_M3U }}
+          ALT_M3U: ${{ secrets.LOUNGE_EPG_NZ_AU_QA_M3U }}
         run: |
           python3 - <<'PY'
-          import json, os, re, urllib.error, urllib.parse, urllib.request
+          import json, os, re, urllib.parse, subprocess, tempfile
+          from pathlib import Path
 
-          source = urllib.parse.urlsplit(os.environ['PLUS_M3U'])
-          if (source.scheme, source.netloc, source.path) != ('https', 'n.loungetv.nz', '/get.php'):
-              raise SystemExit('Missing existing Plus playlist secret')
           home = 'https://n.loungetv.nz'
           direct = 'https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-plus-qa'
           qa = 'https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-xtream-direct-epg-qa'
-          query = urllib.parse.parse_qs(source.query)
-          login = urllib.parse.urlencode({key: query[key][0] for key in ('username', 'password')})
-          fallback = '/get.php?' + login + '&type=m3u_plus&output=ts'
-          class NoRedirect(urllib.request.HTTPRedirectHandler):
-              def redirect_request(self, *args):
-                  return None
-          http = urllib.request.build_opener(NoRedirect())
           def fetch(url):
-              try:
-                  response = http.open(url, timeout=55)
-              except urllib.error.HTTPError as error:
-                  response = error
-              except (TimeoutError, OSError):
-                  raise SystemExit('Request interrupted') from None
-              with response:
-                  return response.status, response.headers, response.read(12000000)
-
-          status, headers, payload = fetch(home + fallback)
-          if status != 200 or headers.get('X-Lounge-Catalogue') != 'plus-qa':
-              raise SystemExit(f'Existing Plus catalogue unavailable: {status}')
+              if any(ord(c) < 33 or c in (chr(34), chr(92)) for c in url):
+                  raise SystemExit('Unexpected URL encoding')
+              with tempfile.TemporaryDirectory() as root:
+                  target = Path(root) / 'response'
+                  hdr = Path(root) / 'headers'
+                  result = subprocess.run(
+                      ['curl', '--config', '-', '--silent', '--compressed', '--max-filesize', '12000000',
+                       '--max-time', '55', '--dump-header', str(hdr), '--output', str(target),
+                       '--write-out', '%{http_code}'],
+                      input='url = "' + url + '"' + chr(10), text=True, capture_output=True)
+                  if result.returncode:
+                      raise SystemExit(f'Request interrupted: curl exit {result.returncode}')
+                  headers = dict(tuple(line.split(': ', 1)) for line in hdr.read_text().splitlines() if ': ' in line)
+                  return int(result.stdout), {key.lower(): value for key, value in headers.items()}, target.read_bytes()
+          for secret in ('PLUS_M3U', 'ALT_M3U'):
+              source = urllib.parse.urlsplit(os.environ[secret])
+              if (source.scheme, source.netloc, source.path) != ('https', 'n.loungetv.nz', '/get.php'):
+                  continue
+              query = urllib.parse.parse_qs(source.query)
+              login = urllib.parse.urlencode({key: query[key][0] for key in ('username', 'password')})
+              fallback = '/get.php?' + login + '&type=m3u_plus&output=ts'
+              status, headers, payload = fetch(home + fallback)
+              if status == 200 and headers.get('x-lounge-catalogue') == 'plus-qa':
+                  break
+              print(f'Fixture returned {status} with Plus route: {headers.get("x-lounge-catalogue") == "plus-qa"}')
+          else:
+              raise SystemExit('No fixture authenticated through the existing Plus route')
           status, headers, candidate = fetch(qa + fallback)
           if status != 200:
               raise SystemExit(f'QA fallback request failed: {status}')
-          remaps = int(headers['X-Lounge-QA-EPG-Remaps'])
+          remaps = int(headers['x-lounge-qa-epg-remaps'])
           original, updated = payload.decode().splitlines(), candidate.decode().splitlines()
           if len(original) != len(updated):
               raise SystemExit('Playlist length changed')
