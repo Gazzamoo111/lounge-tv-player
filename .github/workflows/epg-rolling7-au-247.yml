@@ -185,11 +185,12 @@ jobs:
       id-token: write
     env:
       BROKER_URL: https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-international-epg-broker-qa
-      WORK: ${{ runner.temp }}/lounge-epg-bulk
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Select private runner workspace
+        run: printf 'WORK=%s\n' "$RUNNER_TEMP/lounge-epg-bulk" >> "$GITHUB_ENV"
       - name: Check out the reviewed catalogue replay and protected regressions
         uses: actions/checkout@v4
         with:
