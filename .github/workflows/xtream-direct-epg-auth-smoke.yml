@@ -1,0 +1,104 @@
+name: Authenticated Xtream fallback QA
+on:
+  push:
+    branches: [qa/xtream-direct-epg-auth-smoke]
+    paths: [.github/workflows/xtream-direct-epg-auth-smoke.yml]
+permissions: { contents: read }
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Compare the existing Plus subscription with the isolated QA fallback
+        env:
+          PLUS_M3U: ${{ secrets.LOUNGE_EPG_PLUS_QA_M3U }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re, urllib.error, urllib.parse, urllib.request
+
+          source = urllib.parse.urlsplit(os.environ['PLUS_M3U'])
+          if (source.scheme, source.netloc, source.path) != ('https', 'n.loungetv.nz', '/get.php'):
+              raise SystemExit('Missing existing Plus playlist secret')
+          home = 'https://n.loungetv.nz'
+          direct = 'https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-plus-qa'
+          qa = 'https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-xtream-direct-epg-qa'
+          query = urllib.parse.parse_qs(source.query)
+          login = urllib.parse.urlencode({key: query[key][0] for key in ('username', 'password')})
+          fallback = '/get.php?' + login + '&type=m3u_plus&output=ts'
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self, *args):
+                  return None
+          http = urllib.request.build_opener(NoRedirect())
+          def fetch(url):
+              try:
+                  response = http.open(url, timeout=55)
+              except urllib.error.HTTPError as error:
+                  response = error
+              except (TimeoutError, OSError):
+                  raise SystemExit('Request interrupted') from None
+              with response:
+                  return response.status, response.headers, response.read(12000000)
+
+          status, headers, payload = fetch(home + fallback)
+          if status != 200 or headers.get('X-Lounge-Catalogue') != 'plus-qa':
+              raise SystemExit(f'Existing Plus catalogue unavailable: {status}')
+          status, headers, candidate = fetch(qa + fallback)
+          if status != 200:
+              raise SystemExit(f'QA fallback request failed: {status}')
+          remaps = int(headers['X-Lounge-QA-EPG-Remaps'])
+          original, updated = payload.decode().splitlines(), candidate.decode().splitlines()
+          if len(original) != len(updated):
+              raise SystemExit('Playlist length changed')
+          guide_urls = re.fullmatch(r'#EXTM3U x-tvg-url="([^"]+)"', updated[0]).group(1).split(',')
+          if guide_urls != [
+              qa + '/xmltv.php?' + login,
+              'https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg66.xml.gz',
+              'https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg64.xml.gz',
+          ]:
+              raise SystemExit('Guide order mismatch')
+          changed_ids = channels = categories = 0
+          for before, after in zip(original[1:], updated[1:]):
+              if not before.startswith('#EXTINF:'):
+                  if before != after:
+                      raise SystemExit('Media or DRM line difference')
+                  continue
+              channels += 1
+              epg = r'(?<=\stvg-id=")[^"]*(?=")'
+              group = r'(?<=\sgroup-title=")[^"]*(?=")'
+              changed_ids += re.search(epg, before).group() != re.search(epg, after).group()
+              categories += bool(re.search(group, before) and '&amp;' in re.search(group, before).group())
+              clean = re.sub(group, lambda m: m.group().replace('&amp;', '&'), before, count=1)
+              if re.sub(epg, '', clean, count=1) != re.sub(epg, '', after, count=1):
+                  raise SystemExit('Unexpected channel metadata difference')
+              if ('TVNZ1.nz' in before or 'TVNZ2.nz' in before or re.search(r'SkySport[1-9]\.nz', before)) and re.sub(group, '', before) != re.sub(group, '', after):
+                  raise SystemExit('Protected EPG ID changed')
+          if changed_ids != remaps or not remaps:
+              raise SystemExit('Remap count mismatch')
+          for action, expected in [('', 200), ('&action=get_live_streams', 503), ('&action=get_live_categories', 200)]:
+              path = '/player_api.php?' + login + action
+              code_before, _, a = fetch(home + path)
+              code_after, _, b = fetch(qa + path)
+              if code_before != expected or code_after != expected:
+                  raise SystemExit(f'Xtream contract status mismatch: {code_before}/{code_after}')
+              if 'get_live_categories' in action:
+                  normalized = json.loads(a)
+                  for item in normalized:
+                      item['category_name'] = item['category_name'].replace('&amp;', '&')
+                  if normalized != json.loads(b):
+                      raise SystemExit('Category names, IDs or ordering differ')
+              if not action and json.loads(b)['user_info']['auth'] not in (1, '1'):
+                  raise SystemExit('Subscription login did not authenticate')
+          status, _, prior = fetch(direct + fallback)
+          if status != 200:
+              raise SystemExit(f'Previous device-preview origin failed: {status}')
+          prior_rows = prior.decode().splitlines()
+          if len(original) != len(prior_rows):
+              raise SystemExit('Existing Xtream and device reference have different inventory lengths')
+          urls_prior = [row for row in prior_rows if not row.startswith('#') and row]
+          urls_base = [row for row in original if not row.startswith('#') and row]
+          same = sum(a == b for a, b in zip(urls_base, urls_prior))
+          alias = sum(a.replace(home + '/live/', direct + '/live/', 1) == b for a, b in zip(urls_base, urls_prior) if a != b)
+          remaining = len(urls_base) - same - alias
+          print(f'Authenticated Plus login and intentional 503 passed. Channels: {channels}, guarded remaps: {remaps}, group labels corrected on {categories} rows.')
+          print(f'Candidate media and DRM lines byte-identical to Xtream. Old preview origin: {same} identical media URLs, {alias} same routes on alternate host, {remaining} other URL differences.')
+          PY
