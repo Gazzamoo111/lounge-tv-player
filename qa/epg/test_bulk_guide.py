@@ -17,6 +17,7 @@ END = NOW + timedelta(days=7)
 START = NOW - timedelta(hours=12)
 SOURCE = Source("share-us", "us", "", "")
 FAST = Source("talk-fast", "us", "multi", "")
+EPGENIUS = Source("epgenius-66", "", "", "", "epgenius")
 
 
 class BulkGuideTest(unittest.TestCase):
@@ -78,6 +79,33 @@ class BulkGuideTest(unittest.TestCase):
             matches, reasons, _ = read_source(SOURCE, file, index, aliases, NOW, START, END)
             self.assertFalse(matches)
             self.assertEqual(reasons["ltv-1"], "ambiguous-in-source")
+
+    def test_epgenius_rejects_alias_only_and_conflicting_markets(self):
+        usa = Row("1", "USA NETWORK HD", "US TV", "ACCNetwork.us")
+        self.assertFalse(safe_match(usa, EPGENIUS, "ACCNetwork.us",
+                                    ["ACC Network", "USA Network"], "exact"))
+        self.assertTrue(safe_match(usa, EPGENIUS, "usanetwork.us", ["USA Network"], "name"))
+        au = Row("2", "beIN SPORTS AU 2", "UK Sports", "ltv-2")
+        self.assertFalse(safe_match(au, EPGENIUS, "bein2.uk", ["beIN SPORTS AU 2"], "name"))
+
+    def test_epgenius_requires_real_distinct_and_nonconflicting_listings(self):
+        row = Row("1", "Test Movie Channel", "US TV", "TestMovie.us")
+        _, index, aliases, _ = candidates([row], {}, {}, NOW)
+        channel = '<channel id="TestMovie.us"><display-name>Test Movie Channel</display-name></channel>'
+        with TemporaryDirectory() as tmp:
+            file = Path(tmp) / "guide.xml"
+            for first, second, next_start, expected in (
+                ("Real Movie", "Another Movie", "20261120010000", True),
+                ("Next Event: TBD", "Another Movie", "20261120010000", False),
+                ("Real Movie", "Real Movie", "20261120010000", False),
+                ("Real Movie", "Another Movie", "20261120003000", False),
+            ):
+                with self.subTest(first=first, second=second, next_start=next_start):
+                    file.write_text(f'<tv>{channel}'
+                                    f'<programme channel="TestMovie.us" start="20261119230000" stop="20261120010000"><title>{first}</title></programme>'
+                                    f'<programme channel="TestMovie.us" start="{next_start}" stop="20261120020000"><title>{second}</title></programme></tv>')
+                    matches, _, _ = read_source(EPGENIUS, file, index, aliases, NOW, START, END)
+                    self.assertEqual(bool(matches), expected)
 
     def test_legacy_duplicate_channel_declarations_are_normalized(self):
         sample = ('<tv><channel id="guide"/><channel id="guide"/>'
