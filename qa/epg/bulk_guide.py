@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 from bisect import bisect_left
 from collections import Counter, defaultdict
 from concurrent.futures import ThreadPoolExecutor
@@ -281,7 +282,10 @@ def baseline(path, cutoff, horizon, *, legacy=False, continuous_labels=None):
             elif status == "continuous-label" and continuous_labels is not None:
                 start, stop = timestamp(element.get("start")), timestamp(element.get("stop"))
                 if stop > cutoff and start < horizon:
-                    continuous_labels[element.get("channel")][start, stop] = compact(element, start, stop)
+                    labels = continuous_labels[element.get("channel")]
+                    if (start, stop) in labels:
+                        raise ValueError("duplicate continuous label")
+                    labels[start, stop] = compact(element, start, stop)
     if (not channels or not records or records.keys() - channels.keys() or counts["invalid"] or
             (continuous_labels is not None and continuous_labels.keys() - channels.keys())):
         raise ValueError("baseline XMLTV failed integrity check")
@@ -492,6 +496,32 @@ def write_guide(path, channels, records):
         file.write(b"</tv>\n")
 
 
+def verify_short_guides(directory, channels, records, now):
+    verified = 0
+    for path in directory.glob("*.json"):
+        document = json.loads(path.read_text())
+        channel = document["epg_id"]
+        if channel not in channels or path.stem != fnv1a(channel):
+            raise ValueError("incorrect short guide channel ID")
+        expected = []
+        for (start, stop), xml in sorted(records[channel].items()):
+            if stop > now - timedelta(minutes=15):
+                programme = etree.fromstring(xml)
+                expected.append((int(start.timestamp()), int(stop.timestamp()),
+                                 (programme.findtext("title") or "").strip()))
+        actual = []
+        for listing in document["epg_listings"]:
+            if listing["channel_id"] != channel or listing["epg_id"] != channel:
+                raise ValueError("incorrect short listing channel ID")
+            title = base64.b64decode(listing["title"], validate=True).decode()
+            base64.b64decode(listing["description"], validate=True).decode()
+            actual.append((listing["start_timestamp"], listing["stop_timestamp"], title))
+        if actual != expected:
+            raise ValueError("short guide listings differ from XMLTV")
+        verified += len(actual)
+    return verified
+
+
 def build(args):
     started = time.monotonic()
     now = datetime.fromisoformat(args.now).astimezone(UTC) if args.now else datetime.now(UTC)
@@ -644,14 +674,26 @@ def build(args):
             raise ValueError(f"programme coverage fell for {name}")
     # Verify the complete serialized output, including every programme reference.
     for name in ("guide.xml.gz", "international-master.xml.gz"):
-        _, _, stats = baseline(args.out / name, cutoff, horizon)
+        retained_labels = defaultdict(dict)
+        output_channels, output_records, stats = baseline(
+            args.out / name, cutoff, horizon, continuous_labels=retained_labels)
         if stats.get("duplicate"):
             raise ValueError(f"duplicate programme in {name}")
+        for channel in output_records.keys() | retained_labels.keys():
+            windows = sorted([*output_records.get(channel, ()), *retained_labels.get(channel, ())])
+            if any(end > next_start for (_, end), (next_start, _) in zip(windows, windows[1:])):
+                raise ValueError(f"overlapping programme windows in {name}")
+        if name == "guide.xml.gz":
+            if retained_labels != continuous_labels:
+                raise ValueError("canonical 24/7 labels changed")
+            short_verified = verify_short_guides(stage, output_channels, output_records, now)
     report = {
         "generated_at": now.isoformat(), "elapsed_seconds": round(time.monotonic() - started, 1),
         "downloaded_source_bytes": sum(s.get("bytes", 0) for s in health.values()),
         "baseline": baseline_health, "international_baseline": intl_health,
         "international_compiled_baseline_used": bool(args.international_baseline),
+        "continuous_labels_retained": sum(map(len, continuous_labels.values())),
+        "short_listings_verified": short_verified,
         "guides": {"shared": {"channels": len(shared_channels), "programmes": sum(map(len, shared_output_records.values()))},
                    "international": {"channels": len(international_out_channels),
                                      "programmes": sum(map(len, international_out_records.values()))}},
