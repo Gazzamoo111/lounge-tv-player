@@ -255,7 +255,7 @@ def compact(node, start, stop):
     return etree.tostring(node, with_tail=False)
 
 
-def baseline(path, cutoff, horizon, *, legacy=False):
+def baseline(path, cutoff, horizon, *, legacy=False, continuous_labels=None):
     channels, records, counts = {}, defaultdict(dict), Counter()
     for element in elements(path):
         if element.tag == "channel":
@@ -278,7 +278,12 @@ def baseline(path, cutoff, horizon, *, legacy=False):
                     counts["duplicate"] += 1
                 else:
                     records[key][window] = compact(element, *window)
-    if (not channels or not records or records.keys() - channels.keys() or counts["invalid"]):
+            elif status == "continuous-label" and continuous_labels is not None:
+                start, stop = timestamp(element.get("start")), timestamp(element.get("stop"))
+                if stop > cutoff and start < horizon:
+                    continuous_labels[element.get("channel")][start, stop] = compact(element, start, stop)
+    if (not channels or not records or records.keys() - channels.keys() or counts["invalid"] or
+            (continuous_labels is not None and continuous_labels.keys() - channels.keys())):
         raise ValueError("baseline XMLTV failed integrity check")
     return channels, records, dict(counts)
 
@@ -502,7 +507,9 @@ def build(args):
     for name, before in before_profiles.items():
         if [(r.key, r.name, r.category) for r in before] != [(r.key, r.name, r.category) for r in profiles[name]]:
             raise ValueError("catalogue identity, name or order changed")
-    channels, records, baseline_health = baseline(args.baseline, cutoff, horizon)
+    continuous_labels = defaultdict(dict)
+    channels, records, baseline_health = baseline(
+        args.baseline, cutoff, horizon, continuous_labels=continuous_labels)
     canonical_ids = set(channels)
     intl_ids = {row.guide for row in profiles["international"] if row.guide not in {"", "0"}}
     intl_channels, intl_records, intl_health = (
@@ -581,7 +588,15 @@ def build(args):
                   | canonical_ids)
     shared_channels = {key: data for key, data in channels.items() if key in shared_ids}
     shared_records = {key: data for key, data in records.items() if key in shared_ids}
-    write_guide(args.out / "guide.xml.gz", shared_channels, shared_records)
+    # Retain existing 24/7 labels in the shared XML without treating them as
+    # programme coverage or using them to match source schedules.
+    shared_output_records = dict(shared_records)
+    for key, labels in continuous_labels.items():
+        scheduled = dict(shared_records.get(key, {}))
+        if add_schedule(scheduled, labels) != len(labels):
+            raise ValueError("existing 24/7 labels overlap the shared schedule")
+        shared_output_records[key] = scheduled
+    write_guide(args.out / "guide.xml.gz", shared_channels, shared_output_records)
     international_out_channels = dict(intl_channels)
     international_out_records = {}
     for key, old in intl_records.items():
@@ -637,7 +652,7 @@ def build(args):
         "downloaded_source_bytes": sum(s.get("bytes", 0) for s in health.values()),
         "baseline": baseline_health, "international_baseline": intl_health,
         "international_compiled_baseline_used": bool(args.international_baseline),
-        "guides": {"shared": {"channels": len(shared_channels), "programmes": sum(map(len, shared_records.values()))},
+        "guides": {"shared": {"channels": len(shared_channels), "programmes": sum(map(len, shared_output_records.values()))},
                    "international": {"channels": len(international_out_channels),
                                      "programmes": sum(map(len, international_out_records.values()))}},
         "catalogue_rows": {name: len(rows) for name, rows in profiles.items()},

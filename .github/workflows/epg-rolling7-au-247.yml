@@ -65,7 +65,13 @@ jobs:
           test -s /tmp/lounge-epg7/existing.xml.gz
       - name: Build three-day-minimum AU guide and seven-day 24/7 labels
         run: |
-          python qa/epg/seven_day_targeted.py \
+          set -euo pipefail
+          # Keep the serving canonical refresh on its reviewed generator while
+          # the newer AU bindings are evaluated by the separate bulk job.
+          legacy_generator=55c98e2cd237bbea904b64b9c9151572bdcdc7b1
+          git fetch --no-tags --depth=1 origin "$legacy_generator"
+          git show "$legacy_generator:qa/epg/seven_day_targeted.py" > /tmp/lounge-epg7/legacy-generator.py
+          python /tmp/lounge-epg7/legacy-generator.py \
             --manifest epg-release/qa/epg/active-release.json \
             --existing /tmp/lounge-epg7/existing.xml.gz \
             --au primary=/tmp/lounge-epg7/au-primary.xml.gz \
@@ -249,6 +255,7 @@ jobs:
             "${previous[@]}" --cache "$WORK/sources" --out "$WORK/candidate"
           python - <<'PY'
           from datetime import datetime
+          from hashlib import file_digest
           import json, os
           from pathlib import Path
           base = Path(os.environ['WORK']) / 'candidate'
@@ -266,6 +273,27 @@ jobs:
                       'sources': {name: {k: status[k] for k in ('status', 'latest_stop', 'accepted_ids') if k in status}
                                   for name, status in report['source_health'].items()}}
           (base / 'manifest.json').write_text(json.dumps(manifest, indent=2) + chr(10))
+          with Path(os.environ['GITHUB_STEP_SUMMARY']).open('a') as summary:
+              print('## Authenticated bulk EPG candidate', file=summary)
+              print(file=summary)
+              print(f"Generated {manifest['generated_at']} from canonical revision "
+                    f"`{manifest['baseline_head']}`.", file=summary)
+              print(file=summary)
+              print('| Profile | Eligible | Mapped | Current | Next | Both |', file=summary)
+              print('| --- | ---: | ---: | ---: | ---: | ---: |', file=summary)
+              for name, data in groups.items():
+                  before = report['before'][name]['categories']['TOTAL']
+                  after = data['categories']['TOTAL']
+                  changes = ' | '.join(f'{before[k]} → {after[k]}' for k in ('mapped', 'current', 'next', 'both'))
+                  print(f"| {name} | {after['eligible']} | {changes} |", file=summary)
+              print(file=summary)
+              for label, path in [('Shared candidate', base / 'guide.xml.gz'),
+                                  ('International candidate', base / 'international-master.xml.gz'),
+                                  ('International rollback baseline', base.parent / 'international-before.xml.gz')]:
+                  with path.open('rb') as guide:
+                      digest = file_digest(guide, 'sha256').hexdigest()
+                  print(f'- {label} SHA-256 `{digest}`', file=summary)
+              print(f"- Shared short guides: {sum(1 for _ in (base / 'short').glob('*.json'))}", file=summary)
           PY
       - name: Checkout only the EPG data branch for promotion
         if: vars.LOUNGE_EPG_BULK_MODE == 'publish'

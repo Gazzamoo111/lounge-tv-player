@@ -1,13 +1,15 @@
 """Regression tests for programme identity and preservation across EPG feeds."""
+from argparse import Namespace
 from datetime import datetime, timedelta, timezone
 import gzip
+import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
 from lxml import etree
 
-from bulk_guide import (Row, Source, add_schedule, baseline, candidates, coverage,
+from bulk_guide import (Row, Source, add_schedule, baseline, build, candidates, coverage,
                         identity, load_catalogue, read_source, safe_match, timestamp)
 
 NOW = datetime(2026, 11, 20, 0, tzinfo=timezone.utc)
@@ -93,6 +95,36 @@ class BulkGuideTest(unittest.TestCase):
                                channels, programmes, NOW, {})
             self.assertEqual(results["categories"]["TOTAL"]["eligible"], 1)
             self.assertEqual(results["categories"]["TOTAL"]["current"], 1)
+
+    def test_shared_output_retains_existing_continuous_labels(self):
+        with TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            programmes = '''<tv><channel id="guide"/><channel id="loop"/>
+                <programme channel="guide" start="20261119230000 +0000" stop="20261120010000 +0000">
+                    <title>Scheduled show</title>
+                </programme>
+                <programme channel="loop" start="20261119230000 +0000" stop="20261120010000 +0000">
+                    <title>24/7 • Continuous</title>
+                </programme></tv>'''
+            (base / "canonical.xml").write_text(programmes)
+            (base / "sources.tsv").touch()
+            (base / "catalogue.json").write_text(json.dumps([
+                {"key": "1", "name": "TVNZ 1", "category": "New Zealand", "guide": "guide"},
+                {"key": "2", "name": "Continuous", "category": "24/7 Movies", "guide": "loop"},
+            ]))
+            output = base / "out"
+            build(Namespace(
+                now=NOW.isoformat(), baseline=base / "canonical.xml",
+                international_baseline=None, previous_bulk=None, before_profile=[],
+                profile=[f"{p}={base / 'catalogue.json'}" for p in ("nz-au", "plus", "international")],
+                sources=base / "sources.tsv", cache=base / "cache", out=output,
+            ))
+            with gzip.open(output / "guide.xml.gz") as guide:
+                root = etree.parse(guide)
+            self.assertEqual(root.findtext('programme[@channel="loop"]/title'), "24/7 • Continuous")
+            report = json.loads((output / "report.json").read_text())
+            self.assertEqual(report["guides"]["shared"]["programmes"], 2)
+            self.assertEqual(report["after"]["nz-au"]["categories"]["TOTAL"]["current"], 1)
 
 
 if __name__ == "__main__":
