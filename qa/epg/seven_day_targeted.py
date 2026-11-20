@@ -43,6 +43,14 @@ AU_REVIEWED_IDS = {
     "ABC Comedy": ("xmltv-net", "411316auepg.com.au"),
     "ABC NEWS SYDNEY": ("xmltv-net", "391135auepg.com.au"),
 }
+# Source IDs and markets verified against the corresponding Lounge TV streams.
+# If the exact upstream service is absent, leave the channel without new listings.
+AU_SOURCE_BINDINGS = {
+    "live:au-ten": "10Perth.au",
+    "live:au-espn-1": "ESPN.au",
+    "live:au-espn-2": "ESPN2.au",
+    "live:au-10-shake": "10ShakeSydney.au",
+}
 IGNORED = re.compile(r"\b(?:4k|uhd|fhd|hevc|hd|sd|50fps|60fps)\b", re.I)
 
 
@@ -107,12 +115,17 @@ def source_index(root, now, end):
 def select_feed(row, feeds, now, end):
     desired = str(row.get("epgId") or "").strip()
     name = str(row.get("name") or "").strip()
+    exact_source = AU_SOURCE_BINDINGS.get(row.get("key"))
     candidates = []
     for feed_name, (ids, names, programs) in feeds.items():
         cid = None
         method = None
         reviewed = AU_REVIEWED_IDS.get(name)
-        if reviewed and feed_name == reviewed[0] and reviewed[1].casefold() in ids:
+        if exact_source:
+            if feed_name != "primary":
+                continue
+            cid, method = ids.get(exact_source.casefold()), "verified-source-binding"
+        elif reviewed and feed_name == reviewed[0] and reviewed[1].casefold() in ids:
             cid, method = ids[reviewed[1].casefold()], "official-rename-reviewed-id"
         elif desired and desired.casefold() in ids:
             cid, method = ids[desired.casefold()], "exact-id"
@@ -195,8 +208,8 @@ def main():
     rows = json.loads(Path(args.manifest).read_text())["rows"]
     au_rows = [x for x in rows if x.get("category") == "Australia"]
     # Never overwrite an EPG ID reused by different broadcaster names.
-    # The source manifest currently assigns 10Bold.au to BOTH 10 BOLD and Ten.
-    # Correcting that requires an isolated channel-to-guide mapping fix first.
+    # The pinned manifest still lists 10Bold.au for Ten. The gateway emits
+    # Ten under its canonical key, which is the target for its Perth schedule.
     au_id_owners = defaultdict(set)
     for row in au_rows:
         if row.get("epgId"):
@@ -246,7 +259,7 @@ def main():
     au_status = {}
     au_rejections = {}
     for row in au_rows:
-        target = str(row.get("epgId") or row["key"]).strip()
+        target = row["key"] if row["key"] in AU_SOURCE_BINDINGS else str(row.get("epgId") or row["key"]).strip()
         if len(au_id_owners.get(target, set())) > 1:
             au_status[row["name"]] = "shared-epg-id-skipped"
             continue
@@ -257,7 +270,12 @@ def main():
             for feed_name, (ids, names, programs) in feeds.items():
                 desired = str(row.get("epgId") or "").strip()
                 match_id = None
-                if desired and desired.casefold() in ids:
+                exact_source = AU_SOURCE_BINDINGS.get(row["key"])
+                if exact_source:
+                    if feed_name != "primary":
+                        continue
+                    match_id = ids.get(exact_source.casefold())
+                elif desired and desired.casefold() in ids:
                     match_id = ids[desired.casefold()]
                 elif row["name"].upper() in ALIAS and ALIAS[row["name"].upper()].casefold() in ids:
                     match_id = ids[ALIAS[row["name"].upper()].casefold()]

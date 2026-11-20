@@ -9,6 +9,11 @@ on:
   schedule:
     - cron: '17 0,12 * * *'
   workflow_dispatch:
+    inputs:
+      candidate_only:
+        description: 'Validate the bulk EPG without publishing'
+        type: boolean
+        default: false
 permissions:
   contents: read
 concurrency:
@@ -16,6 +21,10 @@ concurrency:
   cancel-in-progress: false
 jobs:
   validate:
+    if: >-
+      github.event_name != 'push' &&
+      (github.event_name != 'workflow_dispatch' ||
+       (!inputs.candidate_only && vars.LOUNGE_EPG_BULK_MODE != 'candidate'))
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -32,7 +41,7 @@ jobs:
       - name: Install XML parser
         run: python -m pip install lxml==5.4.0
       - name: Run regression suite first
-        run: python -m unittest qa/epg/test_seven_day_targeted.py -v
+        run: python -m unittest discover -s qa/epg -v
       - name: Download existing guide and Australian schedules
         shell: bash
         run: |
@@ -60,7 +69,13 @@ jobs:
           test -s /tmp/lounge-epg7/existing.xml.gz
       - name: Build three-day-minimum AU guide and seven-day 24/7 labels
         run: |
-          python qa/epg/seven_day_targeted.py \
+          set -euo pipefail
+          # Keep the serving canonical refresh on its reviewed generator while
+          # the newer AU bindings are evaluated by the separate bulk job.
+          legacy_generator=55c98e2cd237bbea904b64b9c9151572bdcdc7b1
+          git fetch --no-tags --depth=1 origin "$legacy_generator"
+          git show "$legacy_generator:qa/epg/seven_day_targeted.py" > /tmp/lounge-epg7/legacy-generator.py
+          python /tmp/lounge-epg7/legacy-generator.py \
             --manifest epg-release/qa/epg/active-release.json \
             --existing /tmp/lounge-epg7/existing.xml.gz \
             --au primary=/tmp/lounge-epg7/au-primary.xml.gz \
@@ -157,3 +172,194 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -m 'epg: refresh Australian schedules with three-day minimum and honest 24/7 labels'
           git push origin HEAD:epg-data
+
+  bulk:
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      github.event_name == 'workflow_dispatch' && inputs.candidate_only &&
+      vars.LOUNGE_EPG_BULK_MODE == 'candidate'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      BROKER_URL: https://liqocisegeqzbyuqloql.supabase.co/functions/v1/lounge-international-epg-broker-qa
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Select private runner workspace
+        run: printf 'WORK=%s\n' "$RUNNER_TEMP/lounge-epg-bulk" >> "$GITHUB_ENV"
+      - name: Check out the reviewed catalogue replay and protected regressions
+        uses: actions/checkout@v4
+        with:
+          repository: Gazzamoo111/lounge-tv-feed
+          ref: 46a6cc00d6a90fe2660f8641660623984d5719ec
+          path: feed-regression
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: python -m pip install lxml==5.4.0
+      - run: python -m unittest discover -s qa/epg -v
+      - name: Run protected playback routing regressions
+        working-directory: feed-regression
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin \
+            68be2022dc70675c351a8a6fc5435ae1f4079efa \
+            589ecddb085352585d3f7d3b6a65ecc2ad444b68 \
+            db443bb775bea37a92339db2443b418ea8222386 \
+            f8bc7ab33542bda9daedf1839cd23d980f4b6a7c
+          python -m unittest discover -s tests/playlist_regression
+          python scripts/run_playlist_regression.py
+      - name: Obtain a read token for the private International guide
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const token = await core.getIDToken('loungetv-international-epg-qa');
+            core.setSecret(token);
+            core.exportVariable('LOUNGE_QA_OIDC', token);
+      - name: Capture full authenticated catalogue and current guide versions
+        env:
+          NZ_AU_M3U: ${{ secrets.LOUNGE_EPG_NZ_AU_QA_M3U }}
+          PLUS_M3U: ${{ secrets.LOUNGE_EPG_PLUS_QA_M3U }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p "$WORK"
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          import subprocess
+          from urllib.parse import urlsplit
+          url = os.environ['NZ_AU_M3U'] or os.environ['PLUS_M3U']
+          endpoint = urlsplit(url)
+          work = Path(os.environ['WORK'])
+          if ((endpoint.scheme, endpoint.netloc, endpoint.path) != ('https', 'n.loungetv.nz', '/get.php')
+                  or any(ord(c) < 33 or c in (chr(34), chr(92)) for c in url)):
+              raise SystemExit('A valid authenticated Lounge TV gateway playlist secret is required')
+          subprocess.run(['curl', '--config', '-', '--fail', '--silent',
+                          '--compressed', '--max-filesize', '20000000', '--max-time', '90',
+                          '--dump-header', str(work / 'account.headers'),
+                          '--output', str(work / 'authenticated.m3u')],
+                         input=f'url = "{url}"' + chr(10), text=True, check=True)
+          headers = (work / 'account.headers').read_text().lower().splitlines()
+          markers = [line.split(':', 1)[1].strip() for line in headers
+                     if line.startswith('x-lounge-catalogue:')]
+          if markers not in ([], ['plus-qa']):
+              raise SystemExit('Unexpected playlist variant')
+          (work / 'authenticated-profile').write_text('plus' if markers else 'nz-au')
+          PY
+          curl -fsS --max-time 90 --max-filesize 10000000 -o "$WORK/catalogue.json" \
+            -H "Authorization: Bearer $LOUNGE_QA_OIDC" "$BROKER_URL/bulk-catalogue"
+          curl -fsS --max-time 90 --max-filesize 20000000 -o "$WORK/international.m3u" \
+            -H "Authorization: Bearer $LOUNGE_QA_OIDC" "$BROKER_URL/bulk-regional-playlist"
+          curl -fsS --max-time 90 --max-filesize 49000000 -D "$WORK/international.headers" \
+            -H "Authorization: Bearer $LOUNGE_QA_OIDC" "$BROKER_URL/bulk-baseline" \
+            -o "$WORK/international-before.xml.gz"
+          head="$(git ls-remote origin refs/heads/epg-data | cut -f1)"
+          test "${#head}" = 40
+          printf '%s\n' "$head" > "$WORK/source-head"
+          canonical="https://raw.githubusercontent.com/Gazzamoo111/lounge-tv-player/$head/epg"
+          curl -fsS --max-time 120 "$canonical/guide.xml.gz" -o "$WORK/canonical.xml.gz"
+          code="$(curl -sS --max-time 120 -w '%{http_code}' "$canonical/bulk/guide.xml.gz" -o "$WORK/previous")"
+          case "$code" in
+            200) ;;
+            404) rm "$WORK/previous" ;;
+            *) exit 1 ;;
+          esac
+      - name: Replay both catalogues from the current Supabase snapshot
+        run: |
+          set -euo pipefail
+          umask 077
+          for slug in n lounge-plus-qa; do
+            python feed-regression/scripts/restore_playlist_baseline.py --repo feed-regression \
+              --function "$slug" --output "$WORK/bundle-$slug"
+          done
+          mkdir "$WORK/bundles"
+          mv "$WORK/bundle-n/n" "$WORK/bundle-lounge-plus-qa/lounge-plus-qa" "$WORK/bundles/"
+          node feed-regression/tests/playlist_regression/replay.mjs \
+            "$WORK/bundles" "$WORK/profiles" "$WORK/catalogue.json"
+          PYTHONPATH=qa/epg python - <<'PY'
+          import os
+          from pathlib import Path
+          from bulk_guide import load_catalogue
+          work = Path(os.environ['WORK'])
+          authenticated_profile = (work / 'authenticated-profile').read_text()
+          actual = load_catalogue(work / 'authenticated.m3u')
+          received = work / 'profiles' / (authenticated_profile + '.m3u')
+          expected = load_catalogue(received)
+          if [row.key for row in actual] != [row.key for row in expected]:
+              raise SystemExit(f'Authenticated {authenticated_profile} stable IDs/order differ from the pinned replay '
+                               f'({len(actual)} vs {len(expected)} rows)')
+          if actual != expected:
+              raise SystemExit(f'Authenticated {authenticated_profile} catalogue metadata differs from the pinned replay')
+          print(f'Authenticated {authenticated_profile} verified: {len(actual)} stable IDs in the expected order')
+          (work / 'authenticated.m3u').replace(received)
+          PY
+      - name: Validate combined XMLTV and record source health
+        run: |
+          set -euo pipefail
+          for file in "$WORK"/profiles/{nz-au,plus}.m3u "$WORK"/international.m3u; do
+            test "$(grep -c '^#EXTINF:' "$file")" -ge 10000
+          done
+          previous=()
+          if test -s "$WORK/previous"; then previous=(--previous-bulk "$WORK/previous"); fi
+          python qa/epg/bulk_guide.py \
+            --profile nz-au="$WORK/profiles/nz-au.m3u" --profile plus="$WORK/profiles/plus.m3u" \
+            --profile international="$WORK/international.m3u" \
+            --baseline "$WORK/canonical.xml.gz" --international-baseline "$WORK/international-before.xml.gz" \
+            "${previous[@]}" --cache "$WORK/sources" --out "$WORK/candidate"
+          python - <<'PY'
+          from datetime import datetime
+          from hashlib import file_digest
+          import json, os
+          from pathlib import Path
+          base = Path(os.environ['WORK']) / 'candidate'
+          report = json.loads((base / 'report.json').read_text())
+          groups = report['after']
+          if not any(r.get('shared_programmes', 0) for r in report['contributions'].values()) and not (base.parent / 'previous').exists():
+              raise SystemExit('initial build provided no shared schedule gains')
+          if not report['international_compiled_baseline_used'] or (base / 'international-master.xml.gz').stat().st_size >= 49000000:
+              raise SystemExit('compiled guide failed its publication bounds')
+          manifest = {'generated_at': report['generated_at'],
+                      'revision': datetime.fromisoformat(report['generated_at']).strftime('%Y%m%d%H%M%S'),
+                      'baseline_head': (base.parent / 'source-head').read_text().strip(),
+                      'guides': report['guides'],
+                      'coverage': {p: groups[p]['categories']['TOTAL'] for p in groups},
+                      'sources': {name: {k: status[k] for k in ('status', 'latest_stop', 'accepted_ids') if k in status}
+                                  for name, status in report['source_health'].items()}}
+          (base / 'manifest.json').write_text(json.dumps(manifest, indent=2) + chr(10))
+          with Path(os.environ['GITHUB_STEP_SUMMARY']).open('a') as summary:
+              print('## Authenticated bulk EPG candidate', file=summary)
+              print(file=summary)
+              print(f"Generated {manifest['generated_at']} from canonical revision "
+                    f"`{manifest['baseline_head']}`.", file=summary)
+              print(file=summary)
+              auth_profile = (base.parent / 'authenticated-profile').read_text()
+              print('| Profile | Source | Eligible | Mapped | Current | Next | Both |', file=summary)
+              print('| --- | --- | ---: | ---: | ---: | ---: | ---: |', file=summary)
+              for name, data in groups.items():
+                  before = report['before'][name]['categories']['TOTAL']
+                  after = data['categories']['TOTAL']
+                  changes = ' | '.join(f'{before[k]} → {after[k]}' for k in ('mapped', 'current', 'next', 'both'))
+                  origin = ('Existing QA broker' if name == 'international' else
+                            'Authenticated BEST account' if name == auth_profile else
+                            'Supabase replay; separate account unverified')
+                  print(f"| {name} | {origin} | {after['eligible']} | {changes} |", file=summary)
+              print(file=summary)
+              for label, path in [('Shared candidate', base / 'guide.xml.gz'),
+                                  ('International candidate', base / 'international-master.xml.gz'),
+                                  ('International rollback baseline', base.parent / 'international-before.xml.gz')]:
+                  with path.open('rb') as guide:
+                      digest = file_digest(guide, 'sha256').hexdigest()
+                  print(f'- {label} SHA-256 `{digest}`', file=summary)
+              print(f"- Shared short guides: {sum(1 for _ in (base / 'short').glob('*.json'))}", file=summary)
+              print(f"- Canonical 24/7 labels retained: {report['continuous_labels_retained']}", file=summary)
+              print(f"- Shared short listings verified: {report['short_listings_verified']}", file=summary)
+          PY
