@@ -58,7 +58,7 @@ jobs:
               raise SystemExit('Playlist length changed')
           guide_urls = re.fullmatch(r'#EXTM3U x-tvg-url="([^"]+)"', updated[0]).group(1).split(',')
           if guide_urls != [
-              qa + '/xmltv.php?' + login,
+              re.fullmatch(r'#EXTM3U x-tvg-url="([^"]+)"', original[0]).group(1),
               'https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg66.xml.gz',
               'https://github.com/ferteque/Curated-M3U-Repository/raw/refs/heads/main/epg64.xml.gz',
           ]:
