@@ -67,7 +67,7 @@ import tv.own.owntv.ui.theme.stageAccent
 import tv.own.owntv.ui.theme.stageText
 
 /** The sheet's items, top to bottom. [DEVELOPER] exists only in local builds (BuildConfig.DEV_TOOLS). */
-private enum class MoreItem { SETTINGS, FAVORITES, HISTORY, BACKUP, LOCAL_SYNC, ERROR_LOG, ABOUT, DEVELOPER }
+private enum class MoreItem { SETTINGS, HISTORY, BACKUP, LOCAL_SYNC, ERROR_LOG, ABOUT, DEVELOPER }
 
 /**
  * More: the glass section sheet, topped by the profile, and one page on the right
@@ -162,7 +162,6 @@ fun MoreScreen(
             }
             item(MoreItem.SETTINGS, OwnTVIcon.SETTINGS, stringResource(R.string.common_nav_settings), null, false)
             GroupLabel(stringResource(R.string.more_group_your_things))
-            item(MoreItem.FAVORITES, OwnTVIcon.FAVORITE, stringResource(R.string.content_category_favorites), favorites.total.toString(), false)
             item(MoreItem.HISTORY, OwnTVIcon.HISTORY, stringResource(R.string.content_category_history), history.total.toString(), false)
             GroupLabel(stringResource(R.string.more_group_keep_safe))
             item(
@@ -200,10 +199,6 @@ fun MoreScreen(
                     entry = pageTarget, pinned = pinned.size,
                     onOpenGroup = { onOpenSettings(it, false) },
                     onSearch = { onOpenSettings(null, true) },
-                )
-                MoreItem.FAVORITES -> FavouritesPage(
-                    vm = vm, setEntry = setEntry,
-                    onPlayChannel = onPlayChannel, onPlayMovie = { onPlayMovie(it, 0L) }, onOpenSeries = onOpenSeries,
                 )
                 MoreItem.HISTORY -> HistoryPage(
                     vm = vm, setEntry = setEntry,

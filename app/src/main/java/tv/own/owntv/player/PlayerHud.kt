@@ -208,6 +208,7 @@ fun PlayerHud(
     // (the EPG data lives in LiveViewModel, not the player). Rendered on the right edge whenever the
     // controls are visible, like the top-bar channel card; informational only, never focusable.
     liveEpgCard: (@Composable () -> Unit)? = null,
+    premiumLivePanel: (@Composable (List<String>, FocusRequester, () -> Unit, () -> Unit) -> Unit)? = null,
     // Now/next lines for the channel-change banner (the playing channel's guide). Null = name only.
     zapGuide: (@Composable () -> Unit)? = null,
     // The archive's own wall-clock instant while catch-up/rewind is playing; null means the picture is
@@ -286,15 +287,29 @@ fun PlayerHud(
         nextCardDue && !autoNextDismissed
 
     var controlsVisible by remember { mutableStateOf(true) }
+    var premiumTools by remember { mutableStateOf(false) }
+    LaunchedEffect(controlsVisible) { if (!controlsVisible) premiumTools = false }
+    LaunchedEffect(premiumTools) {
+        if (controlsVisible && !inert) {
+            androidx.compose.runtime.withFrameNanos { }
+            runCatching { playFocus.requestFocus() }
+        }
+    }
     var showInfo by remember { mutableStateOf(false) } // stream technical-info overlay
     // Used only by "Report this stream", which writes the current readout into the playback log.
     val reportContext = androidx.compose.ui.platform.LocalContext.current
     var wakeTick by remember { mutableIntStateOf(0) }
     val forceShow = error != null || dialog != HudDialog.NONE
-    // First Back hides the controls (instead of leaving the channel); with the controls already hidden
-    // this handler is disabled, so Back falls through to the shell, which exits the player. Also disabled
-    // while an error/dialog is up (a dialog handles its own Back; an error should exit).
-    BackHandler(enabled = controlsVisible && !forceShow) { controlsVisible = false }
+    // Keep Back's down/up ownership in this persistent HUD, not in the synopsis content that
+    // disappears on KeyDown. Otherwise its KeyUp reaches the shell after controlsVisible=false
+    // and the same physical press exits playback as well as closing the panel.
+    var consumedBackDownTime by remember { mutableStateOf<Long?>(null) }
+    val dismissControls: () -> Unit = {
+        if (premiumTools) { premiumTools = false; wakeTick++ }
+        else controlsVisible = false
+    }
+    // System/predictive Back has no key pair, but observes the same contextual precedence.
+    BackHandler(enabled = controlsVisible && !forceShow && !inert, onBack = dismissControls)
     // Channel zap (live only): a brief "now watching" card on up/down without revealing the full HUD.
     val canZap = onChannelUp != null && onChannelDown != null
     var channelFlash by remember { mutableIntStateOf(0) }
@@ -423,7 +438,7 @@ fun PlayerHud(
         }
     }
     // Back cancels digit entry before it hides/exits controls.
-    BackHandler(enabled = digitsActive) { digitBuffer = ""; tuneOsd = null }
+    BackHandler(enabled = digitsActive && !inert && dialog == HudDialog.NONE) { cancelDirectTune() }
 
     // Only for the "report this stream" button, whose readout is now gathered off the main thread.
     val hudScope = androidx.compose.runtime.rememberCoroutineScope()
@@ -474,6 +489,23 @@ fun PlayerHud(
     Box(
         modifier = modifier.fillMaxSize()
             .onPreviewKeyEvent { e ->
+            if (e.key == Key.Back) {
+                if (e.type == KeyEventType.KeyUp && consumedBackDownTime != null) {
+                    consumedBackDownTime = null
+                    return@onPreviewKeyEvent true
+                }
+                if (e.type == KeyEventType.KeyDown) {
+                    // Repeats stay with the original gesture even after the panel has unmounted.
+                    if (consumedBackDownTime == e.nativeKeyEvent.downTime) return@onPreviewKeyEvent true
+                    // A fresh downTime recovers cleanly if a window change lost the preceding KeyUp.
+                    consumedBackDownTime = null
+                    if (!inert && dialog == HudDialog.NONE && error == null && (digitsActive || controlsVisible)) {
+                        consumedBackDownTime = e.nativeKeyEvent.downTime
+                        if (digitsActive) cancelDirectTune() else dismissControls()
+                        return@onPreviewKeyEvent true
+                    }
+                }
+            }
             // ---- Direct-tune digit capture (before the existing KeyDown guard) ----
             // Number keys are consumed globally here, HUD visible or not: on a TV remote a digit press
             // during live playback can only mean "tune to this channel", and swallowing both KeyDown and
@@ -657,6 +689,16 @@ fun PlayerHud(
         RecordingBadge(modifier = Modifier.align(Alignment.TopEnd))
 
         if (controlsVisible) {
+            if (isLive && error == null && premiumLivePanel != null && !premiumTools) {
+                Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 28.dp, vertical = 20.dp)) {
+                    premiumLivePanel(
+                        listOfNotNull(engineChip) + streamChips.ifEmpty { listOfNotNull(videoRes) },
+                        playFocus,
+                        { premiumTools = true },
+                        { controlsVisible = false },
+                    )
+                }
+            } else {
             // Scrims: a FLAT semi-transparent panel behind the controls, feathered to transparent only at
             // the inner edge. A pure gradient faded out exactly where the chips and the Now/Next text sit,
             // so those washed out on bright scenes; a hard-edged band would instead draw a visible seam
@@ -743,6 +785,9 @@ fun PlayerHud(
                     modifier = Modifier.align(Alignment.BottomStart),
                 )
             }
+        }
+
+            // End of the existing full tools chrome. The compact panel never owns playback.
         }
 
         // Next-episode countdown card (VOD queue only) — surfaces the automatic advance with Play now /

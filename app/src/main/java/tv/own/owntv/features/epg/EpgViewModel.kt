@@ -5,8 +5,10 @@ package tv.own.owntv.features.epg
 import tv.own.owntv.core.epg.displayLogoUrl
 import tv.own.owntv.features.live.shouldHideBestNzChannel
 import tv.own.owntv.features.live.isAllowedBestNzSportsCategory
+import tv.own.owntv.features.live.LoungeEditorialOrder
 import tv.own.owntv.features.live.LoungeLiveCatalogueCleanup
 import tv.own.owntv.features.live.LoungeLiveDuplicates
+import tv.own.owntv.features.live.LoungeNzOrder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.FlowPreview
@@ -51,6 +53,7 @@ import tv.own.owntv.core.customize.CustomizeKeys
 import tv.own.owntv.core.customize.applyCustomizations
 import tv.own.owntv.core.customize.railCategories
 import tv.own.owntv.core.database.entity.ChannelEntity
+import tv.own.owntv.core.database.entity.ContentOrderEntity
 import tv.own.owntv.core.database.entity.EpgProgrammeEntity
 import tv.own.owntv.core.model.MediaType
 import tv.own.owntv.core.network.ConnectivityObserver
@@ -88,6 +91,9 @@ data class EpgUiState(
     val message: EpgMessage? = null,
     /** False when the user hasn't added any EPG source yet → the screen shows an "Add EPG" prompt. */
     val hasEpgSources: Boolean = true,
+    /** Identity of the completed row load; cached rows stay visible while another category loads. */
+    val loadedCategory: tv.own.owntv.core.live.LiveKey? = null,
+    val loadedLiveMode: Boolean = false,
 )
 
 /**
@@ -332,6 +338,22 @@ class EpgViewModel(
     private fun shiftFor(channel: ChannelEntity): Int =
         tv.own.owntv.core.epg.EpgShift.minutesFor(custom.value, channel, epgOffset.value)
 
+    /** Lightweight schedule for one channel/day only. Retains core's source priority and manual time shifts. */
+    suspend fun channelSchedule(channel: ChannelEntity, from: Long, to: Long): List<EpgProgrammeEntity> {
+        require(to > from && to - from <= 25L * 60 * 60 * 1000)
+        // Read the active profile directly: the first popup can open before custom's stateIn warms.
+        val pid = settings.activeProfileId.first()
+        if (pid < 0) return emptyList()
+        val cust = customize.observe(pid, MediaType.LIVE).first()
+        val rows = guideReader.row(channel, cust, settings.epgOffsetMinutes.first(), from, to)
+            .filter { it.stopMs > from && it.startMs < to && it.stopMs > it.startMs }
+            .distinctBy { Triple(it.startMs, it.stopMs, it.title) }
+            .sortedBy { it.startMs }
+        return rows // Full text and year/episode metadata are read only for the settled selection.
+    }
+
+    suspend fun scheduleDays(): Int = settings.guideDaysToKeep.first()
+
     /** Synchronous cache peek — lets a re-composed row render instantly without a loading flash. */
     fun cachedProgrammes(channel: ChannelEntity): List<EpgProgrammeEntity>? =
         cachedRow(cacheKey(channel, shiftFor(channel)))
@@ -403,6 +425,13 @@ class EpgViewModel(
             .drop(1)
             .distinctUntilChanged()
             .onEach { load() }
+            .launchIn(viewModelScope)
+        settings.sortLive
+            .drop(1)
+            .distinctUntilChanged()
+            .onEach {
+                if (settings.sortGuide.first() == SettingsRepository.GuideSort.LIVE_TV) load()
+            }
             .launchIn(viewModelScope)
         settings.guideShowEmpty
             .drop(1)
@@ -873,6 +902,8 @@ class EpgViewModel(
 
     private suspend fun runLoad() {
         val loadStartedAt = android.os.SystemClock.elapsedRealtime()
+        val loadedCategory = _categoryFilter.value
+        val loadedLiveMode = liveTvGuideMode
         // Show the spinner only on the FIRST load. The EpgViewModel is shared, so on re-entry the guide
         // is already populated — keep the existing list on screen and refresh it silently, so opening the
         // Guide menu is instant instead of flashing a spinner and re-rendering from scratch every time.
@@ -891,7 +922,7 @@ class EpgViewModel(
         // even when the customer's normal Xtream playlist is selected.
         val freeviewIds = sourceDao.observeForProfile(pid).first().filter { source ->
             source.type == SourceType.M3U &&
-                source.url.contains("i.mjh.nz/nz/", ignoreCase = true)
+                source?.url.orEmpty().contains("i.mjh.nz/nz/", ignoreCase = true)
         }.map { it.id }
         val playlistIds = (normalSourceIds + freeviewIds).distinct()
         val epgIds = epgSourceStore.getAll().map { it.id }
@@ -921,7 +952,8 @@ class EpgViewModel(
         // Respect customizations: hidden channels stay out of the guide, renames show.
         val cust = customize.observe(pid, MediaType.LIVE).first()
         val q = _query.value.trim()
-        val providerTypes = playlistIds.associateWith { sourceId -> sourceDao.getById(sourceId)?.type }
+        val providerSources = playlistIds.associateWith { sourceId -> sourceDao.getById(sourceId) }
+        val providerTypes = providerSources.mapValues { it.value?.type }
         val categories = categoryDao.observe(playlistIds, MediaType.LIVE).first()
         val originalCategoryNames = categories.associate { it.id to it.name }
         val showEveryUnmatchedChannel = settings.guideShowEmpty.first()
@@ -929,7 +961,7 @@ class EpgViewModel(
             channelDao.channelsForGuide(playlistIds, q, MAX_CHANNELS)
         } else {
             val withGuide = channelDao.channelsWithGuide(ids, q, MAX_CHANNELS)
-            if (!liveTvGuideMode) {
+            if (!loadedLiveMode) {
                 withGuide
             } else {
                 // Supplement only the two approved NZ Sky Sport groups when their provider
@@ -963,7 +995,7 @@ class EpgViewModel(
             name = cat.name, count = null, synced = true,
         )
     })
-    val hiddenCatIds = manualHidden + reviewedPlan.hiddenIds
+    val hiddenCatIds = manualHidden + reviewedPlan.hiddenIds + categories.filter { tv.own.owntv.features.live.LoungeCustomerCatalogue.internalOnly(it.name) }.map { it.id }
     val hiddenDuplicateIds = if (reviewedPlan.sourceIds.isEmpty()) emptySet() else
         withContext(Dispatchers.IO) {
             LoungeLiveDuplicates.choose(
@@ -972,7 +1004,7 @@ class EpgViewModel(
                 reviewedPlan.sourceIds, hiddenCatIds,
             ).hiddenIds
         }
-        val filter = _categoryFilter.value
+        val filter = loadedCategory
         // A provider folder keeps out the channels the user moved from it into a custom category.
         val folderKey = (filter as? tv.own.owntv.core.live.LiveKey.Folder)
             ?.let { categoryDao.getById(it.id) }?.let(CustomizeKeys::category)
@@ -983,10 +1015,69 @@ class EpgViewModel(
                 historyDao.getForProfileType(pid, MediaType.LIVE).mapTo(HashSet()) { it.itemId }
             else -> null
         }
+        val liveSortMode = settings.sortLive.first()
+        val liveOrderIds = if (sortGuideMode != SettingsRepository.GuideSort.LIVE_TV) {
+            emptyList()
+        } else withContext(Dispatchers.IO) {
+            val sourceIds = playlistIds.ifEmpty { listOf(-1L) }
+            val rows = when (filter) {
+                is tv.own.owntv.core.live.LiveKey.Folder -> {
+                    val category = categories.firstOrNull { it.id == filter.id } ?: return@withContext emptyList()
+                    val contextKey = CustomizeKeys.category(category)
+                    val ordered = when {
+                        LoungeEditorialOrder.channelsEnabled(category.name) ->
+                            channelDao.snapshotByCategoryEditorial(
+                                category.id,
+                                pid,
+                                contextKey,
+                                liveSortMode == SettingsRepository.SortMode.ALPHA,
+                                now,
+                                MAX_CHANNELS,
+                            )
+                        liveSortMode == SettingsRepository.SortMode.ALPHA ->
+                            channelDao.snapshotByCategoryManualAlpha(category.id, pid, contextKey, MAX_CHANNELS)
+                        else -> channelDao.snapshotByCategoryManual(category.id, pid, contextKey, MAX_CHANNELS)
+                    }
+                    val source = providerSources[category.sourceId]
+                    if (source?.type == SourceType.M3U &&
+                        source?.url.orEmpty().contains("i.mjh.nz/nz/", ignoreCase = true)
+                    ) LoungeNzOrder.firstFive(
+                        ordered, preserveManualOrder = channelDao.hasManualLiveOrder(pid, contextKey),
+                    ) else ordered
+                }
+                is tv.own.owntv.core.live.LiveKey.Custom ->
+                    if (liveSortMode == SettingsRepository.SortMode.ALPHA) {
+                        customCategoryDao.snapshotChannelsAlpha(pid, filter.id, sourceIds, MAX_CHANNELS)
+                    } else {
+                        customCategoryDao.snapshotChannels(pid, filter.id, sourceIds, MAX_CHANNELS)
+                    }
+                tv.own.owntv.core.live.LiveKey.Favorites ->
+                    channelDao.snapshotFavoritesManual(
+                        pid,
+                        ContentOrderEntity.FAV_CONTEXT,
+                        sourceIds,
+                        MAX_CHANNELS,
+                    )
+                tv.own.owntv.core.live.LiveKey.History ->
+                    channelDao.recentlyWatched(pid, MAX_CHANNELS).first()
+                tv.own.owntv.core.live.LiveKey.Catchup -> {
+                    if (liveSortMode == SettingsRepository.SortMode.ALPHA) {
+                        channelDao.snapshotCatchupAlpha(sourceIds, MAX_CHANNELS)
+                    } else channelDao.snapshotCatchup(sourceIds, MAX_CHANNELS)
+                }
+                null, tv.own.owntv.core.live.LiveKey.All ->
+                    if (liveSortMode == SettingsRepository.SortMode.ALPHA) {
+                        channelDao.snapshotAllAlpha(sourceIds, MAX_CHANNELS)
+                    } else channelDao.snapshotAll(sourceIds, MAX_CHANNELS)
+            }
+            rows.map { it.id }
+        }
         // Heavy work — filter hidden, apply renames + manual EPG matches, sort, category-filter — runs off
         // the main thread (#3/#5) so a 50k-channel playlist never freezes the UI building the guide list.
         val channels = withContext(Dispatchers.Default) {
+            val internalCatIds = categories.filter { tv.own.owntv.features.live.LoungeCustomerCatalogue.internalOnly(it.name) }.mapTo(hashSetOf()) { it.id }
             val auto = rawChannels
+                .filterNot { it.categoryId in internalCatIds }
                 .filter { ch ->
                     !shouldHideBestNzChannel(
                         providerTypes[ch.sourceId],
@@ -1004,18 +1095,13 @@ class EpgViewModel(
                 }
                 .map { ch -> cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
             val matched = applyEpgMatches(auto, cust, playlistIds, q)
-            // The Order menu: Provider (also the old stored LIVE_TV value), A–Z,
-            // Catch-up first, Favourites first. The last two only float those channels to the top.
-            val byAlpha = compareBy<ChannelEntity> { it.name.lowercase() }
-            val byProvider = compareBy<ChannelEntity>({ it.sourceId }, { it.sortOrder }, { it.name.lowercase() })
-            when (sortGuideMode) {
-                SettingsRepository.GuideSort.ALPHA -> matched.sortedWith(byAlpha)
-                SettingsRepository.GuideSort.PROVIDER -> matched.sortedWith(byProvider)
-                SettingsRepository.GuideSort.CATCHUP -> matched.sortedWith(compareByDescending<ChannelEntity> { it.catchup }.then(byProvider))
-                SettingsRepository.GuideSort.FAVORITES -> matched.sortedWith(compareByDescending<ChannelEntity> { it.id in favoriteIds }.then(byProvider))
-                // LIVE_TV, the old default, is the provider's order too (Channel number was the same thing).
-                SettingsRepository.GuideSort.LIVE_TV -> matched.sortedWith(byProvider)
-            }.let { sorted ->
+            GuideChannelOrdering.order(
+                channels = matched,
+                guideSort = sortGuideMode,
+                liveSort = liveSortMode,
+                favoriteIds = favoriteIds,
+                liveOrderIds = liveOrderIds,
+            ).let { sorted ->
                 when (filter) {
                     null, tv.own.owntv.core.live.LiveKey.All -> sorted
                     tv.own.owntv.core.live.LiveKey.Catchup -> sorted.filter { it.catchup }
@@ -1067,6 +1153,7 @@ class EpgViewModel(
         _state.value = EpgUiState(
             channels = channels, windowStart = windowStart, windowEnd = windowEnd, now = now,
             loading = false, message = message, hasEpgSources = hasEpg,
+            loadedCategory = loadedCategory, loadedLiveMode = loadedLiveMode,
         )
 
         tv.own.owntv.core.CorePerf.log {

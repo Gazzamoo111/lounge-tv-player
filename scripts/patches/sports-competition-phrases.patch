@@ -1,0 +1,285 @@
+--- a/core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt
++++ b/core/src/main/java/tv/own/owntv/core/sports/WatchMatcher.kt
+@@ -5,6 +5,7 @@
+ import tv.own.owntv.core.epg.EpgMatcher
+ import tv.own.owntv.core.live.ProviderTags
+ import tv.own.owntv.core.sports.model.Match
++import tv.own.owntv.core.sports.model.Sport
+ 
+ /** Why a channel is listed under "Watch live", best first. */
+ enum class WatchTier { GUIDE, EVENT, REMEMBERED, LIKELY }
+@@ -62,30 +63,31 @@
+     /** How a programme's text relates to a match. */
+     enum class Hit { NONE, PARTIAL, CONFIRMED }
+ 
+-    /** A match prepared once: its sides' and competition's name keys. */
++    /**
++     * A match prepared once: its sides' and competition's name keys. A race has no sides to look for:
++     * once it is over ESPN lists its first two drivers as if they were, and no guide titles a race by them.
++     */
+     class Keys(val match: Match) {
+-        val home: TeamNames.Key? = match.home?.team?.let(TeamNames::keyOf)
+-        val away: TeamNames.Key? = match.away?.team?.let(TeamNames::keyOf)
++        private val sides = if (match.sport == Sport.RACING) emptyList() else listOfNotNull(match.home?.team, match.away?.team)
++        val home: TeamNames.Key? = sides.getOrNull(0)?.let(TeamNames::keyOf)
++        val away: TeamNames.Key? = sides.getOrNull(1)?.let(TeamNames::keyOf)
+         val competitionNames: List<String> = SportsCatalog.competitionNames(match)
+-        val league: TeamNames.Key = TeamNames.keyOfName(*competitionNames.toTypedArray())
+-        val broadcasters: List<TeamNames.Key> = match.broadcasts.map { TeamNames.keyOfName(it.name) }
++        val league: CompetitionNames.Key = CompetitionNames.keyOf(competitionNames)
++        val broadcasters: List<CompetitionNames.Key> = match.broadcasts.map { CompetitionNames.broadcasterKey(it.name) }
+ 
+         /** Words for a channel full-text search: one team's word is enough to find "Frankfurt v Köln". */
+-        val searchWords: List<String> = buildList {
+-            listOfNotNull(match.home?.team, match.away?.team).forEach { t ->
+-                addAll(asciiWords(t.shortName)); addAll(asciiWords(t.name))
+-            }
+-        }.distinct()
++        val searchWords: List<String> = sides.flatMap { t -> asciiWords(t.shortName) + asciiWords(t.name) }.distinct()
+     }
+ 
+     /**
+      * Both teams, or one team and the competition → confirmed. One team alone → partial, worth reading
+-     * the synopsis. A session with no sides (racing) is confirmed by its competition alone.
++     * the synopsis. A session with no sides (racing) is confirmed by its competition alone. [tokens] are
++     * the text's [TeamNames.tokens], [words] its [CompetitionNames.words].
+      */
+-    fun hit(keys: Keys, tokens: Set<String>): Hit {
++    fun hit(keys: Keys, tokens: Set<String>, words: List<String>): Hit {
+         val home = keys.home?.foundIn(tokens) == true
+         val away = keys.away?.foundIn(tokens) == true
+-        val league = keys.league.foundIn(tokens)
++        val league = keys.league.foundIn(words)
+         return when {
+             keys.home == null && keys.away == null -> if (league) Hit.CONFIRMED else Hit.NONE
+             home && away -> Hit.CONFIRMED
+@@ -104,14 +106,17 @@
+     }
+ 
+     /**
+-     * A channel that usually carries it: its name carries the competition or a broadcaster ESPN names.
++     * A channel that usually carries it: its name carries the competition, or it is a channel of a
++     * broadcaster ESPN names and nothing else ("PEACOCK EVENT 3", not "APPLE TV+ SERIES 1").
+      * Not a channel named for one fixture ("Next | La Clery vs. Vieux Fort South | Premier League"): it
+      * shows that fixture, and when it were this one [isEventChannel] has already listed it.
+      */
+     fun isLikely(keys: Keys, channelName: String): Boolean {
+         if (FIXTURE.containsMatchIn(channelName)) return false
+-        val tokens = TeamNames.tokens(channelName).toSet()
+-        return keys.league.foundIn(tokens) || keys.broadcasters.any { it.foundIn(tokens) }
++        if (keys.league.foundIn(CompetitionNames.words(channelName), channel = true)) return true
++        if (keys.broadcasters.isEmpty()) return false
++        val name = CompetitionNames.words(ProviderTags.parse(channelName).name)
++        return keys.broadcasters.any { it.namesOnly(name) }
+     }
+ 
+     /** A playlist's divider row ("##### PREMIER LEAGUE #####"): a heading, never a channel to watch. */
+--- a/core/src/main/java/tv/own/owntv/core/sports/WatchReader.kt
++++ b/core/src/main/java/tv/own/owntv/core/sports/WatchReader.kt
+@@ -108,10 +108,11 @@
+         val keys = slot.map { WatchMatcher.Keys(it) }
+         val programmes = data.programmes(start - SLOT_BEFORE_MS, start + SLOT_AFTER_MS, minStop = start)
+         val tokens = programmes.associate { it.id to TeamNames.tokens(it.title).toSet() }
++        val words = programmes.associate { it.id to CompetitionNames.words(it.title) }
+         val confirmed = HashMap<String, MutableList<EpgProgrammeLite>>()
+         val partial = HashMap<Long, MutableList<WatchMatcher.Keys>>()
+         for (p in programmes) for (k in keys) {
+-            when (WatchMatcher.hit(k, tokens.getValue(p.id))) {
++            when (WatchMatcher.hit(k, tokens.getValue(p.id), words.getValue(p.id))) {
+                 WatchMatcher.Hit.CONFIRMED -> confirmed.getOrPut(k.match.key) { mutableListOf() } += p
+                 WatchMatcher.Hit.PARTIAL -> partial.getOrPut(p.id) { mutableListOf() } += k
+                 WatchMatcher.Hit.NONE -> Unit
+@@ -124,8 +125,9 @@
+             val byId = programmes.associateBy { it.id }
+             for ((id, text) in texts) {
+                 val all = tokens.getValue(id) + TeamNames.tokens(text)
++                val allWords = words.getValue(id) + "" + CompetitionNames.words(text)
+                 partial[id]?.forEach { k ->
+-                    if (WatchMatcher.hit(k, all) == WatchMatcher.Hit.CONFIRMED) {
++                    if (WatchMatcher.hit(k, all, allWords) == WatchMatcher.Hit.CONFIRMED) {
+                         confirmed.getOrPut(k.match.key) { mutableListOf() } += byId.getValue(id)
+                     }
+                 }
+--- a/core/src/main/java/tv/own/owntv/core/sports/SportOnChannels.kt
++++ b/core/src/main/java/tv/own/owntv/core/sports/SportOnChannels.kt
+@@ -51,7 +51,7 @@
+         val keys = matches.map { WatchMatcher.Keys(it) }
+         val candidates = data.programmes(t - LOOKBACK_MS, t + SOON_MS, minStop = t).mapNotNull { p ->
+             val tokens = TeamNames.tokens(p.title).toSet()
+-            if (keys.any { WatchMatcher.hit(it, tokens) == WatchMatcher.Hit.CONFIRMED }) return@mapNotNull null
++            if (keys.any { WatchMatcher.hit(it, tokens, CompetitionNames.words(p.title)) == WatchMatcher.Hit.CONFIRMED }) return@mapNotNull null
+             val sport = sportOf(p.title, p.categories)
+             when {
+                 sport != null -> Triple(p, sport, false)
+--- a/core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt
++++ b/core/src/main/java/tv/own/owntv/core/sports/SportsCatalog.kt
+@@ -149,6 +149,21 @@
+         League(Sport.LACROSSE, "nll", "National Lacrosse League", "NLL"),
+     )
+ 
++    val otherCompetitions: List<String> = listOf(
++        "Indian Premier League", "Caribbean Premier League", "Bangladesh Premier League", "Lanka Premier League",
++        "Premier League Darts", "Premier League 2", "Premier League Cup", "Premier League International Cup",
++        "Basketball Champions League", "EHF Champions League", "CEV Champions League", "Volleyball Champions League",
++        "World Cup of Darts", "Cricket World Cup", "T20 World Cup", "ICC World Cup", "Rugby League World Cup",
++        "Ski World Cup", "FIS World Cup", "Biathlon World Cup",
++        "Frauen-Bundesliga", "Handball-Bundesliga", "Basketball Bundesliga", "Volleyball Bundesliga", "Bundesliga Handball",
++        "Serie A Femminile", "Serie A Women", "Brasileirão Série B", "Serie B Femminile",
++        "Vrouwen Eredivisie", "Eredivisie Vrouwen", "Liga Portugal 2",
++        "NBA G League", "NBA Summer League", "MLS Next Pro", "F1 Academy", "PGA Tour Champions",
++        "Women's Six Nations", "U20 Six Nations", "Six Nations U20", "Copa del Rey de Baloncesto",
++    )
++
++    val allCompetitionNames: List<String> by lazy { leagues.map { it.name } + otherCompetitions }
++
+     private val byKey: Map<String, League> = leagues.associateBy { it.key }
+ 
+     fun league(key: String): League? = byKey[key]
+@@ -178,7 +193,8 @@
+      * its feed, `cricket/all`, is every series at once.
+      */
+     fun competitionNames(match: Match): List<String> =
+-        listOfNotNull(league(League.keyOf(match.sport, match.leagueSlug))?.name, match.leagueName).distinct()
++        (listOfNotNull(league(League.keyOf(match.sport, match.leagueSlug))?.name, match.leagueName) +
++            if (match.sport == Sport.RACING && match.leagueSlug == "f1") listOf("F1", "Formula One") else emptyList()).distinct()
+ 
+     /** The sports that have something in the catalogue, in chip order. */
+     val sports: List<Sport> get() = Sport.entries.filter { s -> leagues.any { it.sport == s } }
+--- /dev/null
++++ b/core/src/main/java/tv/own/owntv/core/sports/CompetitionNames.kt
+@@ -0,0 +1,92 @@
++package tv.own.owntv.core.sports
++
++import java.text.Normalizer
++
++/**
++ * Competition and broadcaster names in guide titles and channel names: "Formula 1", "F1", "2. Bundesliga".
++ *
++ * Unlike team names ([TeamNames]) a competition is matched as a *phrase*: its words in order, side by
++ * side, numbers kept. "Formula 1" is not in "Formula E", "Ligue 1" is not in "Ligue 2", and "Top 14" needs
++ * the 14. A name found inside a longer competition name ([SportsCatalog.allCompetitionNames]) does not
++ * count either: "Premier League" inside "Indian Premier League", "Bundesliga" inside "2. Bundesliga".
++ * Pure Kotlin, unit-tested.
++ */
++object CompetitionNames {
++
++    private val COMBINING = Regex("\\p{M}+")
++    private val NON_ALNUM = Regex("[^\\p{L}\\p{N}]+")
++    private val NUMBER = Regex("\\p{N}+")
++
++    /**
++     * Words a channel may carry beside a broadcaster's name and still be that broadcaster's channel:
++     * "PEACOCK EVENT 3", "ESPN+ HD". Anything else ("APPLE TV+ SERIES 1") makes it a different channel.
++     */
++    private val FILLER = setOf(
++        "sport", "sports", "hd", "fhd", "uhd", "sd", "hdr", "4k", "8k", "plus", "extra", "live", "event", "events",
++        "ppv", "tv", "channel", "raw", "backup", "alt",
++    )
++
++    /** Lower-case, accent-folded words in order, numbers kept. */
++    fun words(text: String): List<String> =
++        Normalizer.normalize(text.replace('ı', 'i').replace("ß", "ss"), Normalizer.Form.NFKD)
++            .replace(COMBINING, "")
++            .lowercase()
++            .split(NON_ALNUM)
++            .filter { it.isNotEmpty() }
++
++    /**
++     * A competition (or broadcaster) prepared once for many titles. [wider] are, for each of its
++     * phrases, the longer competition names that contain it.
++     */
++    class Key internal constructor(
++        private val phrases: List<List<String>>,
++        private val wider: Map<List<String>, List<List<String>>>,
++    ) {
++        /**
++         * True when one of its names stands in [text] (from [words]) and not as part of a longer
++         * competition's name. A [channel] name may number its feeds ("DAZN LaLiga 2" is LaLiga's second
++         * channel), so there a longer name that only adds a number after it does not count.
++         */
++        fun foundIn(text: List<String>, channel: Boolean = false): Boolean = phrases.any { p ->
++            occurrences(text, p).any { at -> wider[p].orEmpty().none { w -> (!channel || !onlyAddsNumber(p, w)) && covers(text, at, p, w) } }
++        }
++
++        /**
++         * True when a channel is named for it and nothing else: a name, then only quality, feed numbers and
++         * words like "Sport" or "Event" around it.
++         */
++        fun namesOnly(text: List<String>): Boolean = phrases.any { p ->
++            occurrences(text, p).any { at ->
++                text.withIndex().all { (i, w) -> i in at until at + p.size || w in FILLER || NUMBER.matches(w) }
++            }
++        }
++    }
++
++    // The catalogue is immutable: normalise its phrases once, not for every fixture in a board.
++    private val knownPhrases by lazy { SportsCatalog.allCompetitionNames.map(::words).distinct() }
++
++    /** The key of a competition known by [names] (several spellings of one competition). */
++    fun keyOf(names: List<String>): Key {
++        val phrases = names.map(::words).filter { it.isNotEmpty() }.distinct()
++        val others = knownPhrases.filter { it !in phrases }
++        return Key(phrases, phrases.associateWith { p -> others.filter { it.size > p.size && occurrences(it, p).isNotEmpty() } })
++    }
++
++    /** The key of a broadcaster ESPN names ("Peacock", "Apple TV"). */
++    fun broadcasterKey(name: String): Key = Key(listOf(words(name)).filter { it.isNotEmpty() }, emptyMap())
++
++    private fun occurrences(text: List<String>, phrase: List<String>): List<Int> =
++        if (phrase.isEmpty() || phrase.size > text.size) emptyList()
++        else (0..text.size - phrase.size).filter { i -> phrase.indices.all { j -> text[i + j] == phrase[j] } }
++
++    /** True when the longer name [w] stands in [text] around the [phrase] found at [at]. */
++    private fun covers(text: List<String>, at: Int, phrase: List<String>, w: List<String>): Boolean =
++        occurrences(w, phrase).any { offset ->
++            val start = at - offset
++            start >= 0 && start + w.size <= text.size && w.indices.all { j -> text[start + j] == w[j] }
++        }
++
++    /** "LaLiga 2" around "LaLiga": the longer name is the phrase plus trailing numbers only. */
++    private fun onlyAddsNumber(phrase: List<String>, w: List<String>): Boolean =
++        w.size > phrase.size && w.subList(0, phrase.size) == phrase && w.drop(phrase.size).all { NUMBER.matches(it) }
++}
+--- /dev/null
++++ b/core/src/test/java/tv/own/owntv/core/sports/CompetitionNamesTest.kt
+@@ -0,0 +1,40 @@
++package tv.own.owntv.core.sports
++
++import org.junit.Assert.assertEquals
++import org.junit.Assert.assertFalse
++import org.junit.Assert.assertTrue
++import org.junit.Test
++import tv.own.owntv.core.sports.model.Broadcast
++import tv.own.owntv.core.sports.model.Competitor
++import tv.own.owntv.core.sports.model.League
++import tv.own.owntv.core.sports.model.Match
++import tv.own.owntv.core.sports.model.MatchState
++import tv.own.owntv.core.sports.model.Sport
++import tv.own.owntv.core.sports.model.Team
++
++class CompetitionNamesTest {
++    private fun match(sport: Sport, slug: String, espnName: String, sides: List<Team> = emptyList(), broadcasts: List<String> = emptyList()) = Match(
++        id = "1", sport = sport, feed = League.keyOf(sport, slug), leagueSlug = slug, leagueName = espnName,
++        startMs = 0, state = MatchState.PRE, statusText = "", title = "",
++        competitors = sides.mapIndexed { i, t -> Competitor(t, home = i == 0, winner = null, score = null) },
++        broadcasts = broadcasts.map { Broadcast(it) },
++    )
++
++
++    @Test fun formulaOneDoesNotMatchFormulaE() {
++        val k=WatchMatcher.Keys(match(Sport.RACING,"f1","Formula 1"))
++        assertFalse(WatchMatcher.isLikely(k,"Formula E"))
++        assertTrue(WatchMatcher.isLikely(k,"Sky Sports F1"))
++        assertEquals(WatchMatcher.Hit.NONE, WatchMatcher.hit(k, TeamNames.tokens("Formula E").toSet(), CompetitionNames.words("Formula E")))
++    }
++    @Test fun premierLeagueDoesNotMatchIndianPremierLeague() {
++        val k=WatchMatcher.Keys(match(Sport.SOCCER,"eng.1","Premier League"))
++        assertFalse(WatchMatcher.isLikely(k,"Indian Premier League"))
++        assertTrue(WatchMatcher.isLikely(k,"Premier League"))
++    }
++    @Test fun broadcasterOwnershipDoesNotPromoteUnrelatedSeries() {
++        val k=WatchMatcher.Keys(match(Sport.SOCCER,"eng.1","Premier League", broadcasts=listOf("Apple TV")))
++        assertFalse(WatchMatcher.isLikely(k,"Apple TV+ Series 1"))
++        assertTrue(WatchMatcher.isLikely(k,"Apple TV Event 3"))
++    }
++}

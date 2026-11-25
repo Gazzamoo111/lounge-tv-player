@@ -13,6 +13,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.unit.Dp
 import tv.own.owntv.core.database.entity.MovieEntity
 import tv.own.owntv.features.shell.components.VodPosterArt
+import tv.own.owntv.features.shell.components.vodRating
 import tv.own.owntv.ui.components.OwnTVIcon
 import tv.own.owntv.ui.components.loungeVodTitle
 import tv.own.owntv.ui.stage.StagePoster
@@ -37,6 +38,7 @@ internal fun LoungeMoviesEditorialPoster(
 ) {
     StagePoster(
         title = loungeVodTitle(title),
+        rating = item.rating?.takeIf { it > 0 }?.let(::vodRating),
         width = width,
         height = width * 1.5f,
         onClick = { onOpen(item) },

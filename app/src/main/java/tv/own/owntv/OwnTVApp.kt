@@ -119,6 +119,9 @@ class OwnTVApp : Application(), SingletonImageLoader.Factory, androidx.work.Conf
             modules(coreModule, appModule, databaseModule, dataModule, playerModule)
         }
         Perf.stamp("koin-started")
+        // The isolated v2qa app may test the unactivated 3,252-channel backend.
+        // Customer package builds cannot enter this gated QA bootstrap.
+        tv.own.owntv.qa.Catalogue3252QaBootstrap.start(this, appScope)
         // A chosen icon colour ("Later", the first-run pick, a restore) reaches the launcher when the app
         // is next in the background, never while it is on screen.
         tv.own.owntv.core.brand.AppIconSwitcher.start(this, GlobalContext.get().get())
@@ -230,6 +233,7 @@ class OwnTVApp : Application(), SingletonImageLoader.Factory, androidx.work.Conf
         // h2, and a poster grid opens dozens of requests to that one host at once. Over HTTP/1.1 those
         // queue behind OkHttp's per-host connection limit; over h2 they multiplex on a single connection.
         // Restore protocol negotiation for images only — the panel-facing client keeps its 1.1 pin.
+        val lowRam = context.getSystemService(android.app.ActivityManager::class.java)?.isLowRamDevice == true
         val imageHttpClient = GlobalContext.get().get<OkHttpClient>()
             .newBuilder()
             .retryOnConnectionFailure(true)
@@ -237,7 +241,11 @@ class OwnTVApp : Application(), SingletonImageLoader.Factory, androidx.work.Conf
             .build()
         return ImageLoader.Builder(context)
             .components { add(OkHttpNetworkFetcherFactory(callFactory = { imageHttpClient })) }
-            .memoryCache { MemoryCache.Builder().maxSizePercent(context, 0.10).build() }
+            .memoryCache {
+                MemoryCache.Builder()
+                    .maxSizeBytes(imageMemoryCacheBytes(Runtime.getRuntime().maxMemory(), lowRam))
+                    .build()
+            }
             // Explicit bounded disk cache: posters/logos survive across sessions instead of
             // re-downloading, capped so a 220k-item catalog can't eat the box's storage.
             .diskCache {
@@ -249,7 +257,7 @@ class OwnTVApp : Application(), SingletonImageLoader.Factory, androidx.work.Conf
             // Opaque poster art doesn't need an alpha channel; RGB_565 halves bitmap memory
             // under the deliberately small memory cap.
             .allowRgb565(true)
-            .crossfade(true)
+            .crossfade(if (lowRam) 0 else 120)
             .build()
     }
 
@@ -282,4 +290,10 @@ class OwnTVApp : Application(), SingletonImageLoader.Factory, androidx.work.Conf
         // and used to leave mpv on a trimmed cache for the rest of the session.
         runCatching { GlobalContext.getOrNull()?.getOrNull<tv.own.owntv.player.PlaybackEngines>()?.onTrimMemory(level) }
     }
+}
+
+/** 15% of the heap, capped at 64 MB; low-RAM devices keep 10%. */
+internal fun imageMemoryCacheBytes(heapBytes: Long, lowRam: Boolean): Long {
+    if (lowRam) return minOf((heapBytes * 0.10).toLong(), 32L * 1024 * 1024)
+    return minOf((heapBytes * 0.15).toLong(), 64L * 1024 * 1024)
 }

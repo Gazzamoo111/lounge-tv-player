@@ -29,7 +29,10 @@ internal object LoungeNzOrder {
         }
     }
 
-    fun firstFive(channels: List<ChannelEntity>): List<ChannelEntity> =
+    fun firstFive(
+        channels: List<ChannelEntity>,
+        preserveManualOrder: Boolean = false,
+    ): List<ChannelEntity> = if (preserveManualOrder) channels else
         channels.withIndex()
             .sortedWith(compareBy<IndexedValue<ChannelEntity>>(
                 { priority(it.value.name) }, { it.index },

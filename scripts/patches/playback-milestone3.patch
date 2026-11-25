@@ -1,0 +1,1115 @@
+--- a/core/src/main/java/tv/own/owntv/core/network/HttpClient.kt
++++ b/core/src/main/java/tv/own/owntv/core/network/HttpClient.kt
+@@ -4,7 +4,11 @@
+ import android.util.Log
+ import kotlinx.coroutines.CancellationException
+ import kotlinx.coroutines.Dispatchers
+-import kotlinx.coroutines.Job
++import kotlinx.coroutines.CoroutineScope
++import kotlinx.coroutines.CoroutineStart
++import kotlinx.coroutines.awaitCancellation
++import kotlinx.coroutines.isActive
++import kotlinx.coroutines.launch
+ import kotlinx.coroutines.currentCoroutineContext
+ import kotlinx.coroutines.delay
+ import kotlinx.coroutines.ensureActive
+@@ -50,8 +54,11 @@
+         while (attempt <= attempts) {
+             coroutineContext.ensureActive()
+             val call = client.newCall(request)
+-            val cancellationHook = coroutineContext[Job]?.invokeOnCompletion { cause ->
+-                if (cause is CancellationException) call.cancel()
++            // Completion handlers run only AFTER a blocked execute() returns. A child suspended on
++            // cancellation closes the call as soon as the parent is cancelled, including header/body IO.
++            val cancellationHook = CoroutineScope(coroutineContext).launch(start = CoroutineStart.UNDISPATCHED) {
++                try { awaitCancellation() }
++                finally { if (!coroutineContext.isActive) call.cancel() }
+             }
+             var responseReceived = false
+             Log.d(TAG, "GET start url=$safeUrl ua=${ua.take(48)} attempt=$attempt/$attempts")
+@@ -101,7 +108,7 @@
+                 )
+                 if (!retrying) throw e
+             } finally {
+-                cancellationHook?.dispose()
++                cancellationHook.cancel()
+             }
+             delay((RETRY_DELAY_MS * attempt).coerceAtMost(MAX_RETRY_DELAY_MS))
+             attempt++
+--- /dev/null
++++ b/core/src/test/java/tv/own/owntv/core/network/HttpCancellationIntegrationTest.kt
+@@ -0,0 +1,79 @@
++package tv.own.owntv.core.network
++
++import java.net.ServerSocket
++import java.net.Socket
++import java.util.concurrent.CountDownLatch
++import java.util.concurrent.TimeUnit
++import java.util.concurrent.atomic.AtomicReference
++import kotlinx.coroutines.*
++import okhttp3.Call
++import okhttp3.EventListener
++import okhttp3.OkHttpClient
++import org.junit.Assert.*
++import org.junit.Test
++
++/** Real localhost HTTP sockets, not a mocked transport or provider stream. */
++class HttpCancellationIntegrationTest {
++    private class SilentServer : AutoCloseable {
++        private val server = ServerSocket(0)
++        private val socket = AtomicReference<Socket?>()
++        val received = CountDownLatch(1)
++        val closed = CountDownLatch(1)
++        val url = "http://127.0.0.1:${server.localPort}/resolve"
++        init {
++            Thread({
++                try {
++                    server.accept().use { client ->
++                        socket.set(client)
++                        val input = client.getInputStream().bufferedReader()
++                        while (!input.readLine().isNullOrEmpty()) { }
++                        received.countDown()
++                        if (input.read() == -1) closed.countDown()
++                    }
++                } catch (_: Exception) { }
++            }, "m3-silent-http-test").apply { isDaemon = true; start() }
++        }
++        override fun close() { socket.get()?.close(); server.close() }
++    }
++    private fun client() = OkHttpClient.Builder().readTimeout(30, TimeUnit.SECONDS).build()
++
++    @Test(timeout = 10_000) fun `cancelled URL or metadata fetch closes blocked real socket promptly`() = runBlocking {
++        SilentServer().use { server ->
++            val client = client()
++            try {
++                val request = async(Dispatchers.Default) { HttpClient(client).getText(server.url) }
++                assertTrue(withContext(Dispatchers.IO) { server.received.await(3, TimeUnit.SECONDS) })
++                request.cancelAndJoin()
++                assertTrue(withContext(Dispatchers.IO) { server.closed.await(3, TimeUnit.SECONDS) })
++                assertTrue(request.isCancelled)
++            } finally { client.dispatcher.executorService.shutdown(); client.connectionPool.evictAll() }
++        }
++    }
++    @Test(timeout = 10_000) fun `recovery timeout interrupts blocked HTTP instead of waiting for socket read timeout`() = runBlocking {
++        SilentServer().use { server ->
++            val client = client()
++            try {
++                val result = withTimeoutOrNull(1_000) { HttpClient(client).getText(server.url) }
++                assertNull(result)
++                assertTrue(withContext(Dispatchers.IO) { server.closed.await(3, TimeUnit.SECONDS) })
++            } finally { client.dispatcher.executorService.shutdown(); client.connectionPool.evictAll() }
++        }
++    }
++    @Test(timeout = 10_000) fun `successful response does not trigger call cancellation`() = runBlocking {
++        ServerSocket(0).use { server ->
++            var cancelled = 0
++            val client = OkHttpClient.Builder().eventListener(object : EventListener() {
++                override fun canceled(call: Call) { cancelled++ }
++            }).build()
++            Thread({ server.accept().use { socket ->
++                val input = socket.getInputStream().bufferedReader()
++                while (!input.readLine().isNullOrEmpty()) { }
++                socket.getOutputStream().write("HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nOK".toByteArray())
++            } }, "m3-success-http-test").apply { isDaemon = true; start() }
++            try {
++                assertEquals("OK", HttpClient(client).getText("http://127.0.0.1:${server.localPort}/ok"))
++                assertEquals(0, cancelled)
++            } finally { client.dispatcher.executorService.shutdown(); client.connectionPool.evictAll() }
++        }
++    }
++}
+--- a/player-core/src/main/java/tv/own/owntv/player/LiveEngines.kt
++++ b/player-core/src/main/java/tv/own/owntv/player/LiveEngines.kt
+@@ -50,6 +50,8 @@
+     val exoContentBroken: Boolean get() = false
+     /** Whether mpv holds a stream (full-screen live, a film, a catch-up). */
+     val mpvHasStream: Boolean
++    val mpvUrl: String? get() = null
++    val mpvFailed: Boolean get() = false
+ 
+     fun exoPlay(url: String, muted: Boolean, request: LiveRequest)
+     fun exoSetMuted(muted: Boolean)
+@@ -110,6 +112,8 @@
+     override val exoStillReconnecting: Boolean get() = exo.stillReconnecting
+     override val exoContentBroken: Boolean get() = exo.contentBroken
+     override val mpvHasStream: Boolean get() = mpv.hasActiveStream
++    override val mpvUrl: String? get() = mpv.currentMediaUrl
++    override val mpvFailed: Boolean get() = mpv.error.value != null
+ 
+     override fun exoPlay(url: String, muted: Boolean, request: LiveRequest) = exo.play(url, muted, request)
+ 
+--- a/player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt
++++ b/player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt
+@@ -24,6 +24,9 @@
+ import androidx.media3.exoplayer.video.MediaCodecVideoRenderer
+ import androidx.media3.exoplayer.video.VideoFrameMetadataListener
+ import kotlinx.coroutines.CoroutineScope
++import kotlinx.coroutines.Job
++import kotlinx.coroutines.currentCoroutineContext
++import kotlinx.coroutines.ensureActive
+ import kotlinx.coroutines.Dispatchers
+ import kotlinx.coroutines.SupervisorJob
+ import kotlinx.coroutines.cancel
+@@ -746,6 +749,7 @@
+         private set
+     /** Monotonic tune identity; URL equality is insufficient when two channels share a fallback URL. */
+     private var tuneGeneration: Long = 0L
++    private var reconnectResolveJob: Job? = null
+ 
+     /**
+      * Reconnect URL provider — set ONLY when the current item's URL is short-lived and must be
+@@ -1221,6 +1225,12 @@
+     /** Terminal failure of the current load that is NOT worth another reconnect: stand the watchdogs down
+      *  and surface an error so the ViewModel can retry elsewhere (TS variant / mpv) immediately. */
+     private fun failLoad(reason: String) {
++        reconnectResolveJob?.cancel()
++        reconnectResolveJob = null
++        recoveryTasks.cancelAll()
++        pendingReload = null
++        tuneGeneration++
++        tune.reconnectPending = false
+         mainHandler.removeCallbacks(stallWatchdog)
+         mainHandler.removeCallbacks(progressWatchdog)
+         mainHandler.removeCallbacks(openWatchdog)
+@@ -1634,6 +1644,8 @@
+          *  never the URL tuned first — see [tv.own.owntv.core.database.entity.ChannelEntity.directSource]. */
+         directSource: String? = null,
+     ) {
++        reconnectResolveJob?.cancel()
++        reconnectResolveJob = null
+         recoveryTasks.cancelAll()
+         tuneGeneration++
+         LiveDiagnosticsLog.event("play() engine=$engineId url=${HttpClient.redactUrl(url)} muted=$muted")
+@@ -1973,6 +1985,8 @@
+     fun stop() {
+         LiveDiagnosticsLog.event("stop() — intentional")
+         tune.stoppingIntentionally = true
++        reconnectResolveJob?.cancel()
++        reconnectResolveJob = null
+         recoveryTasks.cancelAll()
+         tuneGeneration++
+         currentUrl = null
+@@ -2043,6 +2057,8 @@
+         player = null
+         videoRenderer = null
+         surface = null
++        reconnectResolveJob?.cancel()
++        reconnectResolveJob = null
+         recoveryTasks.cancelAll()
+         tuneGeneration++
+         currentUrl = null
+@@ -2064,6 +2080,7 @@
+      *  resolved URL — a [reconnectUrlProvider] mints a fresh one first (null/absent → replay as-is,
+      *  which is correct for M3U/Xtream and direct-URL Stalker portals). */
+     private fun reconnect(reason: String, fastHlsHttpRecovery: Boolean = false, immediate: Boolean = false) {
++        if (tune.reconnectPending || tune.gaveUp || tune.stoppingIntentionally) return
+         mainHandler.removeCallbacks(stallWatchdog); mainHandler.removeCallbacks(progressWatchdog); mainHandler.removeCallbacks(fpsFastRefresh)
+         mainHandler.removeCallbacks(openWatchdog)
+         mainHandler.removeCallbacks(healthyReset) // this attempt is a failure, not a recovery
+@@ -2081,6 +2098,7 @@
+             // than the last reconnect's internal trigger ("buffering stalled" read as a double negative).
+             val raw = tune.lastCodecError ?: diagnostics.recentError()
+                 ?: "no data for ${failingSecs}s; gave up after ${tune.retryCount} reconnects"
++            failLoad(raw) // release the failed stream and cancel every delayed recovery before surfacing it
+             _error.value = PlayerErrors.visibleFailure(raw, currentUrl, PlaybackFailure.LostConnection)
+             _errorInfo.value = ErrorInfo(PlayerErrors.reasonFor(raw), exoSpec(), raw)
+             return
+@@ -2103,19 +2121,18 @@
+         }
+         // Resolve a fresh URL off-main (Stalker create_link is a network call) before the delayed reload.
+         val provider = reconnectUrlProvider
+-        scope.launch {
+-            val fresh = if (provider != null) {
+-                withContext(Dispatchers.IO) {
+-                    runCatching { provider.freshUrl() }
+-                        .onFailure { LiveDiagnosticsLog.event("reconnect fresh-url failed: ${it.message}") }
+-                        .getOrNull()
+-                }
+-            } else null
++        reconnectResolveJob?.cancel()
++        reconnectResolveJob = scope.launch {
++            val fresh = withContext(Dispatchers.IO) { resolvePlaybackRecoveryUrl(provider) }
++            currentCoroutineContext().ensureActive()
+             if (tuneGeneration != generation || currentUrl != url) return@launch
+             // Coalesce the backoff delay with the resolve: whichever is later wins, but the resolve must
+             // complete before we reload. Post the reload so it lands on the main thread's Looper after delay.
+             lateinit var reload: Runnable
+-            reload = recoveryTasks.post(delayMs, { tuneGeneration == generation && currentUrl == url }) {
++            reload = recoveryTasks.post(
++                remainingRecoveryDelay(delayMs, nowMs, android.os.SystemClock.elapsedRealtime()),
++                { tuneGeneration == generation && currentUrl == url },
++            ) {
+                 // Only its own: a reload left over from a channel since left must not clear the current one's.
+                 if (pendingReload === reload) pendingReload = null
+                 if (tuneGeneration != generation || currentUrl != url) return@post // superseded (zapped / stopped), even if the replacement channel reuses the same URL
+--- a/player-core/src/main/java/tv/own/owntv/player/LiveTuneController.kt
++++ b/player-core/src/main/java/tv/own/owntv/player/LiveTuneController.kt
+@@ -4,6 +4,8 @@
+ import kotlinx.coroutines.CoroutineScope
+ import kotlinx.coroutines.Job
+ import kotlinx.coroutines.delay
++import kotlinx.coroutines.currentCoroutineContext
++import kotlinx.coroutines.ensureActive
+ import kotlinx.coroutines.flow.MutableStateFlow
+ import kotlinx.coroutines.flow.StateFlow
+ import kotlinx.coroutines.flow.asStateFlow
+@@ -158,6 +160,12 @@
+     /** When this controller last stopped ExoPlayer, for [awaitExoRelease]. */
+     private var exoStoppedAtMs: Long? = null
+ 
++    private var requestGeneration = 0L
++    private var previewGeneration = 0L
++    private var sessionSource: SourceEntity? = null
++    private var sessionSelection: Pair<EnginePreference, Boolean?>? = null
++    private var sessionUrl: String? = null
++    private var opening = false
+     private var tuneJob: Job? = null
+     private var previewJob: Job? = null
+     private var exoResolveJob: Job? = null
+@@ -174,7 +182,11 @@
+      * last thing asked for is the thing that happens.
+      */
+     fun launch(block: suspend LiveTuneController.() -> Unit): Job {
++        requestGeneration++
++        previewGeneration++
+         tuneJob?.cancel()
++        previewJob?.cancel()
++        cancelLadderJobs()
+         return scope.launch { block() }.also { tuneJob = it }
+     }
+ 
+@@ -191,21 +203,42 @@
+     suspend fun start(channel: ChannelEntity, source: SourceEntity?, resolved: String? = null) {
+         previewJob?.cancel()
+         cancelLadderJobs()
+-        current = channel
+-        recall.onWatched(channel)
++        currentCoroutineContext().ensureActive()
+         _previewBlocked.value = false
+         val setting = source?.liveEnginePreference
+             ?.let { name -> EnginePreference.entries.firstOrNull { it.name == name } }
+             ?: host.globalPreference()
++        val pin = host.enginePin(channel)
++        currentCoroutineContext().ensureActive()
++        val selection = setting to pin
++        // Presentation changes do not reset a healthy engine, its retry budget or the user's pin.
++        val sameSession = current == channel && sessionSource == source && sessionSelection == selection &&
++            resolved == null && ts == null && sessionUrl != null &&
++            (if (_liveOnExo.value) engines.exoUrl == sessionUrl && !engines.exoFailed
++            else engines.mpvHasStream && engines.mpvUrl == sessionUrl && !engines.mpvFailed)
++        if (sameSession) {
++            if (_liveOnExo.value) { engines.exoSetMuted(false); watchExo(channel, source) }
++            else watchMpv(channel, source)
++            if (opening) startAlarm(channel)
++            host.onEngineStarted()
++            return
++        }
++        current = channel
++        sessionSource = source
++        sessionSelection = selection
++        sessionUrl = null
++        recall.onWatched(channel)
+         val route = LiveRouting.decide(
+             setting = setting,
+-            pin = host.enginePin(channel),
++            pin = pin,
+             drmProtected = channel.drmConfig != null,
+             panelRefusesSegments = panelRefusesSegments(channel, source),
+         )
+         engineLog("tune '${channel.name}' -> ${route.why} [${route.preference.name}]")
+         openTimeshift(channel, source, resolved)
++        currentCoroutineContext().ensureActive()
+         arm(channel, source, route.preference)
++        currentCoroutineContext().ensureActive()
+         when {
+             route.onMpv -> startOnMpv(channel, source, route.why, resolved = resolved)
+             // The preview already found that ExoPlayer can't open this channel. Promoting it put the
+@@ -255,6 +288,12 @@
+         launch {
+             host.pin(channel, goToMpv)
+             val source = host.sourceOf(channel.sourceId)
++            val setting = source?.liveEnginePreference
++                ?.let { name -> EnginePreference.entries.firstOrNull { it.name == name } }
++                ?: host.globalPreference()
++            currentCoroutineContext().ensureActive()
++            sessionSource = source
++            sessionSelection = setting to goToMpv
+             arm(channel, source, EnginePreference.onlyOn(goToMpv))
+             if (goToMpv) startOnMpv(channel, source, "user chose compatibility mode")
+             else switchToExo(channel, source)
+@@ -277,11 +316,12 @@
+ 
+     private suspend fun handoffPreviewSession(
+         channel: ChannelEntity, source: SourceEntity?, nextUrl: String,
++        forPreview: Boolean = true,
+     ): Boolean {
+         val isSingleSession = singleSessionPanel(channel, source)
+         val previousUrl = engines.exoUrl
+         if (previousUrl != null && previousUrl != nextUrl && isSingleSession) {
+-            engines.exoStop()
++            stopExoEngine()
+             previewSessionReleaseUntilMs = host.nowMs() + LivePreviewEngine.SESSION_RELEASE_MS
+         }
+         // The cooldown belongs to the controller, not a cancellable focus job.
+@@ -290,10 +330,12 @@
+             val remainingMs = previewSessionReleaseUntilMs - host.nowMs()
+             if (remainingMs > 0L) delay(remainingMs)
+         }
+-        return !_liveOnExo.value && previewedChannelId == channel.id
++        currentCoroutineContext().ensureActive()
++        return if (forPreview) !_liveOnExo.value && previewedChannelId == channel.id else isCurrent(channel)
+     }
+ 
+     fun preview(channel: ChannelEntity, muted: Boolean) {
++        val generation = ++previewGeneration
+         lastPreview = channel to muted
+         if (_liveOnExo.value) {
+             if (current != null) return
+@@ -316,14 +358,17 @@
+         previewJob?.cancel()
+         previewJob = scope.launch {
+             val source = host.sourceOf(channel.sourceId)
++            currentCoroutineContext().ensureActive()
++            if (generation != previewGeneration || _liveOnExo.value) return@launch
+             if (host.needsResolve(source)) {
+                 if (exoStalkerCmd == channel.streamUrl && !engines.exoFailed) {
+                     engines.exoSetMuted(muted)
+                     return@launch
+                 }
+                 val url = host.resolve(source!!, channel.streamUrl) ?: return@launch
+-                if (_liveOnExo.value) return@launch // promoted to full-screen while resolving
+-                if (blockedBySingleSession(url, channel)) return@launch
++                currentCoroutineContext().ensureActive()
++                if (generation != previewGeneration || _liveOnExo.value) return@launch
++                if (blockedBySingleSession(url, channel, source)) return@launch
+                 if (!handoffPreviewSession(channel, source, url)) return@launch
+                 exoStalkerCmd = channel.streamUrl
+                 setReconnect(channel, source)
+@@ -331,7 +376,7 @@
+                 return@launch
+             }
+             val url = exoUrlFor(channel, source)
+-            if (blockedBySingleSession(url, channel)) return@launch
++            if (blockedBySingleSession(url, channel, source)) return@launch
+             if (engines.exoUrl == url && !engines.exoFailed) {
+                 engines.exoSetMuted(muted) // already previewing it (a re-focus) — just re-apply the mute
+                 return@launch
+@@ -364,6 +409,9 @@
+      * no ladder.
+      */
+     fun detach() {
++        requestGeneration++
++        previewGeneration++
++        opening = false
+         tuneJob?.cancel()
+         cancelLadderJobs()
+         current = null
+@@ -372,6 +420,7 @@
+ 
+     /** Stop ExoPlayer (the preview, or a detached stream) without touching mpv. */
+     fun stopExo() {
++        previewGeneration++
+         previewJob?.cancel()
+         exoResolveJob?.cancel()
+         exoWatchJob?.cancel()
+@@ -382,7 +431,9 @@
+ 
+     /** Cancel the tune in flight, from outside [launch]. */
+     fun cancelTune() {
++        requestGeneration++
+         tuneJob?.cancel()
++        cancelLadderJobs()
+     }
+ 
+     /**
+@@ -587,6 +638,7 @@
+             // the previous channel's socket is the app competing with itself for the only session (458).
+             // Wait for mpv to let go first; bounded by mpv's release timeout, and only on such a panel.
+             engines.mpvStopAndAwaitRelease()
++            currentCoroutineContext().ensureActive()
+             if (!isCurrent(channel)) return // zapped on while mpv released
+         } else {
+             engines.mpvStop() // mpv lets go of the connection and the decoder before ExoPlayer claims either
+@@ -611,7 +663,9 @@
+             return
+         }
+         val url = exoUrlFor(channel, source)
+-        if (engines.exoUrl == url) {
++        if (!handoffPreviewSession(channel, source, url, forPreview = false)) return
++        sessionUrl = url
++        if (engines.exoUrl == url && !engines.exoFailed) {
+             engines.exoSetMuted(false) // promote — instant if already playing, otherwise keeps loading
+         } else {
+             // Leaving a UHD channel: release its 4K decoder before the rebuild (no-op for SD/HD).
+@@ -625,7 +679,8 @@
+     }
+ 
+     private suspend fun startOnExoStalker(channel: ChannelEntity, source: SourceEntity, resolved: String?) {
+-        if (exoStalkerCmd == channel.streamUrl && resolved == null) {
++        if (exoStalkerCmd == channel.streamUrl && resolved == null && engines.exoUrl != null && !engines.exoFailed) {
++            sessionUrl = engines.exoUrl
+             engines.exoSetMuted(false) // promote the preview that already holds this command
+             setReconnect(channel, source)
+             host.onEngineStarted()
+@@ -641,14 +696,17 @@
+         }
+         // Detached: minting is a network call, and a ladder step that got here from a watcher must not
+         // die with that watcher when [watchExo] replaces it.
++        val generation = requestGeneration
+         exoResolveJob = scope.launch {
+             val url = host.resolve(source, channel.streamUrl) ?: return@launch
+-            if (!isCurrent(channel)) return@launch // zapped away while minting
++            currentCoroutineContext().ensureActive()
++            if (generation != requestGeneration || !isCurrent(channel)) return@launch // zapped away while minting
+             playExoStalker(channel, source, url)
+         }
+     }
+ 
+     private fun playExoStalker(channel: ChannelEntity, source: SourceEntity, url: String) {
++        sessionUrl = url
+         exoStalkerCmd = channel.streamUrl
+         setReconnect(channel, source)
+         engines.exoPlay(url, muted = false, request(channel, source))
+@@ -723,7 +781,9 @@
+         // Against the PANEL: the redirect is the provider's, so every later channel starts out knowing.
+         if (exoDiscoveredHls) LiveStreamQuirks.rememberHlsRedirect(preferred)
+         val url = if (LiveStreamQuirks.isKnownHlsHost(preferred)) LiveStreamQuirks.toHlsUrl(preferred) else preferred
++        currentCoroutineContext().ensureActive()
+         if (!isCurrent(channel)) return // zapped away while minting
++        sessionUrl = url
+         setReconnect(if (stalker) channel else null, source)
+         engines.mpvPlay(url, request(channel, source))
+         host.onEngineStarted()
+@@ -740,8 +800,10 @@
+      * second of black on each of those would be a handover cost charged to a tune that never handed over.
+      */
+     private suspend fun awaitExoRelease() {
+-        val stoppedAt = exoStoppedAtMs ?: return
+-        val left = OwnTVPlayer.SURFACE_HANDOFF_MS - (host.nowMs() - stoppedAt)
++        val now = host.nowMs()
++        val decoderLeft = exoStoppedAtMs?.let { OwnTVPlayer.SURFACE_HANDOFF_MS - (now - it) } ?: 0L
++        // Cancelling a limited preview to choose MPV must not skip its provider-release barrier.
++        val left = maxOf(decoderLeft, previewSessionReleaseUntilMs - now)
+         if (left > 0) delay(left)
+     }
+ 
+@@ -753,18 +815,19 @@
+     // --- Watchers ---------------------------------------------------------------------------------
+ 
+     private fun watchExo(channel: ChannelEntity, source: SourceEntity?) {
++        val generation = requestGeneration
+         exoWatchJob?.cancel()
+         exoWatchJob = scope.launch {
+             engines.watchExo(
+                 channelName = channel.name,
+                 // A watchdog outlives the tune that armed it; firing after that would stop a stream
+                 // nobody complained about.
+-                stillOurs = { isStillExo(channel) },
++                stillOurs = { generation == requestGeneration && isStillExo(channel) },
+                 // Into the ladder rather than straight to mpv: the ladder decides what "next" means.
+-                handOver = { reason -> advance(channel, source, reason) },
+-                onOpened = ::standDownAlarm,
++                handOver = { reason -> if (generation == requestGeneration) advance(channel, source, reason) },
++                onOpened = { if (generation == requestGeneration) standDownAlarm() },
+                 // A provider back-off is a wait OwnTV agreed to; it is not charged to the budget.
+-                postponeDeadline = { ladder.postponeDeadline(it) },
++                postponeDeadline = { if (generation == requestGeneration) ladder.postponeDeadline(it) },
+                 log = ::engineLog,
+             )
+         }
+@@ -772,10 +835,12 @@
+ 
+     /** mpv runs its own retry and format ladder first, so its deadline is looser than ExoPlayer's. */
+     private fun watchMpv(channel: ChannelEntity, source: SourceEntity?) {
++        val generation = requestGeneration
+         mpvOutcomeJob?.cancel()
+         mpvOutcomeJob = scope.launch {
+             val outcome = engines.awaitMpvOutcome(MPV_OPEN_TIMEOUT_MS)
+-            if (!isStillMpv(channel)) return@launch
++            currentCoroutineContext().ensureActive()
++            if (generation != requestGeneration || !isStillMpv(channel)) return@launch
+             val reason = when {
+                 outcome == null -> "mpv never opened it (${MPV_OPEN_TIMEOUT_MS / 1000}s, no picture and no error)"
+                 outcome.opened -> {
+@@ -792,6 +857,7 @@
+     // --- The ladder -------------------------------------------------------------------------------
+ 
+     private suspend fun arm(channel: ChannelEntity, source: SourceEntity?, preference: EnginePreference) {
++        opening = true
+         forceTsFor = null
+         val secs = SourceOverrides.liveTuneTimeoutSecsOf(source) ?: host.globalBudgetSecs()
+         armedBudgetMs = if (secs <= 0) LiveLadder.NO_BUDGET else secs * 1000L
+@@ -809,6 +875,7 @@
+      * A channel that opens stands the alarm down — later stalls belong to the watchdogs.
+      */
+     private fun startAlarm(channel: ChannelEntity) {
++        val generation = requestGeneration
+         deadlineJob?.cancel()
+         deadlineJob = scope.launch {
+             while (ladder.owns(channel.streamUrl)) {
+@@ -818,7 +885,7 @@
+             }
+             // Both gates matter: the ladder can still own a channel the user walked away from, and this
+             // alarm stops an engine — on mpv's side the shared player, which may be showing a film.
+-            if (!ladder.owns(channel.streamUrl)) return@launch
++            if (generation != requestGeneration || !ladder.owns(channel.streamUrl)) return@launch
+             if (!isStillExo(channel) && !isStillMpv(channel)) return@launch
+             val detail = "no picture within ${armedBudgetMs / 1000}s of tuning"
+             engineLog("'${channel.name}' — giving up: $detail")
+@@ -832,6 +899,7 @@
+     }
+ 
+     private fun standDownAlarm() {
++        opening = false
+         deadlineJob?.cancel()
+         deadlineJob = null
+     }
+@@ -848,7 +916,8 @@
+         /** Whether the failure says anything about the stream's format; by default, unless it was a refusal. */
+         aboutFormat: Boolean = !isRequestRefusal(reason),
+     ) {
+-        if (!ladder.owns(channel.streamUrl)) return // a newer tune owns the ladder now
++        currentCoroutineContext().ensureActive()
++        if (!isCurrent(channel) || !ladder.owns(channel.streamUrl)) return
+         val nowMs = host.nowMs()
+         // ExoPlayer played this channel, then found its content unplayable (not a connection problem).
+         // The opening budget is long spent by then, which would refuse mpv, the engine most likely to
+@@ -906,7 +975,9 @@
+ 
+     // --- Small helpers ----------------------------------------------------------------------------
+ 
+-    private fun isCurrent(channel: ChannelEntity): Boolean = current?.id == channel.id
++    private fun isCurrent(channel: ChannelEntity): Boolean = current?.let {
++        it.id == channel.id && it.sourceId == channel.sourceId && it.streamUrl == channel.streamUrl
++    } == true
+ 
+     private fun isStillExo(channel: ChannelEntity): Boolean = _liveOnExo.value && isCurrent(channel)
+ 
+@@ -917,8 +988,8 @@
+     private fun singleSessionPanel(channel: ChannelEntity, source: SourceEntity?): Boolean =
+         source?.maxConnections == 1 || LiveStreamQuirks.isSingleSession(channel.streamUrl)
+ 
+-    private fun blockedBySingleSession(url: String, channel: ChannelEntity): Boolean {
+-        val blocked = (engines.mpvHasStream && LiveStreamQuirks.isSingleSession(url)) ||
++    private fun blockedBySingleSession(url: String, channel: ChannelEntity, source: SourceEntity?): Boolean {
++        val blocked = (engines.mpvHasStream && (source?.maxConnections == 1 || LiveStreamQuirks.isSingleSession(url))) ||
+             host.downloadHoldsOnlyStream(channel.sourceId)
+         _previewBlocked.value = blocked
+         return blocked
+--- a/player-core/src/main/java/tv/own/owntv/player/OwnTVPlayer.kt
++++ b/player-core/src/main/java/tv/own/owntv/player/OwnTVPlayer.kt
+@@ -12,6 +12,7 @@
+ import kotlinx.coroutines.SupervisorJob
+ import kotlinx.coroutines.cancel
+ import kotlinx.coroutines.delay
++import kotlinx.coroutines.ensureActive
+ import kotlinx.coroutines.flow.MutableStateFlow
+ import kotlinx.coroutines.flow.StateFlow
+ import kotlinx.coroutines.flow.asStateFlow
+@@ -635,6 +636,8 @@
+      * the previous channel's provider and retry into a live stream. Stalker VOD passes its own
+      * provider — a `create_link` URL expires in a couple of hours, which is well inside a film.
+      */
++    private var recoveryResolveJob: Job? = null
++
+     @Volatile var reconnectUrlProvider: tv.own.owntv.core.stalker.ReconnectUrlProvider? = null
+     private var consecutiveHardResets = 0
+     // Snapshot of a non-live item taken when the app backgrounds (screensaver / Home), so it can be restored
+@@ -1976,6 +1979,8 @@
+         val pos = _position.value
+         pendingImageSub = sub
+         _subTrackList.value = _subTrackList.value.map { it.copy(selected = it.mpvId == sub.mpvId) }
++        recoveryResolveJob?.cancel()
++        recoveryResolveJob = null
+         loadGeneration++ // supersede any mpv retry/watchdog work for this item
+         errorCheckJob?.cancel(); videoCheckJob?.cancel()
+         load.expectingPlayback = false
+@@ -2162,6 +2167,8 @@
+         // Resume where mpv got to only if the file actually opened; otherwise _position is stale from the
+         // previous item — use the intended start position instead.
+         val pos = if (load.fileLoaded && _position.value > 0) _position.value else load.pendingSeekMs
++        recoveryResolveJob?.cancel()
++        recoveryResolveJob = null
+         loadGeneration++ // supersede any mpv retry/watchdog work for this item
+         val gen = loadGeneration
+         errorCheckJob?.cancel(); videoCheckJob?.cancel()
+@@ -2285,7 +2292,9 @@
+             mpvFailureBeforeFallback = null
+             item.triedExoVodFallback = false
+             itemEngine = tv.own.owntv.core.player.EnginePreference.EXO_FIRST // see the mpv branch above
+-            loadGeneration++ // supersede mpv retry/watchdog work for this item
++            recoveryResolveJob?.cancel()
++        recoveryResolveJob = null
++        loadGeneration++ // supersede mpv retry/watchdog work for this item
+             val gen = loadGeneration
+             errorCheckJob?.cancel(); videoCheckJob?.cancel()
+             load.expectingPlayback = false
+@@ -2943,6 +2952,8 @@
+             "mpv_load live=$isLive url=${HttpClient.redactUrl(url)} " +
+                 "ua=${if (currentUserAgent.isNullOrBlank()) "default" else "custom"}",
+         )
++        recoveryResolveJob?.cancel()
++        recoveryResolveJob = null
+         loadGeneration++
+         errorCheckJob?.cancel()
+         videoCheckJob?.cancel()
+@@ -3873,11 +3884,13 @@
+             return
+         }
+         val gen = loadGeneration
+-        scope.launch {
+-            val fresh = withContext(Dispatchers.IO) {
+-                runCatching { provider.freshUrl() }.getOrNull()
+-            }
+-            if (gen != loadGeneration || currentUrl == null) return@launch // zapped/stopped during resolve
++        recoveryResolveJob?.cancel()
++        recoveryResolveJob = scope.launch {
++            val fresh = withContext(Dispatchers.IO) { resolvePlaybackRecoveryUrl(provider) }
++            kotlinx.coroutines.currentCoroutineContext().ensureActive()
++            if (gen != loadGeneration || currentUrl == null) return@launch
++            // loadUrl cancels obsolete resolution; this operation has completed and owns that load.
++            recoveryResolveJob = null
+             loadUrl(fresh ?: url, currentMetaSnapshot(), isLive = isLive, startPositionMs = startAt, resetRetries = resetRetries, isArchive = archive)
+         }
+     }
+@@ -3886,6 +3899,8 @@
+         clearToast()
+         deactivateExo() // give the surface back to mpv before tearing down
+         load.pendingExoStart = false
++        recoveryResolveJob?.cancel()
++        recoveryResolveJob = null
+         loadGeneration++ // cancels any queued-but-not-yet-executed load
+         load.expectingPlayback = false
+         errorCheckJob?.cancel()
+@@ -3982,6 +3997,8 @@
+         initialized = false
+         surfaceAttached = false
+         mpvHasSurface = false
++        recoveryResolveJob?.cancel()
++        recoveryResolveJob = null
+         loadGeneration++
+         pendingUrl = null
+         // The core about to be destroyed owes these END_FILEs; the fresh one must not inherit them, or
+@@ -4837,6 +4854,8 @@
+         if (!isLiveContent && fallbackToExoVod(msg, mpvStuck = false)) return
+         // Halt decoding but KEEP currentUrl so the HUD's Retry works (e.g. after the user flips the
+         // hardware-decoding setting, which applies live).
++        recoveryResolveJob?.cancel()
++        recoveryResolveJob = null
+         loadGeneration++
+         load.expectingPlayback = false
+         errorCheckJob?.cancel()
+--- a/player-core/src/main/java/tv/own/owntv/player/TuneRecoveryTasks.kt
++++ b/player-core/src/main/java/tv/own/owntv/player/TuneRecoveryTasks.kt
+@@ -24,3 +24,20 @@
+         obsolete.forEach(remove)
+     }
+ }
++
++/** A stalled token service must not hold either engine's recovery pending indefinitely. */
++internal suspend fun resolvePlaybackRecoveryUrl(
++    provider: tv.own.owntv.core.stalker.ReconnectUrlProvider?,
++    timeoutMs: Long = 8_000L,
++): String? {
++    if (provider == null) return null
++    return kotlinx.coroutines.withTimeoutOrNull(timeoutMs) {
++        try { provider.freshUrl() }
++        catch (cancel: kotlinx.coroutines.CancellationException) { throw cancel }
++        catch (_: Exception) { null }
++    }
++}
++
++/** URL resolution and retry backoff run together, rather than charging both waits. */
++internal fun remainingRecoveryDelay(delayMs: Long, startedMs: Long, nowMs: Long): Long =
++    (delayMs - (nowMs - startedMs).coerceAtLeast(0L)).coerceAtLeast(0L)
+--- /dev/null
++++ b/player-core/src/test/java/tv/own/owntv/player/LivePlaybackWorkBenchmarkTest.kt
+@@ -0,0 +1,132 @@
++package tv.own.owntv.player
++
++import kotlin.coroutines.Continuation
++import kotlin.coroutines.resume
++import kotlin.coroutines.suspendCoroutine
++import kotlinx.coroutines.ExperimentalCoroutinesApi
++import kotlinx.coroutines.async
++import kotlinx.coroutines.test.*
++import org.junit.Assert.*
++import org.junit.Test
++import tv.own.owntv.core.database.entity.ChannelEntity
++import tv.own.owntv.core.database.entity.SourceEntity
++import tv.own.owntv.core.player.EnginePreference
++import tv.own.owntv.core.stalker.ReconnectUrlProvider
++
++/** Identical real-controller scenarios run against the prior patched core and milestone 3. */
++@OptIn(ExperimentalCoroutinesApi::class)
++class LivePlaybackWorkBenchmarkTest {
++    private val before = System.getenv("LOUNGE_M3_BASELINE") == "true"
++    private class Engines : LiveEngines {
++        override var exoUrl: String? = null
++        override val exoIsHls = false
++        override val exoFailed = false
++        override var mpvHasStream = false
++        override var mpvUrl: String? = null
++        val opens = ArrayList<String>()
++        var replacementsWithoutStop = 0
++        override fun exoPlay(url: String, muted: Boolean, request: LiveRequest) {
++            if (exoUrl != null && exoUrl != url) replacementsWithoutStop++
++            exoUrl = url; opens += url
++        }
++        override fun exoSetMuted(muted: Boolean) {}
++        override fun exoStop() { exoUrl = null }
++        override fun exoReleaseUhdDecoder() {}
++        override fun exoAbandon(reason: String) {}
++        override suspend fun watchExo(channelName: String, stillOurs: () -> Boolean, handOver: suspend (String) -> Unit,
++            onOpened: () -> Unit, postponeDeadline: (Long) -> Unit, log: (String) -> Unit) { onOpened() }
++        override fun mpvPlay(url: String, request: LiveRequest) { mpvHasStream = true; mpvUrl = url; opens += url }
++        override fun mpvStop() { mpvHasStream = false; mpvUrl = null }
++        override suspend fun mpvStopAndAwaitRelease() { mpvStop() }
++        override fun mpvAbandon(reason: String) {}
++        override suspend fun awaitMpvOutcome(timeoutMs: Long) = MpvOutcome(true, null)
++        override fun setReconnectProvider(provider: ReconnectUrlProvider?) {}
++    }
++    private class Host(private val test: TestScope) : LiveTuneController.Host {
++        var preference = EnginePreference.EXO_FIRST
++        var waitForFirst = false
++        var firstLookup: Continuation<SourceEntity?>? = null
++        override suspend fun sourceOf(sourceId: Long): SourceEntity? =
++            if (sourceId == 1L && waitForFirst) suspendCoroutine { firstLookup = it } else null
++        override fun needsResolve(source: SourceEntity?) = false
++        override suspend fun resolve(source: SourceEntity, cmd: String): String? = null
++        override suspend fun enginePin(channel: ChannelEntity): Boolean? = null
++        override suspend fun pin(channel: ChannelEntity, onMpv: Boolean) {}
++        override suspend fun globalPreference() = preference
++        override suspend fun globalBudgetSecs() = 30
++        override fun meta(channel: ChannelEntity) = MediaMeta(channel.name)
++        override fun recordLadderEvent(onExo: Boolean, reason: PlayerFailureReason, detail: String) {}
++        override fun nowMs() = test.testScheduler.currentTime
++    }
++    private fun channel(id: Long, source: Long = 1) = ChannelEntity(id = id, sourceId = source,
++        name = "channel$id", streamUrl = "http://m3-work-benchmark.invalid/live/$id.ts")
++    private fun report(name: String, value: Int) = println("M3_COMPARISON baseline=$before metric=$name value=$value")
++
++    @Test fun `five same-stream fullscreen requests`() = runTest {
++        val engines = Engines(); val host = Host(this).apply { preference = EnginePreference.MPV_FIRST }
++        val c = LiveTuneController(backgroundScope, engines, host)
++        repeat(5) { c.tune(channel(1)); runCurrent() }
++        report("mpv_opens_for_five_same_stream_requests", engines.opens.size)
++        assertEquals(if (before) 5 else 1, engines.opens.size)
++        c.stop()
++    }
++    @Test fun `single-session fullscreen switch releases old stream first`() = runTest {
++        LiveStreamQuirks.clearForTest()
++        try {
++            LiveStreamQuirks.rememberSessionLimit(channel(2).streamUrl)
++            val engines = Engines(); val c = LiveTuneController(backgroundScope, engines, Host(this))
++            c.tune(channel(2)); runCurrent()
++            c.tune(channel(3)); runCurrent()
++            advanceTimeBy(2_001); runCurrent()
++            report("source_replacements_without_explicit_session_release", engines.replacementsWithoutStop)
++            assertEquals(if (before) 1 else 0, engines.replacementsWithoutStop)
++            assertEquals(2, engines.opens.size)
++            c.stop()
++        } finally { LiveStreamQuirks.clearForTest() }
++    }
++    @Test fun `obsolete non-cooperative lookup cannot retake latest channel`() = runTest {
++        val engines = Engines(); val host = Host(this).apply { waitForFirst = true }
++        val c = LiveTuneController(backgroundScope, engines, host)
++        c.tune(channel(4)); runCurrent()
++        c.tune(channel(5, source = 2)); runCurrent()
++        host.firstLookup!!.resume(null); runCurrent()
++        val stale = engines.opens.count { it == channel(4).streamUrl }
++        report("stale_channel_opens_after_newer_pick", stale)
++        assertEquals(if (before) 1 else 0, stale)
++        assertEquals(if (before) channel(4).streamUrl else channel(5).streamUrl, engines.opens.last())
++        c.stop()
++    }
++    @Test(timeout = 10_000) fun `cancelled HTTP request releases blocked socket before read timeout`() = kotlinx.coroutines.runBlocking {
++        java.net.ServerSocket(0).use { server ->
++            val accepted = java.util.concurrent.atomic.AtomicReference<java.net.Socket?>()
++            val received = java.util.concurrent.CountDownLatch(1)
++            val closed = java.util.concurrent.CountDownLatch(1)
++            Thread({
++                try { server.accept().use { socket ->
++                    accepted.set(socket)
++                    val input = socket.getInputStream().bufferedReader()
++                    while (!input.readLine().isNullOrEmpty()) { }
++                    received.countDown()
++                    if (input.read() == -1) closed.countDown()
++                } } catch (_: Exception) { }
++            }, "m3-comparison-http").apply { isDaemon = true; start() }
++            val client = okhttp3.OkHttpClient.Builder().readTimeout(30, java.util.concurrent.TimeUnit.SECONDS).build()
++            val request = async(kotlinx.coroutines.Dispatchers.Default) {
++                tv.own.owntv.core.network.HttpClient(client).getText("http://127.0.0.1:${server.localPort}/resolve")
++            }
++            try {
++                assertTrue(kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { received.await(3, java.util.concurrent.TimeUnit.SECONDS) })
++                request.cancel()
++                val released = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { closed.await(2, java.util.concurrent.TimeUnit.SECONDS) }
++                report("cancelled_http_socket_released_before_read_timeout", if (released) 1 else 0)
++                assertEquals(!before, released)
++            } finally {
++                accepted.get()?.close()
++                request.cancel()
++                request.join()
++                client.dispatcher.executorService.shutdown(); client.connectionPool.evictAll()
++            }
++        }
++    }
++
++}
+--- a/player-core/src/test/java/tv/own/owntv/player/LiveTuneControllerTest.kt
++++ b/player-core/src/test/java/tv/own/owntv/player/LiveTuneControllerTest.kt
+@@ -34,6 +34,8 @@
+         override var exoStillReconnecting = false
+         override var exoContentBroken = false
+         override var mpvHasStream = false
++        override var mpvUrl: String? = null
++        override var mpvFailed = false
+ 
+         /** Complete with a reason to fail the ExoPlayer watch, or with null for "opened". */
+         var exoWatch: CompletableDeferred<String?>? = null
+@@ -67,15 +69,19 @@
+ 
+         override fun mpvPlay(url: String, request: LiveRequest) {
+             mpvHasStream = true
++            mpvUrl = url
++            mpvFailed = false
+             log += "mpv:$url"
+         }
+         override fun mpvStop() {
+             if (mpvHasStream) order += "mpv-stop"
+             mpvHasStream = false
++            mpvUrl = null
+         }
+         override suspend fun mpvStopAndAwaitRelease() {
+             if (mpvHasStream) order += "mpv-released"
+             mpvHasStream = false
++            mpvUrl = null
+         }
+         override fun mpvAbandon(reason: String) { log += "mpv-abandon" }
+         override suspend fun awaitMpvOutcome(timeoutMs: Long): MpvOutcome? {
+@@ -88,18 +94,20 @@
+     private class FakeHost(private val scope: TestScope) : LiveTuneController.Host {
+         var preference = EnginePreference.EXO_FIRST
+         var budgetSecs = 30
++        var sourceResult: SourceEntity? = null
+         var sourceDelayMs = 0L
++        var pinned: Boolean? = null
+         val pins = mutableListOf<Boolean>()
+         val events = mutableListOf<PlayerFailureReason>()
+ 
+         override suspend fun sourceOf(sourceId: Long): SourceEntity? {
+             if (sourceDelayMs > 0) delay(sourceDelayMs)
+-            return null
++            return sourceResult
+         }
+         override fun needsResolve(source: SourceEntity?) = false
+         override suspend fun resolve(source: SourceEntity, cmd: String): String? = null
+-        override suspend fun enginePin(channel: ChannelEntity): Boolean? = null
+-        override suspend fun pin(channel: ChannelEntity, onMpv: Boolean) { pins += onMpv }
++        override suspend fun enginePin(channel: ChannelEntity): Boolean? = pinned
++        override suspend fun pin(channel: ChannelEntity, onMpv: Boolean) { pins += onMpv; pinned = onMpv }
+         override suspend fun globalPreference() = preference
+         override suspend fun globalBudgetSecs() = budgetSecs
+         override fun meta(channel: ChannelEntity) = MediaMeta(title = channel.name)
+@@ -408,4 +416,134 @@
+         assertEquals(1, engines.log.count { it.startsWith("exo:") })
+         assertEquals("exo-mute", engines.log.last())
+     }
++    @Test fun `reselecting a healthy MPV channel preserves its session and pin`() = runTest {
++        val engines = FakeEngines()
++        val host = FakeHost(this).apply { preference = EnginePreference.MPV_FIRST }
++        val c = controller(engines, host)
++        c.tune(channel(101)); runCurrent()
++        engines.mpvWatch!!.complete(MpvOutcome(true, null)); runCurrent()
++        repeat(10) { c.tune(channel(101)); runCurrent() }
++        assertEquals(1, engines.log.count { it.startsWith("mpv:") })
++        assertTrue(host.pins.isEmpty())
++        assertFalse(engines.order.contains("mpv-stop"))
++    }
++
++    @Test fun `reselecting an opening channel does not reset its give-up budget`() = runTest {
++        val engines = FakeEngines()
++        val host = FakeHost(this).apply { budgetSecs = 10 }
++        val c = controller(engines, host)
++        c.tune(channel(102)); runCurrent()
++        repeat(4) { advanceTimeBy(2_000); c.tune(channel(102)); runCurrent() }
++        advanceTimeBy(2_001)
++        assertEquals(1, engines.log.count { it.startsWith("exo:") })
++        assertTrue(engines.log.contains("exo-abandon"))
++    }
++
++    @Test fun `failed MPV is reopened on deliberate retry instead of preserved`() = runTest {
++        val engines = FakeEngines()
++        val host = FakeHost(this).apply { preference = EnginePreference.MPV_FIRST }
++        val c = controller(engines, host)
++        c.tune(channel(103)); runCurrent()
++        engines.mpvFailed = true
++        c.tune(channel(103)); runCurrent()
++        assertEquals(2, engines.log.count { it.startsWith("mpv:") })
++    }
++
++    @Test fun `changed request headers do not reuse an incompatible playing session`() = runTest {
++        val engines = FakeEngines()
++        val c = controller(engines, FakeHost(this).apply { preference = EnginePreference.MPV_FIRST })
++        c.tune(channel(104)); runCurrent()
++        c.tune(channel(104).copy(httpHeaders = "Referer: https://new.invalid")); runCurrent()
++        assertEquals(2, engines.log.count { it.startsWith("mpv:") })
++    }
++
++    @Test fun `preview release cooldown survives OK into fullscreen on a newer channel`() = runTest {
++        LiveStreamQuirks.clearForTest()
++        try {
++            LiveStreamQuirks.rememberSessionLimit(channel(105).streamUrl)
++            val engines = FakeEngines()
++            val c = controller(engines, FakeHost(this))
++            c.preview(channel(105), true); runCurrent()
++            c.preview(channel(106), true); runCurrent()
++            advanceTimeBy(500)
++            c.tune(channel(106)); runCurrent()
++            assertEquals(1, engines.log.count { it.startsWith("exo:") })
++            advanceTimeBy(1_501); runCurrent()
++            assertEquals(listOf("exo-open", "exo-stop", "exo-open"), engines.order)
++            assertEquals("exo:${channel(106).streamUrl}", engines.log.last())
++        } finally { LiveStreamQuirks.clearForTest() }
++    }
++
++    @Test fun `old watchdog from A B A cannot hand over or abandon the new A`() = runTest {
++        val engines = FakeEngines()
++        val c = controller(engines, FakeHost(this))
++        c.tune(channel(107)); runCurrent()
++        val obsolete = engines.exoWatch!!
++        c.tune(channel(108)); runCurrent()
++        c.tune(channel(107)); runCurrent()
++        obsolete.complete("old failure")
++        advanceTimeBy(1_000); runCurrent()
++        assertFalse(engines.log.any { it.startsWith("mpv:") || it.endsWith("abandon") })
++        assertTrue(c.liveOnExo.value)
++    }
++
++    @Test fun `manual engine selection remains owned on the next same-channel request`() = runTest {
++        val engines = FakeEngines()
++        val host = FakeHost(this)
++        val c = controller(engines, host)
++        c.tune(channel(109)); runCurrent()
++        c.toggleEngine()
++        advanceTimeBy(OwnTVPlayer.SURFACE_HANDOFF_MS + 1); runCurrent()
++        c.tune(channel(109)); runCurrent()
++        assertEquals(listOf(true), host.pins)
++        assertEquals(1, engines.log.count { it.startsWith("mpv:") })
++    }
++
++    @Test fun `provider-declared single connection blocks preview before any refusal is learned`() = runTest {
++        LiveStreamQuirks.clearForTest()
++        val engines = FakeEngines().apply { mpvHasStream = true }
++        val host = FakeHost(this).apply {
++            sourceResult = SourceEntity(name = "one stream", type = tv.own.owntv.core.model.SourceType.XTREAM,
++                url = "http://tune-controller-test.invalid", maxConnections = 1)
++        }
++        val c = controller(engines, host)
++        c.preview(channel(110), true); runCurrent()
++        assertTrue(c.previewBlockedSingleSession.value)
++        assertTrue(engines.log.isEmpty())
++    }
++
++    @Test fun `successful automatic fallback stays on MPV when the same channel is selected again`() = runTest {
++        val engines = FakeEngines()
++        val host = FakeHost(this)
++        val c = controller(engines, host)
++        c.tune(channel(111)); runCurrent()
++        engines.exoWatch!!.complete("unsupported content")
++        advanceTimeBy(OwnTVPlayer.SURFACE_HANDOFF_MS + 1); runCurrent()
++        engines.mpvWatch!!.complete(MpvOutcome(true, null)); runCurrent()
++        c.tune(channel(111)); runCurrent()
++        assertFalse(c.liveOnExo.value)
++        assertEquals(1, engines.log.count { it.startsWith("exo:") })
++        assertEquals(1, engines.log.count { it.startsWith("mpv:") })
++        assertTrue(host.pins.isEmpty())
++    }
++
++    @Test fun `switching to MPV cannot bypass a limited preview release already in progress`() = runTest {
++        LiveStreamQuirks.clearForTest()
++        try {
++            LiveStreamQuirks.rememberSessionLimit(channel(112).streamUrl)
++            val engines = FakeEngines()
++            val host = FakeHost(this)
++            val c = controller(engines, host)
++            c.preview(channel(112), true); runCurrent()
++            c.preview(channel(113), true); runCurrent()
++            advanceTimeBy(500)
++            host.preference = EnginePreference.MPV_FIRST
++            c.tune(channel(114)); runCurrent()
++            assertFalse(engines.log.any { it.startsWith("mpv:") })
++            advanceTimeBy(1_501); runCurrent()
++            assertEquals(1, engines.log.count { it.startsWith("mpv:") })
++            assertEquals("mpv:${channel(114).streamUrl}", engines.log.last())
++        } finally { LiveStreamQuirks.clearForTest() }
++    }
++
+ }
+--- /dev/null
++++ b/player-core/src/test/java/tv/own/owntv/player/RecoveryResolutionTest.kt
+@@ -0,0 +1,53 @@
++package tv.own.owntv.player
++
++import kotlinx.coroutines.CompletableDeferred
++import kotlinx.coroutines.ExperimentalCoroutinesApi
++import kotlinx.coroutines.async
++import kotlinx.coroutines.awaitCancellation
++import kotlinx.coroutines.test.*
++import org.junit.Assert.*
++import org.junit.Test
++import tv.own.owntv.core.stalker.ReconnectUrlProvider
++
++@OptIn(ExperimentalCoroutinesApi::class)
++class RecoveryResolutionTest {
++    @Test fun `silent URL service times out so the existing bounded ladder can continue`() = runTest {
++        var released = false
++        val result = async { resolvePlaybackRecoveryUrl(ReconnectUrlProvider {
++            try { awaitCancellation() } finally { released = true }
++        }) }
++        advanceTimeBy(7_999); assertFalse(result.isCompleted)
++        advanceTimeBy(2); runCurrent()
++        assertNull(result.await()); assertTrue(released)
++    }
++    @Test fun `stop or a replacement tune cancels URL work and publishes nothing`() = runTest {
++        var applied = false
++        var released = false
++        val job = async {
++            resolvePlaybackRecoveryUrl(ReconnectUrlProvider { try { awaitCancellation() } finally { released = true } })
++            applied = true
++        }
++        runCurrent(); job.cancel(); runCurrent()
++        assertFalse(applied); assertTrue(released)
++    }
++    @Test fun `valid refreshed URL reaches the engine unchanged`() = runTest {
++        assertEquals("new-token", resolvePlaybackRecoveryUrl(ReconnectUrlProvider { "new-token" }))
++    }
++    @Test fun `transport failure and absent provider fall back to the stored URL`() = runTest {
++        assertNull(resolvePlaybackRecoveryUrl(ReconnectUrlProvider { error("offline") }))
++        assertNull(resolvePlaybackRecoveryUrl(null))
++    }
++    @Test fun `backoff and slow URL resolve overlap instead of stacking`() = runTest {
++        val start = testScheduler.currentTime
++        val fresh = resolvePlaybackRecoveryUrl(ReconnectUrlProvider { kotlinx.coroutines.delay(2_000); "fresh" })
++        kotlinx.coroutines.delay(remainingRecoveryDelay(1_500, start, testScheduler.currentTime))
++        assertEquals("fresh", fresh)
++        assertEquals(2_000, testScheduler.currentTime - start)
++        // Before: 2,000 ms resolution + 1,500 ms backoff = 3,500 ms under identical conditions.
++    }
++    @Test fun `fast resolution still honours provider backoff and clock regressions`() {
++        assertEquals(3_000, remainingRecoveryDelay(3_500, 10_000, 10_500))
++        assertEquals(0, remainingRecoveryDelay(1_500, 10_000, 15_000))
++        assertEquals(1_500, remainingRecoveryDelay(1_500, 10_000, 9_000))
++    }
++}
+--- a/tools/i18n/safe_literals.txt
++++ b/tools/i18n/safe_literals.txt
+@@ -5677,7 +5677,6 @@
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt	ready
+ 1	log	player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt	reconnect attempt ${tune.retryCount}/$MAX_RECONNECTS reason=$reason
+ 1	log	player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt	reconnect exhausted ($reason) at ${tune.retryCount}/$MAX_RECONNECTS after ${failingSecs}s — giving up
+-1	technical	player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt	reconnect fresh-url failed: ${it.message}
+ 1	technical	player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt	reconnect re-resolved expiring URL (${HttpClient.redactUrl(fresh)})
+ 1	log	player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt	reconnect skipped — the stream came back on its own
+ 1	log	player-core/src/main/java/tv/own/owntv/player/LivePreviewEngine.kt	recovered after the ladder gave up — clearing the error

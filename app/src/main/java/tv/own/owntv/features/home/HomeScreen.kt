@@ -1,5 +1,8 @@
 package tv.own.owntv.features.home
 
+import tv.own.owntv.features.shell.components.VodPosterBadgeState
+import tv.own.owntv.features.shell.components.vodMoviePosterBadges
+import tv.own.owntv.features.shell.components.vodSeriesPosterBadges
 import tv.own.owntv.ui.theme.stageTone
 import tv.own.owntv.ui.stage.backdropLeftWash
 import android.graphics.SurfaceTexture
@@ -61,6 +64,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.LineHeightStyle
@@ -71,6 +75,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.Text
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import tv.own.owntv.R
@@ -84,6 +89,7 @@ import tv.own.owntv.core.home.GuideSliceState
 import tv.own.owntv.core.home.TrendingHomeItem
 import tv.own.owntv.core.launcher.LauncherContinuationItem
 import tv.own.owntv.core.metadata.MetadataImages
+import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.core.model.HomeLiveRowMode
 import tv.own.owntv.core.model.HomeRow
 import tv.own.owntv.core.model.HomeTrendingStyle
@@ -121,8 +127,39 @@ import java.util.Locale
 /** The row gap; the headings' design positions below already include it. */
 private val RowGap = 40.mpx
 
+internal const val LOUNGE_HOME_POSTERS_PER_ROW = 6
+/** Compute how many posters fill the viewport, never truncating the horizontally browsable titles. */
+internal fun loungeHomeVisiblePosterCount(total: Int): Int = minOf(total, LOUNGE_HOME_POSTERS_PER_ROW)
+
 /** Lounge TV's first-login rails use the existing card widgets, without altering OwnTV Core. */
-private enum class LoungeHomeRow { FEATURED_MOVIES, POPULAR_SERIES, SPORTS_LINKS, SPORTS_FIXTURES }
+internal enum class LoungeHomeRow { SPORTS_HERO, NEW_RELEASES, FEATURED_MOVIES, POPULAR_SERIES, LIVE_NOW, SPORTS_LINKS, SPORTS_FIXTURES, CUSTOMIZE }
+
+private sealed interface HomeNewRelease {
+    data class Movie(val movie: MovieEntity) : HomeNewRelease
+    data class Series(val series: SeriesEntity) : HomeNewRelease
+}
+
+/** Preserve the existing core hidden rows while allowing a profile to reorder Lounge shelves. */
+internal fun loungeCuratedHomeRows(
+    hidden: Set<HomeRow>,
+    preferences: LoungeHomePreferences = LoungeHomePreferences(),
+): List<Any> = buildList {
+    add(LoungeHomeRow.SPORTS_HERO)
+    preferences.shelfOrder.filterNot { it in preferences.hiddenShelves }.forEach { shelf ->
+        when (shelf) {
+            LoungeHomeShelf.KEEP -> if (HomeRow.HERO !in hidden) add(HomeRow.HERO)
+            LoungeHomeShelf.NEW -> add(LoungeHomeRow.NEW_RELEASES)
+            LoungeHomeShelf.TRENDING -> if (HomeRow.TRENDING !in hidden) add(HomeRow.TRENDING)
+            LoungeHomeShelf.FEATURED -> add(LoungeHomeRow.FEATURED_MOVIES)
+            LoungeHomeShelf.POPULAR -> add(LoungeHomeRow.POPULAR_SERIES)
+            LoungeHomeShelf.LIVE -> add(LoungeHomeRow.LIVE_NOW)
+            LoungeHomeShelf.FAV_CHANNELS -> add(HomeRow.FAVORITE_CHANNELS)
+            LoungeHomeShelf.FAV_MOVIES -> add(HomeRow.FAVORITE_MOVIES)
+            LoungeHomeShelf.FAV_SERIES -> add(HomeRow.FAVORITE_SERIES)
+        }
+    }
+    add(LoungeHomeRow.CUSTOMIZE)
+}
 
 /** Quick links only: every destination already exists in the v5.2.2.11 app. */
 enum class LoungeSportsShortcut(val title: Int, val subtitle: Int) {
@@ -172,11 +209,24 @@ fun HomeScreen(
     onEntryHook: (((() -> Boolean)?) -> Unit)? = null,
     /** Sports Hub: ▶ on a Live sports card opens its match page. */
     onOpenMatch: (tv.own.owntv.core.sports.model.Match) -> Unit = {},
+    onPlayLiveSport: (tv.own.owntv.core.sports.model.Match, () -> Unit) -> Unit = { _, _ -> },
     onSportsShortcut: (LoungeSportsShortcut) -> Unit = {},
     modifier: Modifier = Modifier,
     sportsVm: tv.own.owntv.features.sports.SportsViewModel = org.koin.androidx.compose.koinViewModel(),
 ) {
     val state by vm.uiState.collectAsStateWithLifecycle()
+    val settingsRepository: SettingsRepository = koinInject()
+    val homeProfileId by settingsRepository.activeProfileId.collectAsStateWithLifecycle(-1L)
+    val homeContext = LocalContext.current
+    val homePreferenceStore = remember(homeContext, homeProfileId) {
+        LoungeHomePreferenceStore(homeContext, homeProfileId)
+    }
+    var homePreferences by remember(homeContext, homeProfileId) {
+        mutableStateOf(homePreferenceStore.read())
+    }
+    var customisingHome by remember { mutableStateOf(false) }
+    val movieProgress by vm.movieProgress.collectAsStateWithLifecycle()
+    val seriesProgress by vm.seriesProgress.collectAsStateWithLifecycle()
     // Existing followed-sports row is unchanged. If it is not configured, show
     // live/soon fixtures as a small ADDITIONAL row at the very bottom of Home.
     val existingSportsRow = HomeRow.LIVE_SPORTS in state.config.visibleOrder
@@ -185,7 +235,32 @@ fun HomeScreen(
     } else if (state.config.visibleOrder.isNotEmpty() && !state.isLoading) {
         sportsVm.featuredHomeEvents.collectAsStateWithLifecycle().value
     } else emptyList()
+    val featuredSports by sportsVm.featuredHomeEvents.collectAsStateWithLifecycle()
+    var sportsNow by remember { mutableStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(previewEnabled) {
+        if (previewEnabled) while (true) {
+            vm.refreshDiscoveryIfExpired()
+            delay(60_000)
+        }
+    }
+    LaunchedEffect(previewEnabled) {
+        while (previewEnabled) { delay(30_000); sportsNow = System.currentTimeMillis() }
+    }
+    val sportsPreferences by sportsVm.sportsConfig.collectAsStateWithLifecycle()
+    val sportsHero = remember(featuredSports, sportsPreferences, sportsNow, homePreferences) {
+        HomeSportsSelection.ranked(featuredSports, sportsPreferences, sportsNow)
+            .filter { homePreferences.selectedSports.isEmpty() || it.sport.name in homePreferences.selectedSports }
+            .let { candidates ->
+                if (homePreferences.followedFirst) candidates
+                else candidates.sortedWith(compareBy({ !it.isLive }, { it.startMs }, { it.key }))
+            }.take(12)
+    }
+    val liveEvents by sportsVm.liveHomeEvents.collectAsStateWithLifecycle()
+    val liveNowEvents = remember(liveEvents, sportsNow) {
+        HomeSportsSelection.liveNow(liveEvents, sportsNow)
+    }
     val trendingUnavailableMessage = stringResource(R.string.home_trending_unavailable)
+    val liveUnavailableMessage = stringResource(R.string.lounge_home_live_unavailable)
     val heroPreviewEngine = koinInject<HeroPreviewEngine>()
     val engineState by heroPreviewEngine.state.collectAsStateWithLifecycle()
     val isPreviewActive by vm.isPreviewActive.collectAsStateWithLifecycle()
@@ -215,42 +290,122 @@ fun HomeScreen(
     // A Keep watching card plays its preview only after 3 s of continuous focus (the dwell below).
     var previewIndex by remember { mutableStateOf(-1) }
     var focusedHeroIndex by remember { mutableStateOf(-1) }
-    // Keep Watching follows the featured hero, then favourites and curated VOD.
-    // Do not build a Live TV Highlights row from incomplete programme listings.
-    // Do not resurrect any user-hidden existing Home rows.
-    val orderedRows: List<Any> = buildList {
-        val originalRows = state.config.visibleOrder
-        val preferred = listOf<Any>(
-            HomeRow.TRENDING,
-            HomeRow.HERO,
-            HomeRow.FAVORITE_CHANNELS,
-            HomeRow.FAVORITE_MOVIES,
-            HomeRow.FAVORITE_SERIES,
-            LoungeHomeRow.FEATURED_MOVIES,
-            LoungeHomeRow.POPULAR_SERIES,
-        )
-        preferred.forEach { row ->
-            if (row is LoungeHomeRow || (row is HomeRow && row in originalRows)) add(row)
+    // Profile-customisable shelves; core playback config and playlist filters remain untouched.
+    val orderedRows: List<Any> = loungeCuratedHomeRows(state.config.hidden, homePreferences)
+    val heroFeatures: List<LoungeVodHeroFeature> = when (homePreferences.source) {
+        LoungeHomeHeroSource.SPORTS -> emptyList()
+        LoungeHomeHeroSource.TRENDING -> state.trendingItems.take(12).map { title ->
+            LoungeVodHeroFeature(
+                key = title.stableKey,
+                title = loungeVodTitle(title.snapshot.localizedTitle),
+                backdropUrl = trendingBackdrop(title),
+                logoUrl = state.trendingExtras[title.stableKey]?.logoUrl,
+                metadata = title.snapshot.year?.toString().orEmpty(),
+                rating = title.snapshot.rating,
+                onPlay = {
+                    onActivateTrending(title) {
+                        trendingToast.show(trendingUnavailableMessage)
+                        vm.refresh()
+                    }
+                },
+            )
         }
-        originalRows.forEach { row -> if (row !in this) add(row) }
-        // Append only. Never move/remove the hero, films, series, recent or favourites.
-        if (originalRows.isNotEmpty()) {
-            add(LoungeHomeRow.SPORTS_LINKS)
-            if (HomeRow.LIVE_SPORTS !in originalRows) add(LoungeHomeRow.SPORTS_FIXTURES)
+        LoungeHomeHeroSource.RECENT -> buildList {
+            state.recentMovies.take(8).forEach { movie ->
+                add(LoungeVodHeroFeature(
+                    key = "new-movie-${movie.id}",
+                    title = loungeVodTitle(movie.canonicalTitle.ifBlank { movie.name }),
+                    backdropUrl = movie.backdropUrl,
+                    metadata = movie.year?.toString().orEmpty(),
+                    rating = movie.rating,
+                    onPlay = { onPlayMovie(movie.id, 0L) },
+                ))
+            }
+            state.recentSeries.take(8).forEach { series ->
+                add(LoungeVodHeroFeature(
+                    key = "new-series-${series.id}",
+                    title = loungeVodTitle(series.canonicalTitle.ifBlank { series.name }),
+                    backdropUrl = series.backdropUrl,
+                    metadata = series.year?.toString().orEmpty(),
+                    rating = series.rating,
+                    onPlay = { onOpenSeries(series) },
+                ))
+            }
+        }
+        LoungeHomeHeroSource.CONTINUE -> state.heroItems.mapNotNull { item ->
+            when (item) {
+                is HeroItem.MovieHero -> LoungeVodHeroFeature(
+                    key = "continue-movie-${item.movie.id}",
+                    title = loungeVodTitle(item.movie.name),
+                    backdropUrl = item.movie.backdropUrl,
+                    metadata = item.movie.year?.toString().orEmpty(),
+                    rating = item.movie.rating,
+                    onPlay = { onPlayMovie(item.movie.id, item.positionMs) },
+                )
+                is HeroItem.SeriesHero -> LoungeVodHeroFeature(
+                    key = "continue-series-${item.series.id}-${item.episode.id}",
+                    title = loungeVodTitle(item.series.name),
+                    backdropUrl = item.series.backdropUrl,
+                    metadata = item.series.year?.toString().orEmpty(),
+                    rating = item.series.rating,
+                    onPlay = { onPlayEpisode(item.series.id, item.episode.id, item.positionMs) },
+                )
+                is HeroItem.LiveHero -> null
+            }
+        }
+        LoungeHomeHeroSource.WATCHLIST -> buildList {
+            state.favoriteMovies.take(8).forEach { movie ->
+                add(LoungeVodHeroFeature(
+                    key = "favourite-movie-${movie.id}",
+                    title = loungeVodTitle(movie.name),
+                    backdropUrl = movie.backdropUrl,
+                    metadata = movie.year?.toString().orEmpty(),
+                    rating = movie.rating,
+                    onPlay = { onPlayMovie(movie.id, 0L) },
+                ))
+            }
+            state.favoriteSeries.take(8).forEach { series ->
+                add(LoungeVodHeroFeature(
+                    key = "favourite-series-${series.id}",
+                    title = loungeVodTitle(series.name),
+                    backdropUrl = series.backdropUrl,
+                    metadata = series.year?.toString().orEmpty(),
+                    rating = series.rating,
+                    onPlay = { onOpenSeries(series) },
+                ))
+            }
+        }
+    }
+    val newReleaseItems = remember(state.newMovies, state.newSeries) {
+        buildList<HomeNewRelease> {
+            for (index in 0 until maxOf(state.newMovies.size, state.newSeries.size)) {
+                state.newMovies.getOrNull(index)?.let { add(HomeNewRelease.Movie(it)) }
+                state.newSeries.getOrNull(index)?.let { add(HomeNewRelease.Series(it)) }
+            }
         }
     }
     val heroVisible = HomeRow.HERO in orderedRows
-    val hasNonHeroContent = orderedRows.any { it != HomeRow.HERO && rowHasData(it, state, sportsCards.size) }
+    val hasDataNow: (Any) -> Boolean = { row -> when (row) {
+        LoungeHomeRow.SPORTS_HERO -> if (homePreferences.source == LoungeHomeHeroSource.SPORTS)
+            sportsHero.isNotEmpty() else heroFeatures.isNotEmpty()
+        LoungeHomeRow.CUSTOMIZE -> true
+        LoungeHomeRow.LIVE_NOW -> liveNowEvents.isNotEmpty()
+        else -> rowHasData(row, state, sportsCards.size)
+    } }
+    val hasNonHeroContent = orderedRows.any { it != HomeRow.HERO && hasDataNow(it) }
     val showHeroFallback = heroVisible && state.heroItems.isEmpty() && !hasNonHeroContent
-    val renderRows = orderedRows.filter { rowCanRender(it, state, showHeroFallback, sportsCards.size) }
-    val firstDataRow = renderRows.firstOrNull { it != HomeRow.HERO && rowHasData(it, state, sportsCards.size) }
+    val renderRows = orderedRows.filter { row ->
+        when (row) {
+            LoungeHomeRow.SPORTS_HERO, LoungeHomeRow.LIVE_NOW, LoungeHomeRow.CUSTOMIZE -> hasDataNow(row)
+            else -> rowCanRender(row, state, showHeroFallback, sportsCards.size)
+        }
+    }
+    val firstDataRow = renderRows.firstOrNull { it != HomeRow.HERO && hasDataNow(it) }
     val showAllHiddenState = orderedRows.isEmpty()
     val showEmptyState = orderedRows.isNotEmpty() && renderRows.isEmpty()
-    val fullBleed = renderRows.firstOrNull() == HomeRow.TRENDING &&
-        state.config.trendingStyle == HomeTrendingStyle.HERO
-    // Trending layout = Posters only: the folded line on top follows the focused poster.
-    val posterHero = renderRows.firstOrNull() == HomeRow.TRENDING &&
-        state.config.trendingStyle == HomeTrendingStyle.POSTERS
+    // Trending is a third-row poster shelf, not a first-row full-bleed hero.
+    val fullBleed = false
+    val posterHero = false
     var posterIndex by remember { mutableIntStateOf(0) }
     val rowFocusRequester: (Any) -> FocusRequester? = { row ->
         if (row == renderRows.firstOrNull() && firstRowFocusRequester != null) {
@@ -305,6 +460,18 @@ fun HomeScreen(
                     listState.scrollToItem(rowIndex)
                 }
             }
+        }
+    }
+
+    // D-pad navigation must return to the entire Keep Watching row, including its heading.
+    // Compose normally scrolls only the focused card and can leave the heading clipped.
+    val showKeepWatchingHeading: () -> Unit = {
+        val index = renderRows.indexOf(HomeRow.HERO)
+        if (index >= 0) homeScope.launch {
+            kotlinx.coroutines.delay(70L)
+            if (renderRows.getOrNull(index) == HomeRow.HERO &&
+                (listState.firstVisibleItemIndex != index || listState.firstVisibleItemScrollOffset != 0)
+            ) listState.scrollToItem(index)
         }
     }
 
@@ -436,13 +603,42 @@ fun HomeScreen(
                     // of the list remembers its focused child.
                     .focusGroup(),
                 state = listState,
-                contentPadding = PaddingValues(top = if (fullBleed || posterItem != null) 0.dp else NoHeroTop, bottom = 48.mpx),
+                contentPadding = PaddingValues(
+                    top = if (renderRows.firstOrNull() == LoungeHomeRow.SPORTS_HERO || fullBleed || posterItem != null) 0.dp else NoHeroTop,
+                    bottom = 180.mpx,
+                ),
                 verticalArrangement = Arrangement.spacedBy(RowGap),
             ) {
                 itemsIndexed(renderRows, key = { _, row -> row.toString() }) { _, row ->
                     val firstItemFocusRequester = rowFocusRequester(row)
                     val rowModifier = if (row == firstRowUnderHero) unfoldOnUp else Modifier
                     when (row) {
+                        LoungeHomeRow.SPORTS_HERO -> {
+                            if (homePreferences.source == LoungeHomeHeroSource.SPORTS) {
+                                LoungeSportsHomeHero(
+                                    sportsHero, contentStart, firstItemFocusRequester,
+                                    onFocus = { onSportsRowFocused(LoungeHomeRow.SPORTS_HERO) },
+                                    onOpen = onOpenMatch,
+                                    onRemind = { sportsVm.remind(it, emptyList()) },
+                                    active = previewEnabled,
+                                    autoRotate = homePreferences.rotate,
+                                )
+                            } else {
+                                LoungeFullBleedVodHero(
+                                    items = heroFeatures,
+                                    autoRotate = homePreferences.rotate,
+                                    firstFocus = firstItemFocusRequester,
+                                    onFocus = { onSportsRowFocused(LoungeHomeRow.SPORTS_HERO) },
+                                    active = previewEnabled,
+                                )
+                            }
+                        }
+                        LoungeHomeRow.CUSTOMIZE -> StageButton(
+                            text = stringResource(R.string.lounge_pref_customize),
+                            onClick = { customisingHome = true },
+                            modifier = Modifier.padding(start = contentStart)
+                                .then(if (firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier),
+                        )
                         LoungeHomeRow.SPORTS_LINKS -> LoungeSportsQuickLinks(
                             start = contentStart,
                             onSelect = onSportsShortcut,
@@ -463,12 +659,43 @@ fun HomeScreen(
                             modifier = rowModifier,
                         )
 
+                        LoungeHomeRow.NEW_RELEASES -> FavoritePosterRow(
+                            title = stringResource(R.string.lounge_movies_new_releases),
+                            items = newReleaseItems,
+                            key = { when (it) {
+                                is HomeNewRelease.Movie -> it.movie.id * 2L
+                                is HomeNewRelease.Series -> it.series.id * 2L + 1L
+                            } },
+                            name = { when (it) {
+                                is HomeNewRelease.Movie -> loungeVodTitle(it.movie.canonicalTitle.ifBlank { it.movie.name })
+                                is HomeNewRelease.Series -> loungeVodTitle(it.series.canonicalTitle.ifBlank { it.series.name })
+                            } },
+                            poster = { when (it) {
+                                is HomeNewRelease.Movie -> state.moviePosterOverrides[it.movie.id] ?: it.movie.posterUrl
+                                is HomeNewRelease.Series -> state.seriesPosterOverrides[it.series.id] ?: it.series.posterUrl
+                            } },
+                            badges = { when (it) {
+                                is HomeNewRelease.Movie -> vodMoviePosterBadges(it.movie.rating, movieProgress[it.movie.id])
+                                is HomeNewRelease.Series -> vodSeriesPosterBadges(it.series.rating, seriesProgress[it.series.id])
+                            } },
+                            start = contentStart,
+                            onItemClick = { when (it) {
+                                is HomeNewRelease.Movie -> onOpenMovie(it.movie)
+                                is HomeNewRelease.Series -> onOpenSeries(it.series)
+                            } },
+                            onFocus = onNonHeroFocused,
+                            firstItemFocusRequester = firstItemFocusRequester,
+                            track = track,
+                            modifier = rowModifier,
+                        )
+
                         LoungeHomeRow.FEATURED_MOVIES -> FavoritePosterRow(
                             title = stringResource(R.string.lounge_home_featured_movies),
                             items = state.featuredMovies,
                             key = { it.id },
                             name = { loungeVodTitle(state.featuredMovieNames[it.id] ?: it.canonicalTitle.ifBlank { it.name }) },
-                            poster = { it.posterUrl },
+                            poster = { state.moviePosterOverrides[it.id] ?: it.posterUrl },
+                            badges = { vodMoviePosterBadges(it.rating, movieProgress[it.id]) },
                             start = contentStart,
                             onItemClick = onOpenMovie,
                             onFocus = onNonHeroFocused,
@@ -482,10 +709,21 @@ fun HomeScreen(
                             items = state.popularSeries,
                             key = { it.id },
                             name = { loungeVodTitle(state.popularSeriesNames[it.id] ?: it.canonicalTitle.ifBlank { it.name }) },
-                            poster = { it.posterUrl },
+                            poster = { state.seriesPosterOverrides[it.id] ?: it.posterUrl },
+                            badges = { vodSeriesPosterBadges(it.rating, seriesProgress[it.id]) },
                             start = contentStart,
                             onItemClick = onOpenSeries,
                             onFocus = onNonHeroFocused,
+                            firstItemFocusRequester = firstItemFocusRequester,
+                            track = track,
+                            modifier = rowModifier,
+                        )
+
+                        LoungeHomeRow.LIVE_NOW -> HomeLiveSportsRow(
+                            matches = liveNowEvents,
+                            start = contentStart,
+                            onPlay = { match -> onPlayLiveSport(match) { trendingToast.show(liveUnavailableMessage) } },
+                            onFocus = { onSportsRowFocused(LoungeHomeRow.LIVE_NOW) },
                             firstItemFocusRequester = firstItemFocusRequester,
                             track = track,
                             modifier = rowModifier,
@@ -496,6 +734,14 @@ fun HomeScreen(
                         } else if (!fullBleed || trendingItem == null) {
                             posterItem?.let { FoldedHeroLine(it, contentStart, height = CompactHeroHeight + RowGap) }
                             TrendingPosterRow(
+                                poster = { item -> when (item) {
+                                    is TrendingHomeItem.Movie -> state.moviePosterOverrides[item.movie.id] ?: item.movie.posterUrl
+                                    is TrendingHomeItem.Series -> state.seriesPosterOverrides[item.series.id] ?: item.series.posterUrl
+                                } },
+                                badges = { item -> when (item) {
+                                    is TrendingHomeItem.Movie -> vodMoviePosterBadges(item.movie.rating, movieProgress[item.movie.id])
+                                    is TrendingHomeItem.Series -> vodSeriesPosterBadges(item.series.rating, seriesProgress[item.series.id])
+                                } },
                                 // Room for the focused poster's lift under the heading when the line sits above.
                                 headerGap = if (posterItem != null) 16.mpx else 0.dp,
                                 // Compose's one-line poster title is 10 px shorter than Chrome's (measured).
@@ -595,6 +841,7 @@ fun HomeScreen(
                                         vm.onHeroUserNavigate(index)
                                         vm.setHeroFocused(true)
                                         onChildFocused()
+                                        showKeepWatchingHeading()
                                     } else if (focusedHeroIndex == index) {
                                         focusedHeroIndex = -1
                                     }
@@ -660,6 +907,7 @@ fun HomeScreen(
                             key = { it.id },
                             name = { loungeVodTitle(it.name) },
                             poster = { it.posterUrl },
+                            badges = { vodMoviePosterBadges(it.rating, movieProgress[it.id]) },
                             start = contentStart,
                             onItemClick = onOpenMovie,
                             onFocus = onNonHeroFocused,
@@ -674,6 +922,7 @@ fun HomeScreen(
                             key = { it.id },
                             name = { loungeVodTitle(it.name) },
                             poster = { it.posterUrl },
+                            badges = { vodSeriesPosterBadges(it.rating, seriesProgress[it.id]) },
                             start = contentStart,
                             onItemClick = onOpenSeries,
                             onFocus = onNonHeroFocused,
@@ -685,6 +934,7 @@ fun HomeScreen(
                         HomeRow.CONTINUE_MOVIES -> ContinuePosterRow(
                             title = (row as HomeRow).displayTitle(),
                             items = state.continueMovies,
+                            badges = { vodMoviePosterBadges(state.continuationMovieRatings[it.sourceItemId], movieProgress[it.sourceItemId]) },
                             start = contentStart,
                             onItemClick = { onPlayMovie(it.sourceItemId, it.positionMs) },
                             onFocus = onNonHeroFocused,
@@ -706,6 +956,16 @@ fun HomeScreen(
                     }
                 }
             }
+        }
+        if (customisingHome) {
+            LoungeHomeCustomizeScreen(
+                prefs = homePreferences,
+                onChange = { next ->
+                    homePreferences = next
+                    homePreferenceStore.save(next)
+                },
+                onClose = { customisingHome = false },
+            )
         }
     }
 
@@ -804,8 +1064,12 @@ private fun LoungeSportsQuickLinks(
 }
 
 private fun rowHasData(row: Any, state: HomeUiState, sportsCards: Int): Boolean = when (row) {
+    LoungeHomeRow.SPORTS_HERO -> true
+    LoungeHomeRow.CUSTOMIZE -> true
+    LoungeHomeRow.LIVE_NOW -> false // evaluated against the actual live fixtures in HomeScreen
     LoungeHomeRow.SPORTS_LINKS -> !state.isLoading
     LoungeHomeRow.SPORTS_FIXTURES -> sportsCards > 0
+    LoungeHomeRow.NEW_RELEASES -> state.newMovies.isNotEmpty() || state.newSeries.isNotEmpty()
     LoungeHomeRow.FEATURED_MOVIES -> state.featuredMovies.isNotEmpty()
     LoungeHomeRow.POPULAR_SERIES -> state.popularSeries.isNotEmpty()
     HomeRow.TRENDING -> state.trendingItems.size >= TrendingDao.MIN_ELIGIBLE_ITEMS
@@ -1332,6 +1596,9 @@ internal fun relativeLastWatchedLabel(lastEngagementAt: Long, nowMs: Long): Stri
 private fun ContinuePosterRow(
     title: String,
     items: List<LauncherContinuationItem>,
+    badges: (LauncherContinuationItem) -> VodPosterBadgeState = { item ->
+        vodSeriesPosterBadges(null, item.durationMs.takeIf { it > 0 }?.let { item.positionMs.toFloat() / it })
+    },
     start: Dp,
     onItemClick: (LauncherContinuationItem) -> Unit,
     onFocus: () -> Unit,
@@ -1341,23 +1608,31 @@ private fun ContinuePosterRow(
 ) {
     Column(modifier) {
         HomeRowHeader(title, small = items.size.toString(), start = start)
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(20.mpx),
-            contentPadding = PaddingValues(start = start, end = 64.mpx),
-            modifier = Modifier.focusRestorer().focusGroup(),
-        ) {
-            itemsIndexed(items, key = { _, item -> item.stableKey }) { index, item ->
-                StagePoster(
-                    title = loungeVodTitle(item.title),
-                    onClick = { onItemClick(item) },
-                    width = 196.mpx,
-                    height = 294.mpx,
-                    modifier = Modifier
-                        .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
-                        .tracked(track = track)
-                        .onFocusChanged { if (it.hasFocus) onFocus() },
-                ) {
-                    AsyncImage(model = item.posterUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val posterWidth = ((maxWidth - start - 64.mpx - 20.mpx * 5) / LOUNGE_HOME_POSTERS_PER_ROW).coerceAtLeast(1.dp)
+            val posterHeight = posterWidth * 1.5f
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(20.mpx),
+                contentPadding = PaddingValues(start = start, end = 64.mpx),
+                modifier = Modifier.width((maxWidth - 64.mpx).coerceAtLeast(1.dp)).focusRestorer().focusGroup(),
+            ) {
+                itemsIndexed(items, key = { _, item -> item.stableKey }) { index, item ->
+                    val badge = badges(item)
+                    StagePoster(
+                        title = loungeVodTitle(item.title),
+                        rating = badge.rating,
+                        watched = badge.watched,
+                        progress = badge.progress,
+                        onClick = { onItemClick(item) },
+                        width = posterWidth,
+                        height = posterHeight,
+                        modifier = Modifier
+                            .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
+                            .tracked(track = track)
+                            .onFocusChanged { if (it.hasFocus) onFocus() },
+                    ) {
+                        AsyncImage(model = item.posterUrl, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                    }
                 }
             }
         }
@@ -1372,6 +1647,7 @@ private fun <T> FavoritePosterRow(
     key: (T) -> Long,
     name: (T) -> String,
     poster: (T) -> String?,
+    badges: (T) -> VodPosterBadgeState,
     start: Dp,
     onItemClick: (T) -> Unit,
     onFocus: () -> Unit,
@@ -1381,23 +1657,31 @@ private fun <T> FavoritePosterRow(
 ) {
     Column(modifier) {
         HomeRowHeader(title, small = items.size.toString(), start = start)
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(20.mpx),
-            contentPadding = PaddingValues(start = start, end = 64.mpx),
-            modifier = Modifier.focusRestorer().focusGroup(),
-        ) {
-            itemsIndexed(items, key = { _, item -> key(item) }) { index, item ->
-                StagePoster(
-                    title = name(item),
-                    onClick = { onItemClick(item) },
-                    width = 196.mpx,
-                    height = 294.mpx,
-                    modifier = Modifier
-                        .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
-                        .tracked(track = track)
-                        .onFocusChanged { if (it.hasFocus) onFocus() },
-                ) {
-                    AsyncImage(model = poster(item), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val posterWidth = ((maxWidth - start - 64.mpx - 20.mpx * 5) / LOUNGE_HOME_POSTERS_PER_ROW).coerceAtLeast(1.dp)
+            val posterHeight = posterWidth * 1.5f
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(20.mpx),
+                contentPadding = PaddingValues(start = start, end = 64.mpx),
+                modifier = Modifier.width((maxWidth - 64.mpx).coerceAtLeast(1.dp)).focusRestorer().focusGroup(),
+            ) {
+                itemsIndexed(items, key = { _, item -> key(item) }) { index, item ->
+                    val badge = badges(item)
+                    StagePoster(
+                        title = name(item),
+                        rating = badge.rating,
+                        watched = badge.watched,
+                        progress = badge.progress,
+                        onClick = { onItemClick(item) },
+                        width = posterWidth,
+                        height = posterHeight,
+                        modifier = Modifier
+                            .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
+                            .tracked(track = track)
+                            .onFocusChanged { if (it.hasFocus) onFocus() },
+                    ) {
+                        AsyncImage(model = poster(item), contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                    }
                 }
             }
         }
@@ -1412,6 +1696,8 @@ private fun <T> FavoritePosterRow(
 private fun TrendingPosterRow(
     title: String,
     items: List<TrendingHomeItem>,
+    poster: (TrendingHomeItem) -> String?,
+    badges: (TrendingHomeItem) -> VodPosterBadgeState,
     start: Dp,
     onItemClick: (TrendingHomeItem) -> Unit,
     onFocus: () -> Unit,
@@ -1424,40 +1710,44 @@ private fun TrendingPosterRow(
     Column {
         HomeRowHeader(title, small = null, start = start)
         Spacer(Modifier.height(headerGap))
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(20.mpx),
-            contentPadding = PaddingValues(start = start, end = 64.mpx),
-            modifier = Modifier.focusRestorer().focusGroup(),
-        ) {
-            itemsIndexed(items, key = { _, item -> item.stableKey }) { index, item ->
-                StagePoster(
-                    title = when (item) {
-                        is TrendingHomeItem.Movie -> loungeVodTitle(item.movie.name)
-                        is TrendingHomeItem.Series -> loungeVodTitle(item.series.name)
-                    },
-                    onClick = { onItemClick(item) },
-                    width = 196.mpx,
-                    height = 294.mpx,
-                    rating = item.snapshot.rating?.let(::ratingText),
-                    modifier = Modifier
-                        .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
-                        .tracked(track = track)
-                        .onFocusChanged {
-                            if (it.hasFocus) {
-                                onItemFocused(index)
-                                onFocus()
-                            }
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val posterWidth = ((maxWidth - start - 64.mpx - 20.mpx * 5) / LOUNGE_HOME_POSTERS_PER_ROW).coerceAtLeast(1.dp)
+            val posterHeight = posterWidth * 1.5f
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(20.mpx),
+                contentPadding = PaddingValues(start = start, end = 64.mpx),
+                modifier = Modifier.width((maxWidth - 64.mpx).coerceAtLeast(1.dp)).focusRestorer().focusGroup(),
+            ) {
+                itemsIndexed(items, key = { _, item -> item.stableKey }) { index, item ->
+                    val badge = badges(item)
+                    StagePoster(
+                        title = when (item) {
+                            is TrendingHomeItem.Movie -> loungeVodTitle(item.movie.name)
+                            is TrendingHomeItem.Series -> loungeVodTitle(item.series.name)
                         },
-                ) {
-                    AsyncImage(
-                        model = when (item) {
-                            is TrendingHomeItem.Movie -> item.movie.posterUrl
-                            is TrendingHomeItem.Series -> item.series.posterUrl
-                        },
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize(),
-                    )
+                        onClick = { onItemClick(item) },
+                        width = posterWidth,
+                        height = posterHeight,
+                        rating = badge.rating,
+                        watched = badge.watched,
+                        progress = badge.progress,
+                        modifier = Modifier
+                            .then(if (index == 0 && firstItemFocusRequester != null) Modifier.focusRequester(firstItemFocusRequester) else Modifier)
+                            .tracked(track = track)
+                            .onFocusChanged {
+                                if (it.hasFocus) {
+                                    onItemFocused(index)
+                                    onFocus()
+                                }
+                            },
+                    ) {
+                        AsyncImage(
+                            model = poster(item),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
                 }
             }
         }
