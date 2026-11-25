@@ -151,7 +151,7 @@ docs/            Architecture, QA and developer documentation
 extras/          Upstream supporting assets and reference material
 scripts/         Build, QA, release and verification helpers
 services/        Service integration code
-.github/         CI, publishing and upstream-sync workflows
+.github/         CI, publishing and guide maintenance workflows
 ```
 
 ### Developer and QA resources
@@ -180,7 +180,6 @@ Local debug APKs are **not** interchangeable with the signed production release.
 - **[Releases](https://github.com/Gazzamoo111/lounge-tv-player/releases):** signed APKs and version history.
 - **[QA workflow](https://github.com/Gazzamoo111/lounge-tv-player/actions/workflows/ci.yml):** build and test checks.
 - **[Publishing workflow](https://github.com/Gazzamoo111/lounge-tv-player/actions/workflows/publish.yml):** controlled release process.
-- **[Upstream sync](https://github.com/Gazzamoo111/lounge-tv-player/actions/workflows/upstream-sync.yml):** tracks reviewed changes from OwnTV.
 
 QA artifacts and customer releases serve different purposes. A passing build is not a substitute for a successful real-device playback and update test.
 

@@ -4,17 +4,17 @@ Lounge TV is a branded, GPLv3-modified Android TV / Fire TV build of [OwnTV](htt
 
 ## Development and source
 
-The base of this fork is OwnTV `v5.2.0`. Our upstream version is tracked in `.loungetv/upstream-version`. `UPSTREAM_README.md` and `LICENSE` preserve the upstream documentation and GPLv3 licence. The corresponding source and build instructions are made available in this repository to recipients of the APK.
+The base of this fork is OwnTV `v5.2.0`. `.loungetv/upstream-version` records historical source provenance; it is not an active update subscription. `UPSTREAM_README.md` and `LICENSE` preserve the upstream documentation and GPLv3 licence. The corresponding source and build instructions are made available in this repository to recipients of the APK.
 
 - App ID: `com.loungetv.player`
 - Updates: Releases from `Gazzamoo111/lounge-tv-player`, **not** `ahXN00/OwnTV` and **not** the older `Gazzamoo111/lounge-tv-releases` repo.
 - CI: `.github/workflows/ci.yml` checks branding, runs JVM tests, and compiles a QA APK.
-- Sync: `.github/workflows/upstream-sync.yml` checks OwnTV daily and opens a review PR if the merge is clean; merge conflicts create an issue.
+- Changes: Lounge TV changes are reviewed in this repository. Automated upstream application syncing is retired.
 - Release: `.github/workflows/publish.yml` is *manual only*; prepares a signed candidate, then pauses at a protected production environment before releasing that exact APK.
 
 ## Approving an update
 
-1. Review the automated upstream PR and CI checks. Do not auto-merge it.
+1. Review the Lounge TV change PR and its CI checks. Do not auto-merge it.
 2. Test on an actual Fire TV with the BEST test playlist, programme guide, favourites, artwork, audio, playback switching, navigation, and settings.
 3. Merge the tested PR to `main`. In Actions, run **Build and approve Lounge TV release** with a version greater than the current `5.2.2.0`, such as `5.2.2.1` (Android versionCode `5020201`).
 4. Download the **signed candidate APK** from the candidate job and test installing it over a previously signed `com.loungetv.player` version with `adb install -r`, confirming playlists/data survive. A **QA `.qa` package is a different app**, not an upgrade test.
